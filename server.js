@@ -28,6 +28,26 @@ const DASHBOARD     = path.join(BASE_DIR, 'dashboard.html');
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
+// Công đoạn bị bỏ qua theo loại đơn (0-indexed)
+// - "Sửa" / "Làm tiếp" → bỏ CBM(0), SÁP(1), SƯỜN(2) → chỉ còn ĐẮP(3), MÀI(4) = 2 stage
+// - "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3), MÀI(4) → chỉ còn CBM(0), SÁP(1), SƯỜN(2) = 3 stage
+const SKIP_STAGES = {
+  sua_laitiep: [0, 1, 2],  // CBM, SÁP, SƯỜN
+  thusuon:     [3, 4],     // ĐẮP, MÀI
+};
+
+function getSkipStages(lk, gc) {
+  const lkLower = (lk || '').toLowerCase();
+  const gcLower = (gc || '').toLowerCase();
+  if (lkLower.includes('sửa') || lkLower.includes('làm tiếp')) {
+    return SKIP_STAGES.sua_laitiep;
+  }
+  if (gcLower.includes('ts') || gcLower.includes('thử sườn')) {
+    return SKIP_STAGES.thusuon;
+  }
+  return [];
+}
+
 // ── CACHE ─────────────────────────────────────────────
 let cache     = null;
 let cacheKey  = '';
@@ -210,15 +230,21 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
     // Ưu tiên JSON scraper (realtime) > Excel stage
     const sm     = jsonStageMap[ma]   || excelStageMap[ma] || { lk: '', tk: '', stages: {} };
 
-    const stages = STAGE_NAMES.map(n => {
+    const gc      = order.gc || '';
+    const skip    = getSkipStages(sm.lk, gc);
+    const stages  = STAGE_NAMES.map((n, i) => {
       const sd = sm.stages[n] || { ktv: '', xn: false, tg: '' };
-      return { n, k: sd.ktv, x: sd.xn, t: sd.tg };
+      return { n, k: sd.ktv, x: sd.xn, t: sd.tg, sk: skip.includes(i) };
     });
 
-    const done   = stages.filter(s => s.x).length;
+    const activeStages = stages.filter(s => !s.sk);
+    const done   = activeStages.filter(s => s.x).length;
+    const totalStages = activeStages.length;
+    const pct   = totalStages > 0 ? Math.round(done / totalStages * 100) : 0;
+
     let curKtv   = '';
-    for (let i = done - 1; i >= 0; i--) {
-      if (stages[i].k) { curKtv = stages[i].k; break; }
+    for (let i = stages.indexOf(activeStages[activeStages.length - 1]); i >= 0; i--) {
+      if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
     }
     let lastTg = '';
     stages.forEach(s => { if (s.t) lastTg = s.t; });
@@ -237,7 +263,8 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
       tk:       sm.tk         || 'lanhn',
       stages,
       done,
-      pct:      Math.round(done / 5 * 100),
+      total:    totalStages,
+      pct:      totalStages > 0 ? Math.round(done / totalStages * 100) : 0,
       curKtv,
       lastTg,
     });

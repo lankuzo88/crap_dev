@@ -36,6 +36,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .pip-done{background:var(--green);}
 .pip-cur{background:var(--amber);animation:blink 1.2s ease infinite;}
 .pip-pend{background:var(--border);}
+.pip-skip{background:var(--border) !important;opacity:.22 !important;border:1px dashed var(--text3) !important;animation:none !important;}
 
 .ph-chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;letter-spacing:.3px;}
 .ph-zirc{color:#5bbfff;border-color:rgba(91,191,255,.35);background:rgba(91,191,255,.08);}
@@ -48,7 +49,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .lk-sua{color:var(--red);border-color:rgba(255,71,87,.3);background:var(--red-s);}
 .lk-lai{color:var(--purple);border-color:rgba(165,94,234,.3);background:var(--purple-s);}
 .lk-bh{color:var(--orange);border-color:rgba(255,107,53,.3);background:var(--orange-s);}
+.lk-ts{color:var(--amber);border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.08);}
+.lk-nb{color:var(--purple);border-color:rgba(165,94,234,.35);background:rgba(165,94,234,.08);}
 .lk-tiep{color:var(--green);border-color:rgba(46,213,115,.3);background:var(--green-s);}
+.lk-time{color:var(--blue);border-color:rgba(61,159,255,.35);background:rgba(61,159,255,.08);}
 
 .pct-b{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;}
 .pct-0{color:var(--text3);background:var(--surface2);}
@@ -91,6 +95,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .st-done{background:rgba(46,213,115,.1);color:var(--green);border:1px solid rgba(46,213,115,.3);}
 .st-cur{background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.4);}
 .st-pend{background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
+.st-skip{background:rgba(74,82,112,.08);color:var(--text3);border:1px dashed rgba(74,82,112,.4);}
+.st-col-skip{opacity:.45;}
+.st-name-skip{color:var(--text3);}
+.st-ktv-skip,.st-time-skip{color:rgba(74,82,112,.5);}
 .st-name{font-size:8px;color:var(--text3);font-weight:700;margin-bottom:2px;}
 @media(min-width:769px){.st-name{font-size:10px;}}
 .st-ktv{font-size:10px;color:var(--text2);}
@@ -560,6 +568,20 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 /* ═══════ CONSTANTS ═══════ */
 const STAGE_NAMES = ['CBM','SÁP/Cadcam','SƯỜN','ĐẮP','MÀI'];
 const SCOL = {'CBM':'#2ed573','SÁP/Cadcam':'#3d9fff','SƯỜN':'#a55eea','ĐẮP':'#ff6b81','MÀI':'#f5a623'};
+// Công đoạn bị bỏ qua theo loại đơn (0-indexed)
+// "Sửa" / "Làm tiếp" → bỏ CBM(0),SÁP(1),SƯỜN(2) → chỉ còn ĐẮP(3),MÀI(4) = 2 stage
+// "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3),MÀI(4) → chỉ còn CBM(0),SÁP(1),SƯỜN(2) = 3 stage
+const SKIP_STAGES = {
+  sua_laitiep: [0, 1, 2],
+  thusuon:     [3, 4],
+};
+function getSkipStages(lk, gc) {
+  const lkLower = (lk || '').toLowerCase();
+  const gcLower = (gc || '').toLowerCase();
+  if (lkLower.includes('sửa') || lkLower.includes('làm tiếp')) return SKIP_STAGES.sua_laitiep;
+  if (gcLower.includes('ts') || gcLower.includes('thử sườn')) return SKIP_STAGES.thusuon;
+  return [];
+}
 const IS_MOBILE = window.innerWidth <= 768;
 const DATA_URL = 'data.json';          // ← scraper ghi vào đây
 const REFRESH_MS = 5 * 60 * 1000;     // auto-refresh mỗi 5 phút
@@ -586,10 +608,21 @@ function parseJson(raw) {
 
 function parseExcelFormat(orders) {
   return orders.map(o => {
-    const stages = o.stages || STAGE_NAMES.map(n => ({n, k:'', x:false, t:''}));
-    const done   = stages.filter(s => s.x).length;
+    const gc    = o.gc || '';
+    const lk    = o.lk || '';
+    const skip  = getSkipStages(lk, gc);
+    // Normalize stages: add sk field, keep server-side sk if present
+    const stages = (o.stages || STAGE_NAMES.map(n => ({n, k:'', x:false, t:''}))).map((s, i) => ({
+      ...s,
+      sk: skip.length ? skip.includes(i) : !!(s.sk),
+    }));
+    const active = stages.filter(s => !s.sk);
+    const done   = active.filter(s => s.x).length;
+    const total  = active.length;
     let curKtv = '';
-    for (let i = done-1; i >= 0; i--) { if (stages[i].k) { curKtv = stages[i].k; break; } }
+    for (let i = stages.length - 1; i >= 0; i--) {
+      if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
+    }
     let lastTg = ''; stages.forEach(s => { if (s.t) lastTg = s.t; });
     const ph = (o.ph || '').replace(/\|/g,' | ');
     const rang = ph.match(/R[aă]ng?:\s*([^,\)]+)/)?.[1]?.trim() || '';
@@ -599,20 +632,20 @@ function parseExcelFormat(orders) {
       ph:       ph.split('|')[0].trim(),
       sl:       o.sl || 0,
       rang:     rang,
-      lk:       o.lk || '',
+      lk:       lk,
       stages,
-      pct:      o.pct || Math.round(done/5*100),
+      pct:      o.pct !== undefined ? o.pct : (total > 0 ? Math.round(done/total*100) : 0),
       done,
+      total,
       curKtv,
       lastTg,
       allPh:    ph,
-      // THÔNG TIN ĐẦY ĐỦ TỪ EXCEL
       bn:       o.bn || '',
       kh:       o.kh || '',
       nhan:     o.nhan || '',
       yc_ht:    o.yc_ht || '',
       yc_giao:  o.yc_giao || '',
-      gc:       o.gc || '',
+      gc,
     };
   });
 }
@@ -630,13 +663,20 @@ function parseScraperFormat(raw) {
     const parsed = unique.map(parseRawRow);
     const main = parsed[0] || {};
     const totalSL = parsed.reduce((s,p)=>s+(p.sl||0),0);
-    const stageList = STAGE_NAMES.map(n=>({n,k:o.stages[n]?.ktv||'',x:o.stages[n]?.xn||false,t:o.stages[n]?.tg||''}));
-    const done = stageList.filter(s=>s.x).length;
-    let curKtv=''; for(let i=done-1;i>=0;i--){if(stageList[i].k){curKtv=stageList[i].k;break;}}
+    const lk  = main.lk || '';
+    const gc  = '';
+    const skip = getSkipStages(lk, gc);
+    const stageList = STAGE_NAMES.map((n,i)=>({
+      n, k:o.stages[n]?.ktv||'', x:o.stages[n]?.xn||false, t:o.stages[n]?.tg||'', sk:skip.includes(i)
+    }));
+    const active = stageList.filter(s=>!s.sk);
+    const done = active.filter(s=>s.x).length;
+    const total = active.length;
+    let curKtv=''; for(let i=stageList.length-1;i>=0;i--){if(!stageList[i].sk&&stageList[i].k){curKtv=stageList[i].k;break;}}
     let lastTg=''; stageList.forEach(s=>{if(s.t)lastTg=s.t;});
     return { id:o.id, tai_khoan:o.tai_khoan, ph:main.ph||'', sl:totalSL||main.sl||0,
-      rang:parsed.map(p=>p.rang).filter(Boolean).join(' | '), lk:main.lk||'',
-      stages:stageList, pct:Math.round(done/5*100), done, curKtv, lastTg,
+      rang:parsed.map(p=>p.rang).filter(Boolean).join(' | '), lk,
+      stages:stageList, pct:total>0?Math.round(done/total*100):0, done, total, curKtv, lastTg,
       allPh:parsed.map(p=>`${p.ph} SL:${p.sl} R:${p.rang}`).join('\n'),
       bn:'', kh:'', nhan:'', yc_ht:'', yc_giao:'', gc:'' };
   });
@@ -673,6 +713,49 @@ function lkAccCls(lk) {
   if (l.includes('lại')) return 'acc-lai';
   if (l.includes('bảo hành')) return 'acc-bh';
   return 'acc-tiep';
+}
+function gcTime(gc) {
+  // Chỉ 2 pattern:
+  // 1. "XH NGÀY DD/MM" → "XH DD/MM"
+  // 2. "XH" đứng ĐẦU chuỗi, ngay sau là space hoặc end-of-string → "XH"
+  if (!gc) return '';
+  const t = gc.replace(/\r\n/g, ' ');
+
+  // Pattern 1: XH NGÀY DD/MM (XH ngay trước NGÀY)
+  const m1 = t.match(/^(\d{1,2})H\s+NGÀY\s+(\d{1,2}[\/\-]\d{2})/i);
+  if (m1) return `${m1[1]}H ${m1[2]}`;
+
+  // Pattern 2: XH đứng đầu chuỗi + ngay sau phải là space hoặc cuối chuỗi
+  // "15H đứng riêng" → "15H"  (space + chữ thường)
+  // "15H"             → "15H"  (cuối chuỗi)
+  // "15H 28/03"       → ""     (space + số)
+  // "hẹn 9H"          → ""     (không đứng đầu)
+  const m2 = t.match(/^(\d{1,2})H(?:\s|$)/i);
+  if (m2) return `${m2[1]}H`;
+  // Nếu pattern đầu chuỗi không match → tìm XH đầu tiên trong chuỗi, nhưng chỉ khi đứng cách space ra
+  // "15H xong sứ thô bóng đi 15H" → lấy 15H đầu tiên vì "đi 15H" có chữ xen trước H
+  const m3 = t.match(/(\d{1,2})H/i);
+  if (m3) return `${m3[1]}H`;
+  return '';
+
+  return '';
+}
+function gcTimeSortVal(o) {
+  const tm = gcTime(o.gc);
+  if (tm) {
+    const m = tm.match(/(\d{1,2})H\s+(\d{1,2})[\/\-](\d{2})/);
+    if (m) {
+      // "12H 28/03" → 2026-03-28T12:00
+      const yr = String(new Date().getFullYear());
+      return `${yr}-${m[2].padStart(2,'0')}-${m[3]}T${m[1].padStart(2,'0')}:00`;
+    }
+    // "15H" → hôm nay lúc 15:00
+    const hr = tm.replace('H','').padStart(2,'0');
+    const d  = new Date();
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${ds}T${hr}:00`;
+  }
+  return o.yc_giao || 'zzz';
 }
 function phType(ph) {
   const p = (ph || '').toLowerCase();
@@ -758,12 +841,12 @@ function filterOrders(f, q) {
     if (f === 'ti'       && phT !== 'ti')   return false;
     if (f === 'lanhn'    && o.tai_khoan !== 'lanhn') return false;
     if (f === 'kythuat'  && o.tai_khoan !== 'kythuat') return false;
-    if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk).toLowerCase().includes(q)) return false;
+    if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
     return true;
   }).sort((a, b) => {
     const ua = isUrgent(a), ub = isUrgent(b);
     if (ua && !ub) return -1; if (ub && !ua) return 1;
-    return (a.yc_giao||'').localeCompare(b.yc_giao||'');
+    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
 }
 function filterPipeline(ps) {
@@ -828,14 +911,14 @@ function openModal(id) {
     </div>`;
   const stCols = o.stages.map((s, i) => {
     const dc = o.stages.filter(x => x.x).length;
-    const cls = s.x ? 'st-done' : i === dc ? 'st-cur' : 'st-pend';
-    const ico = s.x ? '✓' : i === dc ? '▶' : '·';
-    const col = s.x ? SCOL[s.n] : i === dc ? SCOL[s.n] : 'var(--text3)';
-    return `<div class="st-col">
-      <div class="st-bar ${cls}" style="${(s.x||i===dc)?'color:'+col+';border-color:'+col+(s.x?'50':'80'):''}">${ico}</div>
-      <div class="st-name">${s.n.replace('SÁP/Cadcam','SÁP')}</div>
-      <div class="st-ktv">${s.k || '—'}</div>
-      <div class="st-time">${s.t ? fmtDate(s.t)+' '+fmtTg(s.t) : ''}</div>
+    const cls = s.sk ? 'st-skip' : s.x ? 'st-done' : i === dc ? 'st-cur' : 'st-pend';
+    const ico = s.sk ? '✕' : s.x ? '✓' : i === dc ? '▶' : '·';
+    const col = s.sk ? 'var(--text3)' : s.x ? SCOL[s.n] : i === dc ? SCOL[s.n] : 'var(--text3)';
+    return `<div class="st-col ${s.sk ? 'st-col-skip' : ''}">
+      <div class="st-bar ${cls}" style="${(!s.sk&&(s.x||i===dc))?'color:'+col+';border-color:'+col+(s.x?'50':'80'):''}">${ico}</div>
+      <div class="st-name ${s.sk ? 'st-name-skip' : ''}">${s.n.replace('SÁP/Cadcam','SÁP')}${s.sk ? '<br><span style="font-size:9px;font-weight:400">KHÔNG LÀM</span>' : ''}</div>
+      <div class="st-ktv ${s.sk ? 'st-ktv-skip' : ''}">${s.sk ? '—' : (s.k || '—')}</div>
+      <div class="st-time ${s.sk ? 'st-time-skip' : ''}">${s.sk ? '' : (s.t ? fmtDate(s.t)+' '+fmtTg(s.t) : '')}</div>
     </div>`;
   }).join('');
   const allPhHtml = o.allPh.split('\n').filter(Boolean).map(l => `<div style="padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px;color:var(--text2)">${l}</div>`).join('');
@@ -853,7 +936,7 @@ function openModal(id) {
   document.getElementById('MB').innerHTML = `
     ${excelGrid}
     <div class="info-grid">
-      <div class="info-box"><div class="info-label">TIẾN ĐỘ</div><div class="info-val ${o.pct===100?'green':o.pct>0?'amber':''}">${o.done}/5 · ${o.pct}%</div></div>
+      <div class="info-box"><div class="info-label">TIẾN ĐỘ</div><div class="info-val ${o.pct===100?'green':o.pct>0?'amber':''}">${o.done}/${o.total||5} · ${o.pct}%</div></div>
       <div class="info-box"><div class="info-label">KTV HIỆN TẠI</div><div class="info-val">${o.curKtv || '—'}</div></div>
       <div class="info-box"><div class="info-label">CẬP NHẬT</div><div class="info-val">${o.lastTg ? fmtDate(o.lastTg)+' '+fmtTg(o.lastTg) : '—'}</div></div>
     </div>
@@ -903,7 +986,7 @@ function mRender() {
   list.sort((a,b)=>{
     const ua=isUrgent(a),ub=isUrgent(b);
     if(ua&&!ub) return -1; if(ub&&!ua) return 1;
-    return (a.yc_giao||'zzzz').localeCompare(b.yc_giao||'zzzz');
+    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
 
   // Build time-groups (nhóm theo giờ giao)
@@ -940,7 +1023,7 @@ function mRender() {
 
     grp.items.forEach(o=>{
       const dc   = o.stages.filter(s=>s.x).length;
-      const pips = o.stages.map((s,i)=>`<div class="m-pip pip ${s.x?'pip-done':i===dc?'pip-cur':'pip-pend'}"></div>`).join('');
+      const pips = o.stages.map((s,i)=>`<div class="m-pip pip ${s.sk?'pip-skip':s.x?'pip-done':i===dc?'pip-cur':'pip-pend'}" ${s.sk?'title="— '+s.n+' KHÔNG LÀM —"':''}></div>`).join('');
       const pCol = progColor(o.pct);
       const htTxt = o.yc_ht ? fmtTg(o.yc_ht) : '—';
       const htColor = dt==='today'&&parseInt(htTxt)<12 ? 'var(--red)' : dt==='today'?'var(--amber)':dt==='tomorrow'?'var(--blue)':'var(--text3)';
@@ -949,6 +1032,11 @@ function mRender() {
       let tags = `<span class="ph-chip ${phCls(o.ph)}" style="font-size:8px">${phShort(o.ph)}</span>`;
       if (isUrgent(o)) tags += ` <span class="ph-chip" style="font-size:8px;color:var(--red);border-color:rgba(255,71,87,.35);background:var(--red-s)">GẤP</span>`;
       else if (o.lk) tags += ` <span class="ph-chip ${lkCls(o.lk)}" style="font-size:8px">${o.lk}</span>`;
+      const gcLow = (o.gc||'').toLowerCase();
+      if (gcLow.includes('ts') || gcLow.includes('thử sườn')) tags += ` <span class="ph-chip lk-ts" style="font-size:8px">Thử sườn</span>`;
+      if ((o.lk||'').toLowerCase().includes('làm tiếp')) tags += ` <span class="ph-chip lk-nb" style="font-size:8px">Nướng bóng</span>`;
+      const gcTm = gcTime(o.gc);
+      if (gcTm) tags += ` <span class="ph-chip lk-time" style="font-size:8px">⏰ ${gcTm}</span>`;
 
       html += `<div class="row-item" onclick="openModal('${o.ma_dh||o.id}')">
         <div class="row-accent ${lkAccCls(o.lk)}"></div>
@@ -1068,11 +1156,11 @@ function mSw(name, el) {
 function dRender() {
   const q = (document.getElementById('d-q')?.value || '').toLowerCase();
   const list = filterOrders(dCF, q);
-  // Sort: urgent first, then by yc_giao
+  // Sort: urgent first, then by gc time
   list.sort((a,b)=>{
     const ua=isUrgent(a), ub=isUrgent(b);
     if(ua&&!ub) return -1; if(ub&&!ua) return 1;
-    return (a.yc_giao||'').localeCompare(b.yc_giao||'');
+    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
   let html = '', lastGrp = '';
   list.forEach(o => {
@@ -1087,10 +1175,15 @@ function dRender() {
       </div></td></tr>`;
     }
     const dc = o.stages.filter(s => s.x).length;
-    const pipsH = o.stages.map((s, i) => `<div class="d-pip pip ${s.x?'pip-done':i===dc?'pip-cur':'pip-pend'}" title="${s.n}${s.k?' · '+s.k:''}"></div>`).join('');
+    const pipsH = o.stages.map((s, i) => `<div class="d-pip pip ${s.sk?'pip-skip':s.x?'pip-done':i===dc?'pip-cur':'pip-pend'}" ${s.sk?'title="— '+s.n+' KHÔNG LÀM —"':`title="${s.n}${s.k?' · '+s.k:''}"`}></div>`).join('');
     // Tags: loại lệnh + urgent
     let tags = `<span class="ph-chip ${lkCls(o.lk)}" style="margin-right:3px">${o.lk||'—'}</span>`;
     if(isUrgent(o)) tags += `<span class="ph-chip" style="color:var(--red);border-color:rgba(255,71,87,.3);background:var(--red-s)">GẤP</span>`;
+    const gcLow = (o.gc||'').toLowerCase();
+    if (gcLow.includes('ts') || gcLow.includes('thử sườn')) tags += `<span class="ph-chip lk-ts" style="margin-left:3px">Thử sườn</span>`;
+    if ((o.lk||'').toLowerCase().includes('làm tiếp')) tags += `<span class="ph-chip lk-nb" style="margin-left:3px">Nướng bóng</span>`;
+    const gcTm = gcTime(o.gc);
+    if (gcTm) tags += `<span class="ph-chip lk-time" style="margin-left:3px">⏰ ${gcTm}</span>`;
     const rowCls = isUrgent(o) ? 'data-row urgent-row' : 'data-row';
     html += `<tr class="${rowCls}" onclick="openModal('${o.ma_dh||o.id}')">
       <td class="td-acc"><div class="acc-bar ${lkAccCls(o.lk)}"></div></td>
@@ -1105,7 +1198,7 @@ function dRender() {
       </td>
       <td class="td-sl">${o.sl}</td>
       <td class="td-time${isSoonTime(o.yc_ht)?' amber':''}" style="padding:7px 10px;font-family:var(--mono);font-size:11px;white-space:nowrap">${o.yc_ht?fmtTg(o.yc_ht):'—'}</td>
-      <td class="td-stages"><div class="d-pips">${pipsH}<span class="d-pip-lbl">${dc}/5</span></div></td>
+      <td class="td-stages"><div class="d-pips">${pipsH}<span class="d-pip-lbl">${dc}/${o.total||5}</span></div></td>
       <td class="td-pct"><span class="pct-b ${pctCls(o.pct)}">${o.pct}%</span></td>
       <td class="td-gc" style="padding:7px 8px;font-size:11px;color:var(--text2);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.gc||''}">${o.gc||''}</td>
     </tr>`;
