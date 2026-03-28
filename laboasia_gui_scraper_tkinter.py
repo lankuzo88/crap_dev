@@ -679,10 +679,12 @@ class App:
         self._cfg: Optional[dict] = None  # set during run_job
         self._last_run_file: Optional[str] = None  # path of last successfully scraped file
         self._auto_scheduled = False  # prevent multiple scheduled loops
+        self._server_process: Optional[subprocess.Popen] = None  # node server process
 
         self._build_ui()
         self._load_config()
         self._load_credentials_from_env()
+        self._start_server()
         self.root.after(300, self.process_events)
         self.root.after(800, self._auto_launch)
 
@@ -1159,6 +1161,40 @@ class App:
             self.log(f"[Run Now] Loi load file: {e}")
             return
         self.root.after(300, self.start_run)
+
+    # ── Server lifecycle ────────────────────────────────────────────────────
+
+    def _start_server(self):
+        """Start node server.js in a background process."""
+        server_script = BASE_DIR / "server.js"
+        if not server_script.exists():
+            self.log("[Server] Khong tim thay server.js — bo qua.")
+            return
+        try:
+            self._server_process = subprocess.Popen(
+                ["node", str(server_script)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(BASE_DIR),
+            )
+            self.log("[Server] Da khoi dong node server.js")
+        except Exception as e:
+            self.log(f"[Server] Loi khoi dong: {e}")
+
+    def _stop_server(self):
+        """Stop the node server process."""
+        if self._server_process:
+            try:
+                self._server_process.terminate()
+                self._server_process.wait(timeout=5)
+                self.log("[Server] Da tat node server.js")
+            except Exception:
+                try:
+                    self._server_process.kill()
+                    self.log("[Server] Da kill node server.js")
+                except Exception:
+                    self.log("[Server] Khong the tat process")
+            self._server_process = None
 
     # ── Logging ─────────────────────────────────────────────────────────────
 
@@ -1737,6 +1773,18 @@ def main():
                 )
             except Exception as e:
                 messagebox.showerror("Loi luu file", str(e))
+
+        # Stop node server — use kill() on Windows for reliability
+        if app._server_process:
+            try:
+                app._server_process.terminate()
+                app._server_process.wait(timeout=3)
+            except Exception:
+                try:
+                    app._server_process.kill()
+                except Exception:
+                    pass
+            app._server_process = None
 
         root.destroy()
 
