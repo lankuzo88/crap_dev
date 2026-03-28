@@ -1,0 +1,80 @@
+# ============ OS ============
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+*.swo
+*~
+._*
+
+# ============ Node.js ============
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+.venv/
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ============ IDE / Editor ============
+.vscode/
+.idea/
+*.sublime-*
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+*.iml
+
+# ============ Logs ============
+*.log
+logs/
+
+# ============ Data (local only) ============
+Data/
+Data_thang/
+Excel/
+File_sach/
+
+# ============ Temp files ============
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# ============ Compiled / Build ============
+*.pyc
+*.pyo
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.tgz
+
+# ============ Misc ============
+*.db
+*.sqlite
+*.sqlite3
+.env.local
+.env.*.local
