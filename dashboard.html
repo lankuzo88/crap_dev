@@ -215,6 +215,24 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .m-ktv-bw{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
   .m-ktv-bf{height:100%;border-radius:2px;}
   .m-ktv-n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--amber);width:30px;text-align:right;flex-shrink:0;}
+  /* mobile sub-tabs */
+  .m-sub-tabs{display:flex;border-bottom:1px solid var(--border2);padding:0 10px;margin-top:-1px;}
+  .m-sub-tab{flex:1;padding:8px 6px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;text-align:center;transition:color .15s;}
+  .m-sub-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+  /* mobile IN/OUT */
+  .m-tng-2col{display:flex;gap:8px;padding:10px 10px 0;}
+  .m-tng-col{flex:1;min-width:0;}
+  .m-tng-col-hdr{font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;margin-bottom:5px;text-align:center;letter-spacing:.5px;}
+  .m-tng-col-hdr.in{background:rgba(245,166,35,.15);color:var(--amber);}
+  .m-tng-col-hdr.out{background:rgba(46,213,115,.15);color:var(--green);}
+  .m-tng-card{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:7px 8px;margin-bottom:5px;cursor:pointer;}
+  .m-tng-card:hover{border-color:var(--amber);}
+  .m-tng-id{font-family:var(--mono);font-size:9px;color:var(--text3);}
+  .m-tng-pct{font-family:var(--mono);font-size:9px;color:var(--text2);float:right;}
+  .m-tng-bn{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-tng-kh{font-family:'Lexend',sans-serif;font-size:9px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .m-tng-ktv{font-size:8px;color:var(--text3);margin-top:1px;}
+  .m-tng-empty{font-size:11px;color:var(--text3);text-align:center;padding:16px 0;}
   .m-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:52px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;}
   .m-nt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);transition:all .15s;position:relative;}
   .m-nt.active{color:var(--amber);}
@@ -457,9 +475,17 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div id="m-PB" style="padding-top:2px"></div>
     </div>
     <div class="tab-pane" id="m-pane-summary">
-      <div class="m-ss"><div class="m-ss-t">TIẾN ĐỘ CÔNG ĐOẠN</div><div id="m-SB"></div></div>
-      <div class="m-ss"><div class="m-ss-t">KỸ THUẬT VIÊN</div><div id="m-KB"></div></div>
-      <div class="m-ss"><div class="m-ss-t">LOẠI LỆNH</div><div id="m-LK"></div></div>
+      <div class="m-sub-tabs">
+        <div class="m-sub-tab active" id="m-tng-tab-main" onclick="mTngSetTab('main',this)">📊 Tổng Hợp</div>
+        <div class="m-sub-tab" id="m-tng-tab-suon" onclick="mTngSetTab('suon',this)">SƯỜN</div>
+        <div class="m-sub-tab" id="m-tng-tab-su" onclick="mTngSetTab('su',this)">SỨ</div>
+      </div>
+      <div id="m-tng-content"></div>
+      <div id="m-tng-main-wrap">
+        <div class="m-ss"><div class="m-ss-t">TIẾN ĐỘ CÔNG ĐOẠN</div><div id="m-SB"></div></div>
+        <div class="m-ss"><div class="m-ss-t">KỸ THUẬT VIÊN</div><div id="m-KB"></div></div>
+        <div class="m-ss"><div class="m-ss-t">LOẠI LỆNH</div><div id="m-LK"></div></div>
+      </div>
     </div>
   </div>
   <div class="m-nav">
@@ -1217,6 +1243,45 @@ function mRenderPipeline() {
   document.getElementById('m-PB').innerHTML = rows || '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px">Không có đơn</div>';
 }
 function mSelPipe(n) { mPS = mPS===n?'all':n; mRenderPipeline(); }
+let mTngTab = 'main';
+function renderMobileTongHopSub(tab) {
+  const orders = tab === 'suon' ? getSuonOrders() : getSuOrders();
+  const colIn  = orders.filter(o => tab === 'suon' ? o.suon_in : o.su_in);
+  const colOut = orders.filter(o => tab === 'suon' ? o.suon_out : o.su_out);
+  const card = o => `
+    <div class="m-tng-card" onclick="openModal('${o.ma_dh||o.id}')">
+      <div><span class="m-tng-id">${o.ma_dh||o.id}</span><span class="m-tng-pct">${o.pct}%</span></div>
+      <div class="m-tng-bn">${o.bn||'—'}</div>
+      <div class="m-tng-kh" style="color:${nkColor(o.kh)}">${o.kh||'—'}</div>
+      <div class="m-tng-ktv">${o.lastKtv}${o.lastTime?' · '+o.lastTime:''}</div>
+    </div>`;
+  const col = arr => arr.length ? arr.map(card).join('') : '<div class="m-tng-empty">—</div>';
+  return `
+    <div class="m-tng-2col">
+      <div class="m-tng-col">
+        <div class="m-tng-col-hdr in">IN <span>${colIn.length}</span></div>
+        ${col(colIn)}
+      </div>
+      <div class="m-tng-col">
+        <div class="m-tng-col-hdr out">OUT <span>${colOut.length}</span></div>
+        ${col(colOut)}
+      </div>
+    </div>`;
+}
+function mTngSetTab(tab, el) {
+  mTngTab = tab;
+  document.querySelectorAll('.m-sub-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const wrap = document.getElementById('m-tng-main-wrap');
+  if (tab === 'main') {
+    if (wrap) wrap.style.display = '';
+    document.getElementById('m-tng-content').innerHTML = '';
+    mRenderSummary();
+  } else {
+    if (wrap) wrap.style.display = 'none';
+    document.getElementById('m-tng-content').innerHTML = renderMobileTongHopSub(tab);
+  }
+}
 function mRenderSummary() {
   const st = calcStats();
   let sH = '';
@@ -1258,7 +1323,7 @@ function mSw(name, el) {
   el.classList.add('active');
   document.getElementById('m-SA').scrollTop = 0;
   if (name==='pipeline') mRenderPipeline();
-  if (name==='summary')  mRenderSummary();
+  if (name==='summary')  mTngSetTab('main', document.getElementById('m-tng-tab-main'));
 }
 
 /* ═══════ DESKTOP ═══════ */
