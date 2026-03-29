@@ -50,11 +50,7 @@ htmlcov/
 *.log
 logs/
 
-# ============ Data (local only) ============
-Data/
-Data_thang/
-Excel/
-File_sach/
+
 
 # ============ Temp files ============
 *.tmp
