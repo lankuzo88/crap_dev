@@ -172,7 +172,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .row-info{flex:1;min-width:0;padding:5px 6px 5px 0;}
   .row-top{display:flex;align-items:center;gap:4px;margin-bottom:1px;}
   .row-id{font-family:var(--mono);font-size:9px;color:var(--text3);}
-  .row-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  .row-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
   .row-sub{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
   .row-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:0 8px 0 4px;gap:2px;flex-shrink:0;}
   .row-sl{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);}
@@ -1054,8 +1054,8 @@ function mRender() {
             <span class="row-id">${o.ma_dh||o.id}</span>
             ${tags}
           </div>
-          <div class="row-name">${o.bn||o.ph||'—'}</div>
-          <div class="row-sub" style="font-size:10px;color:${nkColor(o.kh)};font-family:'Lexend',sans-serif">${o.kh||'—'}</div>
+          <div class="row-name" style="font-size:13px;font-weight:700;color:${nkColor(o.kh)};font-family:'Lexend',sans-serif">${o.kh||'—'}</div>
+          <div class="row-sub" style="font-size:10px">${o.bn||'—'}</div>
           <div style="height:3px;background:var(--border2);border-radius:2px;margin-top:5px;overflow:hidden">
             <div style="height:100%;width:${o.pct}%;background:${pCol};border-radius:2px;transition:width .3s"></div>
           </div>
