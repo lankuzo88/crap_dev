@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ASIA LAB · Live Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@700;800;900&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -498,10 +498,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
           <div class="d-chip" data-f="sua" onclick="dSetF(this,'sua')">🔴 Sửa</div>
           <div class="d-chip" data-f="lai" onclick="dSetF(this,'lai')">🟣 Làm lại</div>
           <div class="d-chip" data-f="bh" onclick="dSetF(this,'bh')">🟠 Bảo hành</div>
-          <div class="d-chip" data-f="zirc" onclick="dSetF(this,'zirc')">Zirconia</div>
-          <div class="d-chip" data-f="ti" onclick="dSetF(this,'ti')">Titanium</div>
-          <div class="d-chip" data-f="lanhn" onclick="dSetF(this,'lanhn')">Nhóm Lân</div>
-          <div class="d-chip" data-f="kythuat" onclick="dSetF(this,'kythuat')">Nhóm KT</div>
         </div>
         <div class="d-sbox">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -568,6 +564,22 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 /* ═══════ CONSTANTS ═══════ */
 const STAGE_NAMES = ['CBM','SÁP/Cadcam','SƯỜN','ĐẮP','MÀI'];
 const SCOL = {'CBM':'#2ed573','SÁP/Cadcam':'#3d9fff','SƯỜN':'#a55eea','ĐẮP':'#ff6b81','MÀI':'#f5a623'};
+
+// Bảng màu cho nha khoa — mỗi nha khoa 1 màu riêng, tự động gán cho nha khoa mới
+const NK_PALETTE = [
+  '#5bbfff','#ff6b81','#a55eea','#2ed573','#f5a623',
+  '#ff4757','#1e90ff','#7bed9f','#ffa502','#70a1ff',
+  '#ff7f50','#eccc68','#ff6348','#00d2d3','#a29bfe',
+  '#fd79a8','#00cec9','#e17055','#74b9ff','#55efc4',
+];
+const NK_CACHE = {};
+function nkColor(kh) {
+  if (!kh) return 'var(--text2)';
+  if (NK_CACHE[kh]) return NK_CACHE[kh];
+  const idx = Object.keys(NK_CACHE).length % NK_PALETTE.length;
+  NK_CACHE[kh] = NK_PALETTE[idx];
+  return NK_CACHE[kh];
+}
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
 // "Sửa" / "Làm tiếp" → bỏ CBM(0),SÁP(1),SƯỜN(2) → chỉ còn ĐẮP(3),MÀI(4) = 2 stage
 // "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3),MÀI(4) → chỉ còn CBM(0),SÁP(1),SƯỜN(2) = 3 stage
@@ -837,16 +849,12 @@ function filterOrders(f, q) {
     if (f === 'sua'      && !lkL.includes('sửa')) return false;
     if (f === 'lai'      && !lkL.includes('lại')) return false;
     if (f === 'bh'       && !lkL.includes('bảo hành')) return false;
-    if (f === 'zirc'     && phT !== 'zirc') return false;
-    if (f === 'ti'       && phT !== 'ti')   return false;
-    if (f === 'lanhn'    && o.tai_khoan !== 'lanhn') return false;
-    if (f === 'kythuat'  && o.tai_khoan !== 'kythuat') return false;
     if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
     return true;
   }).sort((a, b) => {
     const ua = isUrgent(a), ub = isUrgent(b);
     if (ua && !ub) return -1; if (ub && !ua) return 1;
-    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
+    return (a.yc_ht||'').localeCompare(b.yc_ht||'') || gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
 }
 function filterPipeline(ps) {
@@ -927,7 +935,7 @@ function openModal(id) {
   const excelGrid = hasExcel ? `
     <div class="info-grid" style="margin-bottom:10px">
       ${o.bn ? `<div class="info-box"><div class="info-label">BỆNH NHÂN</div><div class="info-val">${o.bn}</div></div>` : ''}
-      ${o.kh ? `<div class="info-box"><div class="info-label">PHÒNG KHÁM</div><div class="info-val">${o.kh}</div></div>` : ''}
+      ${o.kh ? `<div class="info-box"><div class="info-label">PHÒNG KHÁM</div><div class="info-val" style="font-family:'Lexend',sans-serif;color:${nkColor(o.kh)}">${o.kh}</div></div>` : ''}
       ${o.nhan ? `<div class="info-box"><div class="info-label">NHẬN LÚC</div><div class="info-val">${fmtDate(o.nhan)} ${fmtTg(o.nhan)}</div></div>` : ''}
       ${o.yc_ht ? `<div class="info-box"><div class="info-label">Y/C HOÀN THÀNH</div><div class="info-val amber">${fmtDate(o.yc_ht)} ${fmtTg(o.yc_ht)}</div></div>` : ''}
       ${o.yc_giao ? `<div class="info-box"><div class="info-label">Y/C GIAO</div><div class="info-val amber">${fmtDate(o.yc_giao)} ${fmtTg(o.yc_giao)}</div></div>` : ''}
@@ -961,7 +969,7 @@ setInterval(tick, 1000); tick();
 
 /* ═══════ MOBILE ═══════ */
 function getDays() {
-  const dates = ORDERS.map(o=>o.yc_giao||'').filter(Boolean).sort();
+  const dates = ORDERS.map(o=>o.yc_ht||'').filter(Boolean).sort();
   const uniq = [...new Set(dates.map(d=>d.substring(0,10)))].sort();
   return { d0: uniq[0]||'', d1: uniq[1]||'' };
 }
@@ -986,15 +994,15 @@ function mRender() {
   list.sort((a,b)=>{
     const ua=isUrgent(a),ub=isUrgent(b);
     if(ua&&!ub) return -1; if(ub&&!ua) return 1;
-    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
+    return (a.yc_ht||'').localeCompare(b.yc_ht||'') || gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
 
   // Build time-groups (nhóm theo giờ giao)
   const groups = [];
   list.forEach(o=>{
-    const key = o.yc_giao ? o.yc_giao.substring(0,16) : '';
+    const key = o.yc_ht ? o.yc_ht.substring(0,16) : '';
     if (!groups.length || groups[groups.length-1].key !== key)
-      groups.push({ key, giao:o.yc_giao, items:[] });
+      groups.push({ key, giao:o.yc_ht, items:[] });
     groups[groups.length-1].items.push(o);
   });
 
@@ -1012,7 +1020,7 @@ function mRender() {
     let hdrBg    = dt==='today' ? 'var(--amber-s)' : dt==='tomorrow' ? 'var(--blue-s)' : 'rgba(139,149,176,.07)';
     if (urg) { hdrColor='var(--red)'; hdrBg='var(--red-s)'; }
     const dayLbl = dt==='today' ? '🔴 HÔM NAY' : dt==='tomorrow' ? '🔵 NGÀY MAI' : fmtDate(grp.giao);
-    const giaoTxt = grp.giao ? `${dayLbl} · ${fmtTg(grp.giao)}` : 'Chưa có lịch';
+    const giaoTxt = grp.giao ? `${dayLbl} · ${fmtTg(grp.giao)}` : 'Chưa có HT';
     const doneColor = done===tot ? 'var(--green)' : done>0 ? 'var(--amber)' : 'var(--text3)';
 
     html += `<div style="display:flex;align-items:center;gap:7px;padding:8px 10px 3px">
@@ -1047,7 +1055,7 @@ function mRender() {
             ${tags}
           </div>
           <div class="row-name">${o.bn||o.ph||'—'}</div>
-          <div class="row-sub" style="font-size:10px;color:var(--text2)">${o.kh||'—'}</div>
+          <div class="row-sub" style="font-size:10px;color:${nkColor(o.kh)};font-family:'Lexend',sans-serif">${o.kh||'—'}</div>
           <div style="height:3px;background:var(--border2);border-radius:2px;margin-top:5px;overflow:hidden">
             <div style="height:100%;width:${o.pct}%;background:${pCol};border-radius:2px;transition:width .3s"></div>
           </div>
@@ -1160,17 +1168,17 @@ function dRender() {
   list.sort((a,b)=>{
     const ua=isUrgent(a), ub=isUrgent(b);
     if(ua&&!ub) return -1; if(ub&&!ua) return 1;
-    return gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
+    return (a.yc_ht||'').localeCompare(b.yc_ht||'') || gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
   });
   let html = '', lastGrp = '';
   list.forEach(o => {
-    // Group by yc_giao date+time
-    const grpKey = o.yc_giao ? fmtDate(o.yc_giao)+' '+fmtTg(o.yc_giao) : '';
+    // Group by yc_ht date+time
+    const grpKey = o.yc_ht ? fmtDate(o.yc_ht)+' '+fmtTg(o.yc_ht) : '';
     if (grpKey && grpKey !== lastGrp) {
       lastGrp = grpKey;
-      const urgent = isUrgentTime(o.yc_giao);
+      const urgent = isUrgentTime(o.yc_ht);
       html += `<tr class="grp-row"><td colspan="11"><div class="grp-inner">
-        <span class="grp-badge${urgent?' grp-urgent':''}">⏱ GIAO ${fmtDate(o.yc_giao)} — ${fmtTg(o.yc_giao)}</span>
+        <span class="grp-badge${urgent?' grp-urgent':''}">⏱ HOÀN THÀNH ${fmtDate(o.yc_ht)} — ${fmtTg(o.yc_ht)}</span>
         <div class="grp-line"></div>
       </div></td></tr>`;
     }
@@ -1192,7 +1200,7 @@ function dRender() {
       <td class="td-ph" style="min-width:130px">
         <div style="font-size:13px;font-weight:700">${o.bn||'—'}</div>
       </td>
-      <td class="td-kh" style="font-size:11px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px">${o.kh||'—'}</td>
+      <td class="td-kh" style="font-size:13px;font-weight:700;font-family:'Lexend',sans-serif;color:${nkColor(o.kh)};max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px">${o.kh||'—'}</td>
       <td class="td-ph" style="min-width:80px">
         <span class="ph-chip ${phCls(o.ph)}">${phShort(o.ph)}</span>
       </td>
