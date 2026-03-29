@@ -1,0 +1,4022 @@
+[
+  {
+    "ma_dh": "252208037-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 17:14:15",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:45-46, Bảo hành",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "252208037-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 19:20:07",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:45-46, Bảo hành",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "252208037-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 20:05:57",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:45-46, Bảo hành",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "252208037-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:45-46, Bảo hành",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "252208037-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:45-46, Bảo hành",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403036",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 12:39:15",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403036",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 16:08:40",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403036",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 16:44:19",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403036",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trực",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:11:19",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403036",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Gia Thư",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:26:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403034",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 15:10:17",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403034",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 17:14:47",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403034",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 17:59:46",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403034",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trường",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:42:24",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403034",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Phạm Tấn Hữu",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:38:12",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403052",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 18:54:48",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403052",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 21:10:53",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403052",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:27:03",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403052",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Yến Vy",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 11:13:04",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403052",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Phạm Tấn Hữu",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:49:38",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403050",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 18:14:12",
+    "raw_row_text": "Răng sứ Zircornia SL:4 Rang:11,12,21,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403050",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Văn Huyến",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:44:59",
+    "raw_row_text": "Răng sứ Zircornia SL:4 Rang:11,12,21,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403050",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Huyến",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:45:01",
+    "raw_row_text": "Răng sứ Zircornia SL:4 Rang:11,12,21,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403050",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:4 Rang:11,12,21,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403050",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Thế Hỷ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:32:28",
+    "raw_row_text": "Răng sứ Zircornia SL:4 Rang:11,12,21,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403045",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 14:55:55",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:3 Rang:45-47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403045",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:41:13",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:3 Rang:45-47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403045",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:41:14",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:3 Rang:45-47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403045",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trực",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:39:41",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:3 Rang:45-47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403045",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:3 Rang:45-47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503054",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:21:58",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503054",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503054",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503054",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503054",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503001",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:59:50",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503001",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:26:44",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503001",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:23:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503001",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trường",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:32:12",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503001",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:47, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303064-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 19:38:31",
+    "raw_row_text": "Veneer sứ Titanium (Cut Back) SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303064-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 11:18:31",
+    "raw_row_text": "Veneer sứ Titanium (Cut Back) SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303064-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 11:59:40",
+    "raw_row_text": "Veneer sứ Titanium (Cut Back) SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303064-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "H.Trang",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:15:46",
+    "raw_row_text": "Veneer sứ Titanium (Cut Back) SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303064-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Bảo Trân",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:50:58",
+    "raw_row_text": "Veneer sứ Titanium (Cut Back) SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503059",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:48:49",
+    "raw_row_text": "Full Sứ Ziconia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503059",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503059",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503059",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503059",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503008",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 10:59:13",
+    "raw_row_text": "Răng sứ La Va SL:24 Rang:14-24,15-16,25-26,34-35,44-47,31,41,32,33,42,43, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503008",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ La Va SL:24 Rang:14-24,15-16,25-26,34-35,44-47,31,41,32,33,42,43, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503008",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ La Va SL:24 Rang:14-24,15-16,25-26,34-35,44-47,31,41,32,33,42,43, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503008",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ La Va SL:24 Rang:14-24,15-16,25-26,34-35,44-47,31,41,32,33,42,43, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503008",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ La Va SL:24 Rang:14-24,15-16,25-26,34-35,44-47,31,41,32,33,42,43, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503005",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:55:21",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503005",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:26:22",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503005",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:26:33",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503005",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Cẩm Hồng",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:18:37",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503005",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503013",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:27:33",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503013",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:05:02",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503013",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:43:13",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503013",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503013",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503011",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:28:28",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:41-46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503011",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:16",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:41-46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503011",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:41-46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503011",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:41-46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503011",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:41-46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503035",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:17",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:27,34, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503035",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:16",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:27,34, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503035",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:08:20",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:27,34, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503035",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:27,34, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503035",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:27,34, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503033",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:36:12",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503033",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503033",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503033",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503033",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503031",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:00:46",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:13-23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503031",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:43",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:13-23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503031",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:13-23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503031",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:13-23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503031",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:13-23, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103032-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:31:14",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103032-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:42",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103032-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:28:09",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103032-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Cẩm Hồng",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:35:19",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103032-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:44, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262203021-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:31:05",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262203021-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:27",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262203021-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:28:01",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262203021-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262203021-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103026-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:31:37",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103026-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:34",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103026-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:28:25",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103026-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Cẩm Hồng",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:35:26",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262103026-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:23:44",
+    "raw_row_text": "Răng sứ Zircornia SL:6 Rang:13-15,24-25,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:6 Rang:13-15,24-25,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:6 Rang:13-15,24-25,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:6 Rang:13-15,24-25,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:6 Rang:13-15,24-25,22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:23:45",
+    "raw_row_text": "Full Sứ Ziconia SL:3 Rang:16-17,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:3 Rang:16-17,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:3 Rang:16-17,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:3 Rang:16-17,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503024",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Full Sứ Ziconia SL:3 Rang:16-17,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:01:27",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:11, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:05",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:11, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:11, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:11, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:11, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:07",
+    "raw_row_text": "Cánh dán SL:2 Rang:12,21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503022",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Cánh dán SL:2 Rang:12,21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503019",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:12",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:13-14,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503019",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:32:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:13-14,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503019",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:27:54",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:13-14,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503019",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:13-14,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503019",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:13-14,26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:19:11",
+    "raw_row_text": "Răng sứ Titanium SL:9 Rang:11-12,13-15,21-22,23-24, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:9 Rang:11-12,13-15,21-22,23-24, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:9 Rang:11-12,13-15,21-22,23-24, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:9 Rang:11-12,13-15,21-22,23-24, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:9 Rang:11-12,13-15,21-22,23-24, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:16-17, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:16-17, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:16-17, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:16-17, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261503024-2",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:16-17, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503038",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:01:21",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503038",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:10",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503038",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:10:10",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503038",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503038",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503004",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:35:57",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503004",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503004",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503004",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503004",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:43:59",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:31:52",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:17:17",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:46-48, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:46-48, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:46-48, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:46-48, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "250807001-4",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:46-48, Sửa",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503067",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Zir- Diamond (Cut Back) đắp sứ Vita SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503067",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Zir- Diamond (Cut Back) đắp sứ Vita SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503067",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Zir- Diamond (Cut Back) đắp sứ Vita SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503067",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Zir- Diamond (Cut Back) đắp sứ Vita SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503067",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Zir- Diamond (Cut Back) đắp sứ Vita SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303051-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:19:36",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:34-35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303051-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:51",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:34-35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303051-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:07:55",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:34-35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303051-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:34-35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262303051-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:34-35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503055",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:21:52",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503055",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503055",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503055",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503055",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503052",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:19:29",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503052",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503052",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503052",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503052",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261403052-2",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Chrome - Cobalt SL:1 Rang:34, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261403052-2",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Chrome - Cobalt SL:1 Rang:34, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261403052-2",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Chrome - Cobalt SL:1 Rang:34, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261403052-2",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Chrome - Cobalt SL:1 Rang:34, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "261403052-2",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Chrome - Cobalt SL:1 Rang:34, Làm thêm",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503066",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503066",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503066",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503066",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503066",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:24-26, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503051",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:14:15",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:11-25, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503051",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:11-25, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503051",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:11-25, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503051",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:11-25, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503051",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:11-25, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262003065-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:14:21",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:36-37, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262003065-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:36-37, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262003065-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:36-37, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262003065-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:36-37, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262003065-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:36-37, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503064",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503064",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503064",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503064",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503064",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:35, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503015",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:24:00",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503015",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:02:16",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503015",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:43:14",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503015",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262503015",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:12-22, Làm mới",
+    "tai_khoan_cao": "kythuat"
+  },
+  {
+    "ma_dh": "262403037",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 12:38:49",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403037",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 15:43:46",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403037",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Trải",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 16:35:51",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403037",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "H.Trang",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:13:12",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403037",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Phạm Tấn Hữu",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:57:31",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403035",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 12:57:56",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:6 Rang:11-21,12-13,22-23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403035",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:03:49",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:6 Rang:11-21,12-13,22-23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403035",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:03:51",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:6 Rang:11-21,12-13,22-23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403035",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Cẩm Hồng",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 10:45:30",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:6 Rang:11-21,12-13,22-23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403035",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Tuấn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:15:15",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:6 Rang:11-21,12-13,22-23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403032",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 12:38:59",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403032",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 14:34:58",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403032",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Trải",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 14:47:01",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403032",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trường",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:42:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403032",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003064-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 18:16:29",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:25, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003064-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 21:10:47",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:25, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003064-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:27:13",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:25, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003064-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trúc My",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:26:02",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:25, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003064-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Phạm Tấn Hữu",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:49:10",
+    "raw_row_text": "Răng sứ Titanium SL:1 Rang:25, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403046",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 14:55:39",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:4 Rang:44-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403046",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "ĐINH THIỆN TÂM",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:23:25",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:4 Rang:44-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403046",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "ĐINH THIỆN TÂM",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:23:27",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:4 Rang:44-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403046",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trúc My",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:21:09",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:4 Rang:44-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403046",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Gia Thư",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:51:34",
+    "raw_row_text": "Răng sứ Zir- Diamond SL:4 Rang:44-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403044",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "24/03/2026 16:17:07",
+    "raw_row_text": "Răng sứ kim loại thường SL:14 Rang:32-42,33-37,43-44,45-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403044",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 10:05:56",
+    "raw_row_text": "Răng sứ kim loại thường SL:14 Rang:32-42,33-37,43-44,45-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403044",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:06:31",
+    "raw_row_text": "Răng sứ kim loại thường SL:14 Rang:32-42,33-37,43-44,45-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403044",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Yến Vy",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:14:59",
+    "raw_row_text": "Răng sứ kim loại thường SL:14 Rang:32-42,33-37,43-44,45-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403044",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "Thế Hỷ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:12:20",
+    "raw_row_text": "Răng sứ kim loại thường SL:14 Rang:32-42,33-37,43-44,45-47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503043",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:23",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503043",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:09",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503043",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:17:39",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503043",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503043",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403057",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:08:35",
+    "raw_row_text": "Veneer sứ Cercon HT (Cut-Back) SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403057",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Văn Huyến",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:45:08",
+    "raw_row_text": "Veneer sứ Cercon HT (Cut-Back) SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403057",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Cercon HT (Cut-Back) SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403057",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "Trường",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:30:28",
+    "raw_row_text": "Veneer sứ Cercon HT (Cut-Back) SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403057",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Cercon HT (Cut-Back) SL:1 Rang:24, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003069-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:17,27, Sửa",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003069-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:17,27, Sửa",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003069-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:17,27, Sửa",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003069-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:17,27, Sửa",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003069-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:17,27, Sửa",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503009",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:59:45",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503009",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503009",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Trải",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:01:01",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503009",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503009",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503006",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 09:59:59",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:43-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503006",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:43-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503006",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:17:24",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:43-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503006",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:43-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503006",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:43-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503014",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:37",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503014",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:17:56",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503014",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:08:12",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503014",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503014",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:32",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:27:32",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:05",
+    "raw_row_text": "Cùi giả SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503012",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:10:56",
+    "raw_row_text": "Cùi giả SL:1 Rang:23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503036",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:00:53",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503036",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:42:47",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503036",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:28:17",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503036",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503036",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503034",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:29:41",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503034",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503034",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503034",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503034",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503032",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:34:37",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503032",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:23",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503032",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503032",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503032",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503030",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:34:53",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:27,45-48, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503030",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:36:34",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:27,45-48, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503030",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:27,45-48, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503030",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:27,45-48, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503030",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:27,45-48, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503029",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:41:43",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:12-16,23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503029",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Thái Sơn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:02:26",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:12-16,23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503029",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:37:46",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:12-16,23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503029",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:12-16,23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503029",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:6 Rang:12-16,23, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503028",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:32:00",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:33-37, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503028",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:26:59",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:33-37, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503028",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:33-37, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503028",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:33-37, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503028",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:33-37, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503026",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:31:53",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:13-16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503026",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:05:14",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:13-16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503026",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:43:06",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:13-16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503026",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:13-16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503026",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:13-16, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503023",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:29:23",
+    "raw_row_text": "Răng sứ kim loại đắp sứ VITA SL:3 Rang:11-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503023",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:05:22",
+    "raw_row_text": "Răng sứ kim loại đắp sứ VITA SL:3 Rang:11-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503023",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 20:01:01",
+    "raw_row_text": "Răng sứ kim loại đắp sứ VITA SL:3 Rang:11-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503023",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại đắp sứ VITA SL:3 Rang:11-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503023",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại đắp sứ VITA SL:3 Rang:11-22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503020",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 13:44:05",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503020",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:43:17",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503020",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:17:31",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503020",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503020",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:12, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:27:45",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:16,45-46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:00:34",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:16,45-46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 20:00:46",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:16,45-46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:16,45-46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:3 Rang:16,45-46, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:27:57",
+    "raw_row_text": "Full/ mão kim loại sứ SL:3 Rang:17-18,47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:00:40",
+    "raw_row_text": "Full/ mão kim loại sứ SL:3 Rang:17-18,47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503016",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 20:00:45",
+    "raw_row_text": "Full/ mão kim loại sứ SL:3 Rang:17-18,47, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:18:49",
+    "raw_row_text": "Veneer sứ Ziconia (Cut Back) SL:1 Rang:26, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Ziconia (Cut Back) SL:1 Rang:26, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Ziconia (Cut Back) SL:1 Rang:26, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Ziconia (Cut Back) SL:1 Rang:26, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Veneer sứ Ziconia (Cut Back) SL:1 Rang:26, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:18:47",
+    "raw_row_text": "Mặt dán sứ SL:1 Rang:16, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Mặt dán sứ SL:1 Rang:16, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Mặt dán sứ SL:1 Rang:16, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Mặt dán sứ SL:1 Rang:16, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262203017-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Mặt dán sứ SL:1 Rang:16, Làm lại",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:01:15",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:13, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:19",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:13, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:10:47",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:13, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:13, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:13, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 15:01:13",
+    "raw_row_text": "Full/ mão kim loại sứ SL:1 Rang:14, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:18:21",
+    "raw_row_text": "Full/ mão kim loại sứ SL:1 Rang:14, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503037",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Bùi Tấn Đạt",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:10:43",
+    "raw_row_text": "Full/ mão kim loại sứ SL:1 Rang:14, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 08:55:15",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 11:18:41",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Trải",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:04:10",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:11-21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 11:31:47",
+    "raw_row_text": "Cùi giả Opac SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503003",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Văn Trải",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 12:04:08",
+    "raw_row_text": "Cùi giả Opac SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503039",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 14:36:05",
+    "raw_row_text": "Răng sứ Zolid SL:11 Rang:35-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503039",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zolid SL:11 Rang:35-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503039",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zolid SL:11 Rang:35-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503039",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zolid SL:11 Rang:35-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503039",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zolid SL:11 Rang:35-45, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503056",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:21:41",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503056",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "HẠNH",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 21:26:49",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503056",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503056",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503056",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:21, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503053",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:29:08",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:42-43, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503053",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:42-43, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503053",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:42-43, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503053",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:42-43, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503053",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Zircornia SL:2 Rang:42-43, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262303047-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 16:19:22",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262303047-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "Hồng Thắm",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:17:57",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262303047-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "Tấn Sĩ",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 18:08:04",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262303047-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262303047-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503062",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:14-17, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503062",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:14-17, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503062",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:14-17, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503062",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:14-17, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503062",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:4 Rang:14-17, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403029-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403029-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403029-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403029-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262403029-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:1 Rang:22, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "261203052-1",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:21:33",
+    "raw_row_text": "Răng sứ Titanium SL:4 Rang:35-38, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "261203052-1",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:4 Rang:35-38, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "261203052-1",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:4 Rang:35-38, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "261203052-1",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:4 Rang:35-38, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "261203052-1",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:4 Rang:35-38, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503063",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:5 Rang:27-28,34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503063",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:5 Rang:27-28,34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503063",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:5 Rang:27-28,34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503063",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:5 Rang:27-28,34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503063",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ Titanium SL:5 Rang:27-28,34-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "240809038-3",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Võ Văn Vạn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:31:43",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm thêm",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "240809038-3",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm thêm",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "240809038-3",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm thêm",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "240809038-3",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm thêm",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "240809038-3",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:5 Rang:13-22, Làm thêm",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003037",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 17:14:10",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:26-27, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003037",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:26-27, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003037",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:26-27, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003037",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:26-27, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262003037",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:26-27, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503057",
+    "thu_tu": 1,
+    "cong_doan": "CBM",
+    "ten_ktv": "Toàn",
+    "xac_nhan": "Có",
+    "thoi_gian_hoan_thanh": "25/03/2026 19:21:47",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:35-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503057",
+    "thu_tu": 2,
+    "cong_doan": "SÁP/Cadcam",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:35-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503057",
+    "thu_tu": 3,
+    "cong_doan": "SƯỜN",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:35-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503057",
+    "thu_tu": 4,
+    "cong_doan": "ĐẮP",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:35-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  },
+  {
+    "ma_dh": "262503057",
+    "thu_tu": 5,
+    "cong_doan": "MÀI",
+    "ten_ktv": "",
+    "xac_nhan": "Chưa",
+    "thoi_gian_hoan_thanh": "",
+    "raw_row_text": "Răng sứ kim loại thường SL:2 Rang:35-36, Làm mới",
+    "tai_khoan_cao": "lanhn"
+  }
+]

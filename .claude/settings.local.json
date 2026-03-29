@@ -6,7 +6,8 @@
       "Bash(pip install:*)",
       "Bash(python3 labo_cleaner.py \"Excel/2403a3_scraped.xlsx\" \"Excel/test_clean.xlsx\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
