@@ -1623,7 +1623,10 @@ class App:
     def _merge_month_file(self, clean_xlsx: str, month_name: str) -> None:
         """
         Gộp dữ liệu từ clean_xlsx vào file tháng tương ứng trong DATA_THANG_DIR.
-        Quy tắc ghi đè: chỉ ghi đè nếu nhan_luc mới hơn.
+        Quy tắc:
+          - Đơn hàng: luôn ghi đè từ source (source = dữ liệu scrape mới nhất).
+          - Tiến độ công đoạn: ghi đè nếu source có Xác nhận='Có' và target
+            chưa xác nhận, hoặc source có Thời gian HT mới hơn.
         """
         target_path = DATA_THANG_DIR / f"Thang_{month_name}.xlsx"
 
@@ -1633,36 +1636,34 @@ class App:
             self.log(f"[Data Thang] Tao moi: {target_path.name}")
             return
 
+        import datetime as _dt
+
+        def _parse_date(val) -> Optional[_dt.datetime]:
+            if val is None:
+                return None
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S",
+                        "%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    return _dt.datetime.strptime(str(val).strip(), fmt)
+                except ValueError:
+                    continue
+            return None
+
         # Đọc source & target workbook
         src_wb = load_workbook(clean_xlsx)
         tgt_wb = load_workbook(str(target_path))
 
         SHEET_ORDERS = "Đơn hàng"
         SHEET_STAGES = "Tiến độ công đoạn"
-        SHEET_SUM    = "Tổng hợp"
 
         src_orders = src_wb[SHEET_ORDERS] if SHEET_ORDERS in src_wb.sheetnames else None
         tgt_orders = tgt_wb[SHEET_ORDERS] if SHEET_ORDERS in tgt_wb.sheetnames else None
 
-        # Chỉ merge sheet Đơn hàng để so sánh & ghi đè
-        new_count = 0
-        update_count = 0
-        existing_count = 0
+        # ── Sheet Đơn hàng: luôn ghi đè từ source ────────────────────────
+        new_orders = 0
+        update_orders = 0
 
         if src_orders and tgt_orders:
-            import datetime as _dt
-
-            def _parse_date(val) -> Optional[_dt.datetime]:
-                if val is None:
-                    return None
-                for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S",
-                            "%Y-%m-%d", "%d/%m/%Y"):
-                    try:
-                        return _dt.datetime.strptime(str(val).strip(), fmt)
-                    except ValueError:
-                        continue
-                return None
-
             # Build lookup: ma_dh → row_index (1-based) trong target
             tgt_lookup: dict[str, int] = {}
             for row in tgt_orders.iter_rows(min_row=2):
@@ -1670,43 +1671,87 @@ class App:
                 if cell_val and str(cell_val).strip():
                     tgt_lookup[str(cell_val).strip()] = row[0].row
 
-            # Duyệt từng dòng trong source
             for row in src_orders.iter_rows(min_row=2):
                 ma_dh = str(row[0].value).strip() if row[0].value else ""
                 if not ma_dh or ma_dh in ("Mã ĐH", "nan"):
                     continue
 
-                src_date = _parse_date(row[1].value)  # cột B = Nhận lúc
-
                 if ma_dh not in tgt_lookup:
                     # Đơn mới → append vào target
-                    tgt_max_row = tgt_orders.max_row + 1
+                    tgt_row = tgt_orders.max_row + 1
                     for col_idx, cell in enumerate(row, start=1):
-                        tgt_orders.cell(row=tgt_max_row, column=col_idx).value = cell.value
-                    tgt_lookup[ma_dh] = tgt_max_row
-                    new_count += 1
+                        tgt_orders.cell(row=tgt_row, column=col_idx).value = cell.value
+                    tgt_lookup[ma_dh] = tgt_row
+                    new_orders += 1
                 else:
-                    tgt_row_idx = tgt_lookup[ma_dh]
-                    tgt_date = _parse_date(tgt_orders.cell(tgt_row_idx, 2).value)
-                    # Ghi đè nếu nhan_luc mới hơn
-                    if src_date and (tgt_date is None or src_date > tgt_date):
-                        for col_idx, cell in enumerate(row, start=1):
-                            tgt_orders.cell(row=tgt_row_idx, column=col_idx).value = cell.value
-                        update_count += 1
-                    else:
-                        existing_count += 1
+                    # Luôn ghi đè — source là dữ liệu scrape mới nhất
+                    tgt_row = tgt_lookup[ma_dh]
+                    for col_idx, cell in enumerate(row, start=1):
+                        tgt_orders.cell(row=tgt_row, column=col_idx).value = cell.value
+                    update_orders += 1
 
-        # Tổng hợp: xóa & tính lại
-        if SHEET_SUM in tgt_wb.sheetnames:
-            del tgt_wb[SHEET_SUM]
+        # ── Sheet Tiến độ công đoạn: merge theo key (Mã ĐH, TT, Công đoạn) ──
+        new_stages = 0
+        update_stages = 0
+
+        src_stages = src_wb[SHEET_STAGES] if SHEET_STAGES in src_wb.sheetnames else None
+        tgt_stages = tgt_wb[SHEET_STAGES] if SHEET_STAGES in tgt_wb.sheetnames else None
+
+        if src_stages and tgt_stages:
+            # Build lookup: (ma_dh, tt, cd) → row_index trong target
+            stage_lookup: dict[tuple, int] = {}
+            for row in tgt_stages.iter_rows(min_row=2):
+                ma = str(row[0].value).strip() if row[0].value else ""
+                tt = row[1].value
+                cd = str(row[2].value).strip() if row[2].value else ""
+                if ma:
+                    stage_lookup[(ma, tt, cd)] = row[0].row
+
+            for row in src_stages.iter_rows(min_row=2):
+                ma = str(row[0].value).strip() if row[0].value else ""
+                tt = row[1].value
+                cd = str(row[2].value).strip() if row[2].value else ""
+                if not ma or ma in ("Mã ĐH", "nan"):
+                    continue
+
+                src_xn = str(row[4].value or "").strip()   # cột E = Xác nhận
+                src_ht = _parse_date(row[5].value)         # cột F = Thời gian HT
+
+                key = (ma, tt, cd)
+                if key not in stage_lookup:
+                    # Bước mới → append
+                    tgt_row = tgt_stages.max_row + 1
+                    for col_idx, cell in enumerate(row, start=1):
+                        tgt_stages.cell(row=tgt_row, column=col_idx).value = cell.value
+                    stage_lookup[key] = tgt_row
+                    new_stages += 1
+                else:
+                    tgt_row = stage_lookup[key]
+                    tgt_xn = str(tgt_stages.cell(tgt_row, 5).value or "").strip()
+                    tgt_ht = _parse_date(tgt_stages.cell(tgt_row, 6).value)
+
+                    # Ghi đè nếu source đã xác nhận còn target chưa,
+                    # hoặc cả hai đã xác nhận nhưng source có HT mới hơn
+                    should_update = (
+                        src_xn == "Có" and tgt_xn != "Có"
+                    ) or (
+                        src_xn == "Có" and tgt_xn == "Có"
+                        and src_ht is not None
+                        and (tgt_ht is None or src_ht > tgt_ht)
+                    )
+
+                    if should_update:
+                        for col_idx, cell in enumerate(row, start=1):
+                            tgt_stages.cell(row=tgt_row, column=col_idx).value = cell.value
+                        update_stages += 1
 
         # Lưu target workbook
         tgt_wb.save(str(target_path))
 
         self.log(
             f"[Data Thang] {target_path.name}: "
-            f"+{new_count} mới, ~{update_count} cap nhat, "
-            f"{existing_count} giu nguyen"
+            f"Don hang +{new_orders} moi, ~{update_orders} cap nhat | "
+            f"Tien do +{new_stages} moi, ~{update_stages} cap nhat"
         )
 
     def _run_data_thang(self, clean_xlsx: str) -> None:
