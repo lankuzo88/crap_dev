@@ -14,9 +14,80 @@ const express = require('express');
 const XLSX    = require('xlsx');
 const path    = require('path');
 const fs      = require('fs');
+const https   = require('https');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// ── ANTHROPIC AI ──────────────────────────────────────
+const AI_API_KEY  = 'sk-7df540121d72d9bbe64730c4c96f4db488492620644269c88ca817225496839a';
+const AI_BASE_URL = 'http://pro-x.io.vn';
+const AI_MODEL    = 'claude-sonnet-4-6';
+const AI_MAX_TOKENS = 1024;
+
+async function anthropicChat(prompt) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({
+      model:       AI_MODEL,
+      max_tokens:  AI_MAX_TOKENS,
+      messages:    [{ role: 'user', content: prompt }],
+    });
+    const url = new URL(`${AI_BASE_URL}/v1/messages`);
+    const opts = {
+      hostname: url.hostname,
+      port:     url.port || 443,
+      path:     url.pathname,
+      method:   'POST',
+      headers:  {
+        'Content-Type':        'application/json',
+        'x-api-key':           AI_API_KEY,
+        'anthropic-version':   '2023-06-01',
+        'Content-Length':      Buffer.byteLength(body),
+      },
+    };
+    const req = https.request(opts, res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          // Sonnet 4: content = [{type:"text",text:"..."}] hoặc [{type:"thinking",...}, {type:"text",text:"..."}]
+          const textBlock = parsed.content?.find(b => b.type === 'text');
+          const answer = textBlock?.text || parsed.content?.[0]?.text || parsed.content?.[0]?.content || 'Không có phản hồi từ AI';
+          resolve(answer);
+        } catch (e) {
+          reject(new Error(`Parse error: ${data.slice(0, 200)}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+const SYSTEM_PROMPT = `Bạn là một Giám đốc Sản xuất / Nhà Phân tích Sản xuất
+chuyên nghiệp trong ngành Labo Nha khoa. Bạn có kiến thức sâu về:
+
+- 5 công đoạn: CBM → SÁP → SƯỜN → ĐẮP → MÀI
+- Đơn Sửa/Làm tiếp: skip 3 công đoạn đầu (CBM, SÁP, SƯỜN)
+- Đơn Thử sườn (TS): skip 2 công đoạn cuối (ĐẮP, MÀI)
+- Thời gian chuẩn: răng sứ ~2-5 ngày, zirconia ~3-7 ngày
+- Deadline trong 'gc' = giờ phải xong để gửi gia công ngoài
+- Mỗi KTV có năng lực khác nhau, cần theo dõi để phân công tối ưu
+
+KHI PHÂN TÍCH:
+1. Nhận diện đơn có deadline nguy hiển (gc sớm hơn bình thường)
+2. Phát hiện đơn đang chờ quá lâu ở 1 công đoạn
+3. Cảnh báo đơn có nguy cơ trễ deadline
+4. Gợi ý ưu tiên sản xuất hợp lý
+
+KHI HỎI NGƯỜI DÙNG:
+- Đặt câu hỏi cụ thể về bất thường bạn nhận thấy
+- Ví dụ: "Đơn X có deadline 15H hôm nay nhưng vẫn đang ở công đoạn ĐẮP — bạn có biết tình trạng không?"
+- Không hỏi chung chung, luôn đi kèm dữ liệu cụ thể
+
+TRẢ LỜI NGẮN GỌN, DỄ ĐỌC, DÙNG TIẾNG VIỆT CÓ DẤU.`;
 
 // ── CẤU HÌNH ĐƯỜNG DẪN ───────────────────────────────
 // server.js đặt trong thư mục crap/
@@ -373,6 +444,95 @@ app.get('/status', (req, res) => {
     cached_orders:  cache?.orders?.length || 0,
     cache_age_s:    cacheTime ? Math.round((Date.now()-cacheTime)/1000) : null,
   });
+});
+
+// ── AI ANALYST ─────────────────────────────────────────
+
+// Helper buildSummary — dùng chung cho cả insights lẫn chat
+function buildSummary(orders) {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const urgent  = orders.filter(o => {
+    if (!o.yc_giao) return false;
+    const d = o.yc_giao.substring(0,10);
+    const t = o.yc_giao.includes(':') ? o.yc_giao : '';
+    if (d !== today) return false;
+    if (!t) return false;
+    const h = parseInt(t.split(':')[1]);
+    return !isNaN(h) && h <= 12;
+  });
+  const done       = orders.filter(o => o.pct === 100);
+  const inProgress = orders.filter(o => o.pct > 0 && o.pct < 100);
+  // Theo công đoạn
+  const byStage = STAGE_NAMES.map((name, i) => ({
+    name,
+    count: orders.filter(o => !o.stages[i].sk && !o.stages[i].x).length,
+  }));
+  // Đơn có gc hôm nay
+  const gcToday = orders.filter(o => {
+    if (!o.gc) return false;
+    const tm = o.gc.match(/(\d{1,2})H/i);
+    return tm && parseInt(tm[1]) > 0;
+  }).map(o => ({
+    ma_dh: o.ma_dh, gc: o.gc, bn: o.bn, kh: o.kh, pct: o.pct,
+    stage: o.stages.find(s => !s.sk && !s.x)?.n || 'xong',
+  }));
+  return {
+    total:        orders.length,
+    done:         done.length,
+    inProgress:   inProgress.length,
+    urgentCount:  urgent.length,
+    byStage,
+    gcToday,
+    now: new Date().toLocaleString('vi-VN'),
+  };
+}
+
+// GET /ai/insights — tự động phân tích khi load dashboard
+app.get('/ai/insights', async (req, res) => {
+  try {
+    const data = getData();
+    const summary = buildSummary(data.orders);
+    const prompt = `${SYSTEM_PROMPT}
+
+DỮ LIỆU HIỆN TẠI (${summary.now}):
+${JSON.stringify(summary, null, 2)}
+
+YÊU CẦU:
+1. Đưa ra 3-5 insights nổi bật nhất (cảnh báo / gợi ý / câu hỏi)
+2. Mỗi insight ngắn gọn, đi kèm mã đơn cụ thể nếu có
+3. Đánh dấu mức độ: 🔴 Nguy hiểm / 🟡 Cần chú ý / 🟢 Bình thường
+4. Nếu không có gì đặc biệt → trả lời: "✅ Mọi thứ bình thường. Không có bất thường cần lưu ý."`;
+
+    const insights = await anthropicChat(prompt);
+    res.json({ insights });
+  } catch (e) {
+    res.status(200).json({ insights: `⚠ Lỗi AI: ${e.message}` });
+  }
+});
+
+// POST /ai/ask — chat với AI
+app.use(express.json());
+app.post('/ai/ask', async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) return res.status(400).json({ error: 'Cần nhập câu hỏi' });
+    const data = getData();
+    const summary = buildSummary(data.orders);
+    const prompt = `${SYSTEM_PROMPT}
+
+DỮ LIỆU HIỆN TẠI:
+${JSON.stringify(summary, null, 2)}
+
+CÂU HỎI CỦA NGƯỜI DÙNG: ${question}
+
+TRẢ LỜI ngắn gọn, đi thẳng vào vấn đề, dùng tiếng Việt có dấu.`;
+
+    const answer = await anthropicChat(prompt);
+    res.json({ answer });
+  } catch (e) {
+    res.status(200).json({ answer: `⚠ Lỗi AI: ${e.message}` });
+  }
 });
 
 app.use(express.static(BASE_DIR));

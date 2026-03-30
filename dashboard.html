@@ -37,6 +37,23 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .pip-cur{background:var(--amber);animation:blink 1.2s ease infinite;}
 .pip-pend{background:var(--border);}
 .pip-skip{background:var(--border) !important;opacity:.22 !important;border:1px dashed var(--text3) !important;animation:none !important;}
+/* ── AI PANELS ────────────────────────────────────────── */
+.d-ai-box{background:var(--surface2);border:1px solid rgba(245,166,35,.3);border-radius:8px;overflow:hidden;}
+.d-ai-hdr{background:rgba(245,166,35,.12);padding:6px 12px;font-size:11px;font-weight:700;color:var(--amber);}
+.d-ai-body{padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap;}
+.ai-chat-wrap{position:fixed;right:0;top:0;bottom:0;width:360px;background:var(--surface);border-left:1px solid var(--border2);display:flex;flex-direction:column;z-index:999;transition:transform .25s;}
+.ai-chat-hidden{transform:translateX(100%);}
+.ai-chat-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-size:13px;font-weight:700;background:rgba(245,166,35,.1);border-bottom:1px solid var(--border2);}
+.ai-chat-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:2px 6px;}
+.ai-chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.ai-msg{max-width:88%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;}
+.ai-msg-ai{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:3px;}
+.ai-msg-user{align-self:flex-end;background:rgba(245,166,35,.2);color:var(--text);border-bottom-right-radius:3px;}
+.ai-chat-input{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border2);}
+.ai-chat-input input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text);outline:none;}
+.ai-chat-input input:focus{border-color:var(--amber);}
+.ai-chat-input button{background:var(--amber);border:none;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#000;}
+#d-nl-ai{color:var(--amber);cursor:pointer;}
 
 .ph-chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;letter-spacing:.3px;}
 .ph-zirc{color:#5bbfff;border-color:rgba(91,191,255,.35);background:rgba(91,191,255,.08);}
@@ -526,6 +543,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl active" id="d-nl-orders" onclick="dSw('orders',this)"><span class="ico">📋</span> Đơn Hàng<span class="d-nl-badge" id="d-nav-badge">—</span></div>
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
+        <div class="d-nl" id="d-nl-ai" onclick="aiChatToggle()"><span class="ico">🤖</span> AI Chat</div>
       </div>
       <div class="d-funnel">
         <div class="d-f-title">TIẾN ĐỘ CÔNG ĐOẠN</div>
@@ -581,6 +599,11 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
               <div class="d-kbig kb"><div class="d-kbig-n" style="color:var(--blue)" id="d-sb-done">—</div><div class="d-kbig-u">✓ HOÀN THÀNH</div></div>
               <div class="d-kbig kp"><div class="d-kbig-n" style="color:var(--purple)" id="d-sb-ktv">—</div><div class="d-kbig-u">KỸ THUẬT VIÊN</div></div>
             </div>
+            <!-- AI INSIGHTS -->
+            <div id="d-ai-insights" class="d-ai-box" style="margin:0 16px 12px">
+              <div class="d-ai-hdr">🤖 AI PHÂN TÍCH</div>
+              <div class="d-ai-body" id="d-ai-body">Đang phân tích...</div>
+            </div>
             <div class="d-sub-tabs">
               <div class="d-sub-tab active" id="tng-tab-main" onclick="tngSetTab('main',this)">📊 Tổng Hợp</div>
               <div class="d-sub-tab" id="tng-tab-suon" onclick="tngSetTab('suon',this)">SƯỜN</div>
@@ -596,6 +619,19 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- AI CHAT PANEL -->
+<div id="ai-chat" class="ai-chat-wrap ai-chat-hidden">
+  <div class="ai-chat-hdr">
+    <span>🤖 AI Sản xuất</span>
+    <button class="ai-chat-close" onclick="aiChatToggle()">✕</button>
+  </div>
+  <div class="ai-chat-msgs" id="ai-msgs"></div>
+  <div class="ai-chat-input">
+    <input id="ai-q" placeholder="Hỏi AI..." onkeydown="if(event.key==='Enter')aiAsk()">
+    <button onclick="aiAsk()">▶</button>
   </div>
 </div>
 
@@ -818,6 +854,55 @@ function gcTimeSortVal(o) {
   }
   return o.yc_giao || 'zzz';
 }
+// ── AI ANALYST ─────────────────────────────────────────
+async function loadInsights() {
+  try {
+    const r = await fetch('/ai/insights');
+    const { insights } = await r.json();
+    document.getElementById('d-ai-body').innerHTML = insights;
+  } catch (e) {
+    document.getElementById('d-ai-body').innerHTML = '⚠ Không thể tải AI';
+  }
+}
+
+let aiOpen = false;
+function aiChatToggle() {
+  aiOpen = !aiOpen;
+  const panel = document.getElementById('ai-chat');
+  if (aiOpen) {
+    panel.classList.remove('ai-chat-hidden');
+    document.getElementById('ai-q').focus();
+    if (!document.getElementById('ai-msgs').children.length) {
+      // Greeting
+      document.getElementById('ai-msgs').innerHTML =
+        '<div class="ai-msg ai-msg-ai">🤖 Xin chào! Tôi là AI phân tích sản xuất labo nha khoa. Hỏi tôi bất cứ điều gì về đơn hàng, tiến độ, hay bất thường nhé!</div>';
+    }
+  } else {
+    panel.classList.add('ai-chat-hidden');
+  }
+}
+
+async function aiAsk() {
+  const input = document.getElementById('ai-q');
+  const q = input.value.trim();
+  if (!q) return;
+  const msgs = document.getElementById('ai-msgs');
+  msgs.innerHTML += `<div class="ai-msg ai-msg-user">${q}</div>`;
+  input.value = '';
+  msgs.innerHTML += `<div class="ai-msg ai-msg-ai">...</div>`;
+  try {
+    const r = await fetch('/ai/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q }),
+    });
+    const { answer } = await r.json();
+    msgs.lastChild.innerHTML = answer;
+  } catch (e) {
+    msgs.lastChild.innerHTML = '⚠ Lỗi kết nối AI';
+  }
+}
+
 function phType(ph) {
   const p = (ph || '').toLowerCase();
   if (p.includes('zircornia') || p.includes('ziconia') || p.includes('cercon') || p.includes('diamond') || p.includes('zirconia ht')) return 'zirc';
@@ -1556,6 +1641,7 @@ async function fetchData() {
     const layout = IS_MOBILE ? 'layout-mobile' : 'layout-desktop';
     document.getElementById(layout).style.display = 'block';
     updateUI();
+    loadInsights(); // AI insights auto-load on first load
   } catch (err) {
     document.getElementById('bootTxt').textContent = '❌ ' + err.message + ' — thử lại sau 30s';
     setTimeout(fetchData, 30000);
