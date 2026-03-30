@@ -68,6 +68,12 @@ logs/
 *.o
 *.tgz
 
+# ============ Data files (KHÔNG push git) ============
+Data/
+Data_thang/
+Excel/
+File_sach/
+
 # ============ AI Memory ============
 ai_memory.json        # learned facts — KHÔNG push git (file thay đổi liên tục)
 
