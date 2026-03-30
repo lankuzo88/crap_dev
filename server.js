@@ -516,12 +516,56 @@ function buildSummary(orders) {
   };
 }
 
+// ── AI HELPER: đọc Excel final mới nhất ───────────────
+function aiReadExcelForAnalysis() {
+  const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
+  if (!excelFile) return null;
+  try {
+    const wb = XLSX.readFile(excelFile.path, { cellDates: true });
+    const getSheet = (...keys) => {
+      const name = wb.SheetNames.find(n => keys.some(k => n.toLowerCase().includes(k.toLowerCase())));
+      return name ? XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' }) : null;
+    };
+    const raw1 = getSheet('Đơn hàng', 'donhang');
+    if (!raw1) return null;
+    const h = raw1[0].map(h => str(h));
+    const ci = k => h.findIndex(col => col.includes(k));
+    const rows = raw1.slice(1).filter(r => {
+      const ma = str(r[ci('Mã ĐH')]);
+      return ma && !ma.includes('TỔNG') && ma !== 'Mã ĐH';
+    });
+    // Lấy tất cả rows thuần (chỉ data, không xử lý stage)
+    const summary = {
+      source: excelFile.name,
+      totalRows: rows.length,
+      samples: rows.slice(0, 5).map(r => ({
+        ma_dh:  str(r[ci('Mã ĐH')]),
+        kh:     str(r[ci('Khách')]),
+        bn:     str(r[ci('ệnh nhân')]),
+        ph:     str(r[ci('Phục hình')]),
+        sl:     parseInt(r[ci('SL')]) || 0,
+        gc:     str(r[ci('Ghi chú')]),
+        yc_ht:  str(r[ci('hoàn thành')]),
+        yc_giao: str(r[ci('giao')]),
+      })),
+    };
+    return summary;
+  } catch (e) {
+    return null;
+  }
+}
+
 // GET /ai/insights — tự động phân tích khi load dashboard
 app.get('/ai/insights', async (req, res) => {
   try {
-    const data = getData();
-    const summary = buildSummary(data.orders);
-    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}
+    const data     = getData();
+    const summary  = buildSummary(data.orders);
+    const excelRaw = aiReadExcelForAnalysis();
+    const excelSection = excelRaw
+      ? `\n\n📋 FILE EXCEL MỚI NHẤT: ${excelRaw.source}\n(Mẫu 5 đơn đầu tiên để bạn hiểu nội dung thực tế)\n${JSON.stringify(excelRaw.samples, null, 2)}`
+      : '\n\n(Không đọc được file Excel)';
+
+    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}${excelSection}
 
 DỮ LIỆU HIỆN TẠI (${summary.now}):
 ${JSON.stringify(summary, null, 2)}
