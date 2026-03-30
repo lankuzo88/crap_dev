@@ -18,12 +18,10 @@ const https   = require('https');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-
-// ── ANTHROPIC AI ──────────────────────────────────────
 const AI_API_KEY  = 'sk-7df540121d72d9bbe64730c4c96f4db488492620644269c88ca817225496839a';
 const AI_BASE_URL = 'http://pro-x.io.vn';
 const AI_MODEL    = 'claude-sonnet-4-6';
-const AI_MAX_TOKENS = 1024;
+const AI_MAX_TOKENS = 8192;
 
 async function anthropicChat(prompt) {
   return new Promise((resolve, reject) => {
@@ -96,6 +94,26 @@ const BASE_DIR      = __dirname;
 const FILE_SACH_DIR = path.join(BASE_DIR, 'File_sach');
 const DATA_DIR      = path.join(BASE_DIR, 'Data');
 const DASHBOARD     = path.join(BASE_DIR, 'dashboard.html');
+
+// ── AI MEMORY ─────────────────────────────────────────
+let AI_MEMORY = {};
+try {
+  AI_MEMORY = JSON.parse(fs.readFileSync(path.join(BASE_DIR, 'ai_memory.json'), 'utf8'));
+  console.log('✓ AI memory loaded: v' + AI_MEMORY.version);
+} catch (e) {
+  console.log('⚠ AI memory not found — AI sẽ không có context dài hạn (' + e.message + ')');
+}
+
+function getMemoryPrompt() {
+  const base = { ...AI_MEMORY };
+  const facts = (AI_MEMORY.learnedFacts || []).map(f => f.text).join('\n- ');
+  const memStr = JSON.stringify(base, null, 2);
+  let out = '\n\n📚 THÔNG TIN CƠ BẢN VỀ LABO:\n' + memStr;
+  if (facts) {
+    out += '\n\n🧠 KIẾN THỨC ĐÃ HỌC (từ kinh nghiệm thực tế):\n- ' + facts;
+  }
+  return out;
+}
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
@@ -493,7 +511,7 @@ app.get('/ai/insights', async (req, res) => {
   try {
     const data = getData();
     const summary = buildSummary(data.orders);
-    const prompt = `${SYSTEM_PROMPT}
+    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}
 
 DỮ LIỆU HIỆN TẠI (${summary.now}):
 ${JSON.stringify(summary, null, 2)}
@@ -519,7 +537,7 @@ app.post('/ai/ask', async (req, res) => {
     if (!question) return res.status(400).json({ error: 'Cần nhập câu hỏi' });
     const data = getData();
     const summary = buildSummary(data.orders);
-    const prompt = `${SYSTEM_PROMPT}
+    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}
 
 DỮ LIỆU HIỆN TẠI:
 ${JSON.stringify(summary, null, 2)}
@@ -533,6 +551,36 @@ TRẢ LỜI ngắn gọn, đi thẳng vào vấn đề, dùng tiếng Việt có
   } catch (e) {
     res.status(200).json({ answer: `⚠ Lỗi AI: ${e.message}` });
   }
+});
+
+// POST /ai/learn — lưu fact mới vào AI memory
+app.post('/ai/learn', (req, res) => {
+  const { fact } = req.body;
+  if (!fact || typeof fact !== 'string') {
+    return res.status(400).json({ error: 'Cần cung cấp fact' });
+  }
+  try {
+    const memPath = path.join(BASE_DIR, 'ai_memory.json');
+    const mem = JSON.parse(fs.readFileSync(memPath, 'utf8'));
+    if (!mem.learnedFacts) mem.learnedFacts = [];
+    // Tránh trùng lặp
+    const exists = mem.learnedFacts.some(f => f.text === fact);
+    if (!exists) {
+      mem.learnedFacts.push({ text: fact, addedAt: new Date().toISOString() });
+      fs.writeFileSync(memPath, JSON.stringify(mem, null, 2), 'utf8');
+      AI_MEMORY = mem; // update in-memory
+      res.json({ ok: true, total: mem.learnedFacts.length });
+    } else {
+      res.json({ ok: true, note: 'Fact đã tồn tại', total: mem.learnedFacts.length });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /ai/memory — xem memory hiện tại
+app.get('/ai/memory', (req, res) => {
+  res.json({ memory: AI_MEMORY });
 });
 
 app.use(express.static(BASE_DIR));

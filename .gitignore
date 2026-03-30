@@ -68,6 +68,9 @@ logs/
 *.o
 *.tgz
 
+# ============ AI Memory ============
+ai_memory.json        # learned facts — KHÔNG push git (file thay đổi liên tục)
+
 # ============ Misc ============
 *.db
 *.sqlite

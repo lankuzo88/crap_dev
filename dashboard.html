@@ -54,6 +54,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .ai-chat-input input:focus{border-color:var(--amber);}
 .ai-chat-input button{background:var(--amber);border:none;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#000;}
 #d-nl-ai{color:var(--amber);cursor:pointer;}
+.d-ai-hdr{display:flex;justify-content:space-between;align-items:center;}
+.d-ai-save-btn{background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;padding:0 4px;opacity:.7;}
+.d-ai-save-btn:hover{opacity:1;}
 
 .ph-chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;letter-spacing:.3px;}
 .ph-zirc{color:#5bbfff;border-color:rgba(91,191,255,.35);background:rgba(91,191,255,.08);}
@@ -601,7 +604,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
             </div>
             <!-- AI INSIGHTS -->
             <div id="d-ai-insights" class="d-ai-box" style="margin:0 16px 12px">
-              <div class="d-ai-hdr">🤖 AI PHÂN TÍCH</div>
+              <div class="d-ai-hdr">
+                <span>🤖 AI PHÂN TÍCH</span>
+                <button class="d-ai-save-btn" onclick="aiSaveInsight()" title="Lưu insight này vào memory">💾 Nhớ</button>
+              </div>
               <div class="d-ai-body" id="d-ai-body">Đang phân tích...</div>
             </div>
             <div class="d-sub-tabs">
@@ -900,6 +906,27 @@ async function aiAsk() {
     msgs.lastChild.innerHTML = answer;
   } catch (e) {
     msgs.lastChild.innerHTML = '⚠ Lỗi kết nối AI';
+  }
+}
+
+async function aiSaveInsight() {
+  const body = document.getElementById('d-ai-body').innerHTML.trim();
+  if (!body || body === 'Đang phân tích...') {
+    alert('Chưa có insights để lưu');
+    return;
+  }
+  const fact = prompt('Lưu insight này vào AI memory?\n\n' + body.slice(0, 200) + '...', body.slice(0, 300));
+  if (!fact) return;
+  try {
+    const r = await fetch('/ai/learn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fact }),
+    });
+    const d = await r.json();
+    if (d.ok) alert('💾 Đã lưu! AI sẽ nhớ fact này. (' + d.total + ' facts)');
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
   }
 }
 
