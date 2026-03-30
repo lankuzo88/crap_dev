@@ -49,10 +49,14 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .ai-msg{max-width:88%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;}
 .ai-msg-ai{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:3px;}
 .ai-msg-user{align-self:flex-end;background:rgba(245,166,35,.2);color:var(--text);border-bottom-right-radius:3px;}
-.ai-chat-input{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border2);}
-.ai-chat-input input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text);outline:none;}
+.ai-chat-input{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-top:1px solid var(--border2);}
+.ai-q-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.ai-q-chip{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);color:var(--amber);border-radius:20px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;}
+.ai-q-chip:hover{background:rgba(245,166,35,.22);}
+.ai-chat-row{display:flex;gap:6px;}
+.ai-chat-input input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text);outline:none;}
 .ai-chat-input input:focus{border-color:var(--amber);}
-.ai-chat-input button{background:var(--amber);border:none;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#000;}
+.ai-chat-input button{background:var(--amber);border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:13px;color:#000;font-weight:700;}
 #d-nl-ai{color:var(--amber);cursor:pointer;}
 .d-ai-hdr{display:flex;justify-content:space-between;align-items:center;}
 .d-ai-save-btn{background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;padding:0 4px;opacity:.7;}
@@ -636,8 +640,17 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   </div>
   <div class="ai-chat-msgs" id="ai-msgs"></div>
   <div class="ai-chat-input">
-    <input id="ai-q" placeholder="Hỏi AI..." onkeydown="if(event.key==='Enter')aiAsk()">
-    <button onclick="aiAsk()">▶</button>
+    <div class="ai-q-chips">
+      <div class="ai-q-chip" onclick="aiAskQ('Còn bao nhiêu đơn chưa xong hôm nay?')">📋 Còn đơn nào?</div>
+      <div class="ai-q-chip" onclick="aiAskQ('Đơn nào đang bị trễ deadline?')">⚠️ Đơn trễ?</div>
+      <div class="ai-q-chip" onclick="aiAskQ('KTV nào đang quá tải?')">👤 KTV nào tải?</div>
+      <div class="ai-q-chip" onclick="aiAskQ('Hôm nay có bao nhiêu đơn khẩn?')">🚨 Đơn khẩn?</div>
+      <div class="ai-q-chip" onclick="aiAskQ('Công đoạn nào đang là nút thắt?')">🔴 Nút thắt?</div>
+    </div>
+    <div class="ai-chat-row">
+      <input id="ai-q" placeholder="Hỏi AI bất cứ điều gì..." onkeydown="if(event.key==='Enter')aiAsk()">
+      <button onclick="aiAsk()">▶</button>
+    </div>
   </div>
 </div>
 
@@ -881,7 +894,7 @@ function aiChatToggle() {
     if (!document.getElementById('ai-msgs').children.length) {
       // Greeting
       document.getElementById('ai-msgs').innerHTML =
-        '<div class="ai-msg ai-msg-ai">🤖 Xin chào! Tôi là AI phân tích sản xuất labo nha khoa. Hỏi tôi bất cứ điều gì về đơn hàng, tiến độ, hay bất thường nhé!</div>';
+        '<div class="ai-msg ai-msg-ai">🤖 Xin chào! Tôi là AI phân tích sản xuất ASIA LAB.<br><br>Dùng các câu hỏi nhanh bên dưới hoặc hỏi tự do về đơn hàng, tiến độ, KTV, deadline — tôi sẽ phân tích và đặt câu hỏi lại nếu thấy bất thường!</div>';
     }
   } else {
     panel.classList.add('ai-chat-hidden');
@@ -892,9 +905,19 @@ async function aiAsk() {
   const input = document.getElementById('ai-q');
   const q = input.value.trim();
   if (!q) return;
-  const msgs = document.getElementById('ai-msgs');
-  msgs.innerHTML += `<div class="ai-msg ai-msg-user">${q}</div>`;
   input.value = '';
+  await doAsk(q);
+}
+
+async function aiAskQ(q) {
+  document.getElementById('ai-q').value = q;
+  await doAsk(q);
+}
+
+async function doAsk(q) {
+  const msgs = document.getElementById('ai-msgs');
+  if (aiOpen) msgs.scrollTop = msgs.scrollHeight;
+  msgs.innerHTML += `<div class="ai-msg ai-msg-user">${q}</div>`;
   msgs.innerHTML += `<div class="ai-msg ai-msg-ai">...</div>`;
   try {
     const r = await fetch('/ai/ask', {
@@ -904,6 +927,7 @@ async function aiAsk() {
     });
     const { answer } = await r.json();
     msgs.lastChild.innerHTML = answer;
+    msgs.scrollTop = msgs.scrollHeight;
   } catch (e) {
     msgs.lastChild.innerHTML = '⚠ Lỗi kết nối AI';
   }
