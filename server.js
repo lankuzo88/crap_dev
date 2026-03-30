@@ -80,6 +80,13 @@ DEADLINE (trường 'gc'):
   • "Hoàn tất"/"HT" → KHÔNG có deadline mới
   • ⚠️ ĐÂY LÀ GIỜ PHẢI XONG SẢN XUẤT ĐỂ GỬI GIA CÔNG BÊN NGOÀI
 
+TRƯỜNG 'sl' = SỐ RĂNG trong đơn. Khi được hỏi "bao nhiêu răng" → TÍNH TỔNG sl, không đếm đơn.
+
+PHÂN BIỆT ĐƠN HOÀN THÀNH vs ĐANG LÀM:
+  • pct = 100 → ĐƠN HOÀN THÀNH, không cần theo dõi
+  • pct < 100 → Đơn đang làm, cần theo dõi
+  • Trong byStage: chỉ tính đơn ĐANG LÀM (pct < 100) chưa qua công đoạn đó
+
 NÚT THẮT QUAN TRỌNG:
   ĐẮP = nút thắt lớn nhất. Thường chiếm 40-60% đơn đang chờ.
   Luôn chú ý đến đơn tắc ở ĐẮP.
@@ -93,6 +100,7 @@ PHÂN TÍCH:
 TRẢ LỜI:
   • TỐI ĐA 200 TỪ mỗi câu trả lời
   • LUÔN đi kèm mã đơn (ma_dh) khi nhắc đơn cụ thể
+  • Khi tính răng → ghi rõ: "X đơn, Y răng"
   • Dùng emoji phân loại: 🔴🟡🟢
   • HỎI NGƯỜI DÙNG ngay nếu thấy bất thường cụ thể
   • TIẾNG VIỆT CÓ DẤU`;
@@ -491,10 +499,14 @@ function buildSummary(orders) {
   });
   const done       = orders.filter(o => o.pct === 100);
   const inProgress = orders.filter(o => o.pct > 0 && o.pct < 100);
-  // Theo công đoạn
+  // Tổng răng
+  const totalTeeth = orders.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
+  const doneTeeth   = done.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
+  const ipTeeth    = inProgress.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
+  // Theo công đoạn — CHỈ đơn đang làm (pct<100)
   const byStage = STAGE_NAMES.map((name, i) => ({
     name,
-    count: orders.filter(o => !o.stages[i].sk && !o.stages[i].x).length,
+    count: inProgress.filter(o => !o.stages[i].sk && !o.stages[i].x).length,
   }));
   // Đơn có gc hôm nay
   const gcToday = orders.filter(o => {
@@ -507,8 +519,11 @@ function buildSummary(orders) {
   }));
   return {
     total:        orders.length,
+    totalTeeth,
     done:         done.length,
+    doneTeeth,
     inProgress:   inProgress.length,
+    ipTeeth,
     urgentCount:  urgent.length,
     byStage,
     gcToday,

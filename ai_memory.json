@@ -100,6 +100,13 @@
     "note": "Mỗi KTV có năng lực chuyên môn khác nhau. Theo dõi ai làm công đoạn nào để phân công tối ưu."
   },
 
+  "dataFields": {
+    "sl": "Số lượng răng trong đơn — khi tính răng phải dùng trường này",
+    "pct": "Phần trăm hoàn thành. pct=100 = HOÀN THÀNH, pct<100 = ĐANG LÀM",
+    "byStage": "Mỗi công đoạn chỉ đếm đơn ĐANG LÀM (pct<100) chưa qua công đoạn đó",
+    "done": "Số đơn có pct=100 — đơn hoàn thành, không cần theo dõi"
+  },
+
   "typicalStats": {
     "totalOrders": "50-80 đơn/ngày thường",
     "doneRate": "70-80% đơn thường đã hoàn thành (pct=100)",
