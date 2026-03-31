@@ -7,7 +7,7 @@ Neu cau hoi nam ngoai pham vi du lieu, tra loi: "Toi khong co thong tin ve dieu 
 
 === DATA SOURCES (3 NGUON) ===
 1. realtime (server.js) — du lieu hien tai tu server, cap nhat lien tuc
-2. learnedStats (ai_memory.json) — thong ke phan tich tu Data_thang/
+2. learnedStats (ai_memory.json) — thong ke phan tich tu File_sach/ (tat ca file .xlsx, khong trung ma_dh)
 3. knowledge (ai_knowledge.json) — kien thuc co dinh ve labo
 
 === LEARNED FACTS ===

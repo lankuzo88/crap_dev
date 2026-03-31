@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ASIA LAB - AI Stats: Phan tich du lieu thang tu Data_thang/*.xlsx
+ASIA LAB - AI Stats: Phan tich tu File_sach/*.xlsx (tat ca file, khong trung ma_dh)
 Cap nhat ai_memory.json voi learnedStats + insights.
 """
 import os, sys, json, io, glob, re
@@ -15,7 +15,7 @@ except Exception:
     pass
 
 BASE_DIR  = Path(__file__).parent.resolve()
-DATA_DIR  = BASE_DIR / "Data_thang"
+DATA_DIR  = BASE_DIR / "File_sach"
 MEMORY_FP = BASE_DIR / "ai_memory.json"
 
 STAGE_ORDER = ["CBM", "SÁP/Cadcam", "SƯỜN", "ĐẮP", "MÀI"]
@@ -98,27 +98,38 @@ def read_tien_do(ws):
         return idx.get(name, -1)
     records = []
     for row in rows[1:]:
-        ma = str_(row[gi("Mã ĐH")])
+        ma_raw = safe_col(row, gi("Mã ĐH"))
+        ma = str_(ma_raw)
         if not ma or ma == "Mã ĐH":
             continue
-        tt_raw = row[gi("TT")]
+        tt_raw = safe_col(row, gi("TT"))
         try:
             tt = int(float(tt_raw)) if tt_raw is not None else None
         except Exception:
             tt = None
+        try:
+            sl = int(float(safe_col(row, gi("SL")))) if safe_col(row, gi("SL")) is not None else 0
+        except Exception:
+            sl = 0
         records.append({
             "ma_dh":     ma,
             "tt":        tt,
-            "cong_doan": str_(row[gi("Công đoạn")]),
-            "ktv":       str_(row[gi("KTV")]),
-            "xac_nhan":  str_(row[gi("Xác nhận")]),
-            "tg_ht":     parse_excel_date(row[gi("Thời gian HT")]),
-            "phuc_hinh": str_(row[gi("Phục hình")]),
-            "sl":        int(float(row[gi("SL")])) if row[gi("SL")] is not None else 0,
-            "loai_lenh": str_(row[gi("Loại lệnh")]),
+            "cong_doan": str_(safe_col(row, gi("Công đoạn"))),
+            "ktv":       str_(safe_col(row, gi("KTV"))),
+            "xac_nhan":  str_(safe_col(row, gi("Xác nhận"))),
+            "tg_ht":     parse_excel_date(safe_col(row, gi("Thời gian HT"))),
+            "phuc_hinh": str_(safe_col(row, gi("Phục hình"))),
+            "sl":        sl,
+            "loai_lenh": str_(safe_col(row, gi("Loại lệnh"))),
         })
     return records
 
+
+def safe_col(row, idx):
+    """Lay gia tri an toan tu tuple row."""
+    if idx < 0 or idx >= len(row):
+        return None
+    return row[idx]
 
 def read_don_hang(ws):
     rows = list(ws.iter_rows(values_only=True))
@@ -130,15 +141,19 @@ def read_don_hang(ws):
         return idx.get(name, -1)
     orders = {}
     for row in rows[1:]:
-        ma = str_(row[gi("Mã ĐH")])
+        ma = str_(safe_col(row, gi("Mã ĐH")))
         if not ma or ma == "Mã ĐH":
             continue
+        try:
+            sl = int(float(safe_col(row, gi("SL")))) if safe_col(row, gi("SL")) is not None else 0
+        except Exception:
+            sl = 0
         orders[ma] = {
-            "khach_hang": str_(row[gi("Khách hàng")]),
-            "benh_nhan":  str_(row[gi("Bệnh nhân")]),
-            "phuc_hinh":  str_(row[gi("Phục hình")]),
-            "sl":         int(float(row[gi("SL")])) if row[gi("SL")] is not None else 0,
-            "ngay_nhan":  parse_excel_date(row[gi("Nhận lúc")]),
+            "khach_hang": str_(safe_col(row, gi("Khách hàng"))),
+            "benh_nhan":  str_(safe_col(row, gi("Bệnh nhân"))),
+            "phuc_hinh":  str_(safe_col(row, gi("Phục hình"))),
+            "sl":         sl,
+            "ngay_nhan":  parse_excel_date(safe_col(row, gi("Nhận lúc"))),
         }
     return orders
 
@@ -148,13 +163,19 @@ def analyze_monthly_files(data_dir):
     all_orders     = {}
     all_files      = []
 
-    for fp in sorted(data_dir.glob("Thang_*.xlsx")):
+    # Doc tat ca file .xlsx trong File_sach/ (khong doc subdir)
+    excel_files = []
+    for fp in sorted(data_dir.glob("*.xlsx")):
+        if "node_modules" in str(fp): continue
+        excel_files.append(fp)
+
+    for fp in excel_files:
         all_files.append(fp.name)
         try:
             import openpyxl
             wb = openpyxl.load_workbook(fp, data_only=True, read_only=True)
         except Exception as e:
-            print(f"  ! Loi doc {fp.name}: {e}")
+            print(f"  ! Loi doc {fp.name}: {e}", file=sys.stderr)
             continue
 
         don_sheet      = None
@@ -372,11 +393,11 @@ def generate_insights(stats):
 
 def learn():
     print("=" * 50)
-    print("  ASIA LAB AI Stats - Phan tich thang")
+    print("  ASIA LAB AI Stats - Phan tich File_sach")
     print("=" * 50)
 
     if not DATA_DIR.exists():
-        print(f"! Thu muc Data_thang khong ton tai: {DATA_DIR}")
+        print(f"! Thu muc File_sach khong ton tai: {DATA_DIR}")
         return
 
     print(f"\nDang phan tich: {DATA_DIR}")
@@ -440,7 +461,7 @@ def learn():
 # ── WATCH MODE ───────────────────────────────────────────────────────────────
 def watch():
     """
-    Theo doi Data_thang/ — khi co file .xlsx thay doi,
+    Theo doi File_sach/ — khi co file .xlsx thay doi (them/sua),
     tu dong chay learn() de cap nhat ai_memory.json.
     """
     from watchdog.observers import Observer

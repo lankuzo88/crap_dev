@@ -6,16 +6,16 @@
       "CBM": "—",
       "SÁP/Cadcam": "0.3",
       "SƯỜN": "0.1",
-      "ĐẮP": "0.2",
+      "ĐẮP": "0.5",
       "MÀI": "0.2"
     },
     "bottleneckStage": "MÀI",
-    "bottleneckPct": 91.1,
-    "remakeRate": "1.5%",
-    "remakeCount": 7,
+    "bottleneckPct": 51.7,
+    "remakeRate": "13.4%",
+    "remakeCount": 66,
     "dailyVolume": {
-      "avg": 45.8,
-      "max": 73,
+      "avg": 49.2,
+      "max": 83,
       "min": 1,
       "days": 10
     },
@@ -30,7 +30,7 @@
     "topCustomers": [
       {
         "name": "SG-Nk Hải Nguyên",
-        "count": 36
+        "count": 38
       },
       {
         "name": "BL-NK BS Tăng Suy Nghĩ",
@@ -38,7 +38,7 @@
       },
       {
         "name": "BT-Nk Bác Sĩ Hiếu",
-        "count": 27
+        "count": 35
       },
       {
         "name": "LA-Nk Tâm Đức",
@@ -46,177 +46,208 @@
       },
       {
         "name": "LA-Nk BS Huý",
-        "count": 18
+        "count": 19
       },
       {
         "name": "AG-Nk Thanh Bình",
-        "count": 18
+        "count": 19
       },
       {
         "name": "DL-Nk Đức Trọng",
         "count": 18
       },
       {
-        "name": "SG-Nk  Hậu - Bình Chánh",
-        "count": 16
-      },
-      {
         "name": "LA-Nk BS Thụy",
         "count": 16
       },
       {
-        "name": "DT-Nk Sa Đéc",
-        "count": 15
+        "name": "SG-Nk  Hậu - Bình Chánh",
+        "count": 16
+      },
+      {
+        "name": "LA-Nk Tố Oanh",
+        "count": 16
       }
     ],
     "ktvPerformance": [
       {
         "name": "Toàn",
-        "xnCount": 62,
-        "totalSL": 154,
-        "orderCount": 62
+        "xnCount": 202,
+        "totalSL": 608,
+        "orderCount": 202
       },
       {
         "name": "Võ Văn Vạn",
-        "xnCount": 52,
-        "totalSL": 215,
-        "orderCount": 52
+        "xnCount": 172,
+        "totalSL": 707,
+        "orderCount": 172
       },
       {
         "name": "Hồng Thắm",
-        "xnCount": 46,
-        "totalSL": 122,
-        "orderCount": 46
-      },
-      {
-        "name": "Bùi Tấn Đạt",
-        "xnCount": 29,
-        "totalSL": 60,
-        "orderCount": 29
+        "xnCount": 163,
+        "totalSL": 492,
+        "orderCount": 163
       },
       {
         "name": "Tấn Sĩ",
-        "xnCount": 20,
-        "totalSL": 71,
-        "orderCount": 20
+        "xnCount": 101,
+        "totalSL": 424,
+        "orderCount": 101
+      },
+      {
+        "name": "Bùi Tấn Đạt",
+        "xnCount": 98,
+        "totalSL": 306,
+        "orderCount": 98
       },
       {
         "name": "HẠNH",
-        "xnCount": 19,
-        "totalSL": 46,
-        "orderCount": 19
+        "xnCount": 81,
+        "totalSL": 286,
+        "orderCount": 81
       },
       {
         "name": "Văn Trải",
-        "xnCount": 14,
-        "totalSL": 38,
-        "orderCount": 14
+        "xnCount": 76,
+        "totalSL": 308,
+        "orderCount": 76
       },
       {
         "name": "Thái Sơn",
-        "xnCount": 8,
-        "totalSL": 37,
-        "orderCount": 6
+        "xnCount": 74,
+        "totalSL": 289,
+        "orderCount": 45
       },
       {
-        "name": "Trường",
-        "xnCount": 6,
-        "totalSL": 8,
-        "orderCount": 6
-      },
-      {
-        "name": "Văn Huyến",
-        "xnCount": 6,
-        "totalSL": 22,
-        "orderCount": 4
-      },
-      {
-        "name": "Cẩm Hồng",
-        "xnCount": 6,
-        "totalSL": 23,
-        "orderCount": 6
-      },
-      {
-        "name": "Yến Vy",
-        "xnCount": 5,
-        "totalSL": 20,
-        "orderCount": 5
-      },
-      {
-        "name": "Phạm Tấn Hữu",
-        "xnCount": 4,
-        "totalSL": 4,
-        "orderCount": 4
-      },
-      {
-        "name": "Trực",
-        "xnCount": 3,
-        "totalSL": 6,
-        "orderCount": 3
-      },
-      {
-        "name": "Gia Thư",
-        "xnCount": 2,
-        "totalSL": 5,
-        "orderCount": 2
+        "name": "Bảo Trân",
+        "xnCount": 58,
+        "totalSL": 220,
+        "orderCount": 57
       },
       {
         "name": "Thế Hỷ",
-        "xnCount": 2,
-        "totalSL": 18,
-        "orderCount": 2
+        "xnCount": 49,
+        "totalSL": 228,
+        "orderCount": 49
       },
       {
-        "name": "H.Trang",
-        "xnCount": 2,
-        "totalSL": 2,
-        "orderCount": 2
-      },
-      {
-        "name": "Tuấn",
-        "xnCount": 2,
-        "totalSL": 9,
-        "orderCount": 2
+        "name": "Trường",
+        "xnCount": 49,
+        "totalSL": 183,
+        "orderCount": 45
       },
       {
         "name": "Trúc My",
-        "xnCount": 2,
-        "totalSL": 5,
-        "orderCount": 2
+        "xnCount": 48,
+        "totalSL": 97,
+        "orderCount": 47
+      },
+      {
+        "name": "Cẩm Hồng",
+        "xnCount": 42,
+        "totalSL": 127,
+        "orderCount": 42
+      },
+      {
+        "name": "Văn Huyến",
+        "xnCount": 42,
+        "totalSL": 185,
+        "orderCount": 32
+      },
+      {
+        "name": "Trực",
+        "xnCount": 41,
+        "totalSL": 152,
+        "orderCount": 41
+      },
+      {
+        "name": "Yến Vy",
+        "xnCount": 39,
+        "totalSL": 156,
+        "orderCount": 39
+      },
+      {
+        "name": "Tuấn",
+        "xnCount": 39,
+        "totalSL": 161,
+        "orderCount": 39
+      },
+      {
+        "name": "H.Trang",
+        "xnCount": 34,
+        "totalSL": 133,
+        "orderCount": 34
+      },
+      {
+        "name": "Gia Thư",
+        "xnCount": 34,
+        "totalSL": 68,
+        "orderCount": 34
       },
       {
         "name": "ĐINH THIỆN TÂM",
-        "xnCount": 2,
-        "totalSL": 8,
-        "orderCount": 1
+        "xnCount": 33,
+        "totalSL": 114,
+        "orderCount": 22
       }
     ],
     "completionRateByType": {
-      "Làm mới": "9%",
-      "Làm lại": "0%",
-      "Sửa": "20%",
-      "Bảo hành": "0%",
-      "Làm tiếp": "—"
+      "Làm mới": "54%",
+      "Làm lại": "11%",
+      "Sửa": "18%",
+      "Bảo hành": "33%",
+      "Làm tiếp": "64%"
     },
     "dataRange": {
       "from": "2026-03-20",
       "to": "2026-03-31"
     },
-    "totalOrdersAnalyzed": 458,
-    "totalTeeth": 1766,
+    "totalOrdersAnalyzed": 492,
+    "totalTeeth": 1867,
     "_debug_files": [
-      "Thang_03_2026.xlsx",
-      "Thang_04_2026.xlsx"
+      "0104a_final.xlsx",
+      "2403a3_final.xlsx",
+      "2503a7_final.xlsx",
+      "2503a8_final.xlsx",
+      "2603a1_final.xlsx",
+      "2603a4_final.xlsx",
+      "2603a_final.xlsx",
+      "2703a4_final.xlsx",
+      "2703a5_final.xlsx",
+      "2703a6_final.xlsx",
+      "2703a7_final.xlsx",
+      "2803a1_final.xlsx",
+      "2803a2_final.xlsx",
+      "2803a3_final.xlsx",
+      "2803a4_final.xlsx",
+      "2803a5_cleaned.xlsx",
+      "2803a5_final.xlsx",
+      "2803a_final.xlsx",
+      "2903a2_final.xlsx",
+      "2903a3_final.xlsx",
+      "2903a4_final.xlsx",
+      "2903a5_final.xlsx",
+      "2903a6_final.xlsx",
+      "2903a7_final.xlsx",
+      "2903a_final.xlsx",
+      "3003a1_final.xlsx",
+      "3003a_final.xlsx",
+      "3103a1_final.xlsx",
+      "3103a2_final.xlsx",
+      "3103a3_final.xlsx",
+      "3103a4_final.xlsx",
+      "3103a_final.xlsx",
+      "Bản sao 2403a3_final.xlsx"
     ]
   },
   "insights": [
-    "Nut that: MÀI chiếm 91.1% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 91.1%)",
-    "Ty le remake: 1.5% (7 don) — chu yeu tu 'Lam lai' va 'Sua'.",
-    "Top KH: SG-Nk Hải Nguyên voi 36 don/thang.",
-    "KTV nang suat nhat: Toàn voi 62 don, 154 rang.",
-    "TB 45.8 don/ngay (max 73, min 1 / 10 ngay)."
+    "Nut that: MÀI chiếm 51.7% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 51.7%)",
+    "Ty le remake: 13.4% (66 don) — chu yeu tu 'Lam lai' va 'Sua'.",
+    "Top KH: SG-Nk Hải Nguyên voi 38 don/thang.",
+    "KTV nang suat nhat: Toàn voi 202 don, 608 rang.",
+    "TB 49.2 don/ngay (max 83, min 1 / 10 ngay)."
   ],
-  "learnedAt": "2026-04-01T06:13:25.899491",
+  "learnedAt": "2026-04-01T08:45:12.909881",
   "lab": {},
   "stages": {},
   "stageGroups": {},

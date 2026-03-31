@@ -20,6 +20,51 @@
         "TB 45.8 don/ngay (max 73, min 1 / 10 ngay)."
       ],
       "trend": {}
+    },
+    {
+      "at": "2026-04-01T08:26:47.077292",
+      "stats": {
+        "totalOrders": 458,
+        "totalTeeth": 1766,
+        "bottleneck": "MÀI",
+        "bottleneckPct": 91.1,
+        "remakeRate": "1.5%",
+        "dailyAvg": 45.8,
+        "topCustomer": "SG-Nk Hải Nguyên",
+        "topKTV": "Toàn"
+      },
+      "insights": [
+        "Nut that: MÀI chiếm 91.1% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 91.1%)",
+        "Ty le remake: 1.5% (7 don) — chu yeu tu 'Lam lai' va 'Sua'.",
+        "Top KH: SG-Nk Hải Nguyên voi 36 don/thang.",
+        "KTV nang suat nhat: Toàn voi 62 don, 154 rang.",
+        "TB 45.8 don/ngay (max 73, min 1 / 10 ngay)."
+      ],
+      "trend": []
+    },
+    {
+      "at": "2026-04-01T08:45:12.932101",
+      "stats": {
+        "totalOrders": 492,
+        "totalTeeth": 1867,
+        "bottleneck": "MÀI",
+        "bottleneckPct": 51.7,
+        "remakeRate": "13.4%",
+        "dailyAvg": 49.2,
+        "topCustomer": "SG-Nk Hải Nguyên",
+        "topKTV": "Toàn"
+      },
+      "insights": [
+        "Nut that: MÀI chiếm 51.7% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 51.7%)",
+        "Ty le remake: 13.4% (66 don) — chu yeu tu 'Lam lai' va 'Sua'.",
+        "Top KH: SG-Nk Hải Nguyên voi 38 don/thang.",
+        "KTV nang suat nhat: Toàn voi 202 don, 608 rang.",
+        "TB 49.2 don/ngay (max 83, min 1 / 10 ngay)."
+      ],
+      "trend": [
+        "Bottleneck giam 91.1% → 51.7%",
+        "Tong don 458 → 492"
+      ]
     }
   ]
 }
