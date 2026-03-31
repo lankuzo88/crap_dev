@@ -1,0 +1,232 @@
+{
+  "version": "2.0",
+  "updated": "",
+  "learnedStats": {
+    "avgLeadTime": {
+      "CBM": "—",
+      "SÁP/Cadcam": "0.3",
+      "SƯỜN": "0.1",
+      "ĐẮP": "0.2",
+      "MÀI": "0.2"
+    },
+    "bottleneckStage": "MÀI",
+    "bottleneckPct": 91.1,
+    "remakeRate": "1.5%",
+    "remakeCount": 7,
+    "dailyVolume": {
+      "avg": 45.8,
+      "max": 73,
+      "min": 1,
+      "days": 10
+    },
+    "topMaterials": [
+      "Kim loại",
+      "Zirconia",
+      "Titanium",
+      "Khác",
+      "Temp/PMMA",
+      "Veneer"
+    ],
+    "topCustomers": [
+      {
+        "name": "SG-Nk Hải Nguyên",
+        "count": 36
+      },
+      {
+        "name": "BL-NK BS Tăng Suy Nghĩ",
+        "count": 36
+      },
+      {
+        "name": "BT-Nk Bác Sĩ Hiếu",
+        "count": 27
+      },
+      {
+        "name": "LA-Nk Tâm Đức",
+        "count": 24
+      },
+      {
+        "name": "LA-Nk BS Huý",
+        "count": 18
+      },
+      {
+        "name": "AG-Nk Thanh Bình",
+        "count": 18
+      },
+      {
+        "name": "DL-Nk Đức Trọng",
+        "count": 18
+      },
+      {
+        "name": "SG-Nk  Hậu - Bình Chánh",
+        "count": 16
+      },
+      {
+        "name": "LA-Nk BS Thụy",
+        "count": 16
+      },
+      {
+        "name": "DT-Nk Sa Đéc",
+        "count": 15
+      }
+    ],
+    "ktvPerformance": [
+      {
+        "name": "Toàn",
+        "xnCount": 62,
+        "totalSL": 154,
+        "orderCount": 62
+      },
+      {
+        "name": "Võ Văn Vạn",
+        "xnCount": 52,
+        "totalSL": 215,
+        "orderCount": 52
+      },
+      {
+        "name": "Hồng Thắm",
+        "xnCount": 46,
+        "totalSL": 122,
+        "orderCount": 46
+      },
+      {
+        "name": "Bùi Tấn Đạt",
+        "xnCount": 29,
+        "totalSL": 60,
+        "orderCount": 29
+      },
+      {
+        "name": "Tấn Sĩ",
+        "xnCount": 20,
+        "totalSL": 71,
+        "orderCount": 20
+      },
+      {
+        "name": "HẠNH",
+        "xnCount": 19,
+        "totalSL": 46,
+        "orderCount": 19
+      },
+      {
+        "name": "Văn Trải",
+        "xnCount": 14,
+        "totalSL": 38,
+        "orderCount": 14
+      },
+      {
+        "name": "Thái Sơn",
+        "xnCount": 8,
+        "totalSL": 37,
+        "orderCount": 6
+      },
+      {
+        "name": "Trường",
+        "xnCount": 6,
+        "totalSL": 8,
+        "orderCount": 6
+      },
+      {
+        "name": "Văn Huyến",
+        "xnCount": 6,
+        "totalSL": 22,
+        "orderCount": 4
+      },
+      {
+        "name": "Cẩm Hồng",
+        "xnCount": 6,
+        "totalSL": 23,
+        "orderCount": 6
+      },
+      {
+        "name": "Yến Vy",
+        "xnCount": 5,
+        "totalSL": 20,
+        "orderCount": 5
+      },
+      {
+        "name": "Phạm Tấn Hữu",
+        "xnCount": 4,
+        "totalSL": 4,
+        "orderCount": 4
+      },
+      {
+        "name": "Trực",
+        "xnCount": 3,
+        "totalSL": 6,
+        "orderCount": 3
+      },
+      {
+        "name": "Gia Thư",
+        "xnCount": 2,
+        "totalSL": 5,
+        "orderCount": 2
+      },
+      {
+        "name": "Thế Hỷ",
+        "xnCount": 2,
+        "totalSL": 18,
+        "orderCount": 2
+      },
+      {
+        "name": "H.Trang",
+        "xnCount": 2,
+        "totalSL": 2,
+        "orderCount": 2
+      },
+      {
+        "name": "Tuấn",
+        "xnCount": 2,
+        "totalSL": 9,
+        "orderCount": 2
+      },
+      {
+        "name": "Trúc My",
+        "xnCount": 2,
+        "totalSL": 5,
+        "orderCount": 2
+      },
+      {
+        "name": "ĐINH THIỆN TÂM",
+        "xnCount": 2,
+        "totalSL": 8,
+        "orderCount": 1
+      }
+    ],
+    "completionRateByType": {
+      "Làm mới": "9%",
+      "Làm lại": "0%",
+      "Sửa": "20%",
+      "Bảo hành": "0%",
+      "Làm tiếp": "—"
+    },
+    "dataRange": {
+      "from": "2026-03-20",
+      "to": "2026-03-31"
+    },
+    "totalOrdersAnalyzed": 458,
+    "totalTeeth": 1766,
+    "_debug_files": [
+      "Thang_03_2026.xlsx",
+      "Thang_04_2026.xlsx"
+    ]
+  },
+  "insights": [
+    "Nut that: MÀI chiếm 91.1% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 91.1%)",
+    "Ty le remake: 1.5% (7 don) — chu yeu tu 'Lam lai' va 'Sua'.",
+    "Top KH: SG-Nk Hải Nguyên voi 36 don/thang.",
+    "KTV nang suat nhat: Toàn voi 62 don, 154 rang.",
+    "TB 45.8 don/ngay (max 73, min 1 / 10 ngay)."
+  ],
+  "learnedAt": "2026-04-01T06:13:25.899491",
+  "lab": {},
+  "stages": {},
+  "stageGroups": {},
+  "specialOrders": {},
+  "deadline": {},
+  "materials": {},
+  "ktvs": {},
+  "dataFields": {},
+  "typicalStats": {},
+  "morningBriefing": {},
+  "aiPersona": {},
+  "learnedFacts": {}
+}
