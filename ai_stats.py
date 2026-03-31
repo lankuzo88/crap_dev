@@ -420,6 +420,19 @@ def learn():
     with open(MEMORY_FP, "w", encoding="utf-8") as f:
         json.dump(memory, f, ensure_ascii=False, indent=2)
 
+    # Ghi vao insight timeline
+    try:
+        sys.path.insert(0, str(BASE_DIR))
+        from ai_memory import append_insight
+        entry = append_insight(insights, stats)
+        if entry.get("trend"):
+            print(f"\n  [Trend] ", end="")
+            for t in entry["trend"]:
+                print(t + " | ", end="")
+            print()
+    except Exception:
+        pass  # ai_memory.py chua co cung duoc
+
     print(f"\n  Da cap nhat: {MEMORY_FP}")
     print("=" * 50)
 

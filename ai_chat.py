@@ -6,7 +6,7 @@ ASIA LAB - AI Chat: Claude Sonnet 4 + NotebookLM-style RAG
 - Trich dan nguon moi cau tra loi
 - Khong hallucinate
 """
-import os, sys, json, io, re, urllib.request, urllib.error
+import os, sys, json, io, re, urllib.request, urllib.error, uuid
 
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -20,6 +20,13 @@ MEMORY_FP   = os.path.join(BASE_DIR, "ai_memory.json")
 API_KEY     = "sk-7df540121d72d9bbe64730c4c96f4db488492620644269c88ca817225496839a"
 BASE_URL    = "http://pro-x.io.vn"
 MODEL       = "claude-sonnet-4-6"
+
+# Memory systems
+from ai_memory import (
+    get_insights_summary, get_facts_summary,
+    save_message, new_session, get_session_context,
+    add_fact, load_insights,
+)
 
 
 # ── LOAD FILES ────────────────────────────────────────────────────────────────
@@ -43,10 +50,11 @@ def load_json(fp):
 def fetch_realtime() -> tuple:
     """Goi server.js /data.json — tra ve (orders, error_msg)."""
     try:
+        import socket
+        socket.setdefaulttimeout(5)
         req = urllib.request.Request(
             "http://localhost:3000/data.json",
             headers={"Accept": "application/json"},
-            timeout=5,
         )
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -196,12 +204,22 @@ Don dac biet:
 
 
 # ── ASSEMBLE PROMPT ──────────────────────────────────────────────────────────
-def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict) -> str:
+def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict,
+                 session_id: str = None) -> str:
     instructions = load_text(INSTRUCTIONS)
 
     lines = []
     lines.append(instructions)
     lines.append("")
+
+    # Session context (neu co lich su)
+    if session_id:
+        ctx = get_session_context(session_id)
+        if ctx:
+            lines.append(ctx)
+            lines.append("")
+
+    # Data chunks
     lines.append("=== DATA CHUNKS ===")
 
     has_realtime = False
@@ -222,8 +240,17 @@ def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict) ->
             if ctx:
                 lines.append(ctx)
 
+    # Insights timeline + Learned facts
+    insights_txt = get_insights_summary()
+    facts_txt    = get_facts_summary()
+    if insights_txt and "(chua co" not in insights_txt:
+        lines.append("")
+        lines.append(insights_txt)
+    if facts_txt and "(chua co" not in facts_txt:
+        lines.append("")
+        lines.append(facts_txt)
+
     if not has_realtime:
-        # Them goi y cho realtime
         lines.append("")
         lines.append("[Luu y] Cau hoi ve du lieu hien tai — xem chunk [Nguon: realtime] o tren")
 
@@ -234,7 +261,7 @@ def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict) ->
 
 
 # ── CHAT ────────────────────────────────────────────────────────────────────
-def chat(user_msg: str, verbose: bool = False) -> str:
+def chat(user_msg: str, verbose: bool = False, session_id: str = None) -> str:
     print("  [Dang suy nghi... ]", end="", flush=True)
     try:
         import anthropic
@@ -242,7 +269,7 @@ def chat(user_msg: str, verbose: bool = False) -> str:
         memory    = load_json(MEMORY_FP)
         knowledge = load_json(KNOWLEDGE_FP)
         sources   = detect_sources(user_msg)
-        prompt    = build_prompt(user_msg, sources, memory, knowledge)
+        prompt    = build_prompt(user_msg, sources, memory, knowledge, session_id)
 
         if verbose:
             print(f"\n[SOURCES: {sources}]", file=sys.stderr)
@@ -252,6 +279,7 @@ def chat(user_msg: str, verbose: bool = False) -> str:
             model=MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
+            tools=[],  # tat tool use — chi tra loi, khong tu browse
         )
 
         parts = []
@@ -259,8 +287,15 @@ def chat(user_msg: str, verbose: bool = False) -> str:
             if hasattr(block, "text"):
                 parts.append(block.text.strip())
 
+        answer = "\n".join(parts).strip()
+
+        # Luu lich su session
+        if session_id:
+            save_message(session_id, "user",   user_msg)
+            save_message(session_id, "assistant", answer)
+
         print("\r  [Xong]            \n", flush=True)
-        return "\n".join(parts).strip()
+        return answer
 
     except Exception as e:
         print(f"\r  [Loi: {e}]            ", flush=True)
@@ -272,17 +307,22 @@ def interactive():
     print("=" * 50)
     print("  ASIA LAB AI Chat -- Claude Sonnet 4 (NotebookLM)")
     print("  3 nguon: realtime | learnedStats | knowledge")
-    print("  Go 'exit'/'quit' de thoat")
+    print("  Tu hoc: insights timeline | learned facts | session memory")
+    print("  Go 'exit'/'quit' de thoat | 'new' de reset session")
     print("=" * 50)
 
-    memory    = load_json(MEMORY_FP)
-    knowledge = load_json(KNOWLEDGE_FP)
+    memory     = load_json(MEMORY_FP)
+    knowledge  = load_json(KNOWLEDGE_FP)
+    session_id = new_session()
 
     if memory.get("learnedStats"):
         dr = memory["learnedStats"].get("dataRange", {})
         print(f"\n  [learnedStats] Data: {dr.get('from','?')} -> {dr.get('to','?')}")
     if knowledge.get("lab"):
         print(f"  [knowledge] Lab: {knowledge['lab'].get('name','?')}")
+    insights_txt = get_insights_summary()
+    if insights_txt and "(chua co" not in insights_txt:
+        print(f"  [insights] Timeline co {load_insights()['entries'][-1]['at'][:10]}")
     print()
 
     while True:
@@ -296,6 +336,10 @@ def interactive():
         if user.lower() in ("exit", "quit", "q"):
             print("Tam biet!")
             break
+        if user.lower() == "new":
+            session_id = new_session()
+            print("  Session moi — da reset lich su")
+            continue
         if user.lower() == "reload":
             memory    = load_json(MEMORY_FP)
             knowledge = load_json(KNOWLEDGE_FP)
@@ -306,7 +350,7 @@ def interactive():
             continue
 
         print()
-        result = chat(user)
+        result = chat(user, session_id=session_id)
         print("  AI:", result)
         print()
 

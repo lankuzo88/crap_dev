@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "at": "2026-04-01T07:32:00.055901",
+      "stats": {
+        "totalOrders": 458,
+        "totalTeeth": 1766,
+        "bottleneck": "MÀI",
+        "bottleneckPct": 91.1,
+        "remakeRate": "1.5%",
+        "dailyAvg": 45.8,
+        "topCustomer": "SG-Nk Hải Nguyên",
+        "topKTV": "Toàn"
+      },
+      "insights": [
+        "Nut that: MÀI chiếm 91.1% đơn chưa xác nhận. (Stage co ti le cho cao nhat: MÀI 91.1%)",
+        "Ty le remake: 1.5% (7 don) — chu yeu tu 'Lam lai' va 'Sua'.",
+        "Top KH: SG-Nk Hải Nguyên voi 36 don/thang.",
+        "KTV nang suat nhat: Toàn voi 62 don, 154 rang.",
+        "TB 45.8 don/ngay (max 73, min 1 / 10 ngay)."
+      ],
+      "trend": {}
+    }
+  ]
+}
