@@ -1,9 +1,9 @@
 /**
- * ASIA LAB — Dashboard Server v2
+ * ASIA LAB — Dashboard Server v2 (Không AI)
  * Đọc: File_sach/ (Excel sạch mới nhất) + Data/ (JSON tiến độ)
  *
  * Cách chạy:
- *   cd C:\Users\...\Desktop\crap
+ *   cd C:\Users\...\Desktop\crap_dev
  *   npm install express xlsx
  *   node server.js
  *
@@ -14,124 +14,15 @@ const express = require('express');
 const XLSX    = require('xlsx');
 const path    = require('path');
 const fs      = require('fs');
-const https   = require('https');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-const AI_API_KEY  = 'sk-7df540121d72d9bbe64730c4c96f4db488492620644269c88ca817225496839a';
-const AI_BASE_URL = 'http://pro-x.io.vn';
-const AI_MODEL    = 'claude-sonnet-4-6';
-const AI_MAX_TOKENS = 8192;
-
-async function anthropicChat(prompt) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({
-      model:       AI_MODEL,
-      max_tokens:  AI_MAX_TOKENS,
-      messages:    [{ role: 'user', content: prompt }],
-    });
-    const url = new URL(`${AI_BASE_URL}/v1/messages`);
-    const opts = {
-      hostname: url.hostname,
-      port:     url.port || 443,
-      path:     url.pathname,
-      method:   'POST',
-      headers:  {
-        'Content-Type':        'application/json',
-        'x-api-key':           AI_API_KEY,
-        'anthropic-version':   '2023-06-01',
-        'Content-Length':      Buffer.byteLength(body),
-      },
-    };
-    const req = https.request(opts, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          // Sonnet 4: content = [{type:"text",text:"..."}] hoặc [{type:"thinking",...}, {type:"text",text:"..."}]
-          const textBlock = parsed.content?.find(b => b.type === 'text');
-          const answer = textBlock?.text || parsed.content?.[0]?.text || parsed.content?.[0]?.content || 'Không có phản hồi từ AI';
-          resolve(answer);
-        } catch (e) {
-          reject(new Error(`Parse error: ${data.slice(0, 200)}`));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-const SYSTEM_PROMPT = `Bạn là Giám đốc Sản xuất Labo Nha Khoa ASIA LAB.
-
-5 CÔNG ĐOẠN (theo thứ tự):
-  CBM(0) → SÁP(1) → SƯỜN(2) → ĐẮP(3) → MÀI(4)
-  → Mỗi đơn phải qua lần lượt các công đoạn chưa skip.
-
-QUY TRÌNH ĐẶC BIỆT:
-  • "Sửa/Làm tiếp" → SKIP 3 công đoạn đầu (CBM,SÁP,SƯỜN), chỉ ĐẮP+MÀI
-  • "TS/Thử sườn" → SKIP 2 công đoạn cuối (ĐẮP,MÀI), chỉ CBM→SÁP→SƯỜN rồi giao lại
-
-DEADLINE (trường 'gc'):
-  • "XH NGÀY DD/MM" → deadline cụ thể: 12H ngày 28/03
-  • "XH" đứng riêng → deadline hôm đó: 15H = deadline 15H hôm nay
-  • "Hoàn tất"/"HT" → KHÔNG có deadline mới
-  • ⚠️ ĐÂY LÀ GIỜ PHẢI XONG SẢN XUẤT ĐỂ GỬI GIA CÔNG BÊN NGOÀI
-
-TRƯỜNG 'sl' = SỐ RĂNG trong đơn. Khi được hỏi "bao nhiêu răng" → TÍNH TỔNG sl, không đếm đơn.
-
-PHÂN BIỆT ĐƠN HOÀN THÀNH vs ĐANG LÀM:
-  • pct = 100 → ĐƠN HOÀN THÀNH, không cần theo dõi
-  • pct < 100 → Đơn đang làm, cần theo dõi
-  • Trong byStage: chỉ tính đơn ĐANG LÀM (pct < 100) chưa qua công đoạn đó
-
-NÚT THẮT QUAN TRỌNG:
-  ĐẮP = nút thắt lớn nhất. Thường chiếm 40-60% đơn đang chờ.
-  Luôn chú ý đến đơn tắc ở ĐẮP.
-
-PHÂN TÍCH:
-  1. Đơn nào sắp/trễ deadline → 🔴 Nguy hiểm
-  2. Đơn chờ ĐẮP quá lâu → 🟡 Cần chú ý
-  3. KTV nào đang quá tải / rảnh
-  4. Đơn khẩn (deadline ≤ 12H hoặc ghi chú 'gấp')
-
-TRẢ LỜI:
-  • TỐI ĐA 200 TỪ mỗi câu trả lời
-  • LUÔN đi kèm mã đơn (ma_dh) khi nhắc đơn cụ thể
-  • Khi tính răng → ghi rõ: "X đơn, Y răng"
-  • Dùng emoji phân loại: 🔴🟡🟢
-  • HỎI NGƯỜI DÙNG ngay nếu thấy bất thường cụ thể
-  • TIẾNG VIỆT CÓ DẤU`;
 
 // ── CẤU HÌNH ĐƯỜNG DẪN ───────────────────────────────
-// server.js đặt trong thư mục crap/
-// → tự động tìm File_sach/ và Data/ cùng cấp
 const BASE_DIR      = __dirname;
 const FILE_SACH_DIR = path.join(BASE_DIR, 'File_sach');
 const DATA_DIR      = path.join(BASE_DIR, 'Data');
 const DASHBOARD     = path.join(BASE_DIR, 'dashboard.html');
-
-// ── AI MEMORY ─────────────────────────────────────────
-let AI_MEMORY = {};
-try {
-  AI_MEMORY = JSON.parse(fs.readFileSync(path.join(BASE_DIR, 'ai_memory.json'), 'utf8'));
-  console.log('✓ AI memory loaded: v' + AI_MEMORY.version);
-} catch (e) {
-  console.log('⚠ AI memory not found — AI sẽ không có context dài hạn (' + e.message + ')');
-}
-
-function getMemoryPrompt() {
-  const base = { ...AI_MEMORY };
-  const facts = (AI_MEMORY.learnedFacts || []).map(f => f.text).join('\n- ');
-  const memStr = JSON.stringify(base, null, 2);
-  let out = '\n\n📚 THÔNG TIN CƠ BẢN VỀ LABO:\n' + memStr;
-  if (facts) {
-    out += '\n\n🧠 KIẾN THỨC ĐÃ HỌC (từ kinh nghiệm thực tế):\n- ' + facts;
-  }
-  return out;
-}
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
@@ -436,7 +327,7 @@ app.get('/', (req, res) => {
   if (fs.existsSync(DASHBOARD)) {
     res.sendFile(DASHBOARD);
   } else {
-    res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục <b>crap/</b></p>`);
+    res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục <b>crap_dev/</b></p>`);
   }
 });
 
@@ -480,176 +371,6 @@ app.get('/status', (req, res) => {
     cached_orders:  cache?.orders?.length || 0,
     cache_age_s:    cacheTime ? Math.round((Date.now()-cacheTime)/1000) : null,
   });
-});
-
-// ── AI ANALYST ─────────────────────────────────────────
-
-// Helper buildSummary — dùng chung cho cả insights lẫn chat
-function buildSummary(orders) {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const urgent  = orders.filter(o => {
-    if (!o.yc_giao) return false;
-    const d = o.yc_giao.substring(0,10);
-    const t = o.yc_giao.includes(':') ? o.yc_giao : '';
-    if (d !== today) return false;
-    if (!t) return false;
-    const h = parseInt(t.split(':')[1]);
-    return !isNaN(h) && h <= 12;
-  });
-  const done       = orders.filter(o => o.pct === 100);
-  const inProgress = orders.filter(o => o.pct > 0 && o.pct < 100);
-  // Tổng răng
-  const totalTeeth = orders.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
-  const doneTeeth   = done.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
-  const ipTeeth    = inProgress.reduce((s, o) => s + (parseInt(o.sl) || 0), 0);
-  // Theo công đoạn — CHỈ đơn đang làm (pct<100)
-  const byStage = STAGE_NAMES.map((name, i) => ({
-    name,
-    count: inProgress.filter(o => !o.stages[i].sk && !o.stages[i].x).length,
-  }));
-  // Đơn có gc hôm nay
-  const gcToday = orders.filter(o => {
-    if (!o.gc) return false;
-    const tm = o.gc.match(/(\d{1,2})H/i);
-    return tm && parseInt(tm[1]) > 0;
-  }).map(o => ({
-    ma_dh: o.ma_dh, gc: o.gc, bn: o.bn, kh: o.kh, pct: o.pct,
-    stage: o.stages.find(s => !s.sk && !s.x)?.n || 'xong',
-  }));
-  return {
-    total:        orders.length,
-    totalTeeth,
-    done:         done.length,
-    doneTeeth,
-    inProgress:   inProgress.length,
-    ipTeeth,
-    urgentCount:  urgent.length,
-    byStage,
-    gcToday,
-    now: new Date().toLocaleString('vi-VN'),
-  };
-}
-
-// ── AI HELPER: đọc Excel final mới nhất ───────────────
-function aiReadExcelForAnalysis() {
-  const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
-  if (!excelFile) return null;
-  try {
-    const wb = XLSX.readFile(excelFile.path, { cellDates: true });
-    const getSheet = (...keys) => {
-      const name = wb.SheetNames.find(n => keys.some(k => n.toLowerCase().includes(k.toLowerCase())));
-      return name ? XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' }) : null;
-    };
-    const raw1 = getSheet('Đơn hàng', 'donhang');
-    if (!raw1) return null;
-    const h = raw1[0].map(h => str(h));
-    const ci = k => h.findIndex(col => col.includes(k));
-    const rows = raw1.slice(1).filter(r => {
-      const ma = str(r[ci('Mã ĐH')]);
-      return ma && !ma.includes('TỔNG') && ma !== 'Mã ĐH';
-    });
-    // Lấy tất cả rows thuần (chỉ data, không xử lý stage)
-    const summary = {
-      source: excelFile.name,
-      totalRows: rows.length,
-      samples: rows.slice(0, 5).map(r => ({
-        ma_dh:  str(r[ci('Mã ĐH')]),
-        kh:     str(r[ci('Khách')]),
-        bn:     str(r[ci('ệnh nhân')]),
-        ph:     str(r[ci('Phục hình')]),
-        sl:     parseInt(r[ci('SL')]) || 0,
-        gc:     str(r[ci('Ghi chú')]),
-        yc_ht:  str(r[ci('hoàn thành')]),
-        yc_giao: str(r[ci('giao')]),
-      })),
-    };
-    return summary;
-  } catch (e) {
-    return null;
-  }
-}
-
-// GET /ai/insights — tự động phân tích khi load dashboard
-app.get('/ai/insights', async (req, res) => {
-  try {
-    const data     = getData();
-    const summary  = buildSummary(data.orders);
-    const excelRaw = aiReadExcelForAnalysis();
-    const excelSection = excelRaw
-      ? `\n\n📋 FILE EXCEL MỚI NHẤT: ${excelRaw.source}\n(Mẫu 5 đơn đầu tiên để bạn hiểu nội dung thực tế)\n${JSON.stringify(excelRaw.samples, null, 2)}`
-      : '\n\n(Không đọc được file Excel)';
-
-    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}${excelSection}
-
-DỮ LIỆU HIỆN TẠI (${summary.now}):
-${JSON.stringify(summary, null, 2)}
-
-YÊU CẦU:
-1. Đưa ra 3-5 insights nổi bật nhất (cảnh báo / gợi ý / câu hỏi)
-2. Mỗi insight ngắn gọn, đi kèm mã đơn cụ thể nếu có
-3. Đánh dấu mức độ: 🔴 Nguy hiểm / 🟡 Cần chú ý / 🟢 Bình thường
-4. Nếu không có gì đặc biệt → trả lời: "✅ Mọi thứ bình thường. Không có bất thường cần lưu ý."`;
-
-    const insights = await anthropicChat(prompt);
-    res.json({ insights });
-  } catch (e) {
-    res.status(200).json({ insights: `⚠ Lỗi AI: ${e.message}` });
-  }
-});
-
-// POST /ai/ask — chat với AI
-app.use(express.json());
-app.post('/ai/ask', async (req, res) => {
-  try {
-    const { question } = req.body;
-    if (!question) return res.status(400).json({ error: 'Cần nhập câu hỏi' });
-    const data = getData();
-    const summary = buildSummary(data.orders);
-    const prompt = `${SYSTEM_PROMPT}${getMemoryPrompt()}
-
-DỮ LIỆU HIỆN TẠI:
-${JSON.stringify(summary, null, 2)}
-
-CÂU HỎI CỦA NGƯỜI DÙNG: ${question}
-
-TRẢ LỜI ngắn gọn, đi thẳng vào vấn đề, dùng tiếng Việt có dấu.`;
-
-    const answer = await anthropicChat(prompt);
-    res.json({ answer });
-  } catch (e) {
-    res.status(200).json({ answer: `⚠ Lỗi AI: ${e.message}` });
-  }
-});
-
-// POST /ai/learn — lưu fact mới vào AI memory
-app.post('/ai/learn', (req, res) => {
-  const { fact } = req.body;
-  if (!fact || typeof fact !== 'string') {
-    return res.status(400).json({ error: 'Cần cung cấp fact' });
-  }
-  try {
-    const memPath = path.join(BASE_DIR, 'ai_memory.json');
-    const mem = JSON.parse(fs.readFileSync(memPath, 'utf8'));
-    if (!mem.learnedFacts) mem.learnedFacts = [];
-    // Tránh trùng lặp
-    const exists = mem.learnedFacts.some(f => f.text === fact);
-    if (!exists) {
-      mem.learnedFacts.push({ text: fact, addedAt: new Date().toISOString() });
-      fs.writeFileSync(memPath, JSON.stringify(mem, null, 2), 'utf8');
-      AI_MEMORY = mem; // update in-memory
-      res.json({ ok: true, total: mem.learnedFacts.length });
-    } else {
-      res.json({ ok: true, note: 'Fact đã tồn tại', total: mem.learnedFacts.length });
-    }
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET /ai/memory — xem memory hiện tại
-app.get('/ai/memory', (req, res) => {
-  res.json({ memory: AI_MEMORY });
 });
 
 app.use(express.static(BASE_DIR));

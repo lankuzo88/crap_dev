@@ -37,30 +37,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .pip-cur{background:var(--amber);animation:blink 1.2s ease infinite;}
 .pip-pend{background:var(--border);}
 .pip-skip{background:var(--border) !important;opacity:.22 !important;border:1px dashed var(--text3) !important;animation:none !important;}
-/* ── AI PANELS ────────────────────────────────────────── */
-.d-ai-box{background:var(--surface2);border:1px solid rgba(245,166,35,.3);border-radius:8px;overflow:hidden;}
-.d-ai-hdr{background:rgba(245,166,35,.12);padding:6px 12px;font-size:11px;font-weight:700;color:var(--amber);}
-.d-ai-body{padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap;}
-.ai-chat-wrap{position:fixed;right:0;top:0;bottom:0;width:360px;background:var(--surface);border-left:1px solid var(--border2);display:flex;flex-direction:column;z-index:999;transition:transform .25s;}
-.ai-chat-hidden{transform:translateX(100%);}
-.ai-chat-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-size:13px;font-weight:700;background:rgba(245,166,35,.1);border-bottom:1px solid var(--border2);}
-.ai-chat-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:2px 6px;}
-.ai-chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
-.ai-msg{max-width:88%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;}
-.ai-msg-ai{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:3px;}
-.ai-msg-user{align-self:flex-end;background:rgba(245,166,35,.2);color:var(--text);border-bottom-right-radius:3px;}
-.ai-chat-input{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-top:1px solid var(--border2);}
-.ai-q-chips{display:flex;flex-wrap:wrap;gap:5px;}
-.ai-q-chip{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);color:var(--amber);border-radius:20px;padding:4px 10px;font-size:10px;cursor:pointer;white-space:nowrap;}
-.ai-q-chip:hover{background:rgba(245,166,35,.22);}
-.ai-chat-row{display:flex;gap:6px;}
-.ai-chat-input input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text);outline:none;}
-.ai-chat-input input:focus{border-color:var(--amber);}
-.ai-chat-input button{background:var(--amber);border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:13px;color:#000;font-weight:700;}
-#d-nl-ai{color:var(--amber);cursor:pointer;}
-.d-ai-hdr{display:flex;justify-content:space-between;align-items:center;}
-.d-ai-save-btn{background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;padding:0 4px;opacity:.7;}
-.d-ai-save-btn:hover{opacity:1;}
 
 .ph-chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;letter-spacing:.3px;}
 .ph-zirc{color:#5bbfff;border-color:rgba(91,191,255,.35);background:rgba(91,191,255,.08);}
@@ -429,6 +405,47 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .d-lk-bf{height:100%;border-radius:3px;}
   .d-lk-v{font-family:var(--mono);font-size:11px;font-weight:600;width:32px;text-align:right;flex-shrink:0;}
 }
+@media print {
+  *{background:#fff!important;color:#000!important;}
+  body{max-width:none!important;overflow:visible!important;background:#fff;}
+  #boot,#layout-desktop,.m-nav,.overlay,.m-kpi-row,.m-sticky,.m-hdr .live-badge{display:none!important;}
+  #layout-mobile{display:block!important;}
+
+  /* Header print */
+  .m-hdr{position:sticky;top:0;background:#fff!important;border-bottom:2px solid #f5a623!important;padding:8px 12px!important;}
+  .m-hdr-r1{display:flex!important;align-items:center!important;justify-content:space-between!important;}
+  .brand-ico,.brand-name,.live-badge,.m-close-btn,.m-hdr .pdf-btn-hide{display:none!important;}
+  .brand{display:flex!important;align-items:center!important;gap:6px!important;}
+  .brand::before{content:'ASIA LAB';font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#f5a623!important;letter-spacing:1px;}
+  .pdf-meta{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
+  .pdf-date{font-family:'JetBrains Mono',monospace!important;font-size:12px!important;color:#555!important;margin-left:auto;}
+  .pdf-summary{font-size:10px!important;color:#888!important;}
+  .pdf-summary{font-size:10px;color:#888!important;margin-top:2px;margin-left:auto;}
+
+  /* Chỉ hiện đơn hôm nay */
+  #m-OB .row-item,.m-scroll,.m-pane-orders,.tab-pane{display:block!important;}
+  #m-OB .row-item .row-accent,#m-OB .row-item .row-pips{display:none!important;}
+  #m-OB .row-item{background:#fff!important;border:1px solid #ccc!important;border-radius:0!important;margin:0!important;padding:5px 8px!important;display:flex!important;align-items:center!important;gap:6px!important;min-height:auto!important;}
+  #m-OB .row-item:active{background:#fff!important;}
+
+  /* Ẩn các đơn không phải hôm nay */
+  #m-OB .row-item[data-today="false"]{display:none!important;}
+
+  /* In thông tin cần thiết */
+  .row-info{flex:1!important;min-width:0!important;padding:0!important;display:flex!important;align-items:center!important;gap:10px!important;}
+  .row-top{display:none!important;}
+  .row-name{font-size:11px!important;font-weight:700!important;color:#000!important;font-family:inherit!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  .row-sub{font-size:10px!important;color:#555!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin-top:0!important;}
+  .row-right{display:flex!important;align-items:center!important;gap:8px!important;flex-shrink:0!important;padding:0!important;min-width:auto!important;}
+  .row-right>*:not(.row-giao):not(.row-sl){display:none!important;}
+  .row-giao{font-family:'JetBrains Mono',monospace!important;font-size:11px!important;font-weight:700!important;color:#000!important;white-space:nowrap!important;}
+  .row-sl{font-family:'JetBrains Mono',monospace!important;font-size:11px!important;font-weight:700!important;color:#f5a623!important;}
+  .row-prog,.pct-b{display:none!important;}
+  .m-scroll{padding:0 8px 16px!important;overflow:visible!important;max-height:none!important;}
+
+  /* PDF button */
+  .m-hdr button{display:none!important;}
+}
 </style>
 </head>
 <body>
@@ -452,6 +469,14 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         </div>
       </div>
       <div class="live-badge"><div class="live-dot"></div><span class="live-txt">LIVE</span></div>
+      <div style="display:none" class="pdf-meta">
+        <div class="pdf-date"></div>
+        <div class="pdf-summary"></div>
+      </div>
+      <button onclick="window.print()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--amber);font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;flex-shrink:0;" title="Xuất PDF đơn hôm nay">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        PDF
+      </button>
     </div>
     <div class="m-kpi-row">
       <div class="m-kpi" onclick="mSetF(document.querySelector('#m-chips .chip[data-f=today]'),'today')" style="cursor:pointer">
@@ -550,7 +575,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl active" id="d-nl-orders" onclick="dSw('orders',this)"><span class="ico">📋</span> Đơn Hàng<span class="d-nl-badge" id="d-nav-badge">—</span></div>
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
-        <div class="d-nl" id="d-nl-ai" onclick="aiChatToggle()"><span class="ico">🤖</span> AI Chat</div>
       </div>
       <div class="d-funnel">
         <div class="d-f-title">TIẾN ĐỘ CÔNG ĐOẠN</div>
@@ -606,15 +630,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
               <div class="d-kbig kb"><div class="d-kbig-n" style="color:var(--blue)" id="d-sb-done">—</div><div class="d-kbig-u">✓ HOÀN THÀNH</div></div>
               <div class="d-kbig kp"><div class="d-kbig-n" style="color:var(--purple)" id="d-sb-ktv">—</div><div class="d-kbig-u">KỸ THUẬT VIÊN</div></div>
             </div>
-            <!-- AI INSIGHTS -->
-            <div id="d-ai-insights" class="d-ai-box" style="margin:0 16px 12px">
-              <div class="d-ai-hdr">
-                <span>🤖 AI PHÂN TÍCH</span>
-                <button class="d-ai-save-btn" onclick="aiSaveInsight()" title="Lưu insight này vào memory">💾 Nhớ</button>
-              </div>
-              <div class="d-ai-body" id="d-ai-body">Đang phân tích...</div>
-            </div>
-            <div class="d-sub-tabs">
+<div class="d-sub-tabs">
               <div class="d-sub-tab active" id="tng-tab-main" onclick="tngSetTab('main',this)">📊 Tổng Hợp</div>
               <div class="d-sub-tab" id="tng-tab-suon" onclick="tngSetTab('suon',this)">SƯỜN</div>
               <div class="d-sub-tab" id="tng-tab-su" onclick="tngSetTab('su',this)">SỨ</div>
@@ -632,27 +648,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   </div>
 </div>
 
-<!-- AI CHAT PANEL -->
-<div id="ai-chat" class="ai-chat-wrap ai-chat-hidden">
-  <div class="ai-chat-hdr">
-    <span>🤖 AI Sản xuất</span>
-    <button class="ai-chat-close" onclick="aiChatToggle()">✕</button>
-  </div>
-  <div class="ai-chat-msgs" id="ai-msgs"></div>
-  <div class="ai-chat-input">
-    <div class="ai-q-chips">
-      <div class="ai-q-chip" onclick="aiAskQ('Còn bao nhiêu đơn chưa xong hôm nay?')">📋 Còn đơn nào?</div>
-      <div class="ai-q-chip" onclick="aiAskQ('Đơn nào đang bị trễ deadline?')">⚠️ Đơn trễ?</div>
-      <div class="ai-q-chip" onclick="aiAskQ('KTV nào đang quá tải?')">👤 KTV nào tải?</div>
-      <div class="ai-q-chip" onclick="aiAskQ('Hôm nay có bao nhiêu đơn khẩn?')">🚨 Đơn khẩn?</div>
-      <div class="ai-q-chip" onclick="aiAskQ('Công đoạn nào đang là nút thắt?')">🔴 Nút thắt?</div>
-    </div>
-    <div class="ai-chat-row">
-      <input id="ai-q" placeholder="Hỏi AI bất cứ điều gì..." onkeydown="if(event.key==='Enter')aiAsk()">
-      <button onclick="aiAsk()">▶</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL -->
 <div class="overlay" id="OV" onclick="closeModal(event)">
@@ -872,86 +867,6 @@ function gcTimeSortVal(o) {
     return `${ds}T${hr}:00`;
   }
   return o.yc_giao || 'zzz';
-}
-// ── AI ANALYST ─────────────────────────────────────────
-async function loadInsights() {
-  try {
-    const r = await fetch('/ai/insights');
-    const { insights } = await r.json();
-    document.getElementById('d-ai-body').innerHTML = insights;
-  } catch (e) {
-    document.getElementById('d-ai-body').innerHTML = '⚠ Không thể tải AI';
-  }
-}
-
-let aiOpen = false;
-function aiChatToggle() {
-  aiOpen = !aiOpen;
-  const panel = document.getElementById('ai-chat');
-  if (aiOpen) {
-    panel.classList.remove('ai-chat-hidden');
-    document.getElementById('ai-q').focus();
-    if (!document.getElementById('ai-msgs').children.length) {
-      // Greeting
-      document.getElementById('ai-msgs').innerHTML =
-        '<div class="ai-msg ai-msg-ai">🤖 Xin chào! Tôi là AI phân tích sản xuất ASIA LAB.<br><br>Dùng các câu hỏi nhanh bên dưới hoặc hỏi tự do về đơn hàng, tiến độ, KTV, deadline — tôi sẽ phân tích và đặt câu hỏi lại nếu thấy bất thường!</div>';
-    }
-  } else {
-    panel.classList.add('ai-chat-hidden');
-  }
-}
-
-async function aiAsk() {
-  const input = document.getElementById('ai-q');
-  const q = input.value.trim();
-  if (!q) return;
-  input.value = '';
-  await doAsk(q);
-}
-
-async function aiAskQ(q) {
-  document.getElementById('ai-q').value = q;
-  await doAsk(q);
-}
-
-async function doAsk(q) {
-  const msgs = document.getElementById('ai-msgs');
-  if (aiOpen) msgs.scrollTop = msgs.scrollHeight;
-  msgs.innerHTML += `<div class="ai-msg ai-msg-user">${q}</div>`;
-  msgs.innerHTML += `<div class="ai-msg ai-msg-ai">...</div>`;
-  try {
-    const r = await fetch('/ai/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q }),
-    });
-    const { answer } = await r.json();
-    msgs.lastChild.innerHTML = answer;
-    msgs.scrollTop = msgs.scrollHeight;
-  } catch (e) {
-    msgs.lastChild.innerHTML = '⚠ Lỗi kết nối AI';
-  }
-}
-
-async function aiSaveInsight() {
-  const body = document.getElementById('d-ai-body').innerHTML.trim();
-  if (!body || body === 'Đang phân tích...') {
-    alert('Chưa có insights để lưu');
-    return;
-  }
-  const fact = prompt('Lưu insight này vào AI memory?\n\n' + body.slice(0, 200) + '...', body.slice(0, 300));
-  if (!fact) return;
-  try {
-    const r = await fetch('/ai/learn', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fact }),
-    });
-    const d = await r.json();
-    if (d.ok) alert('💾 Đã lưu! AI sẽ nhớ fact này. (' + d.total + ' facts)');
-  } catch (e) {
-    alert('Lỗi: ' + e.message);
-  }
 }
 
 function phType(ph) {
@@ -1309,7 +1224,8 @@ function mRender() {
       const gcTm = gcTime(o.gc);
       if (gcTm) tags += ` <span class="ph-chip lk-time" style="font-size:8px">⏰ ${gcTm}</span>`;
 
-      html += `<div class="row-item" onclick="openModal('${o.ma_dh||o.id}')">
+      const isToday = dayType(grp.giao) === 'today';
+      html += `<div class="row-item" onclick="openModal('${o.ma_dh||o.id}')" data-today="${isToday}">
         <div class="row-accent ${lkAccCls(o.lk)}"></div>
         <div class="row-pips"><div class="m-pip-row">${pips}</div></div>
         <div class="row-info">
@@ -1692,7 +1608,7 @@ async function fetchData() {
     const layout = IS_MOBILE ? 'layout-mobile' : 'layout-desktop';
     document.getElementById(layout).style.display = 'block';
     updateUI();
-    loadInsights(); // AI insights auto-load on first load
+
   } catch (err) {
     document.getElementById('bootTxt').textContent = '❌ ' + err.message + ' — thử lại sau 30s';
     setTimeout(fetchData, 30000);
