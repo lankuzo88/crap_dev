@@ -7,15 +7,43 @@
     "location": "Việt Nam",
     "description": "Labo chuyên sản xuất răng sứ, mão răng, veneer cho các phòng khám nha khoa"
   },
-
   "stages": [
-    { "index": 0, "name": "CBM", "full": "Cắt Be Mi", "group": "suon", "description": "Cắt và chuẩn bị Be Mi (khung kim loại/zirconia). Thường là công đoạn đầu tiên." },
-    { "index": 1, "name": "SÁP", "full": "Sáp/Cadcam", "group": "suon", "description": "Thiết kế và đúc sáp, hoặc xử lý Cadcam. Có thể làm song song với CBM." },
-    { "index": 2, "name": "SƯỜN", "full": "Sườn", "group": "suon", "description": "Làm sườn răng, kiểm tra khớp cắn. Công đoạn QC quan trọng." },
-    { "index": 3, "name": "ĐẮP", "full": "Đắp sứ", "group": "su", "description": "Đắp ceramic/sứ lên sườn. THƯỜNG LÀ NÚT THẮT LỚN NHẤT — mất nhiều thời gian nhất, dễ tắc nghẽn." },
-    { "index": 4, "name": "MÀI", "full": "Mài hoàn thiện", "group": "su", "description": "Mài tinh, đánh bóng, kiểm tra cuối trước khi giao." }
+    {
+      "index": 0,
+      "name": "CBM",
+      "full": "Cắt Be Mi",
+      "group": "suon",
+      "description": "Cắt và chuẩn bị Be Mi (khung kim loại/zirconia). Thường là công đoạn đầu tiên."
+    },
+    {
+      "index": 1,
+      "name": "SÁP",
+      "full": "Sáp/Cadcam",
+      "group": "suon",
+      "description": "Thiết kế và đúc sáp, hoặc xử lý Cadcam. Có thể làm song song với CBM."
+    },
+    {
+      "index": 2,
+      "name": "SƯỜN",
+      "full": "Sườn",
+      "group": "suon",
+      "description": "Làm sườn răng, kiểm tra khớp cắn. Công đoạn QC quan trọng."
+    },
+    {
+      "index": 3,
+      "name": "ĐẮP",
+      "full": "Đắp sứ",
+      "group": "su",
+      "description": "Đắp ceramic/sứ lên sườn. THƯỜNG LÀ NÚT THẮT LỚN NHẤT — mất nhiều thời gian nhất, dễ tắc nghẽn."
+    },
+    {
+      "index": 4,
+      "name": "MÀI",
+      "full": "Mài hoàn thiện",
+      "group": "su",
+      "description": "Mài tinh, đánh bóng, kiểm tra cuối trước khi giao."
+    }
   ],
-
   "stageGroups": {
     "suon": {
       "name": "SƯỜN",
@@ -28,20 +56,34 @@
       "out": "MÀI đã xong → HOÀN THÀNH, sẵn sàng giao"
     }
   },
-
   "specialOrders": {
     "sua_laitiep": {
-      "keywords": ["sửa", "làm tiếp", "làm lại", "remake"],
-      "skipStages": [0, 1, 2],
+      "keywords": [
+        "sửa",
+        "làm tiếp",
+        "làm lại",
+        "remake"
+      ],
+      "skipStages": [
+        0,
+        1,
+        2
+      ],
       "description": "Đơn sửa/làm tiếp → skip 3 công đoạn đầu (CBM, SÁP, SƯỜN), chỉ làm ĐẮP và MÀI. Thường làm gấp."
     },
     "thu_suon": {
-      "keywords": ["ts", "thử sườn", "thu suon"],
-      "skipStages": [3, 4],
+      "keywords": [
+        "ts",
+        "thử sườn",
+        "thu suon"
+      ],
+      "skipStages": [
+        3,
+        4
+      ],
       "description": "Đơn thử sườn (TS) → skip 2 công đoạn cuối (ĐẮP, MÀI), chỉ làm CBM→SÁP→SƯỜN rồi giao lại phòng khám. Thường cần làm nhanh."
     }
   },
-
   "deadline": {
     "field": "gc",
     "meaning": "Ghi chú điều phối — thời gian phải XONG sản xuất để GỬI RA bên ngoài gia công",
@@ -53,60 +95,122 @@
     },
     "note": "KHÔNG phân biệt H hoa/thường. Thời gian gc = giờ phải giao cho bên nhận gia công."
   },
-
   "materials": {
     "zirconia": {
-      "keywords": ["zircornia", "ziconia", "cercon", "diamond", "zirconia ht", "zolid", "zr"],
-      "examples": ["Răng sứ Zircornia", "Full Sứ Ziconia", "Cercon HT", "Zir-Diamond"],
+      "keywords": [
+        "zircornia",
+        "ziconia",
+        "cercon",
+        "diamond",
+        "zirconia ht",
+        "zolid",
+        "zr"
+      ],
+      "examples": [
+        "Răng sứ Zircornia",
+        "Full Sứ Ziconia",
+        "Cercon HT",
+        "Zir-Diamond"
+      ],
       "time": "3-7 ngày từ khi nhận mẫu",
       "note": "Cần kiln nung, thời gian chờ giữa các công đoạn"
     },
     "titanium": {
-      "keywords": ["titanium", "ti"],
-      "examples": ["Răng sứ Titanium", "Thanh Bar Titanium"],
+      "keywords": [
+        "titanium",
+        "ti"
+      ],
+      "examples": [
+        "Răng sứ Titanium",
+        "Thanh Bar Titanium"
+      ],
       "time": "3-5 ngày"
     },
     "metal": {
-      "keywords": ["kim loại thường", "kim loại", "mão kim loại"],
-      "examples": ["Răng sứ kim loại thường", "Full/mão kim loại sứ"],
+      "keywords": [
+        "kim loại thường",
+        "kim loại",
+        "mão kim loại"
+      ],
+      "examples": [
+        "Răng sứ kim loại thường",
+        "Full/mão kim loại sứ"
+      ],
       "time": "2-4 ngày"
     },
     "veneer": {
-      "keywords": ["veneer", "laminate", "cut back", "mặt dán"],
-      "examples": ["Veneer sứ Ziconia (Cut Back)", "Mặt dán sứ"],
+      "keywords": [
+        "veneer",
+        "laminate",
+        "cut back",
+        "mặt dán"
+      ],
+      "examples": [
+        "Veneer sứ Ziconia (Cut Back)",
+        "Mặt dán sứ"
+      ],
       "time": "2-3 ngày, đòi hỏi tay nghề cao"
     },
     "temp": {
-      "keywords": ["tạm", "temporary", "pmma"],
-      "examples": ["Răng Tạm"],
+      "keywords": [
+        "tạm",
+        "temporary",
+        "pmma"
+      ],
+      "examples": [
+        "Răng Tạm"
+      ],
       "time": "1-2 ngày, thường làm gấp"
     },
     "other": {
-      "keywords": ["bar", "implant", "in mẫu", "toàn hàm"],
-      "examples": ["Thanh Bar Titanium", "In Mẫu Toàn Hàm"],
+      "keywords": [
+        "bar",
+        "implant",
+        "in mẫu",
+        "toàn hàm"
+      ],
+      "examples": [
+        "Thanh Bar Titanium",
+        "In Mẫu Toàn Hàm"
+      ],
       "note": "Ít gặp, có thể cần quy trình đặc biệt"
     }
   },
-
   "ktvs": {
     "description": "23 KTV hiện tại trong hệ thống",
     "names": [
-      "Ngọc Lân", "HẠNH", "Võ Văn Vạn", "Bùi Tấn Đạt", "Trường",
-      "Gia Thư", "Toàn", "Tấn Sĩ", "H.Trang", "Tuấn", "Thái Sơn",
-      "ĐINH THIỆN TÂM", "Hồng Thắm", "Trực", "Trúc My", "Mỹ Hiền",
-      "Thế Hỷ", "Văn Trải", "Bảo Trân", "Cẩm Hồng", "Phạm Tấn Hữu",
-      "Yến Vy", "Văn Huyến"
+      "Ngọc Lân",
+      "HẠNH",
+      "Võ Văn Vạn",
+      "Bùi Tấn Đạt",
+      "Trường",
+      "Gia Thư",
+      "Toàn",
+      "Tấn Sĩ",
+      "H.Trang",
+      "Tuấn",
+      "Thái Sơn",
+      "ĐINH THIỆN TÂM",
+      "Hồng Thắm",
+      "Trực",
+      "Trúc My",
+      "Mỹ Hiền",
+      "Thế Hỷ",
+      "Văn Trải",
+      "Bảo Trân",
+      "Cẩm Hồng",
+      "Phạm Tấn Hữu",
+      "Yến Vy",
+      "Văn Huyến"
     ],
     "note": "Mỗi KTV có năng lực chuyên môn khác nhau. Theo dõi ai làm công đoạn nào để phân công tối ưu."
   },
-
   "dataFields": {
     "sl": "Số lượng răng trong đơn — khi tính răng phải dùng trường này",
     "pct": "Phần trăm hoàn thành. pct=100 = HOÀN THÀNH, pct<100 = ĐANG LÀM",
     "byStage": "Mỗi công đoạn chỉ đếm đơn ĐANG LÀM (pct<100) chưa qua công đoạn đó",
     "done": "Số đơn có pct=100 — đơn hoàn thành, không cần theo dõi"
   },
-
   "typicalStats": {
     "totalOrders": "50-80 đơn/ngày thường",
     "doneRate": "70-80% đơn thường đã hoàn thành (pct=100)",
@@ -120,7 +224,6 @@
       "MÀI": "0.5-1 ngày"
     }
   },
-
   "morningBriefing": {
     "trigger": "MỖI SÁNG khi user mở dashboard — AI tự phân tích và đưa ra báo cáo buổi sáng",
     "checklist": [
@@ -133,7 +236,6 @@
     ],
     "reportFormat": "Báo cáo buổi sáng ngắn gọn: Tổng quan → Đơn khẩn → Nút thắt → Gợi ý ưu tiên"
   },
-
   "aiPersona": {
     "role": "Giám đốc Sản xuất Labo Nha Khoa ASIA LAB",
     "personality": "Thực tế, thẳng thắn, hỏi câu hỏi cụ thể. Không nói chung chung. Luôn đi kèm dữ liệu cụ thể.",
@@ -151,6 +253,220 @@
       "[KTV] đang nhận [N] đơn — có quá tải không?"
     ]
   },
-
-  "learnedFacts": []
+  "learnedFacts": [],
+  "learnedStats": {
+    "avgLeadTime": {
+      "CBM": "—",
+      "SÁP/Cadcam": "0.3",
+      "SƯỜN": "0.1",
+      "ĐẮP": "0.2",
+      "MÀI": "0.2"
+    },
+    "bottleneckStage": "MÀI",
+    "bottleneckPct": 91.1,
+    "remakeRate": "1.5%",
+    "remakeCount": 7,
+    "dailyVolume": {
+      "avg": 47.1,
+      "max": 63,
+      "min": 1,
+      "days": 10
+    },
+    "topMaterials": [
+      "Kim loại",
+      "Zirconia",
+      "Titanium",
+      "Khác",
+      "Veneer"
+    ],
+    "topCustomers": [
+      {
+        "name": "BL-NK BS Tăng Suy Nghĩ",
+        "count": 35
+      },
+      {
+        "name": "BT-Nk Bác Sĩ Hiếu",
+        "count": 35
+      },
+      {
+        "name": "SG-Nk Hải Nguyên",
+        "count": 32
+      },
+      {
+        "name": "LA-Nk Tâm Đức",
+        "count": 23
+      },
+      {
+        "name": "LA-Nk BS Huý",
+        "count": 18
+      },
+      {
+        "name": "AG-Nk Thanh Bình",
+        "count": 18
+      },
+      {
+        "name": "DL-Nk Đức Trọng",
+        "count": 18
+      },
+      {
+        "name": "LA-Nk Tố Oanh",
+        "count": 16
+      },
+      {
+        "name": "SG-Nk Như Lạc",
+        "count": 16
+      },
+      {
+        "name": "LA-Nk BS Thụy",
+        "count": 16
+      }
+    ],
+    "ktvPerformance": [
+      {
+        "name": "Toàn",
+        "xnCount": 62,
+        "totalSL": 154,
+        "orderCount": 62
+      },
+      {
+        "name": "Võ Văn Vạn",
+        "xnCount": 52,
+        "totalSL": 215,
+        "orderCount": 52
+      },
+      {
+        "name": "Hồng Thắm",
+        "xnCount": 46,
+        "totalSL": 122,
+        "orderCount": 46
+      },
+      {
+        "name": "Bùi Tấn Đạt",
+        "xnCount": 29,
+        "totalSL": 60,
+        "orderCount": 29
+      },
+      {
+        "name": "Tấn Sĩ",
+        "xnCount": 20,
+        "totalSL": 71,
+        "orderCount": 20
+      },
+      {
+        "name": "HẠNH",
+        "xnCount": 19,
+        "totalSL": 46,
+        "orderCount": 19
+      },
+      {
+        "name": "Văn Trải",
+        "xnCount": 14,
+        "totalSL": 38,
+        "orderCount": 14
+      },
+      {
+        "name": "Thái Sơn",
+        "xnCount": 8,
+        "totalSL": 37,
+        "orderCount": 6
+      },
+      {
+        "name": "Trường",
+        "xnCount": 6,
+        "totalSL": 8,
+        "orderCount": 6
+      },
+      {
+        "name": "Văn Huyến",
+        "xnCount": 6,
+        "totalSL": 22,
+        "orderCount": 4
+      },
+      {
+        "name": "Cẩm Hồng",
+        "xnCount": 6,
+        "totalSL": 23,
+        "orderCount": 6
+      },
+      {
+        "name": "Yến Vy",
+        "xnCount": 5,
+        "totalSL": 20,
+        "orderCount": 5
+      },
+      {
+        "name": "Phạm Tấn Hữu",
+        "xnCount": 4,
+        "totalSL": 4,
+        "orderCount": 4
+      },
+      {
+        "name": "Trực",
+        "xnCount": 3,
+        "totalSL": 6,
+        "orderCount": 3
+      },
+      {
+        "name": "Gia Thư",
+        "xnCount": 2,
+        "totalSL": 5,
+        "orderCount": 2
+      },
+      {
+        "name": "Thế Hỷ",
+        "xnCount": 2,
+        "totalSL": 18,
+        "orderCount": 2
+      },
+      {
+        "name": "H.Trang",
+        "xnCount": 2,
+        "totalSL": 2,
+        "orderCount": 2
+      },
+      {
+        "name": "Tuấn",
+        "xnCount": 2,
+        "totalSL": 9,
+        "orderCount": 2
+      },
+      {
+        "name": "Trúc My",
+        "xnCount": 2,
+        "totalSL": 5,
+        "orderCount": 2
+      },
+      {
+        "name": "ĐINH THIỆN TÂM",
+        "xnCount": 2,
+        "totalSL": 8,
+        "orderCount": 1
+      }
+    ],
+    "completionRateByType": {
+      "Làm mới": "9%",
+      "Làm lại": "0%",
+      "Sửa": "20%",
+      "Bảo hành": "0%",
+      "Làm tiếp": "—"
+    },
+    "dataRange": {
+      "from": "2026-03-20",
+      "to": "2026-03-31"
+    },
+    "totalOrdersAnalyzed": 471,
+    "totalTeeth": 1763,
+    "_debug_files": [
+      "Thang_03_2026.xlsx",
+      "Thang_04_2026.xlsx"
+    ]
+  },
+  "insights": [
+    "ĐẮP là nút thắt lớn nhất — chiếm 91.1% đơn chưa xác nhận, lead time TB 0.2 ngày. (Stage có tỷ lệ chờ cao nhất: MÀI 91.1%)",
+    "Tỷ lệ remake là 1.5% (7 đơn) — chủ yếu từ loại lệnh 'Làm lại' và 'Sửa'.",
+    "Top khách hàng: BL-NK BS Tăng Suy Nghĩ với 35 đơn/tháng.",
+    "KTV năng suất nhất: Toàn với 62 đơn hoàn thành, 154 răng.",
+    "Trung bình 47.1 đơn/ngày (cao nhất 63, thấp nhất 1 / 10 ngày)."
+  ],
+  "learnedAt": "2026-03-31T18:54:34.469807"
 }
