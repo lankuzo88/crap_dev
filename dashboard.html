@@ -244,7 +244,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 /* ══════════════════ AI CHAT WIDGET ══════════════════ */
 #ai-fab{
-  position:fixed;bottom:24px;right:24px;width:54px;height:54px;
+  position:fixed;bottom:64px;right:24px;width:54px;height:54px;
   background:var(--amber);border-radius:50%;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 20px rgba(245,166,35,.45);
@@ -266,7 +266,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   animation:aiSlide .22s cubic-bezier(.34,1.15,.64,1);
 }
 @media(max-width:430px){
-  #ai-panel{right:8px;left:8px;bottom:80px;width:auto;height:70vh;border-radius:14px 14px 0 0;}
+  #ai-panel{z-index:101;}
+}
+@media(max-width:430px){
+  #ai-panel{right:8px;left:8px;bottom:64px;width:auto;height:70vh;border-radius:14px 14px 0 0;}
 }
 @keyframes aiSlide{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
 

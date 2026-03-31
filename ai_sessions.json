@@ -1,0 +1,134 @@
+{
+  "sessions": [
+    {
+      "id": "f1c3a50a",
+      "created": "2026-04-01T07:32:42.621637",
+      "messages": [
+        {
+          "role": "user",
+          "content": "tong don la bao nhieu",
+          "at": "2026-04-01T07:32:42.621637"
+        },
+        {
+          "role": "assistant",
+          "content": "458 don",
+          "at": "2026-04-01T07:32:42.669456"
+        }
+      ]
+    },
+    {
+      "id": "9137ae4d",
+      "created": "2026-04-01T07:32:51.962823",
+      "messages": [
+        {
+          "role": "user",
+          "content": "tong don la bao nhieu",
+          "at": "2026-04-01T07:32:51.962823"
+        },
+        {
+          "role": "assistant",
+          "content": "458 don",
+          "at": "2026-04-01T07:32:51.981835"
+        }
+      ]
+    },
+    {
+      "id": "330b4fe0",
+      "created": "2026-04-01T07:33:04.912949",
+      "messages": [
+        {
+          "role": "user",
+          "content": "tong don la bao nhieu",
+          "at": "2026-04-01T07:33:04.912949"
+        },
+        {
+          "role": "assistant",
+          "content": "458 don",
+          "at": "2026-04-01T07:33:04.941906"
+        },
+        {
+          "role": "user",
+          "content": "top KH la ai?",
+          "at": "2026-04-01T07:33:04.961221"
+        },
+        {
+          "role": "assistant",
+          "content": "SG-Nk Hai Nguyen",
+          "at": "2026-04-01T07:33:04.979418"
+        }
+      ]
+    },
+    {
+      "id": "d5fd1224",
+      "created": "2026-04-01T08:22:48.267706",
+      "messages": [
+        {
+          "role": "user",
+          "content": "xin chào",
+          "at": "2026-04-01T08:22:48.267706"
+        },
+        {
+          "role": "assistant",
+          "content": "Xin chào! 👋\n\nToi la **Asia Lab AI** — tro ly AI cua Labo Nha Khoa ASIA LAB.\n\nToi co the giup ban:\n\n- **Hien tai**: Don dang lam, tinh trang giao hang\n- **Thong ke**: Xu huong, KTV, khach hang nhieu don\n- **Quy trinh**: Cong doan san xuat, vat lieu, lead time\n\nBan can thong tin gi?",
+          "at": "2026-04-01T08:22:48.306455"
+        },
+        {
+          "role": "user",
+          "content": "hôm nay ngày 1-4 cần hoàn thành bao nhiêu đơn",
+          "at": "2026-04-01T08:23:37.009274"
+        },
+        {
+          "role": "assistant",
+          "content": "## Đơn hàng cần hoàn thành hôm nay 1/4\n\n**[Nguon: realtime]**\n\n- **Tổng đơn hiện tại:** 86 đơn\n- **Đã hoàn thành (100%):** 10 đơn\n- **Đang làm (chưa xong):** 76 đơn\n\n→ **Cần hoàn thành tối thiểu 76 đơn** để đạt 100%.\n\n> 📌 Trung bình labo xử lý ~30 đơn/ngày [Nguon: learnedStats], nên khối lượng hôm nay khá lớn so với mức thông thường.",
+          "at": "2026-04-01T08:23:37.026124"
+        },
+        {
+          "role": "user",
+          "content": "số lượng răng là bao nhiêu",
+          "at": "2026-04-01T08:24:16.948236"
+        },
+        {
+          "role": "assistant",
+          "content": "## Thông tin số lượng răng\n\nDựa trên dữ liệu gần nhất ([Nguon: learnedStats]):\n- **Tổng đơn:** 120 đơn\n- **Tổng răng:** 415 răng\n- *(Dữ liệu: 2026-03-20 → 2026-03-25)*\n\n⚠️ **Lưu ý:** Đây là số liệu **5 ngày gần nhất** (20–25/3), không phải hôm nay 1/4. Tôi **không có dữ liệu realtime** của ngày 1/4 để trả lời chính xác cho hôm nay.",
+          "at": "2026-04-01T08:24:16.973368"
+        },
+        {
+          "role": "user",
+          "content": "truy cập thư mục Data_thang và lấy file tháng 4",
+          "at": "2026-04-01T08:25:23.482001"
+        },
+        {
+          "role": "assistant",
+          "content": "Xin lỗi, tôi **không có khả năng truy cập thư mục hay file** trên hệ thống.\n\nTôi là **Asia Lab AI**, chỉ hoạt động dựa trên các **data chunks đã được nạp sẵn** trong phiên trò chuyện này.\n\n---\n\n**Tôi đang có:**\n\n| Nguồn | Phạm vi |\n|---|---|\n| **learnedStats** | Dữ liệu **tháng 3/2026** (2026-03-20 → 2026-03-25) |\n| **realtime** | Dữ liệu **hiện tại** đã nạp sẵn |\n| **knowledge** | Kiến thức cố định về quy trình, vật liệu |\n\n**Tôi KHÔNG có dữ liệu tháng 4** — vì file tháng 4 chưa được cung cấp trong prompt này.\n\n---\n\n**Bạn cần làm:**\n\n1. Cập nhật file dữ liệu tháng 4 vào `ai_memory.json` (hoặc tương tự)\n2. Nạp lại prompt cho tôi cùng chunk `[Nguon: learnedStats]` mới\n\n→ Khi đó tôi sẽ trả lời được câu hỏi về tháng 4 ngay! 📋",
+          "at": "2026-04-01T08:25:23.516279"
+        }
+      ]
+    },
+    {
+      "id": "c82eb4e2",
+      "created": "2026-04-01T08:53:26.288234",
+      "messages": [
+        {
+          "role": "user",
+          "content": "hôm nay cần hoàn thành bao nhiêu ca",
+          "at": "2026-04-01T08:53:26.288234"
+        },
+        {
+          "role": "assistant",
+          "content": "Theo dữ liệu hôm nay:\n\n- **Tổng đơn hiện tại: 86**\n- Đã hoàn thành: **10**\n- **Còn lại cần xử lý: 76 đơn** (đang làm, chưa xong)\n\n📌 **Nguồn: realtime**\n\n> Trung bình labo xử lý **~30 đơn/ngày** (theo learnedStats), nhưng hiện tại đang có **76 đơn đang làm dở** — cần ưu tiên đẩy nhanh tiến độ.",
+          "at": "2026-04-01T08:53:26.315190"
+        },
+        {
+          "role": "user",
+          "content": "chính xác là ngày 1-4 cần giao bao nhiêu? không tính ngày mai",
+          "at": "2026-04-01T08:54:14.203092"
+        },
+        {
+          "role": "assistant",
+          "content": "Tôi **không có thông tin** về số đơn cần giao ngày 1/4.\n\n**Lý do:**\n- Dữ liệu **[Nguồn: realtime]** — chỉ cho biết **tổng đơn hiện tại (86)** và tiến độ, không ghi rõ ngày giao.\n- **[Nguồn: learnedStats]** — phản ánh giai đoạn **20–25/3**, không phải ngày 1/4.\n- **[Nguồn: knowledge]** — không chứa thông tin delivery date.\n\nĐể biết chính xác số đơn giao ngày 1/4, bạn cần tra trực tiếp trong **dashboard (server.js)** — nơi lọc theo `ngay_giao = \"2026-04-01\"`.",
+          "at": "2026-04-01T08:54:14.240654"
+        }
+      ]
+    }
+  ]
+}

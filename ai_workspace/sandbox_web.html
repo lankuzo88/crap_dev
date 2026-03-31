@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Asia Lab AI Cowork</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0f18;--surface:#141824;--surface2:#1a2030;
+  --border:#252d42;--border2:#1e2638;
+  --amber:#f5a623;--amber-s:rgba(245,166,35,.1);--amber-d:#b87c10;
+  --green:#2ed573;--green-s:rgba(46,213,115,.1);
+  --red:#ff4757;--red-s:rgba(255,71,87,.1);
+  --blue:#3d9fff;--blue-s:rgba(61,159,255,.1);
+  --text:#e8edf8;--text2:#8b95b0;--text3:#4a5270;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent;}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--amber-d);border-radius:2px}
+
+/* ═══════════════ DESKTOP ═══════════════ */
+@media(min-width:769px){
+  #app{display:flex;height:100vh;}
+  #sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+  .sb-brand{padding:12px 14px 10px;border-bottom:1px solid var(--border2);}
+  .sb-logo{font-family:'Outfit',sans-serif;font-size:14px;font-weight:900;color:var(--amber);letter-spacing:1px;}
+  .sb-sub{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px;}
+  .sb-nav{padding:8px;flex:1;overflow-y:auto;}
+  .sb-nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s;margin-bottom:2px;}
+  .sb-nav-item:hover{background:var(--surface2);color:var(--text);}
+  .sb-nav-item.active{background:var(--amber-s);color:var(--amber);}
+  .sb-nav-item .icon{font-size:15px;flex-shrink:0;}
+  .sb-badge{margin-left:auto;background:var(--amber-d);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:3px;}
+  .sb-status{padding:8px 14px;border-top:1px solid var(--border2);font-family:var(--mono);font-size:9px;color:var(--text3);}
+  .sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;animation:lp 2s ease infinite;}
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+  #topbar{height:48px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;}
+  #topbar-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;color:var(--text);letter-spacing:.5px;flex:1;}
+  #topbar-meta{font-family:var(--mono);font-size:9px;color:var(--text3);}
+  #chat-chips{display:flex;gap:8px;overflow-x:auto;flex-shrink:0;}
+  #chat-chips::-webkit-scrollbar{display:none;}
+  #m-nav,#m-header,#m-tab-bar,#m-input-bar,#m-topbar{display:none !important;}
+}
+
+/* ═══════════════ MOBILE ═══════════════ */
+@media(max-width:768px){
+  #app{height:100%;display:flex;flex-direction:column;overflow:hidden;}
+  #sidebar,#topbar,#chat-chips{display:none !important;}
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0;}
+
+  /* ── Mobile Header ── */
+  #m-header{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 14px;background:var(--surface);
+    border-bottom:1px solid var(--border);flex-shrink:0;
+    height:48px;
+  }
+  .m-logo{font-family:'Outfit',sans-serif;font-size:14px;font-weight:900;color:var(--amber);letter-spacing:1px;flex:1;}
+  .m-live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:lp 1.5s ease infinite;flex-shrink:0;}
+  .m-reload-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;}
+  .m-reload-btn:active{border-color:var(--amber);color:var(--amber);}
+
+  /* ── Mobile Chat ── */
+  #m-chat{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+  #m-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px 12px 4px;display:flex;flex-direction:column;gap:8px;}
+  #m-body::-webkit-scrollbar{display:none;}
+  #m-input-bar{
+    display:flex;gap:8px;padding:8px 12px;
+    background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;
+  }
+  #m-inp{resize:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;flex:1;min-height:40px;max-height:100px;line-height:1.4;}
+  #m-inp::placeholder{color:var(--text3);}
+  #m-inp:focus{border-color:var(--amber);}
+  #m-send{background:var(--amber);border:none;border-radius:10px;padding:8px 14px;font-size:16px;cursor:pointer;flex-shrink:0;transition:opacity .15s;}
+  #m-send:active{opacity:.7;}
+  #m-send:disabled{opacity:.3;cursor:not-allowed;}
+  #m-topbar{
+    display:flex;gap:6px;padding:6px 12px 4px;
+    background:var(--bg);border-bottom:1px solid var(--border2);flex-shrink:0;overflow-x:auto;
+  }
+  #m-topbar::-webkit-scrollbar{display:none;}
+
+  /* Mobile typing */
+  .m-typing{display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;border-bottom-left-radius:4px;width:fit-content;}
+  .m-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:mDot 1s ease infinite}
+  .m-dot:nth-child(2){animation-delay:.15s}.m-dot:nth-child(3){animation-delay:.3s}
+  @keyframes mDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+  /* ── Mobile Tab Bar ── */
+  #m-tab-bar{
+    display:flex;height:52px;background:var(--surface);
+    border-top:1px solid var(--border);flex-shrink:0;
+  }
+  .m-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);transition:all .15s;position:relative;}
+  .m-tab.active{color:var(--amber);}
+  .m-tab-ico{font-size:18px;line-height:1;}
+  .m-tab-lbl{font-size:8px;font-weight:700;letter-spacing:.5px;}
+  .m-tab-badge{position:absolute;top:4px;right:calc(50%-12px);background:var(--red);color:#fff;font-size:7px;font-weight:700;font-family:var(--mono);padding:1px 3px;border-radius:3px;}
+}
+
+/* ═══════════════ SHARED ═══════════════ */
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Panels */
+.panel{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.panel.active{display:flex}
+
+/* Chat */
+#chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#chat-header{overflow-x:auto;flex-shrink:0;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px;font-size:11px;}
+#chat-header::-webkit-scrollbar{display:none;}
+.chip-btn{white-space:nowrap;flex-shrink:0;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;transition:all .15s;}
+.chip-btn:hover{border-color:var(--amber);color:var(--amber);}
+.chip-btn.active{background:var(--amber);border-color:var(--amber);color:#000;}
+#chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.msg{margin-bottom:4px}
+.msg-user{text-align:right}
+.msg-ai{text-align:left}
+.bubble{display:inline-block;max-width:82%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.msg-user .bubble{background:var(--amber);color:#000;border-bottom-right-radius:4px;}
+.msg-ai .bubble{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-bottom-left-radius:4px;}
+.bubble b,.bubble strong{font-weight:700}
+.bubble table{border-collapse:collapse;width:100%;margin:6px 0;font-size:12px}
+.bubble td{padding:3px 6px;border:1px solid var(--border2)}
+.bubble th{background:var(--amber-s);padding:3px 6px}
+.error-bubble{color:var(--red);background:var(--red-s);border:1px solid rgba(255,71,87,.3) !important}
+#chat-input-bar{flex-shrink:0;padding:10px 14px;border-top:1px solid var(--border2);display:flex;gap:8px;background:var(--surface);}
+#chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;resize:none;min-height:40px;max-height:120px;}
+#chat-input::placeholder{color:var(--text3)}
+#chat-input:focus{border-color:var(--amber)}
+#send-btn{background:var(--amber);border:none;border-radius:10px;padding:8px 14px;font-size:16px;cursor:pointer;align-self:flex-end;transition:opacity .15s;}
+#send-btn:disabled{opacity:.3;cursor:not-allowed}
+.welcome{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px;line-height:1.7;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.welcome-ico{font-size:40px;margin-bottom:12px}
+.welcome-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+.typing{display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;border-bottom-left-radius:4px;width:fit-content;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:dot 1s ease infinite}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* Panel header */
+#panel-header{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ph-title{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.ph-btn{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;transition:all .15s;flex-shrink:0;}
+.ph-btn:hover{border-color:var(--amber);color:var(--amber);}
+#panel-body{flex:1;overflow-y:auto;padding:12px 16px;}
+
+/* Task cards */
+.task-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.task-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.task-desc{font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:0;}
+.task-badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;flex-shrink:0;}
+.badge-pending{background:var(--amber-s);color:var(--amber)}
+.badge-done{background:var(--green-s);color:var(--green)}
+.badge-high{background:var(--red-s);color:var(--red)}
+.badge-blocked{background:rgba(74,82,112,.15);color:var(--text3)}
+.task-meta{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:3px}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat-box{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;text-align:center}
+.stat-n{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--amber);line-height:1}
+.stat-l{font-size:9px;font-weight:700;color:var(--text3);margin-top:2px}
+
+.empty-state{text-align:center;padding:32px;color:var(--text3);font-size:12px}
+
+/* QA */
+.qa-section{margin-bottom:14px}
+.qa-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;margin-bottom:6px}
+.qa-btns{display:flex;flex-wrap:wrap;gap:6px}
+.qa-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:var(--surface2);transition:all .15s;}
+.qa-btn:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-s)}
+
+/* Report items */
+.report-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;}
+.report-item:hover{border-color:var(--amber)}
+.report-item:hover .report-name{color:var(--amber)}
+.report-ico{font-size:18px}
+.report-name{font-size:12px;font-weight:600;color:var(--text);flex:1;transition:color .15s}
+.report-meta{font-family:var(--mono);font-size:9px;color:var(--text3)}
+
+/* Log entries */
+.log-entry{font-family:var(--mono);font-size:10px;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border2);line-height:1.5}
+.log-time{color:var(--amber);margin-right:6px}
+.log-action{color:var(--text);margin-right:6px}
+
+/* Overlay */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;justify-content:center;align-items:center;}
+#overlay.open{display:flex;align-items:flex-end}
+@media(min-width:769px){#overlay.open{align-items:center}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 0 0;display:flex;flex-direction:column;overflow:hidden;width:100%;max-height:88vh;animation:slideUp .2s ease}
+@media(min-width:769px){.modal{border-radius:14px;width:680px;max-width:96vw;animation:pop .18s ease}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1}}
+.modal-hdr{padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-title{font-size:13px;font-weight:700;color:var(--text);flex:1}
+.modal-close{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer}
+.modal-body{flex:1;overflow-y:auto;padding:14px 16px;font-family:var(--mono);font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.7}
+
+/* Mobile task cards (larger touch targets) */
+.m-task-card{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 12px;margin-bottom:8px;cursor:pointer;
+  transition:border-color .15s;
+}
+.m-task-card:active{border-color:var(--amber)}
+.m-task-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.m-task-desc{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.m-task-meta{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px}
+
+/* Mobile QA grid */
+.m-qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
+.m-qbtn{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;
+  color:var(--text2);transition:all .15s;
+}
+.m-qbtn:active{border-color:var(--amber);color:var(--amber);background:var(--amber-s)}
+.m-qico{font-size:18px;display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ DESKTOP SIDEBAR ═══ -->
+  <div id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">ASIA COWORK</div>
+      <div class="sb-sub">ai_workspace/</div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-nav-item active" id="nav-chat" onclick="nav('chat',this)">
+        <span class="icon">💬</span> Chat <span class="sb-badge" id="bdg-sess">—</span>
+      </div>
+      <div class="sb-nav-item" id="nav-tasks" onclick="nav('tasks',this)">
+        <span class="icon">📋</span> Tasks <span class="sb-badge" id="bdg-tasks">—</span>
+      </div>
+      <div class="sb-nav-item" id="nav-reports" onclick="nav('reports',this)">
+        <span class="icon">📊</span> Reports
+      </div>
+      <div class="sb-nav-item" id="nav-logs" onclick="nav('logs',this)">
+        <span class="icon">📜</span> Activity Log
+      </div>
+      <div class="sb-nav-item" id="nav-status" onclick="nav('status',this)">
+        <span class="icon">⚙️</span> Status
+      </div>
+    </div>
+    <div class="sb-status">
+      <span class="sb-dot"></span>
+      <span id="sb-txt">connecting...</span>
+    </div>
+  </div>
+
+  <!-- ═══ DESKTOP MAIN ═══ -->
+  <div id="main">
+
+    <!-- CHAT panel -->
+    <div id="panel-chat" class="panel active">
+      <div id="topbar">
+        <div id="topbar-title">💬 AI Cowork Chat</div>
+        <div id="topbar-meta">Claude Sonnet 4</div>
+      </div>
+      <div id="chat-header">
+        <div id="chat-chips">
+          <span class="chip-btn active" id="chip-sandbox" onclick="ctx('sandbox')">📂 Workspace</span>
+          <span class="chip-btn" id="chip-analysis" onclick="ctx('analysis')">📊 Phân tích</span>
+          <span class="chip-btn" id="chip-report" onclick="ctx('report')">📝 Báo cáo</span>
+          <span class="chip-btn" id="chip-task" onclick="ctx('task')">📋 Task</span>
+        </div>
+      </div>
+      <div id="chat-wrap">
+        <div id="chat-body">
+          <div class="welcome" id="welcome">
+            <div class="welcome-ico">🤖</div>
+            <div>Chào bạn! Tôi là <strong>Asia Lab Cowork</strong></div>
+            <div style="margin-top:4px">Workspace riêng · 22 tools · Bộ nhớ dài hạn</div>
+            <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8">
+              "Phân tích dữ liệu tháng 4"<br>
+              "Top 5 khách hàng nhiều đơn nhất"<br>
+              "Tạo báo cáo KTV hôm nay"
+            </div>
+          </div>
+        </div>
+        <div id="chat-input-bar">
+          <textarea id="chat-input" rows="1" placeholder="Hỏi gì đó..." onkeydown="onKey(event)" onclick="initSess()"></textarea>
+          <button id="send-btn" onclick="send()">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS panel -->
+    <div id="panel-tasks" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">📋 Tasks</div>
+        <div class="ph-btn" onclick="newTask()">+ New</div>
+        <div class="ph-btn" onclick="loadTasks()">↻</div>
+      </div>
+      <div id="panel-body">
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-n" id="ts-total">—</div><div class="stat-l">TỔNG</div></div>
+          <div class="stat-box"><div class="stat-n" id="ts-done">—</div><div class="stat-l">ĐÃ XONG</div></div>
+          <div class="stat-box"><div class="stat-n" id="ts-pend">—</div><div class="stat-l">CHƯA XONG</div></div>
+          <div class="stat-box"><div class="stat-n" id="ts-proj">—</div><div class="stat-l">DỰ ÁN</div></div>
+        </div>
+        <div class="qa-section">
+          <div class="qa-title">QUICK ACTIONS</div>
+          <div class="qa-btns">
+            <div class="qa-btn" onclick="qa('analyze')">📊 Phân tích</div>
+            <div class="qa-btn" onclick="qa('ktv')">🏆 KTV</div>
+            <div class="qa-btn" onclick="qa('customer')">👥 Khách</div>
+            <div class="qa-btn" onclick="qa('daily_report')">📝 Daily</div>
+            <div class="qa-btn" onclick="qa('find_facts')">🔍 Patterns</div>
+          </div>
+        </div>
+        <div id="task-list"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS panel -->
+    <div id="panel-reports" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">📊 Reports</div>
+        <div class="ph-btn" onclick="genRpt('daily_summary')">+ Daily</div>
+        <div class="ph-btn" onclick="genRpt('ktv_report')">+ KTV</div>
+        <div class="ph-btn" onclick="loadRpts()">↻</div>
+      </div>
+      <div id="panel-body">
+        <div id="rpt-list"><div class="empty-state">Chưa có báo cáo nào.<br>Nhấn "+ Daily" để tạo.</div></div>
+      </div>
+    </div>
+
+    <!-- LOGS panel -->
+    <div id="panel-logs" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">📜 Activity Log</div>
+        <div class="ph-btn" onclick="loadLogs()">↻</div>
+      </div>
+      <div id="panel-body">
+        <div id="log-list"></div>
+      </div>
+    </div>
+
+    <!-- STATUS panel -->
+    <div id="panel-status" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">⚙️ System Status</div>
+        <div class="ph-btn" onclick="loadStatus()">↻</div>
+        <div class="ph-btn" onclick="doReload()">🔄 Reload</div>
+      </div>
+      <div id="panel-body">
+        <div id="st-content"><div class="empty-state">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ MOBILE LAYOUT ═══ -->
+    <!-- Mobile Header -->
+    <div id="m-header">
+      <div class="m-logo">ASIA COWORK</div>
+      <div class="m-live-dot"></div>
+      <button class="m-reload-btn" onclick="doReload()">↻</button>
+    </div>
+
+    <!-- Mobile Tab: Chat -->
+    <div id="m-tab-chat" class="panel active">
+      <div id="m-chat">
+        <div id="m-topbar">
+          <span class="chip-btn active" id="mc-sandbox" onclick="ctx('sandbox')">📂 Workspace</span>
+          <span class="chip-btn" id="mc-analysis" onclick="ctx('analysis')">📊</span>
+          <span class="chip-btn" id="mc-report" onclick="ctx('report')">📝</span>
+          <span class="chip-btn" id="mc-task" onclick="ctx('task')">📋</span>
+        </div>
+        <div id="m-body">
+          <div class="welcome" id="m-welcome">
+            <div class="welcome-ico">🤖</div>
+            <div>Asia Lab Cowork</div>
+            <div style="margin-top:6px;font-size:12px;color:var(--text3)">
+              "Phân tích tháng 4"<br>"Top KH"<br>"Báo cáo KTV"
+            </div>
+          </div>
+        </div>
+        <div id="m-input-bar">
+          <textarea id="m-inp" rows="1" placeholder="Hỏi gì đó..." onkeydown="onKeyM(event)" onclick="initSess()"></textarea>
+          <button id="m-send" onclick="sendM()">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Tab: Tasks -->
+    <div id="m-tab-tasks" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">📋 Tasks</div>
+        <div class="ph-btn" onclick="newTask()">+ New</div>
+        <div class="ph-btn" onclick="loadTasks()">↻</div>
+      </div>
+      <div id="panel-body">
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-n" id="mts-total">—</div><div class="stat-l">TỔNG</div></div>
+          <div class="stat-box"><div class="stat-n" id="mts-done">—</div><div class="stat-l">XONG</div></div>
+          <div class="stat-box"><div class="stat-n" id="mts-pend">—</div><div class="stat-l">CÒN</div></div>
+          <div class="stat-box"><div class="stat-n" id="mts-proj">—</div><div class="stat-l">DỰ ÁN</div></div>
+        </div>
+        <div class="m-qgrid">
+          <div class="m-qbtn" onclick="qa('analyze')"><span class="m-qico">📊</span>Phân tích</div>
+          <div class="m-qbtn" onclick="qa('ktv')"><span class="m-qico">🏆</span>KTV</div>
+          <div class="m-qbtn" onclick="qa('customer')"><span class="m-qico">👥</span>Khách</div>
+          <div class="m-qbtn" onclick="qa('daily_report')"><span class="m-qico">📝</span>Daily</div>
+        </div>
+        <div id="m-task-list"></div>
+      </div>
+    </div>
+
+    <!-- Mobile Tab: Reports -->
+    <div id="m-tab-reports" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">📊 Reports</div>
+        <div class="ph-btn" onclick="genRpt('daily_summary')">+ Daily</div>
+        <div class="ph-btn" onclick="genRpt('ktv_report')">+ KTV</div>
+      </div>
+      <div id="panel-body">
+        <div id="mrpt-list"><div class="empty-state">Chưa có báo cáo nào.</div></div>
+      </div>
+    </div>
+
+    <!-- Mobile Tab: More (Status) -->
+    <div id="m-tab-more" class="panel">
+      <div id="panel-header">
+        <div class="ph-title">⚙️ Status & Logs</div>
+        <div class="ph-btn" onclick="loadStatus()">↻</div>
+        <div class="ph-btn" onclick="doReload()">🔄</div>
+      </div>
+      <div id="panel-body">
+        <div id="mst-content"><div class="empty-state">Loading...</div></div>
+        <div class="qa-section" style="margin-top:14px">
+          <div class="qa-title">QUICK</div>
+          <div class="qa-btns">
+            <div class="qa-btn" onclick="qa('find_facts')">🔍 Patterns</div>
+            <div class="qa-btn" onclick="nav('logs')">📜 Logs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Tab Bar -->
+    <div id="m-tab-bar">
+      <div class="m-tab active" id="m-tab-btn-chat" onclick="mTab('chat')">
+        <div class="m-tab-ico">💬</div>
+        <div class="m-tab-lbl">CHAT</div>
+        <div class="m-tab-badge" id="m-badge-sess" style="display:none">—</div>
+      </div>
+      <div class="m-tab" id="m-tab-btn-tasks" onclick="mTab('tasks')">
+        <div class="m-tab-ico">📋</div>
+        <div class="m-tab-lbl">TASKS</div>
+        <div class="m-tab-badge" id="m-badge-tasks">—</div>
+      </div>
+      <div class="m-tab" id="m-tab-btn-reports" onclick="mTab('reports')">
+        <div class="m-tab-ico">📊</div>
+        <div class="m-tab-lbl">REPORTS</div>
+      </div>
+      <div class="m-tab" id="m-tab-btn-more" onclick="mTab('more')">
+        <div class="m-tab-ico">⚙️</div>
+        <div class="m-tab-lbl">MORE</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Report Modal -->
+<div id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="ov-title">Report</div>
+      <button class="modal-close" onclick="closeOv()">Đóng</button>
+    </div>
+    <div class="modal-body" id="ov-body"></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let sessId = null;
+let busy = false;
+let ctxMode = 'sandbox';
+const IS_M = window.innerWidth <= 768;
+
+const $ = id => document.getElementById(id);
+
+// ── API helpers ────────────────────────────────────────────
+async function get(url) {
+  const r = await fetch(API + url);
+  return r.json();
+}
+async function post(url, body) {
+  const r = await fetch(API + url, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+// ── Sidebar status ─────────────────────────────────────────
+async function refreshSb() {
+  try {
+    const s = await get('/status');
+    $('sb-txt').textContent = `online · ${s.tools_count||0} tools · ${s.pending_tasks||0} task`;
+    $('bdg-sess').textContent = s.active_chats||0;
+  } catch {}
+  try {
+    const m = await get('/memory');
+    const p = (m.task_stats||{}).pending||0;
+    $('bdg-tasks').textContent = p;
+    // mobile badges
+    $('m-badge-tasks').textContent = p;
+    if (p > 0) $('m-badge-tasks').style.display = '';
+    else $('m-badge-tasks').style.display = 'none';
+  } catch {}
+}
+
+// ── Desktop navigation ──────────────────────────────────────
+function nav(name, el) {
+  document.querySelectorAll('#sidebar .sb-nav-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $('panel-'+name).classList.add('active');
+  if(name==='tasks') loadTasks();
+  if(name==='reports') loadRpts();
+  if(name==='logs') loadLogs();
+  if(name==='status') loadStatus();
+}
+
+// ── Mobile tab ──────────────────────────────────────────────
+function mTab(name) {
+  document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('active'));
+  $('m-tab-btn-'+name).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $('m-tab-'+name).classList.add('active');
+  if(name==='tasks') loadTasks();
+  if(name==='reports') loadRpts();
+  if(name==='more') loadStatus();
+}
+
+// ── Context chips ───────────────────────────────────────────
+const CTX_PROMPTS = {
+  sandbox:"Phan tich workspace hien tai: cho biet tasks, projects, facts, insights.",
+  analysis:"Phan tich chi tiet du lieu Excel trong File_sach. Tim patterns moi.",
+  report:"Tao mot bao cao tong hop va luu vao analysis/reports/.",
+  task:"Kiem tra pending tasks. De xuat hanh dong cho 3 task quan trong nhat.",
+};
+function ctx(mode) {
+  ctxMode = mode;
+  ['sandbox','analysis','report','task'].forEach(m=>{
+    const d = $('chip-'+m); const md = $('mc-'+m);
+    if(d) d.classList.toggle('active',m===mode);
+    if(md) md.classList.toggle('active',m===mode);
+  });
+  if(!sessId) {
+    const inp = IS_M ? $('m-inp') : $('chat-input');
+    if(inp) { inp.value = CTX_PROMPTS[mode]||''; inp.focus(); }
+  }
+}
+
+// ── Session init ─────────────────────────────────────────────
+function initSess() {
+  if(!sessId) {
+    sessId = 'ws'+Date.now();
+    const w = $('welcome'); if(w) w.style.display='none';
+    const mw = $('m-welcome'); if(mw) mw.style.display='none';
+  }
+}
+
+// ── Markdown render ──────────────────────────────────────────
+function md(t) {
+  t = t.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  const lines = t.split('\n'), out = [], tbl = [];
+  let inT = false;
+  for(let i=0;i<lines.length;i++){
+    const l = lines[i];
+    if(/^\|/.test(l)){
+      if(!inT){out.push('<table>');inT=true;}
+      const cells = l.split('|').slice(1,-1).map(c=>c.trim());
+      const isH = lines[i+1]&&/^[\|\- :]+$/.test(lines[i+1]);
+      if(isH){tbl.push('<tr>'+cells.map(c=>`<th>${c}</th>`).join('')+'</tr>');i++;}
+      else tbl.push('<tr>'+cells.map(c=>`<td>${c}</td>`).join('')+'</tr>');
+    } else {
+      if(inT){out.push(tbl.join('')+'</table>');tbl.length=0;inT=false;}
+      if(l.trim()) out.push(l);
+    }
+  }
+  if(inT) out.push(tbl.join('')+'</table>');
+  return out.join('<br>');
+}
+
+// ── Bubbles ────────────────────────────────────────────────
+function addBub(role, html, mobile) {
+  const w = mobile ? $('m-welcome') : $('welcome');
+  if(w) w.style.display='none';
+  $('tip')?.remove();
+  const d = document.createElement('div');
+  d.className = `msg msg-${role}`;
+  d.innerHTML = `<div class="bubble">${html}</div>`;
+  const body = mobile ? $('m-body') : $('chat-body');
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+
+function addTyp(mobile) {
+  $('tip')?.remove();
+  const d = document.createElement('div');
+  d.id = 'tip';
+  d.className = 'msg msg-ai';
+  const dots = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  const html = mobile
+    ? `<div class="m-typing">${dots}<span style="font-size:11px;color:var(--text3);margin-left:4px">...</span></div>`
+    : `<div class="typing">${dots}<span style="font-size:11px;color:var(--text3);margin-left:4px">...</span></div>`;
+  d.innerHTML = html;
+  const body = mobile ? $('m-body') : $('chat-body');
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+}
+
+// ── Send Desktop ────────────────────────────────────────────
+function onKey(e) {
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+}
+async function send() {
+  if(busy) return;
+  const inp = $('chat-input');
+  const txt = (inp.value||'').trim();
+  if(!txt) return;
+  inp.value=''; busy=true; $('send-btn').disabled=true;
+  initSess();
+  addBub('user', esc(txt), false);
+  addTyp(false);
+  try {
+    const d = await post('/chat',{message:txt,sessionId:sessId});
+    $('tip')?.remove();
+    if(d.ok) addBub('ai', md(d.answer||'...'), false);
+    else addBub('ai',`<div class="bubble error-bubble">Loi: ${esc(d.answer||'?')}</div>`,false);
+  } catch(e){$('tip')?.remove();addBub('ai',`<div class="bubble error-bubble">Loi ket noi</div>`,false);}
+  busy=false; $('send-btn').disabled=false; inp.focus(); refreshSb();
+}
+
+// ── Send Mobile ──────────────────────────────────────────────
+function onKeyM(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendM();}
+}
+async function sendM() {
+  if(busy) return;
+  const inp = $('m-inp');
+  const txt = (inp.value||'').trim();
+  if(!txt) return;
+  inp.value=''; busy=true; $('m-send').disabled=true;
+  initSess();
+  addBub('user', esc(txt), true);
+  addTyp(true);
+  try {
+    const d = await post('/chat',{message:txt,sessionId:sessId});
+    $('tip')?.remove();
+    if(d.ok) addBub('ai', md(d.answer||'...'), true);
+    else addBub('ai',`<div class="bubble error-bubble">Loi</div>`,true);
+  } catch(e){$('tip')?.remove();addBub('ai',`<div class="bubble error-bubble">Loi kn</div>`,true);}
+  busy=false; $('m-send').disabled=false; inp.focus(); refreshSb();
+}
+
+// ── Quick Actions ────────────────────────────────────────────
+const QA = {
+  analyze:"Phan tich chi tiet du lieu trong File_sach. Tom tat: tong don, nut that, top KTV, top khach hang.",
+  ktv:"Bao cao hieu suat KTV: ranking theo so don da xac nhan. De xuat cach cai thien.",
+  customer:"Top 5 khach hang nhieu don nhat. Tim pattern moi.",
+  daily_report:"Tao bao cao tong hop ngay hom nay. Luu vao analysis/reports/.",
+  find_facts:"Tim 3 pattern moi: bottleneck shift, KTV cham, don qua han. Ghi vao learned facts.",
+};
+async function qa(action) {
+  const msg = QA[action]||'';
+  if(!msg) return;
+  if(IS_M) { mTab('chat'); $('m-inp').value = msg; $('m-inp').focus(); await sendM(); }
+  else { $('chat-input').value = msg; $('chat-input').focus(); await send(); }
+}
+
+// ── Tasks ──────────────────────────────────────────────────
+async function loadTasks() {
+  try {
+    const [mem,proj] = await Promise.all([get('/memory'),get('/memory/projects')]);
+    const tasks = mem.tasks||[];
+    const st = mem.task_stats||{};
+    const pr = proj.projects||[];
+
+    // desktop stats
+    $('ts-total').textContent = st.total||0;
+    $('ts-done').textContent = st.done||0;
+    $('ts-pend').textContent = st.pending||0;
+    $('ts-proj').textContent = pr.length;
+
+    // mobile stats
+    $('mts-total').textContent = st.total||0;
+    $('mts-done').textContent = st.done||0;
+    $('mts-pend').textContent = st.pending||0;
+    $('mts-proj').textContent = pr.length;
+
+    const priorityCls = {high:'badge-high',medium:'badge-pending',low:'badge-blocked'};
+    const statusCls = {done:'badge-done',pending:'badge-pending',blocked:'badge-blocked'};
+    const card = t => `
+      <div class="task-card">
+        <div class="task-top">
+          <div class="task-desc">${esc(t.description||'?')}</div>
+          <span class="task-badge ${statusCls[t.status]||'badge-pending'}">${t.status||'?'}</span>
+          <span class="task-badge ${priorityCls[t.priority]||''}">${t.priority||'?'}</span>
+        </div>
+        <div class="task-meta">#${t.id} · ${(t.updated||'').slice(0,16)}</div>
+      </div>`;
+    const html = tasks.length ? tasks.map(card).join('') : '<div class="empty-state">Chua co task nao.</div>';
+    $('task-list').innerHTML = html;
+    $('m-task-list').innerHTML = html;
+  } catch(e){
+    $('task-list').innerHTML = `<div class="empty-state">Loi: ${esc(e.message)}</div>`;
+    $('m-task-list').innerHTML = $('task-list').innerHTML;
+  }
+}
+
+async function newTask() {
+  const desc = prompt('Mo ta task:');
+  if(!desc) return;
+  const pri = prompt('Priority (high/medium/low):','medium')||'medium';
+  try {
+    await post('/memory/tasks',{description:desc,priority:pri,project_id:'default'});
+    loadTasks(); refreshSb();
+  } catch(e){alert('Loi: '+e.message);}
+}
+
+// ── Reports ─────────────────────────────────────────────────
+async function loadRpts() {
+  try {
+    const d = await get('/report/list');
+    const rpts = d.reports||[];
+    const html = rpts.length ? rpts.map(r=>{
+      const date = new Date(r.modified*1000).toLocaleString('vi-VN');
+      return `<div class="report-item" onclick="viewRpt('${esc(r.name)}')">
+        <div class="report-ico">📄</div>
+        <div class="report-name">${esc(r.name)}</div>
+        <div class="report-meta">${date}</div>
+      </div>`;
+    }).join('') : '<div class="empty-state">Chua co bao cao nao.</div>';
+    $('rpt-list').innerHTML = html;
+    $('mrpt-list').innerHTML = html;
+  } catch(e){$('rpt-list').innerHTML=`<div class="empty-state">Loi</div>`;$('mrpt-list').innerHTML=$('rpt-list').innerHTML;}
+}
+
+async function viewRpt(name) {
+  try {
+    const d = await get('/report/'+encodeURIComponent(name));
+    $('ov-title').textContent = name;
+    $('ov-body').textContent = typeof d==='string'?d:JSON.stringify(d,null,2);
+    $('overlay').classList.add('open');
+  } catch(e){alert('Loi: '+e.message);}
+}
+
+function closeOv(){$('overlay').classList.remove('open');}
+
+async function genRpt(type) {
+  try {
+    const d = await post('/report/generate',{report_type:type});
+    if(d.ok) {
+      const name = (d.result||{}).saved_to||'';
+      if(confirm(`${type} da tao!\nLuu: ${name}\nXem ngay?`)){
+        loadRpts();
+        setTimeout(()=>viewRpt(name.split(/[/\\]/).pop()),300);
+      }
+    } else alert('Loi: '+(d.error||'?'));
+  } catch(e){alert('Loi: '+e.message);}
+}
+
+// ── Logs ───────────────────────────────────────────────────
+async function loadLogs() {
+  try {
+    const d = await get('/logs?limit=100');
+    const entries = d.entries||[];
+    const html = entries.length ? entries.map(e=>{
+      const m = e.match(/^\[(.+?)\]\s*\[(.+?)\]\s*(.+?)(?:\s*\|\s*(.+))?$/);
+      if(!m) return `<div class="log-entry">${esc(e)}</div>`;
+      return `<div class="log-entry"><span class="log-time">${m[1]}</span><span class="log-action">${m[3]}</span><span style="color:var(--text3)">${m[4]||''}</span></div>`;
+    }).join('') : '<div class="empty-state">Chua co log nao.</div>';
+    $('log-list').innerHTML = html;
+  } catch(e){$('log-list').innerHTML=`<div class="empty-state">Loi</div>`;}
+}
+
+// ── Status ─────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const [s,tools] = await Promise.all([get('/status'),get('/tools')]);
+    const html = `
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-n">${s.pending_tasks||0}</div><div class="stat-l">TASKS</div></div>
+        <div class="stat-box"><div class="stat-n">${s.active_chats||0}</div><div class="stat-l">SESSIONS</div></div>
+        <div class="stat-box"><div class="stat-n">${tools.count||0}</div><div class="stat-l">TOOLS</div></div>
+        <div class="stat-box"><div class="stat-n">${Math.round((s.uptime_s||0)/60)}m</div><div class="stat-l">UPTIME</div></div>
+      </div>
+      <div class="qa-section">
+        <div class="qa-title">SYSTEM INFO</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3);line-height:2">
+          Workspace: ${s.workspace||'?'}<br>
+          Lab: ${s.lab_loaded?'✓ Da nap':'⚠ Chua nap'}<br>
+          File: ${s.latest_excel||'?'}<br>
+          Routes: ${s.routes_ok?'✓':'⚠'}<br>
+          Load time: ${(s.loaded_at||'?').slice(0,19)}
+        </div>
+      </div>
+      <div class="qa-section">
+        <div class="qa-title">TOOLS (${tools.count||0})</div>
+        <div class="qa-btns">${(tools.tools||[]).map(t=>`<div class="qa-btn" style="cursor:default;font-size:10px">${t.name}</div>`).join('')}</div>
+      </div>`;
+    $('st-content').innerHTML = html;
+    $('mst-content').innerHTML = html;
+  } catch(e){$('st-content').innerHTML=`<div class="empty-state">Loi: ${esc(e.message)}</div>`;$('mst-content').innerHTML=$('st-content').innerHTML;}
+}
+
+async function doReload() {
+  try { await get('/reload'); alert('Da reload!'); loadStatus(); refreshSb(); }
+  catch(e){alert('Loi: '+e.message);}
+}
+
+// ── Escape ─────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Boot ───────────────────────────────────────────────────
+async function boot() {
+  refreshSb();
+  setInterval(refreshSb, 30000);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv();});
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+</body>
+</html>
