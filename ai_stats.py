@@ -426,5 +426,78 @@ def learn():
     print("=" * 50)
 
 
+# ── WATCH MODE ───────────────────────────────────────────────────────────────
+def watch():
+    """
+    Theo doi Data_thang/ — khi co file .xlsx thay doi,
+    tu dong chay learn() de cap nhat ai_memory.json.
+    """
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+
+    class ExcelChangeHandler(FileSystemEventHandler):
+        def __init__(self, debounce_sec=5):
+            self.debounce_sec = debounce_sec
+            self.last_run = 0
+            self.pending  = False
+
+        def on_modified(self, event):
+            if event.is_directory:
+                return
+            if not event.src_path.lower().endswith(".xlsx"):
+                return
+            now = datetime.now().timestamp()
+            if now - self.last_run < self.debounce_sec:
+                return
+            self.last_run = now
+            print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Phat hien thay doi: {event.src_path}")
+            print("  -> Chay phan tich...")
+            learn()
+
+        def on_created(self, event):
+            if event.is_directory:
+                return
+            if not event.src_path.lower().endswith(".xlsx"):
+                return
+            now = datetime.now().timestamp()
+            if now - self.last_run < self.debounce_sec:
+                return
+            self.last_run = now
+            print(f"\n[{datetime.now().strftime('%H:%M:%S')}] File moi: {event.src_path}")
+            print("  -> Chay phan tich...")
+            learn()
+
+    if not DATA_DIR.exists():
+        print(f"! Thu muc khong ton tai: {DATA_DIR}")
+        return
+
+    print("=" * 50)
+    print("  AI Stats Watcher - Tu dong cap nhat khi file Excel thay doi")
+    print("=" * 50)
+    print(f"\n  Theo doi: {DATA_DIR}")
+    print(f"  Debounce: 5 giay")
+    print(f"\n  Nhan Ctrl+C de dung.\n")
+
+    handler  = ExcelChangeHandler(debounce_sec=5)
+    observer = Observer()
+    observer.schedule(handler, str(DATA_DIR), recursive=False)
+    observer.start()
+
+    print(f"  [Dang theo doi...]")
+    try:
+        while True:
+            import time
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n\n  Dung watcher.")
+        observer.stop()
+    observer.join()
+
+
 if __name__ == "__main__":
-    learn()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--watch":
+        watch()
+    else:
+        learn()
+
