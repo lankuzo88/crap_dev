@@ -7,11 +7,36 @@ ASIA LAB - AI Chat: Claude Sonnet 4 + NotebookLM-style RAG
 - Khong hallucinate
 """
 import os, sys, json, io, re, urllib.request, urllib.error, uuid
+from pathlib import Path
+from datetime import datetime
 
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 except Exception:
     pass
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+import unicodedata
+
+def unaccent(s: str) -> str:
+    """
+    Chuyen 'Đơn Hàng' -> 'don hang' (ASCII thuan).
+    unicodedata NFKD khong xu ly duoc 'đ'/'Đ' (U+0110/U+0111) tren Python 3.14.
+    Can replace thu cong cho cac ky tu tieng Viet co diacritics.
+    """
+    if not s:
+        return ""
+    # 1. Decompose (xử lý dấu mũ, dấu ngã, dấu hỏi...)
+    nfkd = unicodedata.normalize("NFKD", s)
+    # 2. Strip combining marks
+    ascii_only = "".join(c for c in nfkd if not unicodedata.combining(c))
+    # 3. Replace Vietnamese base chars NFKD can't handle
+    for old, new in [("Đ","D"),("đ","d"),("Ơ","O"),("ơ","o"),
+                     ("Ư","U"),("ư","u"),("Ô","O"),("ô","o"),
+                     ("Ê","E"),("ê","e"),("Ă","A"),("ă","a")]:
+        ascii_only = ascii_only.replace(old, new)
+    return ascii_only.lower()
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 INSTRUCTIONS = os.path.join(BASE_DIR, "ai_instructions.txt")
@@ -63,36 +88,250 @@ def fetch_realtime() -> tuple:
         return [], str(e)
 
 
-def build_realtime_context(orders: list, error: str = None) -> str:
-    """Build Realtime data chunk cho prompt."""
+# ── EXCEL ENRICHMENT: bo sung ngay_nhan tu File_sach/ ───────────────────────
+def load_excel_map() -> dict:
+    """
+    Doc File_sach/*.xlsx — tra ve dict:
+      { ma_dh: datetime(ngay_nhan) }
+    De enrich realtime orders voi ngay_nhan that.
+    """
+    import openpyxl
+    excel_map = {}
+    for fp in sorted(Path(BASE_DIR).glob("File_sach/*.xlsx")):
+        if "node_modules" in str(fp):
+            continue
+        try:
+            wb = openpyxl.load_workbook(fp, data_only=True, read_only=True)
+        except Exception:
+            continue
+
+        # Tim sheet "Don hang"
+        don_sheet = None
+        for shname in wb.sheetnames:
+            if "don hang" in unaccent(shname):
+                don_sheet = shname
+                break
+        if not don_sheet:
+            wb.close()
+            continue
+
+        rows = list(wb[don_sheet].iter_rows(values_only=True))
+        if not rows:
+            wb.close()
+            continue
+
+        # Build index by unaccented column name
+        h = [str(v).strip() if v is not None else "" for v in rows[0]]
+        idx = {unaccent(name): i for i, name in enumerate(h)}
+        ma_col = idx.get("ma dh", -1)
+        nn_col = idx.get("nhan luc", -1)
+
+        for row in rows[1:]:
+            if ma_col < 0 or ma_col >= len(row):
+                continue
+            ma = str(row[ma_col]).strip() if row[ma_col] is not None else ""
+            if not ma or ma == "Ma DH":
+                continue
+            if ma in excel_map:
+                continue
+            # Parse ngay_nhan
+            ngay_val = row[nn_col] if nn_col >= 0 and nn_col < len(row) else None
+            if isinstance(ngay_val, datetime):
+                excel_map[ma] = ngay_val
+            elif isinstance(ngay_val, (int, float)):
+                try:
+                    from openpyxl.utils.datetime import from_excel
+                    excel_map[ma] = from_excel(ngay_val)
+                except Exception:
+                    pass
+            elif isinstance(ngay_val, str):
+                s = ngay_val.strip()
+                if s and s not in ("-", "None", "nan"):
+                    for fmt in ["%d/%m/%Y %H:%M:%S","%Y-%m-%d %H:%M:%S",
+                                "%d/%m/%Y %H:%M","%Y-%m-%d %H:%M",
+                                "%d/%m/%Y","%Y-%m-%d"]:
+                        try:
+                            excel_map[ma] = datetime.strptime(s, fmt)
+                            break
+                        except Exception:
+                            pass
+        wb.close()
+    return excel_map
+
+
+def parse_dt(s: str):
+    """Parse '2026-04-01 12:00:00' or '01/04/2026 12:00:00' -> datetime."""
+    if not s: return None
+    for fmt in ["%Y-%m-%d %H:%M:%S","%d/%m/%Y %H:%M:%S",
+                "%Y-%m-%d %H:%M","%d/%m/%Y %H:%M",
+                "%Y-%m-%d","%d/%m/%Y"]:
+        try: return datetime.strptime(s.strip()[:19], fmt)
+        except Exception: pass
+    return None
+
+
+def build_realtime_context(orders: list, error: str = None,
+                           excel_map: dict = None) -> str:
+    """
+    Build Realtime data chunk.
+    excel_map: { ma_dh: datetime(ngay_nhan) } — tu File_sach/*.xlsx
+               Dung de tinh lead time thuc te & do tre.
+    """
     if error:
         return f"[Nguon: realtime] Khong lay duoc (server.js: {error})"
     if not orders:
-        return None
+        return "[Nguon: realtime] Khong co du lieu"
 
-    today = ""  # ngay hom nay theo Excel
-    total = len(orders)
-    by_kh = {}
-    pending = []
-    done = []
+    today      = datetime.now()
+    today_str  = today.strftime("%Y-%m-%d")
+    excel_map  = excel_map or {}
+
+    due_today   = []
+    overdue     = []   # qua han, chua xong
+    future      = []   # yc_giao > hom nay
+    done_today  = []
+    pending     = []
+    by_kh       = {}
+    total       = len(orders)
+    done_total  = 0
+
+    # Chi tiet don hom nay
+    today_detail = []
 
     for o in orders:
-        kh = o.get("kh") or "?"
-        by_kh[kh] = by_kh.get(kh, 0) + 1
-        if o.get("pct", 0) >= 100:
-            done.append(o)
-        else:
-            pending.append(o)
+        ma   = o.get("ma_dh", "?")
+        kh   = o.get("kh") or "?"
+        bn   = o.get("bn") or "?"
+        yc_g = o.get("yc_giao") or ""
+        pct  = o.get("pct", 0)
+        is_done = pct >= 100
 
-    # Top KH hien tai
+        by_kh[kh] = by_kh.get(kh, 0) + 1
+        yc_giao_date = yc_g[:10] if len(yc_g) >= 10 else ""
+
+        ngay_nhan = excel_map.get(ma)
+
+        # Tinh last confirmed stage time
+        last_t = None
+        stages = o.get("stages", [])
+        for s in stages:
+            if s.get("x"):
+                t = parse_dt(s.get("t") or "")
+                if t and (last_t is None or t > last_t):
+                    last_t = t
+
+        # Tinh lead time thuc te (neu co ngay_nhan & last_t)
+        lead_actual = None
+        if ngay_nhan and last_t:
+            lead_actual = (last_t - ngay_nhan).total_seconds() / 86400.0
+
+        # Lead time yeu cau: yc_giao - ngay_nhan
+        yc_dt = parse_dt(yc_g)
+        lead_needed = None
+        is_late = False
+        if ngay_nhan and yc_dt:
+            lead_needed = (yc_dt - ngay_nhan).total_seconds() / 86400.0
+            # Late = chua xong + deadline da qua so voi now
+            if not is_done and today > yc_dt:
+                is_late = True
+
+        item = {
+            "ma": ma, "kh": kh, "bn": bn,
+            "pct": pct, "is_done": is_done,
+            "yc_giao": yc_giao_date,
+            "ngay_nhan": ngay_nhan.strftime("%d/%m") if ngay_nhan else "?",
+            "lead_actual": round(lead_actual, 1) if lead_actual is not None else None,
+            "lead_needed": round(lead_needed, 1) if lead_needed is not None else None,
+            "is_late": is_late,
+            "curKtv": o.get("curKtv") or "",
+        }
+
+        if is_done:
+            done_total += 1
+            if yc_giao_date == today_str:
+                done_today.append(item)
+                due_today.append(item)
+            elif yc_giao_date > today_str:
+                future.append(item)
+            # DA XONG roi tre thi van tinh (last_t > yc_dt) nhung khong dua vao overdue
+        else:
+            if yc_giao_date == today_str:
+                due_today.append(item)
+                pending.append(item)
+                today_detail.append(item)
+            elif yc_giao_date and yc_giao_date < today_str:
+                overdue.append(item)
+                item["is_late"] = True
+            else:
+                future.append(item)
+
+    # Chi tiet 5 don tre nhat hom nay (chua xong + bi tre so vs lead needed)
+    at_risk = [x for x in pending if x.get("is_late")]
+    at_risk.sort(key=lambda x: x.get("lead_needed") or 999)
+    risk_detail = ""
+    if at_risk[:5]:
+        risk_lines = []
+        for x in at_risk[:5]:
+            lt_need = x.get("lead_needed")
+            lt_act  = x.get("lead_actual")
+            late_tag = " [TRE]" if x.get("is_late") else ""
+            if lt_need:
+                risk_lines.append(
+                    f"  - {x['ma']} | {x['kh']} | yc_giao={x['yc_giao']} "
+                    f"| nhan={x['ngay_nhan']} | can={lt_need:.0f}ngay "
+                    f"(tre={lt_need:.0f}ngay neu chi con 0){late_tag}"
+                )
+            else:
+                risk_lines.append(
+                    f"  - {x['ma']} | {x['kh']} | yc_giao={x['yc_giao']} | nhan={x['ngay_nhan']}{late_tag}"
+                )
+        risk_detail = "\n  At-risk (het lead time):\n" + "\n".join(risk_lines)
+
     top_kh = sorted(by_kh.items(), key=lambda x: -x[1])[:3]
     kh_txt = " | ".join([f"{k}={v}don" for k, v in top_kh])
 
-    return f"""[Nguon: realtime]
-Tong don hien tai: {total}
-Don da hoan thanh (pct=100): {len(done)}
-Don dang lam (pct<100): {len(pending)}
-Top KH: {kh_txt}"""
+    has_excel = bool(excel_map)
+    source_note = "[File_sach: bo sung ngay_nhan]" if has_excel else "[server.js — chua co du lieu Excel]"
+
+    # Don giao truoc 12h hom nay (urgent)
+    urgent_done = []
+    urgent_pending = []
+    for o in orders:
+        yc_g = o.get("yc_giao") or ""
+        if len(yc_g) >= 10 and yc_g[:10] == today_str and len(yc_g) >= 13:
+            try:
+                hour = int(yc_g[11:13])
+                if hour < 12:
+                    pct = o.get("pct", 0)
+                    if pct >= 100:
+                        urgent_done.append(o)
+                    else:
+                        urgent_pending.append(o)
+            except ValueError:
+                pass
+    urgent_txt = ""
+    if urgent_done or urgent_pending:
+        urgent_txt = (
+            f"\n-- Urgent (giao truoc 12h {today_str}): {len(urgent_done)+len(urgent_pending)} don"
+            f"\n  Da xong: {len(urgent_done)} don"
+            f"\n  Chua xong: {len(urgent_pending)} don"
+        )
+        if urgent_pending:
+            urgent_txt += "\n  Chi tiet (chua xong):"
+            for o in urgent_pending[:5]:
+                urgent_txt += (
+                    f"\n    - {o.get('ma_dh','?')} | {o.get('kh','?')} "
+                    f"| yc_giao={o.get('yc_giao','?')} | pct={o.get('pct','?')}% | KTV={o.get('curKtv','?')}"
+                )
+
+    return f"""[Nguon: realtime] {source_note} (hom nay: {today_str})
+Tong don: {total} | Da xong: {done_total} | Dang lam: {len(pending)}
+-- Don can giao hom nay ({today_str}): {len(due_today)} don
+  Da xong, san sang giao: {len(done_today)} don
+  Chua xong, can hoan thanh hom nay: {len(due_today) - len(done_today)} don
+-- Don qua han (yc_giao < {today_str}, chua xong): {len(overdue)} don
+-- Don tuong lai (yc_giao > {today_str}): {len(future)} don
+Top KH: {kh_txt}{risk_detail}{urgent_txt}"""
 
 
 # ── RAG: RETRIEVE RELEVANT KNOWLEDGE ─────────────────────────────────────────
@@ -101,6 +340,13 @@ REALTIME_TRIGGERS = [
     "đang làm","dang lam","cần giao","can giao","chưa xong",
     "sắp giao","sap giao","đơn hôm nay","don hom nay",
     "tình trạng","tinh trang","hien co","hiện có",
+    "trạng thái","trang thai","tra cứu","tra cuu","kiểm tra",
+    "đơn nào","don nao","mấy đơn","may don",
+    "giao khi","giao luc","nhận khi","nhan khi","ngày nào",
+    "mã đơn","ma don","ma_dh","đơn ","don ",
+    "12h","trưa","sáng","chiều","buổi","giờ giao","gio giao",
+    # Specific order IDs (8-12 digit patterns)
+    "263003050","263003035","263003036","263003037","263003038",
 ]
 
 STATS_TRIGGERS = [
@@ -110,6 +356,7 @@ STATS_TRIGGERS = [
     "remake","làm lại","xu hướng","xu huong","trend",
     "số lượng","so luong","bao nhiêu","bao nhieu",
     "trung bình","trung binh","tổng răng","tong rang",
+    "phân tích","phan tich","thống kê","thong ke",
 ]
 
 KNOWLEDGE_TRIGGERS = [
@@ -226,7 +473,9 @@ def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict,
     for src in sources:
         if src == "realtime":
             orders, err = fetch_realtime()
-            ctx = build_realtime_context(orders, err)
+            # Enrich voi ngay_nhan tu Excel
+            excel_map = load_excel_map() if not err else {}
+            ctx = build_realtime_context(orders, err, excel_map)
             lines.append(ctx)
             has_realtime = True
 
@@ -249,6 +498,29 @@ def build_prompt(user_msg: str, sources: list, memory: dict, knowledge: dict,
     if facts_txt and "(chua co" not in facts_txt:
         lines.append("")
         lines.append(facts_txt)
+
+    # Neu hoi ve don cu the (ma don 8-12 chu so) — trich xuat chi tiet
+    specific_ids = re.findall(r"\b\d{8,13}\b", user_msg)
+    if specific_ids and orders:
+        lines.append("")
+        lines.append("=== CHI TIET DON THEO MA ===")
+        for oid in specific_ids:
+            for o in orders:
+                if o.get("ma_dh") == oid:
+                    nn_excel = excel_map.get(oid)
+                    nn_str = nn_excel.strftime("%d/%m/%Y") if nn_excel else (o.get("nhan") or "?")
+                    stages = o.get("stages", [])
+                    stage_txt = " | ".join([
+                        f"{s.get('n','?')}:{s.get('k','?')}:{'✓' if s.get('x') else '✗'}"
+                        for s in stages
+                    ]) if stages else "?"
+                    lines.append(
+                        f"  {oid} | KH={o.get('kh','?')} | BN={o.get('bn','?')} "
+                        f"| nhan={nn_str} | yc_giao={o.get('yc_giao','?')} "
+                        f"| pct={o.get('pct','?')}% | KTV={o.get('curKtv','?')} "
+                        f"| stages=[{stage_txt}]"
+                    )
+                    break
 
     if not has_realtime:
         lines.append("")

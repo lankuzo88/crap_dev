@@ -21,6 +21,55 @@ MEMORY_FP = BASE_DIR / "ai_memory.json"
 STAGE_ORDER = ["CBM", "SÁP/Cadcam", "SƯỜN", "ĐẮP", "MÀI"]
 
 
+# ── REALTIME ENRICHMENT: doc Excel de bo sung ngay_nhan cho orders hien tai ──
+def load_excel_orders_map() -> dict:
+    """
+    Doc tat ca Excel trong File_sach/, tra ve dict:
+      { ma_dh: { "ngay_nhan": datetime, "khach_hang": str, "phuc_hinh": str } }
+    Chi dung de enrich realtime orders — tra ve None neu loi.
+    """
+    try:
+        import openpyxl
+        orders_map = {}
+        excel_files = list(DATA_DIR.glob("*.xlsx"))
+        excel_files = [f for f in excel_files if "node_modules" not in str(f)]
+
+        for fp in excel_files:
+            try:
+                wb = openpyxl.load_workbook(fp, data_only=True, read_only=True)
+            except Exception:
+                continue
+
+            # Tim sheet Don hang
+            don_sheet = None
+            for shname in wb.sheetnames:
+                if "đơn hàng" in shname.lower() or "don hang" in shname.lower():
+                    don_sheet = shname
+                    break
+
+            if don_sheet:
+                rows = list(wb[don_sheet].iter_rows(values_only=True))
+                if rows:
+                    h = [str_(v) for v in rows[0]]
+                    idx = {name: i for i, name in enumerate(h)}
+                    def gi(name):
+                        return idx.get(name, -1)
+                    for row in rows[1:]:
+                        ma = str_(safe_col(row, gi("Mã ĐH")))
+                        if not ma or ma == "Mã ĐH":
+                            continue
+                        if ma not in orders_map:  # giu don dau tien
+                            orders_map[ma] = {
+                                "ngay_nhan":   parse_excel_date(safe_col(row, gi("Nhận lúc"))),
+                                "khach_hang":  str_(safe_col(row, gi("Khách hàng"))),
+                                "phuc_hinh":   str_(safe_col(row, gi("Phục hình"))),
+                            }
+            wb.close()
+        return orders_map
+    except Exception:
+        return None
+
+
 def str_(v):
     if v is None:
         return ""
