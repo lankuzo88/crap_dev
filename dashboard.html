@@ -405,47 +405,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .d-lk-bf{height:100%;border-radius:3px;}
   .d-lk-v{font-family:var(--mono);font-size:11px;font-weight:600;width:32px;text-align:right;flex-shrink:0;}
 }
-@media print {
-  *{background:#fff!important;color:#000!important;}
-  body{max-width:none!important;overflow:visible!important;background:#fff;}
-  #boot,#layout-desktop,.m-nav,.overlay,.m-kpi-row,.m-sticky,.m-hdr .live-badge{display:none!important;}
-  #layout-mobile{display:block!important;}
 
-  /* Header print */
-  .m-hdr{position:sticky;top:0;background:#fff!important;border-bottom:2px solid #f5a623!important;padding:8px 12px!important;}
-  .m-hdr-r1{display:flex!important;align-items:center!important;justify-content:space-between!important;}
-  .brand-ico,.brand-name,.live-badge,.m-close-btn,.m-hdr .pdf-btn-hide{display:none!important;}
-  .brand{display:flex!important;align-items:center!important;gap:6px!important;}
-  .brand::before{content:'ASIA LAB';font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#f5a623!important;letter-spacing:1px;}
-  .pdf-meta{display:flex!important;flex-direction:column!important;align-items:flex-end!important;}
-  .pdf-date{font-family:'JetBrains Mono',monospace!important;font-size:12px!important;color:#555!important;margin-left:auto;}
-  .pdf-summary{font-size:10px!important;color:#888!important;}
-  .pdf-summary{font-size:10px;color:#888!important;margin-top:2px;margin-left:auto;}
-
-  /* Chỉ hiện đơn hôm nay */
-  #m-OB .row-item,.m-scroll,.m-pane-orders,.tab-pane{display:block!important;}
-  #m-OB .row-item .row-accent,#m-OB .row-item .row-pips{display:none!important;}
-  #m-OB .row-item{background:#fff!important;border:1px solid #ccc!important;border-radius:0!important;margin:0!important;padding:5px 8px!important;display:flex!important;align-items:center!important;gap:6px!important;min-height:auto!important;}
-  #m-OB .row-item:active{background:#fff!important;}
-
-  /* Ẩn các đơn không phải hôm nay */
-  #m-OB .row-item[data-today="false"]{display:none!important;}
-
-  /* In thông tin cần thiết */
-  .row-info{flex:1!important;min-width:0!important;padding:0!important;display:flex!important;align-items:center!important;gap:10px!important;}
-  .row-top{display:none!important;}
-  .row-name{font-size:11px!important;font-weight:700!important;color:#000!important;font-family:inherit!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
-  .row-sub{font-size:10px!important;color:#555!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin-top:0!important;}
-  .row-right{display:flex!important;align-items:center!important;gap:8px!important;flex-shrink:0!important;padding:0!important;min-width:auto!important;}
-  .row-right>*:not(.row-giao):not(.row-sl){display:none!important;}
-  .row-giao{font-family:'JetBrains Mono',monospace!important;font-size:11px!important;font-weight:700!important;color:#000!important;white-space:nowrap!important;}
-  .row-sl{font-family:'JetBrains Mono',monospace!important;font-size:11px!important;font-weight:700!important;color:#f5a623!important;}
-  .row-prog,.pct-b{display:none!important;}
-  .m-scroll{padding:0 8px 16px!important;overflow:visible!important;max-height:none!important;}
-
-  /* PDF button */
-  .m-hdr button{display:none!important;}
-}
 </style>
 </head>
 <body>
@@ -469,14 +429,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         </div>
       </div>
       <div class="live-badge"><div class="live-dot"></div><span class="live-txt">LIVE</span></div>
-      <div style="display:none" class="pdf-meta">
-        <div class="pdf-date"></div>
-        <div class="pdf-summary"></div>
-      </div>
-      <button onclick="window.print()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--amber);font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;flex-shrink:0;" title="Xuất PDF đơn hôm nay">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        PDF
-      </button>
     </div>
     <div class="m-kpi-row">
       <div class="m-kpi" onclick="mSetF(document.querySelector('#m-chips .chip[data-f=today]'),'today')" style="cursor:pointer">
