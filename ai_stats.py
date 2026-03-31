@@ -413,11 +413,9 @@ def learn():
     memory["insights"]     = insights
     memory["learnedAt"]    = datetime.now().isoformat()
 
-    for key in ["lab","stages","stageGroups","specialOrders","deadline",
-                "materials","ktvs","dataFields","typicalStats",
-                "morningBriefing","aiPersona","learnedFacts"]:
-        if key not in memory:
-            memory[key] = {}
+    # Ghi learnedStats/insights/learnedAt vao memory
+    # CAC TRUONG: lab/stages/materials/ktvs/specs... HIEN O ai_knowledge.json
+    # ai_stats.py chi ghi phan tich thong ke
 
     with open(MEMORY_FP, "w", encoding="utf-8") as f:
         json.dump(memory, f, ensure_ascii=False, indent=2)
