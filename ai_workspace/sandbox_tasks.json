@@ -1,6 +1,16 @@
 {
   "tasks": [
     {
+      "id": "27b744df",
+      "project_id": "default",
+      "description": "Test MCP integration",
+      "priority": "high",
+      "tags": [],
+      "status": "pending",
+      "created": "2026-04-01T19:14:39.338393",
+      "updated": "2026-04-01T19:14:39.338418"
+    },
+    {
       "id": "41b2bfa2",
       "project_id": "default",
       "description": "Phân tích wip",

@@ -128,13 +128,219 @@ def read_excel(path: str, sheet: str = None) -> dict:
     wb.close()
     return {"file": path, "sheets": list(result.keys()), "data": result}
 
-
 TOOL_REGISTRY["read_file"]  = read_file
 TOOL_REGISTRY["write_file"] = write_file
 TOOL_REGISTRY["list_dir"]   = list_dir
 TOOL_REGISTRY["find_files"] = find_files
 TOOL_REGISTRY["read_json"]  = read_json
 TOOL_REGISTRY["read_excel"] = read_excel
+
+
+# ── Monthly / Data_thang Tools ────────────────────────────────────────────────
+
+def _str(v):
+    return str(v).strip() if v is not None else ""
+
+
+def read_monthly_excel(file_name: str = None, sheet: str = None) -> dict:
+    """
+    Doc file Excel tu Data_thang/ (parent dir).
+    file_name: ten file (vd: 'Thang_04_2026.xlsx'). Bo trong = file moi nhat.
+    sheet: ten sheet tuy chon.
+    """
+    import openpyxl
+    from glob import glob
+
+    data_dir = PARENT_DIR / "Data_thang"
+    if not data_dir.exists():
+        return {"error": f"Data_thang/ not found at {data_dir}"}
+
+    if file_name:
+        fp = data_dir / file_name
+        files = [fp] if fp.exists() else []
+    else:
+        files = sorted(data_dir.glob("*.xlsx"), key=lambda p: p.stat().st_mtime, reverse=True)
+        files = files[:1] if files else []
+
+    if not files:
+        return {"error": f"No .xlsx files in Data_thang/"}
+
+    fp = files[0]
+    try:
+        wb = openpyxl.load_workbook(fp, data_only=True, read_only=True)
+    except Exception as e:
+        return {"error": f"Cannot open {fp.name}: {e}"}
+
+    if sheet:
+        names = [n for n in wb.sheetnames if sheet.lower() in n.lower()]
+        sheets_to_read = names or [wb.sheetnames[0]]
+    else:
+        sheets_to_read = wb.sheetnames[:3]
+
+    result = {}
+    for shname in sheets_to_read:
+        rows = list(wb[shname].iter_rows(values_only=True))
+        if not rows:
+            continue
+        headers = [_str(v) for v in rows[0]]
+        result[shname] = {
+            "headers": headers,
+            "rows": [[_str(v) for v in row] for row in rows[1:50]],  # limit 50 rows
+        }
+    wb.close()
+    return {"file": fp.name, "sheets": list(result.keys()), "data": result}
+
+
+def analyze_monthly(file_name: str = None) -> dict:
+    """
+    Phan tich chi tiet mot file Data_thang/.
+    Bao gom: tong don, loai lenh, vat lieu, top KH, top KTV.
+    file_name: vd 'Thang_04_2026.xlsx'. Bo trong = file moi nhat.
+    """
+    import openpyxl
+    from collections import Counter
+
+    data_dir = PARENT_DIR / "Data_thang"
+    if file_name:
+        fp = data_dir / file_name
+        files = [fp] if fp.exists() else []
+    else:
+        files = sorted(data_dir.glob("*.xlsx"), key=lambda p: p.stat().st_mtime, reverse=True)
+        files = files[:1] if files else []
+
+    if not files:
+        return {"error": "No files in Data_thang/"}
+
+    fp = files[0]
+    wb = openpyxl.load_workbook(fp, data_only=True, read_only=True)
+
+    # Sheet Don hang
+    don_sheet = next((n for n in wb.sheetnames
+                       if "đơn hàng" in n.lower() or "don hang" in n.lower()), None)
+    td_sheet = next((n for n in wb.sheetnames
+                     if "tiến độ" in n.lower() or "tien do" in n.lower()), None)
+
+    orders = {}
+    lk_count = Counter()
+    kh_count = Counter()
+    mat_count = Counter()
+    sl_total = 0
+
+    if don_sheet:
+        rows = list(wb[don_sheet].iter_rows(values_only=True))
+        h = [_str(v) for v in rows[0]]
+        idx = {name: i for i, name in enumerate(h)}
+
+        for row in rows[1:]:
+            ma = _str(row[idx.get("Mã ĐH", -1)])
+            if not ma or ma == "Mã ĐH":
+                continue
+            if ma in orders:
+                continue
+
+            kh = _str(row[idx.get("Khách hàng", -1)])
+            ph = _str(row[idx.get("Phục hình", -1)])
+            sl = int(row[idx.get("SL", -1)]) if _str(row[idx.get("SL", -1)]).isdigit() else 0
+            gc = _str(row[idx.get("Ghi chú ĐP", -1) if "Ghi chú ĐP" in h else -1])
+
+            orders[ma] = {"kh": kh, "ph": ph, "sl": sl, "gc": gc}
+            sl_total += sl
+            if kh:
+                kh_count[kh] += 1
+
+            gc_lower = gc.lower()
+            if "sửa" in gc_lower or "làm tiếp" in gc_lower:
+                lk_count["Sửa/Làm tiếp"] += 1
+            elif "bh" in gc_lower:
+                lk_count["Bảo hành"] += 1
+            elif "ts" in gc_lower or "thử sườn" in gc_lower:
+                lk_count["Thử sườn"] += 1
+            else:
+                lk_count["Làm mới"] += 1
+
+            ph_lower = ph.lower()
+            if "zirc" in ph_lower:
+                mat_count["Zirconia"] += sl
+            elif "kim loại" in ph_lower:
+                mat_count["Kim loại"] += sl
+            elif "vene" in ph_lower:
+                mat_count["Veneer"] += sl
+            elif "temp" in ph_lower or "pmma" in ph_lower:
+                mat_count["Temp/PMMA"] += sl
+            else:
+                mat_count["Khác"] += sl
+
+    # Sheet Tien do — top KTV
+    ktv_count = Counter()
+    if td_sheet:
+        rows = list(wb[td_sheet].iter_rows(values_only=True))
+        h = [_str(v) for v in rows[0]]
+        idx = {name: i for i, name in enumerate(h)}
+        for row in rows[1:]:
+            ma = _str(row[idx.get("Mã ĐH", -1)])
+            ktv = _str(row[idx.get("KTV", -1)]).replace("-", "").strip()
+            xn = _str(row[idx.get("Xác nhận", -1)]) == "Có"
+            if ma and ma != "Mã ĐH" and xn and ktv:
+                ktv_count[ktv] += 1
+
+    wb.close()
+
+    total = len(orders)
+    return {
+        "ok": True,
+        "file": fp.name,
+        "total_orders": total,
+        "total_teeth": sl_total,
+        "order_types": [{"type": k, "count": v, "pct": round(v * 100 / total, 1)} for k, v in lk_count.most_common()],
+        "materials": [{"material": k, "teeth": v} for k, v in mat_count.most_common()],
+        "top_customers": [{"name": k, "count": v} for k, v in kh_count.most_common(10)],
+        "top_ktv": [{"name": k, "count": v} for k, v in ktv_count.most_common(10)],
+    }
+
+
+def compare_months(month1: str = "Thang_03_2026.xlsx",
+                   month2: str = "Thang_04_2026.xlsx") -> dict:
+    """
+    So sanh 2 thang tu Data_thang/.
+    Tra ve: don, rang, loai lenh, vat lieu, top KH thay doi.
+    """
+    r1 = analyze_monthly(month1)
+    r2 = analyze_monthly(month2)
+
+    if not r1.get("ok") or not r2.get("ok"):
+        return {"error": "Could not load one or both months"}
+
+    def diff(name, v1, v2):
+        d = v2 - v1
+        pct = round(d / v1 * 100, 1) if v1 else 0
+        return {"name": name, "before": v1, "after": v2, "diff": d, "diff_pct": pct}
+
+    changes = {
+        "total_orders": diff("Đơn hàng", r1["total_orders"], r2["total_orders"]),
+        "total_teeth": diff("Răng", r1["total_teeth"], r2["total_teeth"]),
+    }
+
+    # Top KH changes
+    kh1 = {x["name"]: x["count"] for x in r1.get("top_customers", [])}
+    kh2 = {x["name"]: x["count"] for x in r2.get("top_customers", [])}
+    all_kh = set(kh1) | set(kh2)
+    kh_changes = []
+    for kh in sorted(all_kh, key=lambda x: -(kh2.get(x, 0) - kh1.get(x, 0))):
+        c1 = kh1.get(kh, 0)
+        c2 = kh2.get(kh, 0)
+        if c2 != c1:
+            kh_changes.append({"name": kh, "before": c1, "after": c2, "diff": c2 - c1})
+    kh_changes.sort(key=lambda x: -x["diff"])
+
+    return {
+        "ok": True,
+        "month1": {"file": r1["file"], "orders": r1["total_orders"], "teeth": r1["total_teeth"]},
+        "month2": {"file": r2["file"], "orders": r2["total_orders"], "teeth": r2["total_teeth"]},
+        "changes": changes,
+        "kh_changes": kh_changes[:10],
+        "month1_order_types": r1["order_types"],
+        "month2_order_types": r2["order_types"],
+    }
 
 
 # ── 2. Analysis Tools ──────────────────────────────────────────────────────
@@ -560,3 +766,6 @@ TOOL_REGISTRY["get_status"]   = get_status
 TOOL_REGISTRY["log_activity"] = log_activity
 TOOL_REGISTRY["search_logs"]  = search_logs
 TOOL_REGISTRY["get_logs"]     = get_logs
+TOOL_REGISTRY["read_monthly_excel"] = read_monthly_excel
+TOOL_REGISTRY["analyze_monthly"]     = analyze_monthly
+TOOL_REGISTRY["compare_months"]      = compare_months

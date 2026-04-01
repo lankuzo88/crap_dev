@@ -1,1 +1,15 @@
-{"facts": []}
+{
+  "facts": [
+    {
+      "id": "5f2de796",
+      "fact": "MCP integration test",
+      "source": "claude_code",
+      "confidence": "high",
+      "tags": [],
+      "firstSeen": "2026-04-01T19:14:39.342989",
+      "lastSeen": "2026-04-01T19:14:39.342989",
+      "count": 1,
+      "verified": false
+    }
+  ]
+}
