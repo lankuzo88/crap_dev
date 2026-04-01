@@ -1,5 +1,5 @@
 /**
- * ASIA LAB — Dashboard Server v3 (Có AI)
+ * ASIA LAB — Dashboard Server v3
  * Đọc: File_sach/ (Excel sạch mới nhất) + Data/ (JSON tiến độ)
  *
  * Cách chạy:
@@ -15,7 +15,6 @@ const express = require('express');
 const XLSX    = require('xlsx');
 const path    = require('path');
 const fs      = require('fs');
-const { spawn } = require('child_process');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -373,57 +372,6 @@ app.get('/status', (req, res) => {
     cached_orders:  cache?.orders?.length || 0,
     cache_age_s:    cacheTime ? Math.round((Date.now()-cacheTime)/1000) : null,
   });
-});
-
-// ── AI CHAT ─────────────────────────────────────────────────────
-app.use(express.json({ limit: '1mb' }));
-
-app.post('/api/chat', async (req, res) => {
-  const { message, sessionId } = req.body;
-  if (!message || !message.trim()) {
-    return res.status(400).json({ error: 'Cần có message' });
-  }
-
-  const pythonExe = process.platform === 'win32' ? 'python' : 'python3';
-  const scriptPath = path.join(BASE_DIR, 'ai_chat.py');
-
-  try {
-    const result = await new Promise((resolve, reject) => {
-      const proc = spawn(pythonExe, [scriptPath, message], {
-        cwd: BASE_DIR,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true,
-      });
-
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout.on('data', d => { stdout += d.toString(); });
-      proc.stderr.on('data', d => { stderr += d.toString(); });
-
-      proc.on('error', err => reject(err));
-
-      // 25s timeout
-      const timer = setTimeout(() => {
-        proc.kill();
-        reject(new Error('timeout'));
-      }, 25000);
-
-      proc.on('close', code => {
-        clearTimeout(timer);
-        if (code === 0) resolve(stdout.trim());
-        else reject(new Error(stderr || `exit ${code}`));
-      });
-    });
-
-    res.json({ answer: result, ok: true });
-  } catch (err) {
-    log(`AI chat error: ${err.message}`);
-    res.json({
-      answer: `Xin lỗi, đang gặp lỗi khi trả lời: ${err.message === 'timeout' ? 'AI mất quá 25 giây — vui lòng thử lại.' : err.message}`,
-      ok: false,
-    });
-  }
 });
 
 app.use(express.static(BASE_DIR));

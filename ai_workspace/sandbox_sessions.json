@@ -83,6 +83,50 @@
         }
       ],
       "active_project": null
+    },
+    {
+      "id": "ws1775024562530",
+      "created": "2026-04-01T13:23:39.531521",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phân loại các sản phẩm",
+          "at": "2026-04-01T13:23:39.531521"
+        },
+        {
+          "role": "assistant",
+          "content": "<Claude:tool_call>\ninvoke name=\"analyze_customers\">\n</invoke>\n</Claude:tool_call>",
+          "at": "2026-04-01T13:23:39.566037"
+        },
+        {
+          "role": "user",
+          "content": "Xin chào",
+          "at": "2026-04-01T13:24:05.547530"
+        },
+        {
+          "role": "assistant",
+          "content": "Chào bạn! 👋\n\nMình là **Asia Lab AI** — trợ lý phân tích cho Labo Nha Khoo ASIA LAB.\n\n**Hiện tại mình có thể giúp bạn:**\n\n- 📊 Phân tích đơn hàng & thống kê lab\n- 👨‍🔧 Theo dõi tiến độ KTV\n- 📁 Đọc file Excel (`File_sach/*.xlsx`)\n- 📋 Tạo báo cáo tự động\n- 🔍 Tìm pattern / bottleneck trong dữ liệu\n\n**Dữ liệu gần nhất:**\n- 📦 120 đơn / 415 răng (2026-03-20 → 2026-03-25)\n- ⚡ TB 30 đơn/ngày\n- 🏆 KTV top: Toàn (35 đơn), Võ Văn Vạn (31 đơn)\n\n---\n\nBạn cần mình hỗ trợ gì hôm nay?",
+          "at": "2026-04-01T13:24:05.600114"
+        }
+      ],
+      "active_project": null
+    },
+    {
+      "id": "ws1775030863487",
+      "created": "2026-04-01T16:20:26.695183",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Phan tich chi tiet du lieu trong File_sach. Tom tat: tong don, nut that, top KTV, top khach hang.",
+          "at": "2026-04-01T16:20:26.695183"
+        },
+        {
+          "role": "assistant",
+          "content": "<Claude:tool_call>\n<invoke name=\"analyze_excel\">\n<parameter name=\"description\">Full analysis of File_sach data: total orders, bottleneck, top KTV, top customers</parameter>\n</invoke>\n</Claude:tool_call>",
+          "at": "2026-04-01T16:20:26.719484"
+        }
+      ],
+      "active_project": null
     }
   ]
 }
