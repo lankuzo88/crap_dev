@@ -7,7 +7,9 @@
       "Bash(python3 labo_cleaner.py \"Excel/2403a3_scraped.xlsx\" \"Excel/test_clean.xlsx\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(cmd /c start http://localhost:3001)",
+      "Bash(cd:*)"
     ]
   }
 }
