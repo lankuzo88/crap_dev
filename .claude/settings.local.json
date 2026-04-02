@@ -9,7 +9,10 @@
       "Bash(git commit:*)",
       "Bash(git pull:*)",
       "Bash(cmd /c start http://localhost:3001)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(node server.js)",
+      "Bash(cmd /c start http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/status)"
     ]
   }
 }
