@@ -18,6 +18,8 @@
   --orange:#ff6b35;--orange-s:rgba(255,107,53,.1);
   --text:#e8edf8;--text2:#8b95b0;--text3:#4a5270;
   --mono:'JetBrains Mono',monospace;
+  --stage-cbm:#3b82f6;--stage-sap:#a855f7;--stage-suon:#f59e0b;--stage-dap:#f97316;--stage-mai:#ef4444;
+  --glass-bg:rgba(255,255,255,0.04);--glass-border:rgba(255,255,255,0.09);
 }
 html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);}
 
@@ -240,6 +242,63 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .m-nt.active .m-nt-ico{transform:translateY(-1px);}
   .m-nt-lbl{font-size:8px;font-weight:700;letter-spacing:.5px;}
   .m-nt-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--red);color:#fff;font-size:7px;font-weight:700;font-family:var(--mono);padding:1px 3px;border-radius:3px;}
+
+  /* ══ GLASSMORPHISM MOBILE V2 ══ */
+  /* Glass card system */
+  .m-gcard{margin:4px 8px 5px;border-radius:12px;background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-border);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;}
+  .m-gcard:active{transform:scale(.98);}
+  .m-gcard-accent{width:4px;align-self:stretch;flex-shrink:0;border-radius:12px 0 0 12px;}
+  /* Group header */
+  .m-ghdr{display:flex;align-items:center;gap:8px;padding:10px 12px 4px;}
+  .m-ghdr-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;border:1px solid;background:var(--glass-bg);backdrop-filter:blur(8px);flex-shrink:0;}
+  .m-ghdr-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;}
+  .m-ghdr-count{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:rgba(255,255,255,.1);}
+  .m-ghdr-line{flex:1;height:1px;background:var(--border2);}
+  .m-ghdr-overdue .m-ghdr-badge{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08);}
+  .m-ghdr-am     .m-ghdr-badge{color:var(--amber);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08);}
+  .m-ghdr-pm     .m-ghdr-badge{color:var(--purple);border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.08);}
+  .m-ghdr-tmr    .m-ghdr-badge{color:var(--blue);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08);}
+  .m-ghdr-week   .m-ghdr-badge{color:var(--text2);border-color:rgba(139,149,176,.25);background:rgba(139,149,176,.06);}
+  .m-ghdr-later  .m-ghdr-badge{color:var(--text3);border-color:rgba(74,82,112,.3);background:rgba(74,82,112,.06);}
+  /* Card interior */
+  .m-gcard-inner{display:flex;align-items:10px 10stretch;padding:px 10px 0;gap:0;}
+  .m-gcard-body{flex:1;min-width:0;padding:0 8px;}
+  .m-gcard-top{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:4px;}
+  .m-gcard-id{font-family:var(--mono);font-size:9px;color:var(--text3);flex-shrink:0;}
+  .m-gcard-bn{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .m-gcard-sl{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber);flex-shrink:0;margin-left:auto;}
+  .m-gcard-kh{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;}
+  .m-gcard-tags{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;}
+  /* Stage pips */
+  .m-pip-row{display:flex;gap:3px;align-items:center;margin-bottom:5px;}
+  .m-pip{height:5px;border-radius:2px;}
+  .m-pip-cur{background:var(--amber);animation:blink 1.2s ease infinite;}
+  .m-pip-skip{background:var(--border);opacity:.25;border:1px dashed var(--text3);animation:none;}
+  /* Countdown */
+  .m-cd-wrap{display:flex;align-items:center;gap:4px;}
+  .m-countdown{font-family:var(--mono);font-size:10px;font-weight:700;}
+  .m-cd-overdue{color:var(--red);}
+  .m-cd-soon{color:var(--amber);}
+  .m-cd-ok{color:var(--text3);}
+  /* 15H badge */
+  .m-15h{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;color:var(--red);border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);}
+  /* Progress bar */
+  .m-gcard-prog{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:4px;}
+  .m-gcard-prog-fill{height:100%;border-radius:2px;transition:width .3s;}
+  /* Fixed bottom filter bar */
+  .m-filter-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(12,15,24,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:90;display:flex;gap:5px;overflow-x:auto;}
+  .m-filter-bar::-webkit-scrollbar{display:none;}
+  .m-filter-bar .chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;transition:all .15s;white-space:nowrap;}
+  .m-filter-bar .chip.active{background:var(--amber);border-color:var(--amber);color:#000;}
+  /* Scroll body padding */
+  #m-OB{padding-bottom:80px;}
+  /* Header KPI glass upgrade */
+  .m-hdr{background:rgba(20,24,36,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border);}
+  .m-kpi{background:var(--glass-bg);border:1px solid var(--glass-border);}
+  /* Nav safe-area */
+  .m-nav{padding-bottom:env(safe-area-inset-bottom);}
+  /* Empty state */
+  .m-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;}
 }
 
 /* ══════════════════ DESKTOP ══════════════════ */
@@ -455,17 +514,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="search" placeholder="Mã đơn · phục hình · KTV..." id="m-q" oninput="mRender()">
         </div>
-        <div class="chips" id="m-chips">
-          <div class="chip active" data-f="all" onclick="mSetF(this,'all')">Tất cả</div>
-          <div class="chip" data-f="today" onclick="mSetF(this,'today')">📅 Hôm nay</div>
-          <div class="chip" data-f="tomorrow" onclick="mSetF(this,'tomorrow')">📅 Ngày mai</div>
-          <div class="chip" data-f="urgent" onclick="mSetF(this,'urgent')">⚡ Gấp</div>
-          <div class="chip" data-f="inprog" onclick="mSetF(this,'inprog')">▶ Đang làm</div>
-          <div class="chip" data-f="done" onclick="mSetF(this,'done')">✓ Xong</div>
-          <div class="chip" data-f="sua" onclick="mSetF(this,'sua')">⟳ Sửa</div>
-          <div class="chip" data-f="zirc" onclick="mSetF(this,'zirc')">Zirconia</div>
-          <div class="chip" data-f="ti" onclick="mSetF(this,'ti')">Titanium</div>
-        </div>
       </div>
       <div id="m-OB" style="padding-top:5px"></div>
     </div>
@@ -499,6 +547,17 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div class="m-nt" id="m-n-summary" onclick="mSw('summary',this)">
       <div class="m-nt-ico">📊</div><div class="m-nt-lbl">TỔNG HỢP</div>
     </div>
+  </div>
+  <div class="m-filter-bar" id="m-chips">
+    <div class="chip active" data-f="all" onclick="mSetF(this,'all')">Tất cả</div>
+    <div class="chip" data-f="today" onclick="mSetF(this,'today')">📅 Hôm nay</div>
+    <div class="chip" data-f="tomorrow" onclick="mSetF(this,'tomorrow')">📅 Ngày mai</div>
+    <div class="chip" data-f="urgent" onclick="mSetF(this,'urgent')">⚡ Gấp</div>
+    <div class="chip" data-f="inprog" onclick="mSetF(this,'inprog')">▶ Đang làm</div>
+    <div class="chip" data-f="done" onclick="mSetF(this,'done')">✓ Xong</div>
+    <div class="chip" data-f="sua" onclick="mSetF(this,'sua')">⟳ Sửa</div>
+    <div class="chip" data-f="zirc" onclick="mSetF(this,'zirc')">Zirconia</div>
+    <div class="chip" data-f="ti" onclick="mSetF(this,'ti')">Titanium</div>
   </div>
 </div>
 
@@ -1118,91 +1177,218 @@ function progColor(pct) {
   return '#4a5270';
 }
 
+/* ═══════ MOBILE GLASSMORPHISM HELPERS ═══════ */
+function getNextActiveStageColor(o) {
+  if (!o || !o.stages) return 'var(--green)';
+  const STAGE_COLORS = { CBM:'var(--stage-cbm)', 'SÁP/Cadcam':'var(--stage-sap)', 'SÁP':'var(--stage-sap)', SƯỜN:'var(--stage-suon)', ĐẮP:'var(--stage-dap)', MÀI:'var(--stage-mai)' };
+  for (const s of o.stages) {
+    if (!s.sk && !s.x) return STAGE_COLORS[s.n] || 'var(--amber)';
+  }
+  return 'var(--green)'; // all done
+}
+
+function getRemainingStages(o) {
+  if (!o || !o.stages) return 0;
+  return o.stages.filter(s => !s.sk && !s.x).length;
+}
+
+function isOverdue(o) {
+  if (!o || !o.yc_ht) return false;
+  return new Date(o.yc_ht).getTime() < Date.now();
+}
+
+function classifyTimeGroup(o) {
+  if (isOverdue(o)) return 'overdue';
+  const now = new Date();
+  const ht = new Date(o.yc_ht);
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).getTime();
+  const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0).getTime();
+  const tomorrowEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23, 59, 59).getTime();
+  const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 23, 59, 59).getTime();
+  const htMs = ht.getTime();
+  if (htMs < tomorrowStart) {
+    // today
+    const h = ht.getHours();
+    return (h < 12) ? 'today-am' : 'today-pm';
+  }
+  if (htMs <= tomorrowEnd) return 'tomorrow';
+  if (htMs <= weekEnd) return 'thisweek';
+  return 'later';
+}
+
+function smartSort(list) {
+  return [...list].sort((a, b) => {
+    const oA = isOverdue(a), oB = isOverdue(b);
+    if (oA && !oB) return -1;
+    if (!oA && oB) return 1;
+    if (oA && oB) return (a.yc_ht||'').localeCompare(b.yc_ht||'');
+    const rA = getRemainingStages(a), rB = getRemainingStages(b);
+    if (rA !== rB) return rA - rB;
+    const gA = ((a.gc||'').toLowerCase().includes('15h') ? 0 : 1);
+    const gB = ((b.gc||'').toLowerCase().includes('15h') ? 0 : 1);
+    if (gA !== gB) return gA - gB;
+    return (a.yc_ht||'').localeCompare(b.yc_ht||'');
+  });
+}
+
+function computeTimeGroups(list) {
+  const GROUP_ORDER = [
+    { key: 'overdue',   label: '⚠️ QUÁ HẠN',   cls: 'm-ghdr-overdue', hasAM: false, hasPM: false },
+    { key: 'today-am',  label: '☀️ SÁNG',        cls: 'm-ghdr-am',       hasAM: true,  hasPM: false },
+    { key: 'today-pm',  label: '🌤️ CHIỀU',      cls: 'm-ghdr-pm',       hasAM: false, hasPM: true  },
+    { key: 'tomorrow',  label: '📅 NGÀY MAI',    cls: 'm-ghdr-tmr',      hasAM: false, hasPM: false },
+    { key: 'thisweek',  label: '📆 TUẦN NÀY',   cls: 'm-ghdr-week',     hasAM: false, hasPM: false },
+    { key: 'later',     label: '🚀 SẮP TỚI',     cls: 'm-ghdr-later',    hasAM: false, hasPM: false },
+  ];
+
+  // Detect AM/PM presence from today's orders for dynamic Sang/Chieu labels
+  const todayOrders = list.filter(o => classifyTimeGroup(o).startsWith('today'));
+  const hasAM = todayOrders.some(o => classifyTimeGroup(o) === 'today-am');
+  const hasPM = todayOrders.some(o => classifyTimeGroup(o) === 'today-pm');
+
+  const map = {};
+  GROUP_ORDER.forEach(g => {
+    map[g.key] = { ...g, orders: [] };
+    // Override AM/PM labels dynamically
+    if (g.key === 'today-am') {
+      map[g.key].label = hasAM ? '☀️ SÁNG' : (hasPM ? '📅 HÔM NAY' : '📅 HÔM NAY');
+    }
+    if (g.key === 'today-pm') {
+      map[g.key].label = hasPM ? '🌤️ CHIỀU' : '📅 HÔM NAY';
+    }
+  });
+
+  // If only AM or only PM, merge both into single "HÔM NAY" group
+  if (!hasPM && hasAM) {
+    list.forEach(o => {
+      const g = classifyTimeGroup(o);
+      if (g === 'today-am' || g === 'today-pm') map['today-am'].orders.push(o);
+    });
+  } else if (hasPM && !hasAM) {
+    list.forEach(o => {
+      const g = classifyTimeGroup(o);
+      if (g === 'today-am' || g === 'today-pm') map['today-pm'].orders.push(o);
+    });
+  } else {
+    list.forEach(o => map[classifyTimeGroup(o)]?.orders.push(o));
+  }
+
+  return GROUP_ORDER
+    .filter(g => {
+      if (g.key === 'today-am' && !hasPM && hasAM) {
+        return map['today-am'].orders.length > 0;
+      }
+      if (g.key === 'today-pm' && hasPM && !hasAM) {
+        return false;
+      }
+      if (g.key === 'today-pm' && hasPM && hasAM) {
+        return true;
+      }
+      return map[g.key].orders.length > 0;
+    })
+    .map(g => ({
+      label: map[g.key].label,
+      cls: g.cls,
+      orders: smartSort(map[g.key].orders),
+      count: map[g.key].orders.length,
+    }));
+}
+
+function renderOrderCard(o) {
+  const accent = getNextActiveStageColor(o);
+  const dc = (o.stages || []).filter(s => s.x).length;
+  const total = (o.stages || []).filter(s => !s.sk).length;
+  const pips = (o.stages || []).map((s, i) => {
+    if (s.sk) return `<div class="m-pip m-pip-skip" title="— ${s.n} KHÔNG LÀM —"></div>`;
+    if (s.x) return `<div class="m-pip" style="background:var(--green);width:10px;height:5px;border-radius:2px"></div>`;
+    if (i === dc) return `<div class="m-pip m-pip-cur" style="width:10px;height:5px"></div>`;
+    return `<div class="m-pip" style="background:var(--border);width:10px;height:5px;border-radius:2px"></div>`;
+  }).join('');
+
+  const pCol = progColor(o.pct);
+  const htRaw = o.yc_ht || '';
+
+  // Tags
+  let tags = `<span class="ph-chip ${phCls(o.ph)}" style="font-size:8px">${phShort(o.ph)}</span>`;
+  if ((o.gc||'').toLowerCase().includes('15h')) tags += ` <span class="m-15h">15H</span>`;
+  else if (isUrgent(o)) tags += ` <span class="ph-chip" style="font-size:8px;color:var(--red);border-color:rgba(255,71,87,.35);background:var(--red-s)">GẤP</span>`;
+  else if (o.lk) tags += ` <span class="ph-chip ${lkCls(o.lk)}" style="font-size:8px">${o.lk}</span>`;
+  const gcLow = (o.gc||'').toLowerCase();
+  if (gcLow.includes('ts') || gcLow.includes('thử sườn')) tags += ` <span class="ph-chip lk-ts" style="font-size:8px">Thử sườn</span>`;
+  if ((o.lk||'').toLowerCase().includes('làm tiếp')) tags += ` <span class="ph-chip lk-nb" style="font-size:8px">Nướng bóng</span>`;
+  const gcTm = gcTime(o.gc);
+  if (gcTm) tags += ` <span class="ph-chip lk-time" style="font-size:8px">⏰ ${gcTm}</span>`;
+
+  const khDisplay = `<span style="font-size:11px;font-family:'Lexend',sans-serif;color:${nkColor(o.kh)}">${o.kh||'—'}</span>`;
+  const bnDisplay = `<span class="m-gcard-bn">${o.bn||'—'}</span>`;
+  const idDisplay = `<span class="m-gcard-id">${o.ma_dh||o.id}</span>`;
+  const slDisplay = `<span class="m-gcard-sl">${o.sl}🦷</span>`;
+
+  const countdownHtml = `<span class="m-countdown m-cd-ok" data-ht="${htRaw}" style="color:var(--text3);font-size:10px;font-family:var(--mono)">…</span>`;
+
+  return `<div class="m-gcard" onclick="openModal('${o.ma_dh||o.id}')">
+    <div style="display:flex;align-items:stretch">
+      <div class="m-gcard-accent" style="background:${accent}"></div>
+      <div class="m-gcard-inner">
+        <div class="m-gcard-body">
+          <div class="m-gcard-top">${idDisplay}${bnDisplay}${slDisplay}</div>
+          <div class="m-gcard-kh">${khDisplay}</div>
+          <div class="m-gcard-tags">${tags}</div>
+          <div class="m-pip-row">${pips}</div>
+          <div class="m-gcard-prog"><div class="m-gcard-prog-fill" style="width:${o.pct}%;background:${pCol}"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:0 2px 0 4px;gap:3px;flex-shrink:0">
+          ${countdownHtml}
+          <span class="pct-b ${pctCls(o.pct)}">${o.pct}%</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function mRender() {
   const q = (document.getElementById('m-q')?.value||'').toLowerCase();
-  let list = filterOrders(mCF, q);
-  list.sort((a,b)=>{
-    const ua=isUrgent(a),ub=isUrgent(b);
-    if(ua&&!ub) return -1; if(ub&&!ua) return 1;
-    return (a.yc_ht||'').localeCompare(b.yc_ht||'') || gcTimeSortVal(a).localeCompare(gcTimeSortVal(b));
-  });
+  const filtered = filterOrders(mCF, q);
+  const groups = computeTimeGroups(filtered);
 
-  // Build time-groups (nhóm theo giờ giao)
-  const groups = [];
-  list.forEach(o=>{
-    const key = o.yc_ht ? o.yc_ht.substring(0,16) : '';
-    if (!groups.length || groups[groups.length-1].key !== key)
-      groups.push({ key, giao:o.yc_ht, items:[] });
-    groups[groups.length-1].items.push(o);
-  });
+  if (!groups.length || groups.every(g => g.orders.length === 0)) {
+    document.getElementById('m-OB').innerHTML = '<div class="m-empty">Không có đơn phù hợp</div>';
+    return;
+  }
 
   let html = '';
-  const { d0, d1 } = getDays();
-
-  groups.forEach(grp => {
-    const dt   = dayType(grp.giao);
-    const urg  = grp.items.some(o=>isUrgent(o));
-    const done = grp.items.filter(o=>o.pct===100).length;
-    const tot  = grp.items.length;
-
-    // Header màu và nhãn theo ngày
-    let hdrColor = dt==='today' ? 'var(--amber)' : dt==='tomorrow' ? 'var(--blue)' : 'var(--text2)';
-    let hdrBg    = dt==='today' ? 'var(--amber-s)' : dt==='tomorrow' ? 'var(--blue-s)' : 'rgba(139,149,176,.07)';
-    if (urg) { hdrColor='var(--red)'; hdrBg='var(--red-s)'; }
-    const dayLbl = dt==='today' ? '🔴 HÔM NAY' : dt==='tomorrow' ? '🔵 NGÀY MAI' : fmtDate(grp.giao);
-    const giaoTxt = grp.giao ? `${dayLbl} · ${fmtTg(grp.giao)}` : 'Chưa có HT';
-    const doneColor = done===tot ? 'var(--green)' : done>0 ? 'var(--amber)' : 'var(--text3)';
-
-    html += `<div style="display:flex;align-items:center;gap:7px;padding:8px 10px 3px">
-      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${hdrColor};background:${hdrBg};padding:3px 9px;border-radius:4px;white-space:nowrap">⏱ ${giaoTxt}</div>
-      <div style="flex:1;height:1px;background:var(--border2)"></div>
-      <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${doneColor}">${done}/${tot}</div>
+  groups.forEach(g => {
+    if (!g.orders.length) return;
+    html += `<div class="m-ghdr ${g.cls}">
+      <div class="m-ghdr-badge">
+        <span class="m-ghdr-label">${g.label}</span>
+        <span class="m-ghdr-count">${g.count}</span>
+      </div>
+      <div class="m-ghdr-line"></div>
     </div>`;
-
-    grp.items.forEach(o=>{
-      const dc   = o.stages.filter(s=>s.x).length;
-      const pips = o.stages.map((s,i)=>`<div class="m-pip pip ${s.sk?'pip-skip':s.x?'pip-done':i===dc?'pip-cur':'pip-pend'}" ${s.sk?'title="— '+s.n+' KHÔNG LÀM —"':''}></div>`).join('');
-      const pCol = progColor(o.pct);
-      const htTxt = o.yc_ht ? fmtTg(o.yc_ht) : '—';
-      const htColor = dt==='today'&&parseInt(htTxt)<12 ? 'var(--red)' : dt==='today'?'var(--amber)':dt==='tomorrow'?'var(--blue)':'var(--text3)';
-
-      // Tags
-      let tags = `<span class="ph-chip ${phCls(o.ph)}" style="font-size:8px">${phShort(o.ph)}</span>`;
-      if (isUrgent(o)) tags += ` <span class="ph-chip" style="font-size:8px;color:var(--red);border-color:rgba(255,71,87,.35);background:var(--red-s)">GẤP</span>`;
-      else if (o.lk) tags += ` <span class="ph-chip ${lkCls(o.lk)}" style="font-size:8px">${o.lk}</span>`;
-      const gcLow = (o.gc||'').toLowerCase();
-      if (gcLow.includes('ts') || gcLow.includes('thử sườn')) tags += ` <span class="ph-chip lk-ts" style="font-size:8px">Thử sườn</span>`;
-      if ((o.lk||'').toLowerCase().includes('làm tiếp')) tags += ` <span class="ph-chip lk-nb" style="font-size:8px">Nướng bóng</span>`;
-      const gcTm = gcTime(o.gc);
-      if (gcTm) tags += ` <span class="ph-chip lk-time" style="font-size:8px">⏰ ${gcTm}</span>`;
-
-      const isToday = dayType(grp.giao) === 'today';
-      html += `<div class="row-item" onclick="openModal('${o.ma_dh||o.id}')" data-today="${isToday}">
-        <div class="row-accent ${lkAccCls(o.lk)}"></div>
-        <div class="row-pips"><div class="m-pip-row">${pips}</div></div>
-        <div class="row-info">
-          <div class="row-top">
-            <span class="row-id">${o.ma_dh||o.id}</span>
-            ${tags}
-          </div>
-          <div class="row-name" style="font-size:13px;font-weight:700;color:${nkColor(o.kh)};font-family:'Lexend',sans-serif">${o.kh||'—'}</div>
-          <div class="row-sub" style="font-size:10px">${o.bn||'—'}</div>
-          <div style="height:3px;background:var(--border2);border-radius:2px;margin-top:5px;overflow:hidden">
-            <div style="height:100%;width:${o.pct}%;background:${pCol};border-radius:2px;transition:width .3s"></div>
-          </div>
-        </div>
-        <div class="row-right" style="min-width:50px;align-items:flex-end">
-          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${htColor}">${htTxt}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">${o.sl}🦷</div>
-          <div class="pct-b ${pctCls(o.pct)}" style="margin-top:3px">${o.pct}%</div>
-        </div>
-      </div>`;
-    });
+    g.orders.forEach(o => { html += renderOrderCard(o); });
   });
 
-  if (!html) html = '<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Không có đơn phù hợp</div>';
   document.getElementById('m-OB').innerHTML = html;
+  tickCountdowns();
 }
+
+function tickCountdowns() {
+  document.querySelectorAll('.m-countdown[data-ht]').forEach(el => {
+    const ht = el.dataset.ht;
+    if (!ht) return;
+    const diffMs = Date.parse(ht) - Date.now();
+    const abs = Math.abs(diffMs);
+    const h = Math.floor(abs / 3600000);
+    const m = Math.floor((abs % 3600000) / 60000);
+    const label = diffMs < 0
+      ? `Trễ ${h > 0 ? h + 'h' : ''}${m}p`
+      : h > 0 ? `Còn ${h}h${m}p` : `Còn ${m}p`;
+    el.textContent = label;
+    el.className = 'm-countdown ' + (diffMs < 0 ? 'm-cd-overdue' : h === 0 ? 'm-cd-soon' : 'm-cd-ok');
+  });
+}
+setInterval(tickCountdowns, 60000);
 
 function mSetF(el, f) {
   if (!el) return;
