@@ -1643,26 +1643,28 @@ class App:
 
         src_orders = src_wb[SHEET_ORDERS] if SHEET_ORDERS in src_wb.sheetnames else None
         tgt_orders = tgt_wb[SHEET_ORDERS] if SHEET_ORDERS in tgt_wb.sheetnames else None
+        src_stages = src_wb[SHEET_STAGES] if SHEET_STAGES in src_wb.sheetnames else None
+        tgt_stages = tgt_wb[SHEET_STAGES] if SHEET_STAGES in tgt_wb.sheetnames else None
 
-        # Chỉ merge sheet Đơn hàng để so sánh & ghi đè
+        import datetime as _dt
+
+        def _parse_date(val) -> Optional[_dt.datetime]:
+            if val is None:
+                return None
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S",
+                        "%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    return _dt.datetime.strptime(str(val).strip(), fmt)
+                except ValueError:
+                    continue
+            return None
+
+        # ── Merge sheet Đơn hàng ───────────────────────────────────────────
         new_count = 0
         update_count = 0
         existing_count = 0
 
         if src_orders and tgt_orders:
-            import datetime as _dt
-
-            def _parse_date(val) -> Optional[_dt.datetime]:
-                if val is None:
-                    return None
-                for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S",
-                            "%Y-%m-%d", "%d/%m/%Y"):
-                    try:
-                        return _dt.datetime.strptime(str(val).strip(), fmt)
-                    except ValueError:
-                        continue
-                return None
-
             # Build lookup: ma_dh → row_index (1-based) trong target
             tgt_lookup: dict[str, int] = {}
             for row in tgt_orders.iter_rows(min_row=2):
@@ -1696,17 +1698,62 @@ class App:
                     else:
                         existing_count += 1
 
-        # Tổng hợp: xóa & tính lại
+        # ── Merge sheet Tiến độ công đoạn ─────────────────────────────────
+        stage_new_count = 0
+        stage_update_count = 0
+
+        if src_stages and tgt_stages:
+            # Build lookup: (ma_dh, cong_doan) → (row_index, tg_ht)
+            # Key = (ma_dh, cong_doan); giá trị = (row_index, thời gian mới nhất)
+            tgt_stage_lookup: dict[tuple[str, str], tuple[int, Optional[_dt.datetime]]] = {}
+            for row in tgt_stages.iter_rows(min_row=2):
+                ma_dh = str(row[0].value).strip() if row[0].value else ""
+                cd    = str(row[2].value).strip() if len(row) > 2 and row[2].value else ""  # cột C = Công đoạn
+                tg    = _parse_date(row[5].value) if len(row) > 5 else None  # cột F = Thời gian HT
+                if ma_dh and cd:
+                    tgt_stage_lookup[(ma_dh, cd)] = (row[0].row, tg)
+
+            # Merge: với mỗi dòng trong source, nếu (ma_dh, cong_doan) chưa có
+            # hoặc có nhưng thời gian mới hơn → cập nhật
+            for row in src_stages.iter_rows(min_row=2):
+                ma_dh = str(row[0].value).strip() if row[0].value else ""
+                cd    = str(row[2].value).strip() if len(row) > 2 and row[2].value else ""
+                if not ma_dh or not cd or ma_dh == "Mã ĐH":
+                    continue
+
+                src_tg = _parse_date(row[5].value) if len(row) > 5 else None
+
+                key = (ma_dh, cd)
+                if key not in tgt_stage_lookup:
+                    # Dòng mới → append vào target
+                    tgt_max_row = tgt_stages.max_row + 1
+                    row_values = [cell.value for cell in row]
+                    for col_idx, val in enumerate(row_values, start=1):
+                        tgt_stages.cell(row=tgt_max_row, column=col_idx).value = val
+                    tgt_stage_lookup[key] = (tgt_max_row, src_tg)
+                    stage_new_count += 1
+                else:
+                    tgt_row_idx, tgt_tg = tgt_stage_lookup[key]
+                    # Ghi đè nếu thời gian mới hơn
+                    if src_tg and (tgt_tg is None or src_tg > tgt_tg):
+                        row_values = [cell.value for cell in row]
+                        for col_idx, val in enumerate(row_values, start=1):
+                            tgt_stages.cell(row=tgt_row_idx, column=col_idx).value = val
+                        tgt_stage_lookup[key] = (tgt_row_idx, src_tg)
+                        stage_update_count += 1
+
+        # ── Xóa sheet Tổng hợp — sẽ được labo_cleaner tạo lại ──────────
         if SHEET_SUM in tgt_wb.sheetnames:
             del tgt_wb[SHEET_SUM]
 
-        # Lưu target workbook
+        # ── Lưu target workbook ───────────────────────────────────────────
         tgt_wb.save(str(target_path))
 
         self.log(
             f"[Data Thang] {target_path.name}: "
-            f"+{new_count} mới, ~{update_count} cap nhat, "
-            f"{existing_count} giu nguyen"
+            f"Don: +{new_count} moi, ~{update_count} cap nhat, "
+            f"{existing_count} giu; "
+            f"Tien do: +{stage_new_count} moi, ~{stage_update_count} cap nhat"
         )
 
     def _run_data_thang(self, clean_xlsx: str) -> None:

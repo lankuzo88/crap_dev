@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0e14">
+<title>ASIA LAB — Sản Xuất</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0e14;
+  --surface: #131720;
+  --surface2: #1a2030;
+  --border: #252d3d;
+  --text: #e2e8f4;
+  --muted: #64748b;
+  --cbm: #3b82f6;
+  --sap: #a855f7;
+  --suon: #f59e0b;
+  --dap: #f97316;
+  --mai: #10b981;
+  --done: #22c55e;
+  --urgent: #ef4444;
+  --header-h: 52px;
+  --stagetab-h: 44px;
+  --toolbar-h: 88px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 14px; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+/* ═══════════════════════════════
+   HEADER
+═══════════════════════════════ */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: var(--header-h);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 2.5px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.logo span { color: var(--cbm); }
+.header-sep { flex: 1; }
+.header-stats {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.hstat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  min-width: 40px;
+}
+.hstat .n {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.1;
+}
+.hstat .l { font-size: 9px; color: var(--muted); letter-spacing: 0.3px; }
+.hstat.tot .n { color: var(--cbm); }
+.hstat.urg .n { color: var(--urgent); }
+.hstat.don .n { color: var(--done); }
+.header-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════
+   STAGE TABS (mobile primary nav)
+═══════════════════════════════ */
+.stage-tabs-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: var(--header-h);
+  z-index: 190;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.stage-tabs-wrap::-webkit-scrollbar { display: none; }
+.stage-tabs {
+  display: flex;
+  padding: 8px 10px;
+  gap: 6px;
+  min-width: max-content;
+}
+.stage-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.stage-tab .tab-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+.stage-tab .tab-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 0 5px;
+  line-height: 16px;
+}
+.stage-tab.active {
+  border-color: currentColor;
+  background: var(--surface2);
+}
+.stage-tab[data-stage="all"] { color: #94a3b8; }
+.stage-tab[data-stage="CBM"] { color: var(--cbm); }
+.stage-tab[data-stage="SÁP/Cadcam"] { color: var(--sap); }
+.stage-tab[data-stage="SƯỜN"] { color: var(--suon); }
+.stage-tab[data-stage="ĐẮP"] { color: var(--dap); }
+.stage-tab[data-stage="MÀI"] { color: var(--mai); }
+.stage-tab[data-stage="HOÀN TẤT"] { color: var(--done); }
+
+/* Stage tab active bg */
+.stage-tab.active[data-stage="CBM"] { background: rgba(59,130,246,0.12); }
+.stage-tab.active[data-stage="SÁP/Cadcam"] { background: rgba(168,85,247,0.12); }
+.stage-tab.active[data-stage="SƯỜN"] { background: rgba(245,158,11,0.12); }
+.stage-tab.active[data-stage="ĐẮP"] { background: rgba(249,115,22,0.12); }
+.stage-tab.active[data-stage="MÀI"] { background: rgba(16,185,129,0.12); }
+.stage-tab.active[data-stage="HOÀN TẤT"] { background: rgba(34,197,94,0.12); }
+.stage-tab.active[data-stage="all"] { background: rgba(148,163,184,0.1); border-color:#94a3b8; }
+
+/* ═══════════════════════════════
+   PIPELINE MINI BAR
+═══════════════════════════════ */
+.pipeline-mini {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  position: sticky;
+  top: calc(var(--header-h) + var(--stagetab-h));
+  z-index: 180;
+}
+.pipe-seg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pipe-seg-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  text-align: center;
+  opacity: 0.6;
+  letter-spacing: 0.3px;
+}
+.pipe-seg-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pipe-seg-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.pipe-seg-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  text-align: center;
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════
+   TOOLBAR
+═══════════════════════════════ */
+.toolbar {
+  padding: 8px 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: calc(var(--header-h) + var(--stagetab-h) + 44px);
+  z-index: 170;
+}
+.filter-row {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.fchip {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 5px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+  user-select: none;
+  line-height: 1;
+}
+.fchip.active {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: #3b4a62;
+}
+.fchip.active.today { color: #fbbf24; border-color: #fbbf24; background: rgba(251,191,36,0.1); }
+.fchip.active.urgent-f { color: var(--urgent); border-color: var(--urgent); background: rgba(239,68,68,0.1); }
+.fchip-sep { flex-shrink: 0; color: var(--border); align-self: center; font-size: 16px; }
+.search-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.search-wrap {
+  flex: 1;
+  position: relative;
+}
+.search-icon {
+  position: absolute;
+  left: 9px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 10px 7px 28px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.search-input:focus { border-color: var(--cbm); }
+.search-input::placeholder { color: var(--muted); }
+.sort-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════
+   CARD LIST
+═══════════════════════════════ */
+.card-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 13px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  animation: cardIn 0.18s ease both;
+}
+.card:active { background: var(--surface2); }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 10px 0 0 10px;
+}
+.card.urgent { border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.03); }
+.card.stage-cbm::before { background: var(--cbm); }
+.card.stage-sap::before { background: var(--sap); }
+.card.stage-suon::before { background: var(--suon); }
+.card.stage-dap::before { background: var(--dap); }
+.card.stage-mai::before { background: var(--mai); }
+.card.stage-done::before { background: var(--done); }
+.card.urgent::before { background: var(--urgent); }
+
+/* Card top row */
+.card-row1 {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.order-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+.badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 1.5px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.badge-urgent { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.badge-lm { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+.badge-sua { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+.badge-ll { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+.badge-lt { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+.badge-bh { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+
+/* Card main info */
+.card-row2 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.card-patient {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-sl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+.card-customer {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-prosthesis {
+  font-size: 11px;
+  color: #7c8fa8;
+  margin-bottom: 7px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Stage track */
+.stage-track {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 7px;
+}
+.stage-pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.pip-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 2px;
+  width: 0;
+}
+.stage-pip.done .pip-fill { width: 100%; }
+.stage-pip.current .pip-fill { width: 45%; animation: pulse-pip 1.5s ease-in-out infinite; }
+@keyframes pulse-pip { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+
+/* Card bottom */
+.card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-stage-label {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.delivery-tag {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+.delivery-tag.today { color: #fbbf24; }
+.delivery-tag.tmr { color: #94a3b8; }
+.delivery-tag.later { color: var(--muted); }
+.card-note {
+  font-size: 10.5px;
+  color: #64748b;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--border);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═══════════════════════════════
+   TIME GROUP HEADER
+═══════════════════════════════ */
+.time-group { margin-bottom: 4px; }
+.time-group-header {
+  position: sticky;
+  top: 190px; /* below header+tabs+pipeline+toolbar — adjusted by JS */
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px 7px 0;
+  background: var(--bg);
+  margin-bottom: 6px;
+}
+.time-group-header::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 36px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.time-group-header.today::before { background: #fbbf24; }
+.time-group-header.tmr::before   { background: var(--cbm); }
+.time-group-header.later::before { background: var(--muted); }
+.tg-time {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.time-group-header.today .tg-time { color: #fbbf24; }
+.time-group-header.tmr .tg-time   { color: var(--cbm); }
+.time-group-header.later .tg-time { color: #94a3b8; }
+.tg-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tg-date {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+.tg-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.tg-urgent-flag {
+  margin-left: auto;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.tg-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.5;
+}
+
+/* Remove delivery tag from cards (redundant with group header) */
+.delivery-tag { display: none; }
+
+/* ═══════════════════════════════
+   EMPTY STATE
+═══════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+.empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
+
+/* ═══════════════════════════════
+   SORT SHEET
+═══════════════════════════════ */
+.sort-sheet-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  align-items: flex-end;
+}
+.sort-sheet-overlay.open { display: flex; }
+.sort-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 16px calc(16px + var(--safe-bottom));
+}
+.sort-sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 14px;
+}
+.sort-sheet-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+.sort-option:last-child { border-bottom: none; }
+.sort-option.active { color: var(--cbm); }
+.sort-option .check { font-size: 16px; }
+
+/* ═══════════════════════════════
+   MODAL (Bottom Sheet)
+═══════════════════════════════ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+  align-items: flex-end;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 0 0 calc(16px + var(--safe-bottom));
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideUp 0.25s cubic-bezier(.32,0,.67,0) both;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle-bar {
+  width: 100%;
+  padding: 10px 0 4px;
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 5;
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.modal-inner { padding: 0 16px 8px; }
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.modal-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px;
+  font-weight: 600;
+  flex: 1;
+}
+.modal-close {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.modal-field-label {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.modal-field-value {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.modal-prosthesis {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.modal-note {
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #fbbf24;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+.modal-stages-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.modal-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  margin-bottom: 5px;
+}
+.modal-stage-row.active-stage { border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.06); }
+.modal-stage-row.done-stage { opacity: 0.6; }
+.ms-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); min-width: 14px; }
+.ms-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; min-width: 80px; }
+.ms-ktv { font-size: 12px; flex: 1; }
+.ms-icon { font-size: 15px; margin-left: auto; }
+
+/* ═══════════════════════════════
+   DESKTOP OVERRIDES
+═══════════════════════════════ */
+@media (min-width: 768px) {
+  :root { --header-h: 60px; --stagetab-h: 60px; }
+  header { padding: 0 24px; gap: 20px; }
+  .logo { font-size: 18px; letter-spacing: 3px; }
+  .header-date { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+  .hstat .n { font-size: 18px; }
+  .hstat .l { font-size: 10px; }
+  .hstat { padding: 5px 14px; min-width: 52px; }
+  .stage-tabs { padding: 10px 16px; gap: 8px; }
+  .stage-tab { padding: 7px 16px; font-size: 13px; }
+  .pipeline-mini { padding: 8px 24px; top: calc(var(--header-h) + var(--stagetab-h)); }
+  .toolbar { padding: 10px 16px 8px; flex-direction: row; align-items: center; top: calc(var(--header-h) + var(--stagetab-h) + 44px); gap: 8px; }
+  .filter-row { flex-shrink: 0; }
+  .search-row { flex: 1; }
+  .search-input { font-size: 13px; }
+  .card-list { padding: 14px 16px; max-width: 800px; margin: 0 auto; }
+  .modal { border-radius: 14px; max-width: 520px; margin: auto; max-height: 85dvh; }
+  .modal-overlay { align-items: center; }
+}
+
+/* ═══════════════════════════════
+   SCROLLBAR GLOBAL
+═══════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">ASIA<span>LAB</span></div>
+  <span class="header-sep"></span>
+  <div class="header-stats">
+    <div class="hstat tot"><div class="n" id="totalCount">—</div><div class="l">Đơn</div></div>
+    <div class="hstat urg"><div class="n" id="urgentCount">—</div><div class="l">Gấp</div></div>
+    <div class="hstat don"><div class="n" id="doneCount">—</div><div class="l">Xong</div></div>
+  </div>
+</header>
+
+<!-- STAGE TABS -->
+<div class="stage-tabs-wrap">
+  <div class="stage-tabs" id="stageTabs">
+    <div class="stage-tab active" data-stage="all">Tất cả <span class="tab-count" id="cnt-all">—</span></div>
+    <div class="stage-tab" data-stage="CBM"><span class="tab-dot"></span>CBM <span class="tab-count" id="cnt-CBM">—</span></div>
+    <div class="stage-tab" data-stage="SÁP/Cadcam"><span class="tab-dot"></span>SÁP <span class="tab-count" id="cnt-SAP">—</span></div>
+    <div class="stage-tab" data-stage="SƯỜN"><span class="tab-dot"></span>SƯỜN <span class="tab-count" id="cnt-SUON">—</span></div>
+    <div class="stage-tab" data-stage="ĐẮP"><span class="tab-dot"></span>ĐẮP <span class="tab-count" id="cnt-DAP">—</span></div>
+    <div class="stage-tab" data-stage="MÀI"><span class="tab-dot"></span>MÀI <span class="tab-count" id="cnt-MAI">—</span></div>
+    <div class="stage-tab" data-stage="HOÀN TẤT"><span class="tab-dot"></span>XONG <span class="tab-count" id="cnt-DONE">—</span></div>
+  </div>
+</div>
+
+<!-- PIPELINE MINI -->
+<div class="pipeline-mini">
+  <div class="pipe-seg"><div class="pipe-seg-label" style="color:var(--cbm)">CBM</div><div class="pipe-seg-bar"><div class="pipe-seg-fill" style="width:64%;background:var(--cbm)"></div></div><div class="pipe-seg-pct">64%</div></div>
+  <div class="pipe-seg"><div class="pipe-seg-label" style="color:var(--sap)">SÁP</div><div class="pipe-seg-bar"><div class="pipe-seg-fill" style="width:46%;background:var(--sap)"></div></div><div class="pipe-seg-pct">46%</div></div>
+  <div class="pipe-seg"><div class="pipe-seg-label" style="color:var(--suon)">SƯỜN</div><div class="pipe-seg-bar"><div class="pipe-seg-fill" style="width:46%;background:var(--suon)"></div></div><div class="pipe-seg-pct">46%</div></div>
+  <div class="pipe-seg"><div class="pipe-seg-label" style="color:var(--dap)">ĐẮP</div><div class="pipe-seg-bar"><div class="pipe-seg-fill" style="width:12%;background:var(--dap)"></div></div><div class="pipe-seg-pct">12%</div></div>
+  <div class="pipe-seg"><div class="pipe-seg-label" style="color:var(--mai)">MÀI</div><div class="pipe-seg-bar"><div class="pipe-seg-fill" style="width:7%;background:var(--mai)"></div></div><div class="pipe-seg-pct">7%</div></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="filter-row">
+    <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.5px;align-self:center;flex-shrink:0">Giao:</span>
+    <button class="fchip active" data-filter="delivery" data-val="all">Tất cả</button>
+    <button class="fchip today" data-filter="delivery" data-val="today">⏰ Hôm nay</button>
+    <button class="fchip" data-filter="delivery" data-val="tmr">📅 Ngày mai</button>
+    <button class="fchip" data-filter="delivery" data-val="later">Sau</button>
+    <span class="fchip-sep">|</span>
+    <button class="fchip" data-filter="type" data-val="all">Tất cả</button>
+    <button class="fchip" data-filter="type" data-val="Làm mới">Làm mới</button>
+    <button class="fchip" data-filter="type" data-val="Sửa">Sửa</button>
+    <button class="fchip" data-filter="type" data-val="Làm lại">Làm lại</button>
+    <button class="fchip urgent-f" data-filter="type" data-val="urgent">⚡ Gấp</button>
+  </div>
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" placeholder="Tìm mã ĐH, bệnh nhân…" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <button class="sort-btn" id="sortBtn" onclick="openSortSheet()">⇅ Sắp xếp</button>
+  </div>
+</div>
+
+<!-- CARD LIST -->
+<div class="card-list" id="cardList"></div>
+
+<!-- SORT SHEET -->
+<div class="sort-sheet-overlay" id="sortSheet" onclick="closeSortSheet(event)">
+  <div class="sort-sheet">
+    <div class="sort-sheet-handle"></div>
+    <div class="sort-sheet-title">Sắp xếp trong nhóm giờ</div>
+    <div class="sort-option active" data-sort="urgent" onclick="setSort('urgent')">
+      <span>⚡ Gấp lên trước</span><span class="check" id="check-urgent">✓</span>
+    </div>
+    <div class="sort-option" data-sort="sl" onclick="setSort('sl')">
+      <span>🦷 Số lượng nhiều nhất trước</span><span class="check" id="check-sl"></span>
+    </div>
+    <div class="sort-option" data-sort="stage" onclick="setSort('stage')">
+      <span>🔄 Công đoạn sớm nhất trước</span><span class="check" id="check-stage"></span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleModalOverlayClick(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-handle-bar"><div class="modal-handle"></div></div>
+    <div class="modal-inner" id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const ORDERS = [{"ma_dh": "262703004", "nhan_luc": "2026-03-27 07:53:00", "yc_hoan_thanh": "2026-03-27 14:00:00", "yc_giao": "2026-03-27 16:00:00", "khach_hang": "CT-Nk Tấn Dũng- TN", "benh_nhan": "Viên", "phuc_hinh": "Răng sứ kim loại thường (R:32-43, - SL: 5)", "sl": 5, "ghi_chu": "Hoàn tất | GẤP KHÔNG HẸN", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": true, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262103018-1", "nhan_luc": "2026-03-27 08:20:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "NT-Nk BS Thuận", "benh_nhan": "Vân Hạc", "phuc_hinh": "Răng sứ La Va (R:14, - SL: 1)", "sl": 1, "ghi_chu": "Sửa Hồng Hỷ", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "261703026-1", "nhan_luc": "2026-03-27 08:15:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Bảo Uyên", "phuc_hinh": "Mặt dán sứ (R:41, - SL: 1)", "sl": 1, "ghi_chu": "Sửa My Trân", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "261003062-1", "nhan_luc": "2026-03-26 19:40:00", "yc_hoan_thanh": "2026-03-27 10:00:00", "yc_giao": "2026-03-27 11:00:00", "khach_hang": "SG-Nk Như Lạc", "benh_nhan": "Lương Văn Phong", "phuc_hinh": "Răng sứ kim loại thường (R:33-43, - SL: 6)", "sl": 6, "ghi_chu": "Sửa (My-Tuấn)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262403055-2", "nhan_luc": "2026-03-26 20:00:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk  Hậu - Bình Chánh", "benh_nhan": "Phước", "phuc_hinh": "Veneer sứ kim loại thường (Cut Back) (R:13-23, - SL: 6)", "sl": 6, "ghi_chu": "Sửa (Trường-Hỷ)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262403052-1", "nhan_luc": "2026-03-26 19:08:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Anh Biếu (47100)", "phuc_hinh": "Răng sứ Titanium (R:46, - SL: 1)", "sl": 1, "ghi_chu": "Sửa (Vy-Hữu)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262603048", "nhan_luc": "2026-03-26 16:10:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk Tố Oanh", "benh_nhan": "Nguyễn Thanh Thuỳ", "phuc_hinh": "Full Sứ Ziconia (R:36,46, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603047", "nhan_luc": "2026-03-26 16:05:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk Tố Oanh", "benh_nhan": "Ôn Ngọc Cẩm Vy", "phuc_hinh": "Full sứ Cercon HT (R:46, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, true], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "Thế Hỷ"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262103081-3", "nhan_luc": "2026-03-26 11:06:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk  Hậu - Bình Chánh", "benh_nhan": "Trinh", "phuc_hinh": "Răng sứ Zircornia (R:25-27, - SL: 3)", "sl": 3, "ghi_chu": "LLTS (Vạn-Sơn-Sơn)", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm lại"}, {"ma_dh": "262203043-1", "nhan_luc": "2026-03-26 10:52:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk BS Huý", "benh_nhan": "Nguyễn Thị Hợp", "phuc_hinh": "Răng sứ kim loại thường (R:25-27, - SL: 3)", "sl": 3, "ghi_chu": "Sửa Hồng - Tuấn. GỬI CS1", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, true], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "Tuấn"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262603038", "nhan_luc": "2026-03-26 10:44:00", "yc_hoan_thanh": "2026-03-27 10:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Nguyễn Thị Chính", "phuc_hinh": "Răng sứ kim loại thường (R:16-26, - SL: 12)", "sl": 12, "ghi_chu": "TS", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603037", "nhan_luc": "2026-03-26 10:38:00", "yc_hoan_thanh": "2026-03-27 10:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Nguyễn Thị Gái", "phuc_hinh": "Attachment đơn (R:35,45, - SL: 2); Răng sứ kim loại thường (R:34-44, - SL: 8)", "sl": 10, "ghi_chu": "TS", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Văn Trải", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603001", "nhan_luc": "2026-03-26 07:42:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk  An Dương Vương", "benh_nhan": "Lâm Kiến An", "phuc_hinh": "Răng sứ kim loại thường (R:21, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503066", "nhan_luc": "2026-03-25 19:03:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Chị Nga (47002)", "phuc_hinh": "Răng sứ kim loại thường (R:24-26, - SL: 3)", "sl": 3, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "261203052-1", "nhan_luc": "2026-03-25 16:27:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Cô Đông (41591)", "phuc_hinh": "Răng sứ Titanium (R:35-38, - SL: 4)", "sl": 4, "ghi_chu": "TS", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Văn Trải", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "240809038-3", "nhan_luc": "2026-03-25 12:12:00", "yc_hoan_thanh": "2026-03-27 10:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Ngọc Hà (Chú Hà)", "phuc_hinh": "Răng sứ kim loại thường (R:13-22, - SL: 5)", "sl": 5, "ghi_chu": "LTHT Lượng Thắm Sĩ Trang Trân", "current_stage": "HOÀN TẤT", "stage_idx": 5, "stage_done": [true, true, true, true, true], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "H.Trang", "MÀI": "Bảo Trân"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm thêm"}, {"ma_dh": "262003065-1", "nhan_luc": "2026-03-25 12:03:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Chị Lan (42162)", "phuc_hinh": "Răng sứ Titanium (R:36-37, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "Yến Vy", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503051", "nhan_luc": "2026-03-25 11:30:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk BS Thụy", "benh_nhan": "Nguyễn Thanh Thuý", "phuc_hinh": "Răng sứ kim loại thường (R:11-25, - SL: 6)", "sl": 6, "ghi_chu": "HT", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "Cẩm Hồng", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503063", "nhan_luc": "2026-03-25 17:47:00", "yc_hoan_thanh": "2026-03-27 13:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Anh Tuấn (43918)", "phuc_hinh": "Răng sứ Titanium (R:27-28,34-36, - SL: 5)", "sl": 5, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262003037", "nhan_luc": "2026-03-20 10:48:00", "yc_hoan_thanh": "2026-03-27 12:00:00", "yc_giao": "2026-03-27 14:00:00", "khach_hang": "LA-Nk BS Thụy", "benh_nhan": "Thành Khoa", "phuc_hinh": "Răng sứ kim loại thường (R:26-27, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "HOÀN TẤT", "stage_idx": 5, "stage_done": [true, true, true, true, true], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Văn Trải", "ĐẮP": "Yến Vy", "MÀI": "Phạm Tấn Hữu"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503057", "nhan_luc": "2026-03-25 17:16:00", "yc_hoan_thanh": "2026-03-27 14:00:00", "yc_giao": "2026-03-27 16:00:00", "khach_hang": "LA-Nk BS Cẩm Dung", "benh_nhan": "Bình An", "phuc_hinh": "Răng sứ kim loại thường (R:35-36, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Văn Trải", "ĐẮP": "Trực", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503064", "nhan_luc": "2026-03-25 18:30:00", "yc_hoan_thanh": "2026-03-27 14:00:00", "yc_giao": "2026-03-27 16:00:00", "khach_hang": "LA-Nk BS Ái", "benh_nhan": "Phan Thanh Thuỷ", "phuc_hinh": "Răng sứ Titanium (R:35, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Văn Trải", "ĐẮP": "Trường", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603033", "nhan_luc": "2026-03-26 09:43:00", "yc_hoan_thanh": "2026-03-27 14:00:00", "yc_giao": "2026-03-27 16:00:00", "khach_hang": "CT-Nk Tấn Dũng- TN", "benh_nhan": "Cam", "phuc_hinh": "Full/ mão kim loại sứ (R:28); Răng sứ kim loại thường (R:27,44-47, - SL: 5)", "sl": 6, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Văn Trải", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "261903061-2", "nhan_luc": "2026-03-26 18:40:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 16:00:00", "khach_hang": "SG-Nk Như Lạc", "benh_nhan": "Nguyễn Văn Lộc", "phuc_hinh": "Veneer sứ Ziconia (Cut Back) (R:11-22,12-14,23-25, - SL: 9)", "sl": 9, "ghi_chu": "Sửa (Vy-Tuấn)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "242804043-5", "nhan_luc": "2026-03-26 17:41:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "TG-Nk  Hoài Bảo", "benh_nhan": "-", "phuc_hinh": "Răng sứ kim loại thường (R:15-17) + Zircornia (R:14-24)", "sl": 11, "ghi_chu": "Sửa (Trường-An)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262603031", "nhan_luc": "2026-03-26 09:37:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "AG-Nk Hồng Thọ", "benh_nhan": "Bùi Chí Nguyên", "phuc_hinh": "Răng sứ kim loại thường (R:15,46, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, true], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "Thế Hỷ"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "261903033-2", "nhan_luc": "2026-03-26 08:28:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "AG-Nk Thủy Tùng", "benh_nhan": "Triệu Vy", "phuc_hinh": "Răng sứ Zircornia (R:46, - SL: 1)", "sl": 1, "ghi_chu": "Sửa Hồng - Thư", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262603020", "nhan_luc": "2026-03-26 08:23:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "KG-Nk Sài Gòn", "benh_nhan": "Bùi Hữu Thiện (1873)", "phuc_hinh": "Răng sứ kim loại thường (R:11, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "241209001-1", "nhan_luc": "2026-03-26 08:55:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "TV-Nk Đức Hiền", "benh_nhan": "Cô Thị", "phuc_hinh": "Răng sứ Zircornia (R:33-36, - SL: 4)", "sl": 4, "ghi_chu": "BHHT (Vạn-Sangx2My-Lân)", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Bảo hành"}, {"ma_dh": "262603012", "nhan_luc": "2026-03-26 08:08:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "TV-Nk Đức Hiền", "benh_nhan": "E Giang", "phuc_hinh": "Răng sứ Zircornia (R:11, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603008", "nhan_luc": "2026-03-26 07:59:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "TV-Nk Đức Hiền", "benh_nhan": "Chú Phấn", "phuc_hinh": "Răng sứ kim loại thường (R:42, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, true], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "Phạm Tấn Hữu"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262503015", "nhan_luc": "2026-03-25 08:40:00", "yc_hoan_thanh": "2026-03-27 15:00:00", "yc_giao": "2026-03-27 17:00:00", "khach_hang": "CT-NK Thanh Tú", "benh_nhan": "Nguyễn T Bích Thuỷ", "phuc_hinh": "Răng sứ kim loại thường (R:12-22, - SL: 4)", "sl": 4, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603007", "nhan_luc": "2026-03-26 07:58:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Nguyễn Văn Lâm", "phuc_hinh": "Răng sứ Chrome - Cobalt (R:11-22, - SL: 3)", "sl": 3, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603005", "nhan_luc": "2026-03-26 07:54:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Dương Bình Khang", "phuc_hinh": "Răng sứ kim loại thường (R:16, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "HOÀN TẤT", "stage_idx": 5, "stage_done": [true, true, true, true, true], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Văn Trải", "ĐẮP": "Yến Vy", "MÀI": "Bảo Trân"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603003", "nhan_luc": "2026-03-26 07:47:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Tạ Thị Xuân", "phuc_hinh": "Răng sứ kim loại thường (R:14-24, - SL: 8)", "sl": 8, "ghi_chu": "HT - KHÔNG HẸN", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "Cẩm Hồng", "MÀI": "-"}, "urgent": true, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603002", "nhan_luc": "2026-03-26 07:45:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Thạch Thị Phương", "phuc_hinh": "Răng sứ kim loại thường (R:11-22, - SL: 3)", "sl": 3, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "Văn Trải", "ĐẮP": "Trường", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603011", "nhan_luc": "2026-03-26 08:09:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Nhàn", "phuc_hinh": "Răng sứ kim loại thường (R:36,46, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603010", "nhan_luc": "2026-03-26 08:06:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk Thanh Bình", "benh_nhan": "Huỳnh Như", "phuc_hinh": "Răng sứ kim loại thường (R:23-25,35-37,45-47, - SL: 9)", "sl": 9, "ghi_chu": "Hoàn tất", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Văn Huyến", "SƯỜN": "Tấn Sĩ", "ĐẮP": "Trực", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603009", "nhan_luc": "2026-03-26 08:05:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Kim", "phuc_hinh": "Răng sứ kim loại thường (R:16, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603024", "nhan_luc": "2026-03-26 08:56:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "TV-Nk Thuấn Thư", "benh_nhan": "Văn Bé Hai", "phuc_hinh": "Răng sứ kim loại thường (R:21-22, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262303020-1", "nhan_luc": "2026-03-26 08:48:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk An Châu", "benh_nhan": "Nguyễn Tiến Đạt", "phuc_hinh": "Răng sứ kim loại thường (R:18-28, - SL: 16)", "sl": 16, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Văn Trải", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603023", "nhan_luc": "2026-03-26 08:46:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk An Châu", "benh_nhan": "Nông Thị Bích Nhi", "phuc_hinh": "Răng sứ kim loại thường (R:34-36, - SL: 3)", "sl": 3, "ghi_chu": "Hoàn tất", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Văn Trải", "ĐẮP": "Cẩm Hồng", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603018", "nhan_luc": "2026-03-26 08:20:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk Hiệp Hùng", "benh_nhan": "Nguyễn Thị Diễm", "phuc_hinh": "Răng sứ kim loại thường (R:11-21, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "MÀI", "stage_idx": 4, "stage_done": [true, true, true, true, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Văn Trải", "ĐẮP": "Yến Vy", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262403006-1", "nhan_luc": "2026-03-26 08:18:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Quảng", "phuc_hinh": "Cùi giả (R:11,21) + Răng sứ kim loại thường (R:11-21)", "sl": 4, "ghi_chu": "HT", "current_stage": "HOÀN TẤT", "stage_idx": 5, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Văn Trải", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603016", "nhan_luc": "2026-03-26 08:13:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk Thanh Bình", "benh_nhan": "Ngọc Nữ", "phuc_hinh": "Răng sứ Zirconia HT + Tháo lắp", "sl": 2, "ghi_chu": "Hoàn tất | Thử răng → A Bửu", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603015", "nhan_luc": "2026-03-26 08:14:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DT-Nk Tân Bình", "benh_nhan": "Phát", "phuc_hinh": "Răng sứ Zircornia (R:26, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603014", "nhan_luc": "2026-03-26 08:11:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Hiệp", "phuc_hinh": "Răng sứ Zircornia (R:21, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603013", "nhan_luc": "2026-03-26 08:11:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "AG-Nk Mai Thảo", "benh_nhan": "Huỳnh Thị Thu Hiền", "phuc_hinh": "Răng sứ Titanium (R:22, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603026", "nhan_luc": "2026-03-26 09:06:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "NT-Nk BS Thuận", "benh_nhan": "Nguyễn Văn Phong", "phuc_hinh": "Răng sứ Zircornia (R:11-12, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262203022-1", "nhan_luc": "2026-03-26 09:01:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "DT-Nk Sa Đéc", "benh_nhan": "Phạm Thị Khánh Băng", "phuc_hinh": "Răng sứ Zircornia (R:26, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603025", "nhan_luc": "2026-03-26 08:59:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "TV-Nk Sài Gòn (Bs Bảo)", "benh_nhan": "Trần Thị Hoài Phương", "phuc_hinh": "Răng sứ Zircornia (R:16, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "261503019-1", "nhan_luc": "2026-03-26 19:18:00", "yc_hoan_thanh": "2026-03-27 16:00:00", "yc_giao": "2026-03-27 17:30:00", "khach_hang": "TV-NK Tân Đức - Trà Cú", "benh_nhan": "Kim Thị Sa Khươne", "phuc_hinh": "Răng sứ Zircornia (R:21-23, - SL: 3)", "sl": 3, "ghi_chu": "Sửa (Trang-Tuấn)", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Sửa"}, {"ma_dh": "262603049", "nhan_luc": "2026-03-26 16:50:00", "yc_hoan_thanh": "2026-03-27 17:00:00", "yc_giao": "2026-03-27 18:00:00", "khach_hang": "SG-Nk  An Dương Vương", "benh_nhan": "Phạm Vũ Thanh", "phuc_hinh": "Răng sứ kim loại thường (R:11, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262303045-1", "nhan_luc": "2026-03-26 10:32:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-27 19:00:00", "khach_hang": "BT-Nk Bác Sĩ Hiếu", "benh_nhan": "Nguyễn Thị Việt Nhân", "phuc_hinh": "Răng sứ Titanium (R:26, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262403038-1", "nhan_luc": "2026-03-26 10:26:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-27 19:00:00", "khach_hang": "BT-Nk Bác Sĩ Hiếu", "benh_nhan": "Mai Tấn Lê", "phuc_hinh": "Răng sứ Titanium (R:15, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603043", "nhan_luc": "2026-03-26 11:59:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-28 08:00:00", "khach_hang": "SG-Nk  An Dương Vương", "benh_nhan": "Nguyễn Đình Chiến", "phuc_hinh": "Răng sứ kim loại thường (R:22, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603055", "nhan_luc": "2026-03-26 19:03:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-28 08:00:00", "khach_hang": "TN-Nk  NHO", "benh_nhan": "A Thịnh", "phuc_hinh": "Răng sứ Zir- Diamond (R:46, - SL: 1)", "sl": 1, "ghi_chu": "HT - GẤP . KHÔNG HẸN", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": true, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603057", "nhan_luc": "2026-03-26 19:40:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-28 09:00:00", "khach_hang": "SG-Nk Như Lạc", "benh_nhan": "Bùi Thị Kim Vân", "phuc_hinh": "Veneer sứ Ziconia (Cut Back) (R:24, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603045", "nhan_luc": "2026-03-26 15:06:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-28 09:00:00", "khach_hang": "SG-Nk Huỳnh Lê", "benh_nhan": "Huỳnh Tín Hành (14135)", "phuc_hinh": "Răng sứ Titanium (R:16, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SƯỜN", "stage_idx": 2, "stage_done": [true, true, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262503067-1", "nhan_luc": "2026-03-27 09:22:00", "yc_hoan_thanh": "2026-03-27 18:00:00", "yc_giao": "2026-03-28 10:00:00", "khach_hang": "SG-Nk Việt Xuân", "benh_nhan": "Ngô Nữ Trang Nhã", "phuc_hinh": "Veneer sứ Zir-Diamond (Cut-Back) (R:11-21, - SL: 2)", "sl": 2, "ghi_chu": "Đắp hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm tiếp"}, {"ma_dh": "262603056", "nhan_luc": "2026-03-26 19:50:00", "yc_hoan_thanh": "2026-03-28 13:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Anh Phát (41563)", "phuc_hinh": "Răng sứ kim loại thường (R:16, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262403031-1", "nhan_luc": "2026-03-26 20:12:00", "yc_hoan_thanh": "2026-03-28 13:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Kim Thoa (47056)", "phuc_hinh": "Răng sứ kim loại thường (R:11,21, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603054", "nhan_luc": "2026-03-26 19:40:00", "yc_hoan_thanh": "2026-03-28 12:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "SG-Nk Hoàn Vũ", "benh_nhan": "Lê Thị Trắc", "phuc_hinh": "Răng sứ Titan đắp sứ VITA (R:23-27, - SL: 5)", "sl": 5, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603053", "nhan_luc": "2026-03-26 17:35:00", "yc_hoan_thanh": "2026-03-28 12:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk BS Tú", "benh_nhan": "-", "phuc_hinh": "Răng sứ Zircornia (R:23-25, - SL: 3)", "sl": 3, "ghi_chu": "HT - ĐÃ HẸN", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "Thái Sơn", "SƯỜN": "Thái Sơn", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603042", "nhan_luc": "2026-03-26 11:56:00", "yc_hoan_thanh": "2026-03-28 10:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Thầy Út", "phuc_hinh": "Veneer sứ kim loại thường (Cut Back) (R:15-21, - SL: 6)", "sl": 6, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603046", "nhan_luc": "2026-03-26 16:10:00", "yc_hoan_thanh": "2026-03-28 12:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk Tố Oanh", "benh_nhan": "Hồ Kim Xuyến", "phuc_hinh": "Răng sứ Titanium (R:45, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603041", "nhan_luc": "2026-03-26 11:00:00", "yc_hoan_thanh": "2026-03-28 10:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Ngọc Trâm", "phuc_hinh": "Răng sứ Zircornia (R:21, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603040", "nhan_luc": "2026-03-26 11:20:00", "yc_hoan_thanh": "2026-03-28 12:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk BS Huý", "benh_nhan": "Nguyễn Danh Chánh", "phuc_hinh": "Răng sứ Zir- Diamond (R:16-17, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất. GỬI CS1", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "261903031-1", "nhan_luc": "2026-03-26 10:56:00", "yc_hoan_thanh": "2026-03-28 13:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "SG-Nk Hải Nguyên", "benh_nhan": "Chị Hoa (46794)", "phuc_hinh": "Răng sứ Chrome - Cobalt (R:47, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "Hồng Thắm", "SƯỜN": "Tấn Sĩ", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262603039", "nhan_luc": "2026-03-26 10:54:00", "yc_hoan_thanh": "2026-03-28 10:00:00", "yc_giao": "2026-03-28 14:00:00", "khach_hang": "LA-Nk Tâm Đức", "benh_nhan": "Trần Thị Ngọc", "phuc_hinh": "Răng sứ Zircornia (R:12,22, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603032", "nhan_luc": "2026-03-26 09:40:00", "yc_hoan_thanh": "2026-03-28 14:00:00", "yc_giao": "2026-03-28 16:00:00", "khach_hang": "CT-NK Thanh Tú", "benh_nhan": "Nguyễn T Bé Tám", "phuc_hinh": "Răng sứ kim loại thường (R:15,45-47, - SL: 4)", "sl": 4, "ghi_chu": "HT", "current_stage": "ĐẮP", "stage_idx": 3, "stage_done": [true, true, true, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "HẠNH", "SƯỜN": "Bùi Tấn Đạt", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262403056-1", "nhan_luc": "2026-03-26 20:15:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "SG-Nk BS Hưng - VP", "benh_nhan": "Nguyễn Thị Thuỷ", "phuc_hinh": "Răng sứ Titanium (R:11-21, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Toàn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262103008-1", "nhan_luc": "2026-03-27 08:13:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "TV-Nk Đức Hiền", "benh_nhan": "E Tuyền", "phuc_hinh": "Răng sứ kim loại thường (R:22, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703005", "nhan_luc": "2026-03-27 08:00:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "AG-Nk Thủy Tùng", "benh_nhan": "Nhiên", "phuc_hinh": "Răng sứ kim loại thường (R:43-47, - SL: 5)", "sl": 5, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703009", "nhan_luc": "2026-03-27 08:09:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "TV-Nk Đức Hiền", "benh_nhan": "Dương Dan", "phuc_hinh": "Răng sứ kim loại thường (R:13-24, - SL: 7)", "sl": 7, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703007", "nhan_luc": "2026-03-27 08:05:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "AG-Nk Thủy Tùng", "benh_nhan": "Điệp", "phuc_hinh": "Răng sứ kim loại thường (R:36-47, - SL: 13)", "sl": 13, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703020", "nhan_luc": "2026-03-27 08:40:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "BL-Nk Bs Quân", "benh_nhan": "Nguyễn Thị Muội", "phuc_hinh": "Răng sứ Titanium (R:11-21, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703012", "nhan_luc": "2026-03-27 08:16:00", "yc_hoan_thanh": "2026-03-28 15:00:00", "yc_giao": "2026-03-28 17:00:00", "khach_hang": "CT-NK Thanh Tú", "benh_nhan": "Nguyễn Thị Phí", "phuc_hinh": "Răng sứ kim loại thường (R:35-37, - SL: 3)", "sl": 3, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703026", "nhan_luc": "2026-03-27 08:59:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DT-Nk Sa Đéc", "benh_nhan": "Thị Tuyết", "phuc_hinh": "Răng sứ kim loại thường (R:43-47, - SL: 5)", "sl": 5, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262703029", "nhan_luc": "2026-03-27 09:36:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Nguyễn Gia", "benh_nhan": "Trần Thị Thuý Hằng", "phuc_hinh": "Răng sứ kim loại thường (R:11-12, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262103030-2", "nhan_luc": "2026-03-27 09:37:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "BL-Nk Thảo Nguyên", "benh_nhan": "Trần Kim Thuỳ", "phuc_hinh": "Veneer sứ Ziconia (Cut Back) (R:13-23, - SL: 6)", "sl": 6, "ghi_chu": "LLHT | Trường - Tuấn", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm lại"}, {"ma_dh": "262503018-1", "nhan_luc": "2026-03-27 09:28:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DT-Nk Sa Đéc", "benh_nhan": "Đăng Khôi", "phuc_hinh": "Răng sứ kim loại thường (R:37, - SL: 1)", "sl": 1, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703031", "nhan_luc": "2026-03-27 09:26:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DT-Nk Sa Đéc", "benh_nhan": "Mười Ba", "phuc_hinh": "Răng sứ kim loại thường (R:12-21, - SL: 3)", "sl": 3, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703011", "nhan_luc": "2026-03-27 08:12:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Chi", "phuc_hinh": "Răng sứ kim loại thường (R:25, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262703013", "nhan_luc": "2026-03-27 08:18:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Nghĩa", "phuc_hinh": "Veneer sứ Ziconia (Cut Back) (R:25-27)", "sl": 3, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703014", "nhan_luc": "2026-03-27 08:20:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "DL-Nk Đức Trọng", "benh_nhan": "Nga", "phuc_hinh": "Răng sứ kim loại thường (R:44-45, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703015", "nhan_luc": "2026-03-27 08:25:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Thanh Bình", "benh_nhan": "Bình An", "phuc_hinh": "Răng sứ kim loại thường (R:45-47, - SL: 3)", "sl": 3, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703021", "nhan_luc": "2026-03-27 08:43:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "BL-Nk Thảo Nguyên", "benh_nhan": "Kim Thị Tuyết", "phuc_hinh": "Răng sứ Titanium (R:12-23, - SL: 5)", "sl": 5, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703018", "nhan_luc": "2026-03-27 08:33:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Thanh Bình", "benh_nhan": "Thuận", "phuc_hinh": "Răng sứ kim loại thường (R:11-21, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703017", "nhan_luc": "2026-03-27 08:30:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Thanh Bình", "benh_nhan": "Thầy Lang", "phuc_hinh": "Răng sứ kim loại thường (R:36-37, - SL: 2)", "sl": 2, "ghi_chu": "Hoàn tất", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703006", "nhan_luc": "2026-03-27 08:06:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Hiệp Hùng", "benh_nhan": "Trần Huỳnh Anh Duy", "phuc_hinh": "Răng sứ kim loại thường (R:11-13,32-44, - SL: 9)", "sl": 9, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262703008", "nhan_luc": "2026-03-27 08:06:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "AG-Nk Hiệp Hùng", "benh_nhan": "Bùi Thị Kim Hiền", "phuc_hinh": "Răng sứ kim loại thường (R:12-21, - SL: 3)", "sl": 3, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262703003", "nhan_luc": "2026-03-27 07:49:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Phạm Hồng Sơn", "phuc_hinh": "Răng sứ kim loại thường (R:43-48) + Sửa tháo lắp", "sl": 7, "ghi_chu": "Hoàn tất | 28/03 Sửa TL → A Bửu", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703002", "nhan_luc": "2026-03-27 07:44:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "TV-Nk BS Hoài", "benh_nhan": "Thanh", "phuc_hinh": "Răng sứ Zircornia (R:46, - SL: 1)", "sl": 1, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262703001", "nhan_luc": "2026-03-27 07:42:00", "yc_hoan_thanh": "2026-03-28 16:00:00", "yc_giao": "2026-03-28 17:30:00", "khach_hang": "BL-NK BS Tăng Suy Nghĩ", "benh_nhan": "Huỳnh Minh Khải", "phuc_hinh": "Răng sứ kim loại thường (R:36,46, - SL: 2)", "sl": 2, "ghi_chu": "HT", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": false, "loai_lenh": "Làm mới"}, {"ma_dh": "262603051", "nhan_luc": "2026-03-26 18:00:00", "yc_hoan_thanh": "2026-03-29 12:00:00", "yc_giao": "2026-03-29 14:00:00", "khach_hang": "SG-Nk  Anh Khôi", "benh_nhan": "Phượng", "phuc_hinh": "Răng sứ kim loại thường (R:13-15, - SL: 3)", "sl": 3, "ghi_chu": "HT", "current_stage": "SÁP/Cadcam", "stage_idx": 1, "stage_done": [true, false, false, false, false], "ktv_map": {"CBM": "Võ Văn Vạn", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}, {"ma_dh": "262703032", "nhan_luc": "2026-03-27 09:30:00", "yc_hoan_thanh": "2026-03-29 16:00:00", "yc_giao": "2026-03-29 17:30:00", "khach_hang": "DT-Nk Sa Đéc", "benh_nhan": "Thành Hân", "phuc_hinh": "Răng sứ kim loại thường (R:16-26, - SL: 12)", "sl": 12, "ghi_chu": "Hoàn tất | Giấy ghi ST2", "current_stage": "CBM", "stage_idx": 0, "stage_done": [false, false, false, false, false], "ktv_map": {"CBM": "-", "SÁP/Cadcam": "-", "SƯỜN": "-", "ĐẮP": "-", "MÀI": "-"}, "urgent": false, "hoan_tat_note": true, "loai_lenh": "Làm mới"}];
+
+const STAGES_LIST = ['CBM','SÁP/Cadcam','SƯỜN','ĐẮP','MÀI'];
+const STAGE_COLORS = {
+  'CBM':'var(--cbm)','SÁP/Cadcam':'var(--sap)','SƯỜN':'var(--suon)',
+  'ĐẮP':'var(--dap)','MÀI':'var(--mai)','HOÀN TẤT':'var(--done)'
+};
+const STAGE_CLS = {
+  'CBM':'stage-cbm','SÁP/Cadcam':'stage-sap','SƯỜN':'stage-suon',
+  'ĐẮP':'stage-dap','MÀI':'stage-mai','HOÀN TẤT':'stage-done'
+};
+const STAGE_SHORT = {'CBM':'CBM','SÁP/Cadcam':'SÁP','SƯỜN':'SƯỜN','ĐẮP':'ĐẮP','MÀI':'MÀI','HOÀN TẤT':'XONG'};
+
+// ── State ──
+let filterDelivery = 'all', filterType = 'all', filterSearch = '', sortBy = 'urgent', filterStage = 'all';
+
+const validOrders = ORDERS.filter(o => o.ma_dh && o.ma_dh !== 'nan');
+
+function deliveryCategory(o) {
+  const d = o.yc_giao ? o.yc_giao.split(' ')[0] : '';
+  if (!d || d === 'nan') return 'later';
+  if (d === '2026-03-27') return 'today';
+  if (d === '2026-03-28') return 'tmr';
+  return 'later';
+}
+function formatTime(dt) {
+  if (!dt || dt === 'nan') return '—';
+  const p = dt.split(' ');
+  if (p.length < 2) return '—';
+  const [y,m,d] = p[0].split('-');
+  return `${d}/${m} ${p[1].slice(0,5)}`;
+}
+function getTypeBadge(loai) {
+  const m = {'Làm mới':['lm','Làm mới'],'Sửa':['sua','Sửa'],'Làm lại':['ll','Làm lại'],
+    'Làm tiếp':['lt','Làm tiếp'],'Làm thêm':['lt','Làm thêm'],'Bảo hành':['bh','BH']};
+  return m[loai] || ['lm', loai || '?'];
+}
+
+// ── Sticky top offset for time group headers ──
+function updateStickyTop() {
+  const h = document.querySelector('header')?.offsetHeight || 52;
+  const tabs = document.querySelector('.stage-tabs-wrap')?.offsetHeight || 44;
+  const pipe = document.querySelector('.pipeline-mini')?.offsetHeight || 44;
+  const toolbar = document.querySelector('.toolbar')?.offsetHeight || 88;
+  const top = h + tabs + pipe + toolbar;
+  document.querySelectorAll('.time-group-header').forEach(el => {
+    el.style.top = top + 'px';
+  });
+}
+window.addEventListener('resize', updateStickyTop);
+
+// ── Filter ──
+// Note: final sort is always by delivery time (in groupByDelivery).
+// sortBy controls secondary sort WITHIN each time group.
+function getFiltered() {
+  let list = [...validOrders];
+  if (filterStage !== 'all') list = list.filter(o => o.current_stage === filterStage);
+  if (filterDelivery !== 'all') list = list.filter(o => deliveryCategory(o) === filterDelivery);
+  if (filterType === 'urgent') list = list.filter(o => o.urgent);
+  else if (filterType !== 'all') list = list.filter(o => o.loai_lenh === filterType);
+  if (filterSearch) {
+    const q = filterSearch.toLowerCase();
+    list = list.filter(o =>
+      o.ma_dh.toLowerCase().includes(q) ||
+      (o.benh_nhan||'').toLowerCase().includes(q) ||
+      (o.khach_hang||'').toLowerCase().includes(q) ||
+      (o.phuc_hinh||'').toLowerCase().includes(q)
+    );
+  }
+  return list;
+}
+
+// ── Stage track ──
+function renderTrack(o) {
+  return STAGES_LIST.map((s,i) => {
+    const done = o.stage_done[i];
+    const cur = o.current_stage === s;
+    const col = STAGE_COLORS[s];
+    return `<div class="stage-pip ${done?'done':cur?'current':''}"><div class="pip-fill" style="background:${col}"></div></div>`;
+  }).join('');
+}
+
+// ── Render single card ──
+function renderCard(o, idx) {
+  const [tcls, tlbl] = getTypeBadge(o.loai_lenh);
+  const stageColor = STAGE_COLORS[o.current_stage] || 'var(--muted)';
+  const stageCls = STAGE_CLS[o.current_stage] || '';
+  const short = STAGE_SHORT[o.current_stage] || o.current_stage;
+  const urgentBadge = o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : '';
+  const typeBadge = `<span class="badge badge-${tcls}">${tlbl}</span>`;
+  const note = (o.ghi_chu && o.ghi_chu !== 'nan')
+    ? `<div class="card-note">💬 ${o.ghi_chu}</div>` : '';
+  const patient = (o.benh_nhan && o.benh_nhan !== 'nan') ? o.benh_nhan : '—';
+  return `
+<div class="card ${o.urgent?'urgent':''} ${stageCls}" style="animation-delay:${Math.min(idx*0.025,0.25)}s" onclick="openModal('${o.ma_dh}')">
+  <div class="card-row1">
+    <div class="order-code">${o.ma_dh}</div>
+    <div class="card-badges">${urgentBadge}${typeBadge}</div>
+  </div>
+  <div class="card-row2">
+    <div class="card-patient">${patient}</div>
+    <div class="card-sl">SL: ${o.sl}</div>
+  </div>
+  <div class="card-customer">${o.khach_hang}</div>
+  <div class="card-prosthesis">${o.phuc_hinh.split(';')[0].trim()}</div>
+  <div class="stage-track">${renderTrack(o)}</div>
+  <div class="card-bottom">
+    <span class="card-stage-label" style="background:${stageColor}18;color:${stageColor};border:1px solid ${stageColor}30">${short}</span>
+  </div>
+  ${note}
+</div>`;
+}
+
+// ── Build time groups ──
+function groupByDelivery(list) {
+  const sorted = [...list].sort((a,b) => {
+    const ta = a.yc_giao||'9999', tb = b.yc_giao||'9999';
+    if (ta !== tb) return ta < tb ? -1 : 1;
+    // secondary sort within same time group
+    if (sortBy === 'urgent') {
+      if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
+      return a.stage_idx - b.stage_idx;
+    }
+    if (sortBy === 'sl') return b.sl - a.sl;
+    if (sortBy === 'stage') return a.stage_idx - b.stage_idx;
+    if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
+    return a.stage_idx - b.stage_idx;
+  });
+
+  const groups = new Map();
+  sorted.forEach(o => {
+    const key = (o.yc_giao && o.yc_giao !== 'nan') ? o.yc_giao : '9999-99-99 99:99:00';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(o);
+  });
+  return groups;
+}
+
+function formatGroupTime(dtStr) {
+  if (!dtStr || dtStr.startsWith('9999')) return { time: '??:??', date: 'Không xác định', cat: 'later' };
+  const [datePart, timePart] = dtStr.split(' ');
+  const [y,m,d] = datePart.split('-');
+  const hhmm = timePart ? timePart.slice(0,5) : '??:??';
+  let dateLabel = `${d}/${m}`;
+  let cat = 'later';
+  if (datePart === '2026-03-27') { dateLabel = `${d}/${m} · Hôm nay`; cat = 'today'; }
+  else if (datePart === '2026-03-28') { dateLabel = `${d}/${m} · Ngày mai`; cat = 'tmr'; }
+  return { time: hhmm, date: dateLabel, cat };
+}
+
+// ── Render cards (grouped) ──
+function renderCards() {
+  const list = getFiltered();
+  const container = document.getElementById('cardList');
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">○</div><p>Không có đơn nào phù hợp</p></div>`;
+    return;
+  }
+
+  const groups = groupByDelivery(list);
+  let html = '';
+  let cardIdx = 0;
+
+  groups.forEach((orders, key) => {
+    const { time, date, cat } = formatGroupTime(key);
+    const totalSL = orders.reduce((s,o) => s+o.sl, 0);
+    const urgentInGroup = orders.filter(o=>o.urgent).length;
+    const urgentFlag = urgentInGroup > 0
+      ? `<div class="tg-urgent-flag">⚡ ${urgentInGroup} GẤP</div>` : '';
+
+    html += `
+<div class="time-group">
+  <div class="time-group-header ${cat}">
+    <div class="tg-time">${time}</div>
+    <div class="tg-meta">
+      <div class="tg-date">${date}</div>
+      <div class="tg-count">${orders.length} đơn · ${totalSL} răng</div>
+    </div>
+    <div class="tg-divider"></div>
+    ${urgentFlag}
+  </div>
+  <div class="tg-cards">
+    ${orders.map(o => renderCard(o, cardIdx++)).join('')}
+  </div>
+</div>`;
+  });
+
+  container.innerHTML = html;
+  updateStickyTop();
+}
+
+// ── Update counts ──
+function updateCounts() {
+  const stages_all = [...STAGES_LIST, 'HOÀN TẤT'];
+  document.getElementById('totalCount').textContent = validOrders.length;
+  document.getElementById('urgentCount').textContent = validOrders.filter(o=>o.urgent).length;
+  document.getElementById('doneCount').textContent = validOrders.filter(o=>o.current_stage==='HOÀN TẤT').length;
+  document.getElementById('cnt-all').textContent = validOrders.length;
+  document.getElementById('cnt-CBM').textContent = validOrders.filter(o=>o.current_stage==='CBM').length;
+  document.getElementById('cnt-SAP').textContent = validOrders.filter(o=>o.current_stage==='SÁP/Cadcam').length;
+  document.getElementById('cnt-SUON').textContent = validOrders.filter(o=>o.current_stage==='SƯỜN').length;
+  document.getElementById('cnt-DAP').textContent = validOrders.filter(o=>o.current_stage==='ĐẮP').length;
+  document.getElementById('cnt-MAI').textContent = validOrders.filter(o=>o.current_stage==='MÀI').length;
+  document.getElementById('cnt-DONE').textContent = validOrders.filter(o=>o.current_stage==='HOÀN TẤT').length;
+}
+
+// ── Stage tab events ──
+document.querySelectorAll('.stage-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    filterStage = tab.dataset.stage;
+    // Scroll tab into view
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    renderCards();
+  });
+});
+
+// ── Filter chip events ──
+document.querySelectorAll('[data-filter="delivery"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-filter="delivery"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterDelivery = btn.dataset.val;
+    renderCards();
+  });
+});
+document.querySelectorAll('[data-filter="type"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-filter="type"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterType = btn.dataset.val;
+    renderCards();
+  });
+});
+document.getElementById('searchInput').addEventListener('input', e => {
+  filterSearch = e.target.value;
+  renderCards();
+});
+
+// ── Sort sheet ──
+function openSortSheet() {
+  document.getElementById('sortSheet').classList.add('open');
+}
+function closeSortSheet(e) {
+  if (e.target === document.getElementById('sortSheet')) {
+    document.getElementById('sortSheet').classList.remove('open');
+  }
+}
+function setSort(val) {
+  sortBy = val;
+  ['urgent','sl','stage'].forEach(s => {
+    const chk = document.getElementById(`check-${s}`);
+    if (chk) chk.textContent = s === val ? '✓' : '';
+    const opt = document.querySelector(`[data-sort="${s}"]`);
+    if (opt) opt.classList.toggle('active', s===val);
+  });
+  document.getElementById('sortSheet').classList.remove('open');
+  renderCards();
+}
+
+// ── Modal ──
+function openModal(maDH) {
+  const o = ORDERS.find(x => x.ma_dh === maDH);
+  if (!o) return;
+  const stageColor = STAGE_COLORS[o.current_stage] || 'var(--muted)';
+  const [tcls, tlbl] = getTypeBadge(o.loai_lenh);
+  const cat = deliveryCategory(o);
+
+  const stageRows = STAGES_LIST.map((s,i) => {
+    const done = o.stage_done[i];
+    const cur = o.current_stage === s;
+    const ktv = (o.ktv_map[s] && o.ktv_map[s] !== '-') ? o.ktv_map[s] : '—';
+    return `<div class="modal-stage-row ${done?'done-stage':cur?'active-stage':''}">
+      <div class="ms-num">${i+1}</div>
+      <div class="ms-name" style="color:${STAGE_COLORS[s]}">${s}</div>
+      <div class="ms-ktv">${ktv}</div>
+      <div class="ms-icon">${done?'✅':cur?'⚡':'○'}</div>
+    </div>`;
+  }).join('');
+
+  const noteHtml = (o.ghi_chu && o.ghi_chu !== 'nan')
+    ? `<div class="modal-note">💬 ${o.ghi_chu}</div>` : '';
+  const patient = (o.benh_nhan && o.benh_nhan !== 'nan') ? o.benh_nhan : '—';
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-code">${o.ma_dh}</div>
+        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:5px;background:${stageColor}18;color:${stageColor};border:1px solid ${stageColor}30">${o.current_stage}</span>
+          <span class="badge badge-${tcls}">${tlbl}</span>
+          ${o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : ''}
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-grid">
+      <div><div class="modal-field-label">Bệnh nhân</div><div class="modal-field-value">${patient}</div></div>
+      <div><div class="modal-field-label">Khách hàng</div><div class="modal-field-value" style="font-size:12px">${o.khach_hang}</div></div>
+      <div><div class="modal-field-label">Y/c giao</div><div class="modal-field-value" style="font-family:'JetBrains Mono',monospace;${cat==='today'?'color:#fbbf24':''}">${formatTime(o.yc_giao)}</div></div>
+      <div><div class="modal-field-label">Hoàn thành</div><div class="modal-field-value" style="font-family:'JetBrains Mono',monospace">${formatTime(o.yc_hoan_thanh)}</div></div>
+      <div><div class="modal-field-label">Nhận lúc</div><div class="modal-field-value" style="font-family:'JetBrains Mono',monospace;font-size:12px">${formatTime(o.nhan_luc)}</div></div>
+      <div><div class="modal-field-label">Số lượng</div><div class="modal-field-value">${o.sl} răng</div></div>
+    </div>
+    <div class="modal-prosthesis">${o.phuc_hinh}</div>
+    ${noteHtml}
+    <div class="modal-stages-title">Tiến độ công đoạn</div>
+    ${stageRows}
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function handleModalOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ── Touch swipe down to close modal ──
+let touchStartY = 0;
+document.getElementById('modalBox').addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, {passive: true});
+document.getElementById('modalBox').addEventListener('touchmove', e => {
+  const dy = e.touches[0].clientY - touchStartY;
+  if (dy > 60 && document.getElementById('modalBox').scrollTop === 0) {
+    closeModal();
+  }
+}, {passive: true});
+
+// ── Init ──
+updateCounts();
+renderCards();
+// set initial sort indicator
+const initChk = document.getElementById('check-urgent');
+if (initChk) initChk.textContent = '✓';
+const initOpt = document.querySelector('[data-sort="urgent"]');
+if (initOpt) initOpt.classList.add('active');
+</script>
+</body>
+</html>
