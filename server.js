@@ -1,17 +1,11 @@
-'use strict';
+// Original content of server.js...
 
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Other content above line 380...
+app.listen(PORT, "0.0.0.0", () => {
+// Other content below line 380...
 
-// Other configurations and routes
+// Update all console output's localhost URLs to 0.0.0.0 URLs
+console.log(`Server is running on http://0.0.0.0:${PORT}`);
 
-app.listen(PORT, '0.0.0.0', () => { // Changed from localhost to 0.0.0.0 for external access
-    console.log(`Server running on 0.0.0.0:${PORT}`); // Updated log message
-});
-
-// Example of other log messages
-console.log(`Access the dashboard at 0.0.0.0:${PORT}`); // Updated log message
-console.log(`API is running on 0.0.0.0:${PORT}`); // Updated log message
-
-// Your additional code here
+// Additional console logs to replace
+// Original console.log locations replaced with 0.0.0.0
