@@ -8,7 +8,6 @@
  *   node server.js
  *
  * Mở browser: http://localhost:3000
- * AI Chat: nhấn nút 🤖 góc dưới phải, hoặc gõ /AI trong ô tìm kiếm
  */
 
 const express = require('express');

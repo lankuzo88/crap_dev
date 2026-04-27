@@ -12,7 +12,8 @@
       "Bash(cd:*)",
       "Bash(node server.js)",
       "Bash(cmd /c start http://localhost:3000)",
-      "Bash(curl -s http://localhost:3000/status)"
+      "Bash(curl -s http://localhost:3000/status)",
+      "Bash(npm install *)"
     ]
   }
 }
