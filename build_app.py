@@ -7,7 +7,6 @@ Bundles:
   - labo_cleaner.py                   (data cleaning)
   - server.js                         (dashboard JSON server)
   - dashboard.html                     (dashboard frontend)
-  - ai_stats.py, ai_memory.py         (utility modules)
 
 Output: dist/LaboAsia.exe
 
@@ -36,8 +35,6 @@ MAIN_SCRIPT = SRC_DIR / "laboasia_gui_scraper_tkinter.py"
 SERVER_JS   = SRC_DIR / "server.js"
 DASHBOARD   = SRC_DIR / "dashboard.html"
 DASH_MOBILE = SRC_DIR / "dashboard_mobile_ref.html"
-AI_STATS    = SRC_DIR / "ai_stats.py"
-AI_MEMORY   = SRC_DIR / "ai_memory.py"
 CLEANER     = SRC_DIR / "labo_cleaner.py"
 
 APP_NAME = "LaboAsia"
@@ -63,7 +60,7 @@ def ensure_dir(path):
 def step_check_files():
     print("\n[1/5] Checking source files...")
     missing = []
-    for f in [MAIN_SCRIPT, SERVER_JS, DASHBOARD, AI_STATS, AI_MEMORY, CLEANER]:
+    for f in [MAIN_SCRIPT, SERVER_JS, DASHBOARD, CLEANER]:
         if not f.exists():
             missing.append(str(f))
             print(f"  [!] MISSING: {f.name}")
@@ -144,8 +141,6 @@ def step_build_exe(server_bundled):
         (str(SERVER_JS),   "."),
         (str(DASHBOARD),   "."),
         (str(DASH_MOBILE), "."),
-        (str(AI_STATS),    "."),
-        (str(AI_MEMORY),   "."),
         (str(CLEANER),     "."),
     ]
 
