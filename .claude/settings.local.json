@@ -13,7 +13,10 @@
       "Bash(node server.js)",
       "Bash(cmd /c start http://localhost:3000)",
       "Bash(curl -s http://localhost:3000/status)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(findstr /I \"install successful already\")",
+      "Bash(chcp 65001)",
+      "Bash(python -X utf8 -c \":*)"
     ]
   }
 }

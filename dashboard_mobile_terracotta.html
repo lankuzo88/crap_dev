@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>ASIA LAB — Mobile Dashboard</title>
+  <style>
+    :root {
+      /* Background & Base */
+      --bg-primary: #7a9b8a;          /* Sage green */
+      --bg-card: #f5f3f0;             /* Cream */
+      --border-card: #e0d9d3;         /* Light border */
+
+      /* Terracotta Color Ramp */
+      --terracotta-light: #c4836f;    /* Sáng sớm 08:00-11:00 */
+      --terracotta: #a85a4f;          /* Chiều 14:00-17:00 */
+      --rust-dark: #8b4438;           /* Tối 18:00-21:00 */
+      --urgent: #6b4a40;              /* Gấp < 2h */
+
+      /* Text */
+      --text-primary: #1a1a1a;        /* Black */
+      --text-muted: #7a7a7a;          /* Gray */
+      --text-light: #9a9a9a;          /* Light gray */
+
+      /* Layout */
+      --header-h: 52px;
+      --stagetab-h: 44px;
+      --toolbar-h: 44px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: 14px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════
+       HEADER
+    ═══════════════════════════════ */
+    header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-card);
+      height: var(--header-h);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+
+    .logo {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+    }
+
+    .logo span {
+      color: var(--terracotta);
+    }
+
+    .header-sep {
+      flex: 1;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .hstat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: transparent;
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 4px 10px;
+      min-width: 44px;
+    }
+
+    .hstat .n {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--terracotta);
+    }
+
+    .hstat .l {
+      font-size: 9px;
+      color: var(--text-light);
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
+
+    .header-date {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 10px;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════
+       STAGE TABS
+    ═══════════════════════════════ */
+    .stage-tabs {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-card);
+      height: var(--stagetab-h);
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      position: sticky;
+      top: var(--header-h);
+      z-index: 190;
+      scroll-behavior: smooth;
+    }
+
+    .stage-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .stage-tab {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-light);
+      font-weight: 500;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stage-tab:hover {
+      border-color: var(--terracotta-light);
+      color: var(--terracotta-light);
+    }
+
+    .stage-tab.active {
+      background: var(--terracotta-light);
+      border-color: var(--terracotta-light);
+      color: var(--bg-card);
+    }
+
+    /* ═══════════════════════════════
+       TOOLBAR
+    ═══════════════════════════════ */
+    .toolbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-card);
+      padding: 8px 12px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      position: sticky;
+      top: calc(var(--header-h) + var(--stagetab-h));
+      z-index: 180;
+    }
+
+    .toolbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .toolbar-chip {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border: 1px solid var(--border-card);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-light);
+      font-weight: 500;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toolbar-chip.active {
+      background: var(--terracotta-light);
+      border-color: var(--terracotta-light);
+      color: var(--bg-card);
+    }
+
+    /* ═══════════════════════════════
+       CARD LIST
+    ═══════════════════════════════ */
+    #cardList {
+      padding: 0;
+      padding-bottom: 20px;
+    }
+
+    .time-group {
+      margin-bottom: 0;
+    }
+
+    .time-group-header {
+      border-left: 4px solid;
+      padding: 12px 16px;
+      margin: 16px 12px 8px 12px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .time-group-header.morning {
+      border-left-color: var(--terracotta-light);
+      background: rgba(196, 131, 111, 0.12);
+    }
+
+    .time-group-header.afternoon {
+      border-left-color: var(--terracotta);
+      background: rgba(168, 90, 79, 0.12);
+    }
+
+    .time-group-header.evening {
+      border-left-color: var(--rust-dark);
+      background: rgba(139, 68, 56, 0.12);
+    }
+
+    .time-group-header.urgent {
+      border-left-color: var(--urgent);
+      background: rgba(107, 74, 64, 0.15);
+    }
+
+    .tg-time {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .tg-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tg-date {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .tg-count {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    /* ═══════════════════════════════
+       CARDS
+    ═══════════════════════════════ */
+    .tg-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 12px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease-out backwards;
+    }
+
+    .card.morning { border-left-color: var(--terracotta-light); }
+    .card.afternoon { border-left-color: var(--terracotta); }
+    .card.evening { border-left-color: var(--rust-dark); }
+    .card.urgent { border-left-color: var(--urgent); }
+
+    .card:active {
+      transform: scale(0.98);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-row1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .order-code {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 4px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .badge-urgent {
+      background: rgba(168, 90, 79, 0.2);
+      color: var(--terracotta);
+      border: 0.5px solid var(--terracotta);
+    }
+
+    .card-row2 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .card-patient {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .card-sl {
+      color: var(--terracotta);
+      font-weight: 600;
+    }
+
+    .card-customer {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .card-prosthesis {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-bottom: 6px;
+    }
+
+    .card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-card);
+    }
+
+    .card-stage-label {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+
+    .empty-state .icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">ASIA <span>LAB</span></div>
+    <div class="header-sep"></div>
+    <div class="header-stats">
+      <div class="hstat">
+        <div class="n" id="totalCount">0</div>
+        <div class="l">TỔNG</div>
+      </div>
+      <div class="hstat">
+        <div class="n" id="urgentCount">0</div>
+        <div class="l">GẤP</div>
+      </div>
+      <div class="hstat">
+        <div class="n" id="doneCount">0</div>
+        <div class="l">XONG</div>
+      </div>
+    </div>
+    <div class="header-date" id="headerDate">2026-04-27</div>
+  </header>
+
+  <!-- Stage Tabs -->
+  <div class="stage-tabs" id="stageTabs"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar"></div>
+
+  <!-- Card List -->
+  <div id="cardList"></div>
+
+  <script>
+    // ═════════════════════════════════════════════════════════════
+    // SAMPLE DATA - Thay bằng dữ liệu thực từ server
+    // ═════════════════════════════════════════════════════════════
+    const SAMPLE_ORDERS = [
+      {
+        ma_dh: '2604A1',
+        benh_nhan: 'Bác sĩ Hiếu',
+        khach_hang: 'Cao Long',
+        phuc_hinh: 'BL.04.TP.PC',
+        sl: 4,
+        ghi_chu: 'Bình thường',
+        current_stage: 'SÁP/Cadcam',
+        yc_ht: '2026-04-28 09:30',
+        yc_giao: '2026-04-28',
+        nhan: '2026-04-25 08:00',
+        loai_lenh: 'Làm tiếp',
+        urgent: true
+      },
+      {
+        ma_dh: '2603A5',
+        benh_nhan: 'Nguyễn Hồ',
+        khach_hang: 'Công ty ABC',
+        phuc_hinh: 'BL.03.KA.SS',
+        sl: 2,
+        ghi_chu: '',
+        current_stage: 'ĐẮP',
+        yc_ht: '2026-04-28 15:00',
+        yc_giao: '2026-04-28',
+        nhan: '2026-04-25 10:00',
+        loai_lenh: 'TS',
+        urgent: false
+      },
+      {
+        ma_dh: '2603A7',
+        benh_nhan: 'Trần Minh',
+        khach_hang: 'Phòng khám XYZ',
+        phuc_hinh: 'BL.02.CA.BH',
+        sl: 3,
+        ghi_chu: 'Gấp',
+        current_stage: 'CBM',
+        yc_ht: '2026-04-28 19:00',
+        yc_giao: '2026-04-28',
+        nhan: '2026-04-25 09:00',
+        loai_lenh: 'Sửa',
+        urgent: false
+      },
+      {
+        ma_dh: '2602A8',
+        benh_nhan: 'Lê Phương',
+        khach_hang: 'Bệnh viện Q1',
+        phuc_hinh: 'BL.01.TP.CC',
+        sl: 1,
+        ghi_chu: '',
+        current_stage: 'SƯỜN',
+        yc_ht: '2026-05-03 10:00',
+        yc_giao: '2026-05-03',
+        nhan: '2026-04-25 08:30',
+        loai_lenh: 'Làm tiếp',
+        urgent: false
+      }
+    ];
+
+    const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
+    const STAGE_COLORS = {
+      'CBM': '#3b82f6',
+      'SÁP/Cadcam': '#a855f7',
+      'SƯỜN': '#f59e0b',
+      'ĐẮP': '#f97316',
+      'MÀI': '#10b981'
+    };
+
+    const STAGE_SHORT = {
+      'CBM': 'CBM',
+      'SÁP/Cadcam': 'SÁP',
+      'SƯỜN': 'SƯỜN',
+      'ĐẮP': 'ĐẮP',
+      'MÀI': 'MÀI',
+      'HOÀN TẤT': '✓'
+    };
+
+    let allOrders = [...SAMPLE_ORDERS];
+    let filterStage = 'all';
+    let filterDelivery = 'all';
+
+    // ═════════════════════════════════════════════════════════════
+    // HELPERS
+    // ═════════════════════════════════════════════════════════════
+    function getCompletionTimeGroup(yc_ht) {
+      if (!yc_ht) return 'default';
+      const hour = parseInt(yc_ht.split(' ')[1].split(':')[0]);
+      if (hour >= 8 && hour < 11) return 'morning';
+      if (hour >= 14 && hour < 17) return 'afternoon';
+      if (hour >= 18 && hour <= 21) return 'evening';
+      return 'default';
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr) return '—';
+      const [date, time] = dateStr.split(' ');
+      return time ? time.substring(0, 5) : '—';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const [date] = dateStr.split(' ');
+      return date;
+    }
+
+    function getFiltered() {
+      return allOrders.filter(o => {
+        if (filterStage !== 'all' && o.current_stage !== filterStage) return false;
+        if (filterDelivery === 'today') {
+          const today = new Date().toISOString().split('T')[0];
+          if (!o.yc_giao.startsWith(today)) return false;
+        }
+        if (filterDelivery === 'urgent' && !o.urgent) return false;
+        return true;
+      });
+    }
+
+    function groupByCompletionTime(orders) {
+      const grouped = new Map();
+      orders.forEach(o => {
+        const cat = getCompletionTimeGroup(o.yc_ht);
+        const key = o.yc_ht || 'no-deadline';
+        if (!grouped.has(key)) {
+          grouped.set(key, { orders: [], cat });
+        }
+        grouped.get(key).orders.push(o);
+      });
+      return grouped;
+    }
+
+    function renderCard(o) {
+      const stageColor = STAGE_COLORS[o.current_stage] || '#94a3b8';
+      const short = STAGE_SHORT[o.current_stage] || o.current_stage;
+      const cat = getCompletionTimeGroup(o.yc_ht);
+      const urgentBadge = o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : '';
+      const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
+
+      return `
+        <div class="card ${cat}" style="cursor: pointer;">
+          <div class="card-row1">
+            <div class="order-code">${o.ma_dh}</div>
+            <div class="card-badges">${urgentBadge}</div>
+          </div>
+          <div class="card-row2">
+            <div class="card-patient">${patient}</div>
+            <div class="card-sl">SL: ${o.sl}</div>
+          </div>
+          <div class="card-customer">${o.khach_hang}</div>
+          <div class="card-prosthesis">${o.phuc_hinh}</div>
+          <div class="card-bottom">
+            <span class="card-stage-label" style="border: 1px solid ${stageColor}30; background: ${stageColor}15; color: ${stageColor};">${short}</span>
+            <span style="font-size: 10px; color: var(--text-light);">📅 ${formatTime(o.yc_ht)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCards() {
+      const list = getFiltered();
+      const container = document.getElementById('cardList');
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">○</div><p>Không có đơn nào</p></div>';
+        return;
+      }
+
+      const groups = groupByCompletionTime(list);
+      let html = '';
+
+      groups.forEach((group, key) => {
+        const { orders, cat } = group;
+        const totalSL = orders.reduce((s, o) => s + o.sl, 0);
+        const time = formatTime(orders[0].yc_ht);
+
+        html += `
+          <div class="time-group">
+            <div class="time-group-header ${cat}">
+              <div class="tg-time">${
+                cat === 'morning' ? '🌅 SÁNG SỚM' :
+                cat === 'afternoon' ? '☀️ CHIỀU' :
+                cat === 'evening' ? '🌙 TỐI' :
+                '⏰ KHÁC'
+              } · ${time}</div>
+              <div class="tg-meta">
+                <div class="tg-count">${orders.length} đơn · ${totalSL} răng</div>
+              </div>
+            </div>
+            <div class="tg-cards">
+              ${orders.map(o => renderCard(o)).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function updateCounts() {
+      document.getElementById('totalCount').textContent = allOrders.length;
+      document.getElementById('urgentCount').textContent = allOrders.filter(o => o.urgent).length;
+      document.getElementById('doneCount').textContent = 0; // Placeholder
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // INIT
+    // ═════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCounts();
+      renderCards();
+
+      // Render stage tabs
+      const stageTabs = document.getElementById('stageTabs');
+      stageTabs.innerHTML = '<div class="stage-tab active" data-stage="all">ALL</div>' +
+        STAGE_NAMES.map(s => `<div class="stage-tab" data-stage="${s}">${s}</div>`).join('');
+
+      document.querySelectorAll('.stage-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          filterStage = tab.dataset.stage;
+          renderCards();
+        });
+      });
+
+      // Render toolbar
+      const toolbar = document.getElementById('toolbar');
+      toolbar.innerHTML = `
+        <div class="toolbar-chip active" data-filter="all">ALL</div>
+        <div class="toolbar-chip" data-filter="today">TODAY</div>
+        <div class="toolbar-chip" data-filter="urgent">⚡ GẤP</div>
+      `;
+
+      document.querySelectorAll('.toolbar-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.toolbar-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          filterDelivery = chip.dataset.filter;
+          renderCards();
+        });
+      });
+
+      // Update header date
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      document.getElementById('headerDate').textContent = dateStr;
+    });
+  </script>
+</body>
+</html>
