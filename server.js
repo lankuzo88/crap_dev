@@ -1,9 +1,9 @@
 /**
- * ASIA LAB — Dashboard Server v2
+ * ASIA LAB — Dashboard Server v3
  * Đọc: File_sach/ (Excel sạch mới nhất) + Data/ (JSON tiến độ)
  *
  * Cách chạy:
- *   cd C:\Users\...\Desktop\crap
+ *   cd C:\Users\...\Desktop\crap_dev
  *   npm install express xlsx
  *   node server.js
  *
@@ -19,8 +19,6 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── CẤU HÌNH ĐƯỜNG DẪN ───────────────────────────────
-// server.js đặt trong thư mục crap/
-// → tự động tìm File_sach/ và Data/ cùng cấp
 const BASE_DIR      = __dirname;
 const FILE_SACH_DIR = path.join(BASE_DIR, 'File_sach');
 const DATA_DIR      = path.join(BASE_DIR, 'Data');
@@ -329,7 +327,7 @@ app.get('/', (req, res) => {
   if (fs.existsSync(DASHBOARD)) {
     res.sendFile(DASHBOARD);
   } else {
-    res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục <b>crap/</b></p>`);
+    res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục <b>crap_dev/</b></p>`);
   }
 });
 

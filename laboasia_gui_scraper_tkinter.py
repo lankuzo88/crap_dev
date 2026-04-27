@@ -1658,6 +1658,21 @@ class App:
 
         src_orders = src_wb[SHEET_ORDERS] if SHEET_ORDERS in src_wb.sheetnames else None
         tgt_orders = tgt_wb[SHEET_ORDERS] if SHEET_ORDERS in tgt_wb.sheetnames else None
+        src_stages = src_wb[SHEET_STAGES] if SHEET_STAGES in src_wb.sheetnames else None
+        tgt_stages = tgt_wb[SHEET_STAGES] if SHEET_STAGES in tgt_wb.sheetnames else None
+
+        import datetime as _dt
+
+        def _parse_date(val) -> Optional[_dt.datetime]:
+            if val is None:
+                return None
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S",
+                        "%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    return _dt.datetime.strptime(str(val).strip(), fmt)
+                except ValueError:
+                    continue
+            return None
 
         # ── Sheet Đơn hàng: luôn ghi đè từ source ────────────────────────
         new_orders = 0
@@ -1745,7 +1760,7 @@ class App:
                             tgt_stages.cell(row=tgt_row, column=col_idx).value = cell.value
                         update_stages += 1
 
-        # Lưu target workbook
+        # ── Lưu target workbook ───────────────────────────────────────────
         tgt_wb.save(str(target_path))
 
         self.log(
