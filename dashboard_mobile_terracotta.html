@@ -20,11 +20,11 @@
 
       /* Text */
       --text-primary: #1a1a1a;        /* Black */
-      --text-muted: #7a7a7a;          /* Gray */
-      --text-light: #9a9a9a;          /* Light gray */
+      --text-muted: #d0d0d0;          /* Light gray */
+      --text-light: #e0e0e0;          /* Very light gray */
 
       /* Layout */
-      --header-h: 52px;
+      --header-h: 40px;
       --stagetab-h: 44px;
       --toolbar-h: 44px;
     }
@@ -56,68 +56,13 @@
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-card);
       height: var(--header-h);
-      padding: 0 16px;
+      padding: 0 12px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
       position: sticky;
       top: 0;
       z-index: 200;
-    }
-
-    .logo {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: 1px;
-      color: var(--text-primary);
-    }
-
-    .logo span {
-      color: var(--terracotta);
-    }
-
-    .header-sep {
-      flex: 1;
-    }
-
-    .header-stats {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .hstat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: transparent;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      padding: 4px 10px;
-      min-width: 44px;
-    }
-
-    .hstat .n {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1;
-      color: var(--terracotta);
-    }
-
-    .hstat .l {
-      font-size: 9px;
-      color: var(--text-light);
-      letter-spacing: 0.3px;
-      margin-top: 2px;
-    }
-
-    .header-date {
-      font-family: 'Monaco', 'Courier New', monospace;
-      font-size: 10px;
-      color: var(--text-light);
-      white-space: nowrap;
     }
 
     /* ═══════════════════════════════
@@ -219,15 +164,22 @@
 
     .time-group-header {
       border-left: 4px solid;
-      padding: 12px 16px;
-      margin: 16px 12px 8px 12px;
+      padding: 8px 12px;
+      margin: 12px 12px 6px 12px;
       border-radius: 6px;
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      flex-direction: row;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .time-group-header.morning {
+      border-left-color: var(--terracotta-light);
+      background: rgba(196, 131, 111, 0.12);
+    }
+
+    .time-group-header.noon {
       border-left-color: var(--terracotta-light);
       background: rgba(196, 131, 111, 0.12);
     }
@@ -277,22 +229,23 @@
     .tg-cards {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       padding: 0 12px;
     }
 
     .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
+      background: var(--terracotta-light);
+      border: 1px solid var(--terracotta-light);
       border-left: 3px solid;
       border-radius: 8px;
-      padding: 12px;
+      padding: 8px;
       cursor: pointer;
       transition: all 0.2s;
       animation: slideIn 0.3s ease-out backwards;
     }
 
     .card.morning { border-left-color: var(--terracotta-light); }
+    .card.noon { border-left-color: var(--terracotta-light); }
     .card.afternoon { border-left-color: var(--terracotta); }
     .card.evening { border-left-color: var(--rust-dark); }
     .card.urgent { border-left-color: var(--urgent); }
@@ -316,7 +269,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 3px;
     }
 
     .order-code {
@@ -343,16 +296,18 @@
 
     .badge-urgent {
       background: rgba(168, 90, 79, 0.2);
-      color: var(--terracotta);
-      border: 0.5px solid var(--terracotta);
+      color: var(--urgent);
+      border: 0.5px solid var(--urgent);
+      font-weight: 700;
     }
 
     .card-row2 {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 2px;
       font-size: 11px;
+      font-weight: 500;
     }
 
     .card-patient {
@@ -361,27 +316,29 @@
     }
 
     .card-sl {
-      color: var(--terracotta);
+      color: #ffffff;
       font-weight: 600;
     }
 
     .card-customer {
       font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
+      color: #ffffff;
+      margin-bottom: 2px;
+      font-weight: 600;
     }
 
     .card-prosthesis {
       font-size: 10px;
-      color: var(--text-light);
-      margin-bottom: 6px;
+      color: #ffffff;
+      margin-bottom: 2px;
+      font-weight: 600;
     }
 
     .card-bottom {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 8px;
+      padding-top: 4px;
       border-top: 1px solid var(--border-card);
     }
 
@@ -408,28 +365,91 @@
       font-size: 14px;
       font-weight: 500;
     }
+
+    /* ── MODAL ─── */
+    #modalOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    #modalOverlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #modalContent {
+      width: 90%;
+      max-width: 400px;
+      max-height: 85vh;
+      z-index: 1000;
+    }
+
+    /* ── STAGE PROGRESS DOTS ─── */
+    .stage-pips {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 3px;
+    }
+    .stage-pip {
+      flex: 1;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--border-card);
+      position: relative;
+      overflow: hidden;
+    }
+    .stage-pip.skip {
+      opacity: 0.25;
+      background: repeating-linear-gradient(90deg, var(--border-card) 0, var(--border-card) 3px, transparent 3px, transparent 6px);
+    }
+    .stage-pip .pip-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      border-radius: 3px;
+      background: var(--terracotta);
+      width: 0;
+    }
+    .stage-pip.done .pip-fill { width: 100%; }
+    .stage-pip.current .pip-fill { width: 50%; animation: pulse-pip 1.5s ease-in-out infinite; }
+    @keyframes pulse-pip { 0%,100% { opacity:0.55; } 50% { opacity:1; } }
+
+    /* ── FONT SCALE +30% ─── */
+    html { font-size: 18px; }
+    .logo { font-size: 21px; }
+    .hstat .n { font-size: 18px; }
+    .hstat .l { font-size: 12px; }
+    .header-date { font-size: 13px; }
+    .stage-tab { font-size: 16px; }
+    .toolbar-chip { font-size: 14px; }
+    .tg-time { font-size: 17px; }
+    .tg-date, .tg-count { font-size: 14px; }
+    .order-code { font-size: 17px; }
+    .badge { font-size: 12px; }
+    .card-row2 { font-size: 14px; }
+    .card-customer { font-size: 13px; }
+    .card-prosthesis { font-size: 13px; }
+    .card-stage-label { font-size: 13px; }
+    .empty-state p { font-size: 18px; }
   </style>
 </head>
 <body>
   <!-- Header -->
   <header>
-    <div class="logo">ASIA <span>LAB</span></div>
-    <div class="header-sep"></div>
-    <div class="header-stats">
-      <div class="hstat">
-        <div class="n" id="totalCount">0</div>
-        <div class="l">TỔNG</div>
-      </div>
-      <div class="hstat">
-        <div class="n" id="urgentCount">0</div>
-        <div class="l">GẤP</div>
-      </div>
-      <div class="hstat">
-        <div class="n" id="doneCount">0</div>
-        <div class="l">XONG</div>
-      </div>
+    <div id="headerContent" style="display: flex; align-items: center; gap: 12px; width: 100%; font-size: 13px; font-weight: 600; color: var(--text-primary);">
+      <span id="headerTimeCat">—</span>
+      <span style="color: var(--text-light);">·</span>
+      <span id="headerTime">—</span>
+      <span style="color: var(--text-light);">·</span>
+      <span id="headerOrderCount">0 đơn</span>
+      <span style="color: var(--text-light);">·</span>
+      <span id="headerToothCount">0 răng</span>
     </div>
-    <div class="header-date" id="headerDate">2026-04-27</div>
   </header>
 
   <!-- Stage Tabs -->
@@ -442,68 +462,6 @@
   <div id="cardList"></div>
 
   <script>
-    // ═════════════════════════════════════════════════════════════
-    // SAMPLE DATA - Thay bằng dữ liệu thực từ server
-    // ═════════════════════════════════════════════════════════════
-    const SAMPLE_ORDERS = [
-      {
-        ma_dh: '2604A1',
-        benh_nhan: 'Bác sĩ Hiếu',
-        khach_hang: 'Cao Long',
-        phuc_hinh: 'BL.04.TP.PC',
-        sl: 4,
-        ghi_chu: 'Bình thường',
-        current_stage: 'SÁP/Cadcam',
-        yc_ht: '2026-04-28 09:30',
-        yc_giao: '2026-04-28',
-        nhan: '2026-04-25 08:00',
-        loai_lenh: 'Làm tiếp',
-        urgent: true
-      },
-      {
-        ma_dh: '2603A5',
-        benh_nhan: 'Nguyễn Hồ',
-        khach_hang: 'Công ty ABC',
-        phuc_hinh: 'BL.03.KA.SS',
-        sl: 2,
-        ghi_chu: '',
-        current_stage: 'ĐẮP',
-        yc_ht: '2026-04-28 15:00',
-        yc_giao: '2026-04-28',
-        nhan: '2026-04-25 10:00',
-        loai_lenh: 'TS',
-        urgent: false
-      },
-      {
-        ma_dh: '2603A7',
-        benh_nhan: 'Trần Minh',
-        khach_hang: 'Phòng khám XYZ',
-        phuc_hinh: 'BL.02.CA.BH',
-        sl: 3,
-        ghi_chu: 'Gấp',
-        current_stage: 'CBM',
-        yc_ht: '2026-04-28 19:00',
-        yc_giao: '2026-04-28',
-        nhan: '2026-04-25 09:00',
-        loai_lenh: 'Sửa',
-        urgent: false
-      },
-      {
-        ma_dh: '2602A8',
-        benh_nhan: 'Lê Phương',
-        khach_hang: 'Bệnh viện Q1',
-        phuc_hinh: 'BL.01.TP.CC',
-        sl: 1,
-        ghi_chu: '',
-        current_stage: 'SƯỜN',
-        yc_ht: '2026-05-03 10:00',
-        yc_giao: '2026-05-03',
-        nhan: '2026-04-25 08:30',
-        loai_lenh: 'Làm tiếp',
-        urgent: false
-      }
-    ];
-
     const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
     const STAGE_COLORS = {
       'CBM': '#3b82f6',
@@ -522,19 +480,60 @@
       'HOÀN TẤT': '✓'
     };
 
-    let allOrders = [...SAMPLE_ORDERS];
+    function adaptOrder(o) {
+      let current_stage = 'HOÀN TẤT';
+      if (o.stages) {
+        const active = o.stages.find(s => !s.sk && !s.x);
+        if (active) current_stage = active.n;
+      }
+      const urgent = o.yc_ht
+        ? (new Date(o.yc_ht) - Date.now()) < 2 * 3600 * 1000
+        : false;
+      return {
+        ma_dh:         o.ma_dh,
+        benh_nhan:     o.bn || '',
+        khach_hang:    o.kh || '',
+        phuc_hinh:     o.ph || '',
+        sl:            o.sl || 0,
+        ghi_chu:       o.gc || '',
+        current_stage,
+        yc_ht:         o.yc_ht || '',
+        yc_giao:       o.yc_giao || '',
+        nhan:          o.nhan || '',
+        loai_lenh:     o.lk || '',
+        urgent,
+        stagesData:    o.stages || [],
+      };
+    }
+
+    let allOrders = [];
     let filterStage = 'all';
     let filterDelivery = 'all';
+
+    async function loadData() {
+      try {
+        const res = await fetch('/data.json');
+        const json = await res.json();
+        allOrders = (json.orders || []).map(adaptOrder);
+        updateCounts();
+        renderCards();
+      } catch (e) {
+        console.error('Lỗi fetch data:', e);
+      }
+    }
 
     // ═════════════════════════════════════════════════════════════
     // HELPERS
     // ═════════════════════════════════════════════════════════════
     function getCompletionTimeGroup(yc_ht) {
       if (!yc_ht) return 'default';
-      const hour = parseInt(yc_ht.split(' ')[1].split(':')[0]);
+      const timePart = yc_ht.split(' ')[1];
+      if (!timePart) return 'default';
+      const hour = parseInt(timePart.split(':')[0]);
       if (hour >= 8 && hour < 11) return 'morning';
-      if (hour >= 14 && hour < 17) return 'afternoon';
-      if (hour >= 18 && hour <= 21) return 'evening';
+      if (hour >= 11 && hour < 14) return 'noon';
+      if (hour >= 14 && hour < 18) return 'afternoon';
+      if (hour >= 18 && hour <= 23) return 'evening';
       return 'default';
     }
 
@@ -582,22 +581,25 @@
       const urgentBadge = o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : '';
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
 
+      const pipsHtml = o.stagesData.map(s => {
+        if (s.sk) return `<div class="stage-pip skip"><div class="pip-fill"></div></div>`;
+        const cls = s.x ? 'done' : (s.n === o.current_stage ? 'current' : '');
+        return `<div class="stage-pip ${cls}"><div class="pip-fill"></div></div>`;
+      }).join('');
+
       return `
-        <div class="card ${cat}" style="cursor: pointer;">
+        <div class="card ${cat}" style="cursor: pointer;" data-ma-dh="${o.ma_dh}">
           <div class="card-row1">
             <div class="order-code">${o.ma_dh}</div>
+            <div class="card-customer" style="flex: 1; text-align: center; margin: 0;">${o.khach_hang}</div>
             <div class="card-badges">${urgentBadge}</div>
           </div>
           <div class="card-row2">
             <div class="card-patient">${patient}</div>
             <div class="card-sl">SL: ${o.sl}</div>
           </div>
-          <div class="card-customer">${o.khach_hang}</div>
           <div class="card-prosthesis">${o.phuc_hinh}</div>
-          <div class="card-bottom">
-            <span class="card-stage-label" style="border: 1px solid ${stageColor}30; background: ${stageColor}15; color: ${stageColor};">${short}</span>
-            <span style="font-size: 10px; color: var(--text-light);">📅 ${formatTime(o.yc_ht)}</span>
-          </div>
+          ${pipsHtml ? `<div class="stage-pips">${pipsHtml}</div>` : ''}
         </div>
       `;
     }
@@ -623,10 +625,11 @@
           <div class="time-group">
             <div class="time-group-header ${cat}">
               <div class="tg-time">${
-                cat === 'morning' ? '🌅 SÁNG SỚM' :
-                cat === 'afternoon' ? '☀️ CHIỀU' :
-                cat === 'evening' ? '🌙 TỐI' :
-                '⏰ KHÁC'
+                cat === 'morning' ? 'SÁNG' :
+                cat === 'noon' ? 'TRƯA' :
+                cat === 'afternoon' ? 'CHIỀU' :
+                cat === 'evening' ? 'TỐI' :
+                'KHÁC'
               } · ${time}</div>
               <div class="tg-meta">
                 <div class="tg-count">${orders.length} đơn · ${totalSL} răng</div>
@@ -643,18 +646,32 @@
     }
 
     function updateCounts() {
-      document.getElementById('totalCount').textContent = allOrders.length;
-      document.getElementById('urgentCount').textContent = allOrders.filter(o => o.urgent).length;
-      document.getElementById('doneCount').textContent = 0; // Placeholder
+      const now = new Date();
+      const hour = now.getHours();
+      const timeMin = String(now.getMinutes()).padStart(2, '0');
+
+      // Get time category (English internal)
+      let timeCatEn = 'default';
+      let timeCatVi = 'KHÁC';
+      if (hour >= 8 && hour < 11) { timeCatEn = 'morning'; timeCatVi = 'SÁNG'; }
+      else if (hour >= 11 && hour < 14) { timeCatEn = 'noon'; timeCatVi = 'TRƯA'; }
+      else if (hour >= 14 && hour < 18) { timeCatEn = 'afternoon'; timeCatVi = 'CHIỀU'; }
+      else if (hour >= 18 && hour <= 23) { timeCatEn = 'evening'; timeCatVi = 'TỐI'; }
+
+      // Count orders in current time category
+      const ordersInCat = getFiltered().filter(o => getCompletionTimeGroup(o.yc_ht) === timeCatEn);
+      const toothCount = ordersInCat.reduce((sum, o) => sum + o.sl, 0);
+
+      document.getElementById('headerTimeCat').textContent = timeCatVi;
+      document.getElementById('headerTime').textContent = `${hour}:${timeMin}`;
+      document.getElementById('headerOrderCount').textContent = `${ordersInCat.length} đơn`;
+      document.getElementById('headerToothCount').textContent = `${toothCount} răng`;
     }
 
     // ═════════════════════════════════════════════════════════════
     // INIT
     // ═════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
-      updateCounts();
-      renderCards();
-
       // Render stage tabs
       const stageTabs = document.getElementById('stageTabs');
       stageTabs.innerHTML = '<div class="stage-tab active" data-stage="all">ALL</div>' +
@@ -686,11 +703,98 @@
         });
       });
 
-      // Update header date
-      const today = new Date();
-      const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      document.getElementById('headerDate').textContent = dateStr;
+      loadData();
+      setInterval(loadData, 60_000);
+
+      // Add click handlers to cards
+      document.addEventListener('click', (e) => {
+        const card = e.target.closest('.card');
+        if (card) {
+          const maDh = card.getAttribute('data-ma-dh');
+          const order = allOrders.find(o => o.ma_dh === maDh);
+          if (order) showOrderDetail(order);
+        }
+      });
     });
+
+    // Modal functions
+    function showOrderDetail(o) {
+      const stageHtml = o.stagesData.map(s => {
+        if (s.sk) return '';
+        const icon = s.x ? '✓' : (s.n === o.current_stage ? '●' : '○');
+        const status = s.x ? 'Xong' : (s.n === o.current_stage ? 'Đang làm' : 'Chờ');
+        const empName = s.k ? ` · ${s.k}` : '';
+        return `<div style="display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border-card);">
+          <div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span style="font-weight: 600;">${icon} ${s.n}${empName}</span>
+            <span style="color: var(--text-light); font-size: 11px;">${status}</span>
+          </div>
+          ${s.tg ? `<div style="font-size: 11px; color: var(--text-light);">⏱ ${formatTime(s.tg)}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      const modalContent = `
+        <div style="background: var(--bg-card); border-radius: 8px; padding: 16px; max-height: 80vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">${o.ma_dh}</h2>
+            <div style="cursor: pointer; font-size: 28px; color: var(--text-muted); padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; transition: all 0.2s;" onclick="closeOrderDetail()" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">✕</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Bệnh nhân</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);">${o.benh_nhan || '—'}</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Nha khoa</div>
+            <div style="font-size: 14px; font-weight: 600; color: #5d7d70;">${o.khach_hang || '—'}</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
+            <div style="font-size: 12px; color: var(--terracotta); font-weight: 600;">${o.phuc_hinh || '—'}</div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <div style="flex: 1;">
+              <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${o.sl}</div>
+            </div>
+            <div style="flex: 1;">
+              <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">${o.yc_giao || '—'}</div>
+            </div>
+          </div>
+
+          ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(196, 131, 111, 0.1); border-left: 3px solid var(--terracotta-light); border-radius: 4px;">
+            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
+            <div style="font-size: 12px; color: var(--text-primary);">${o.ghi_chu}</div>
+          </div>` : ''}
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Tiến độ công đoạn</div>
+            ${stageHtml}
+          </div>
+
+          <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-card); font-size: 11px; color: var(--text-light);">
+            <span>📥 ${o.nhan || '—'}</span>
+            <span>⏱ ${o.yc_ht || '—'}</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('modalContent').innerHTML = modalContent;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeOrderDetail() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
   </script>
+
+  <!-- Modal -->
+  <div id="modalOverlay" style="display: none;">
+    <div id="modalContent"></div>
+  </div>
 </body>
 </html>

@@ -22,7 +22,8 @@ const PORT = process.env.PORT || 3000;
 const BASE_DIR      = __dirname;
 const FILE_SACH_DIR = path.join(BASE_DIR, 'File_sach');
 const DATA_DIR      = path.join(BASE_DIR, 'Data');
-const DASHBOARD     = path.join(BASE_DIR, 'dashboard.html');
+const DASHBOARD        = path.join(BASE_DIR, 'dashboard.html');
+const DASHBOARD_MOBILE = path.join(BASE_DIR, 'dashboard_mobile_terracotta.html');
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
@@ -323,8 +324,16 @@ function getData(forceReload = false) {
 }
 
 // ── ROUTES ────────────────────────────────────────────
+function isMobile(req) {
+  const ua = req.headers['user-agent'] || '';
+  return /Mobile|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua);
+}
+
 app.get('/', (req, res) => {
-  if (fs.existsSync(DASHBOARD)) {
+  const file = isMobile(req) ? DASHBOARD_MOBILE : DASHBOARD;
+  if (fs.existsSync(file)) {
+    res.sendFile(file);
+  } else if (fs.existsSync(DASHBOARD)) {
     res.sendFile(DASHBOARD);
   } else {
     res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục <b>crap_dev/</b></p>`);
@@ -371,6 +380,11 @@ app.get('/status', (req, res) => {
     cached_orders:  cache?.orders?.length || 0,
     cache_age_s:    cacheTime ? Math.round((Date.now()-cacheTime)/1000) : null,
   });
+});
+
+app.get('/mobile', (req, res) => {
+  if (fs.existsSync(DASHBOARD_MOBILE)) res.sendFile(DASHBOARD_MOBILE);
+  else res.redirect('/');
 });
 
 app.use(express.static(BASE_DIR));
