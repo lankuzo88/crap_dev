@@ -16,7 +16,10 @@
       "Bash(npm install *)",
       "Bash(findstr /I \"install successful already\")",
       "Bash(chcp 65001)",
-      "Bash(python -X utf8 -c \":*)"
+      "Bash(python -X utf8 -c \":*)",
+      "Bash(pip list *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)"
     ]
   }
 }

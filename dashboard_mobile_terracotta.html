@@ -24,9 +24,7 @@
       --text-light: #e0e0e0;          /* Very light gray */
 
       /* Layout */
-      --header-h: 40px;
-      --stagetab-h: 44px;
-      --toolbar-h: 44px;
+      --header-h: 56px;
     }
 
     *, *::before, *::after {
@@ -52,102 +50,60 @@
     /* ═══════════════════════════════
        HEADER
     ═══════════════════════════════ */
-    header {
+    /* ═══════════════════════════════
+       SEARCH BAR
+    ═══════════════════════════════ */
+    .search-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-card);
       height: var(--header-h);
-      padding: 0 12px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 200;
     }
 
-    /* ═══════════════════════════════
-       STAGE TABS
-    ═══════════════════════════════ */
-    .stage-tabs {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-card);
-      height: var(--stagetab-h);
-      padding: 8px 12px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      position: sticky;
-      top: var(--header-h);
-      z-index: 190;
-      scroll-behavior: smooth;
+    .search-icon {
+      font-size: 16px;
+      flex-shrink: 0;
     }
 
-    .stage-tabs::-webkit-scrollbar {
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .search-bar input::-webkit-search-cancel-button {
       display: none;
     }
 
-    .stage-tab {
+    .search-clear {
       flex-shrink: 0;
-      padding: 8px 14px;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-light);
-      font-weight: 500;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .stage-tab:hover {
-      border-color: var(--terracotta-light);
-      color: var(--terracotta-light);
-    }
-
-    .stage-tab.active {
-      background: var(--terracotta-light);
-      border-color: var(--terracotta-light);
-      color: var(--bg-card);
-    }
-
-    /* ═══════════════════════════════
-       TOOLBAR
-    ═══════════════════════════════ */
-    .toolbar {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-card);
-      padding: 8px 12px;
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      position: sticky;
-      top: calc(var(--header-h) + var(--stagetab-h));
-      z-index: 180;
-    }
-
-    .toolbar::-webkit-scrollbar {
       display: none;
-    }
-
-    .toolbar-chip {
-      flex-shrink: 0;
-      padding: 6px 12px;
-      border: 1px solid var(--border-card);
-      border-radius: 5px;
-      background: transparent;
-      color: var(--text-light);
-      font-weight: 500;
-      font-size: 11px;
+      font-size: 16px;
+      color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s;
+      padding: 4px 6px;
+      border-radius: 4px;
     }
 
-    .toolbar-chip.active {
-      background: var(--terracotta-light);
-      border-color: var(--terracotta-light);
-      color: var(--bg-card);
+    .search-clear.visible {
+      display: block;
     }
 
     /* ═══════════════════════════════
@@ -174,36 +130,21 @@
       align-items: center;
     }
 
-    .time-group-header.morning {
-      border-left-color: var(--terracotta-light);
-      background: rgba(196, 131, 111, 0.12);
-    }
-
-    .time-group-header.noon {
-      border-left-color: var(--terracotta-light);
-      background: rgba(196, 131, 111, 0.12);
-    }
-
-    .time-group-header.afternoon {
+    .time-group-header.morning,
+    .time-group-header.noon,
+    .time-group-header.afternoon,
+    .time-group-header.evening,
+    .time-group-header.urgent,
+    .time-group-header.default {
       border-left-color: var(--terracotta);
-      background: rgba(168, 90, 79, 0.12);
-    }
-
-    .time-group-header.evening {
-      border-left-color: var(--rust-dark);
-      background: rgba(139, 68, 56, 0.12);
-    }
-
-    .time-group-header.urgent {
-      border-left-color: var(--urgent);
-      background: rgba(107, 74, 64, 0.15);
+      background: var(--bg-card);
     }
 
     .tg-time {
       font-family: 'Monaco', 'Courier New', monospace;
       font-weight: 700;
       font-size: 13px;
-      color: var(--text-primary);
+      color: var(--terracotta);
     }
 
     .tg-meta {
@@ -220,7 +161,7 @@
 
     .tg-count {
       font-size: 11px;
-      color: var(--text-light);
+      color: var(--text-primary);
     }
 
     /* ═══════════════════════════════
@@ -238,7 +179,7 @@
       border: 1px solid var(--terracotta-light);
       border-left: 3px solid;
       border-radius: 8px;
-      padding: 8px;
+      padding: 7px;
       cursor: pointer;
       transition: all 0.2s;
       animation: slideIn 0.3s ease-out backwards;
@@ -419,44 +360,33 @@
     .stage-pip.current .pip-fill { width: 50%; animation: pulse-pip 1.5s ease-in-out infinite; }
     @keyframes pulse-pip { 0%,100% { opacity:0.55; } 50% { opacity:1; } }
 
-    /* ── FONT SCALE +30% ─── */
-    html { font-size: 18px; }
-    .logo { font-size: 21px; }
-    .hstat .n { font-size: 18px; }
-    .hstat .l { font-size: 12px; }
-    .header-date { font-size: 13px; }
-    .stage-tab { font-size: 16px; }
-    .toolbar-chip { font-size: 14px; }
-    .tg-time { font-size: 17px; }
-    .tg-date, .tg-count { font-size: 14px; }
-    .order-code { font-size: 17px; }
-    .badge { font-size: 12px; }
-    .card-row2 { font-size: 14px; }
-    .card-customer { font-size: 13px; }
-    .card-prosthesis { font-size: 13px; }
-    .card-stage-label { font-size: 13px; }
-    .empty-state p { font-size: 18px; }
+    /* ── FONT SCALE +10% (~30% gốc - 15%) ─── */
+    html { font-size: 15px; }
+    .logo { font-size: 18px; }
+    .hstat .n { font-size: 15px; }
+    .hstat .l { font-size: 10px; }
+    .header-date { font-size: 11px; }
+    .stage-tab { font-size: 14px; }
+    .toolbar-chip { font-size: 12px; }
+    .tg-time { font-size: 14px; }
+    .tg-date, .tg-count { font-size: 12px; }
+    .order-code { font-size: 14px; }
+    .badge { font-size: 10px; }
+    .card-row2 { font-size: 12px; }
+    .card-customer { font-size: 11px; }
+    .card-prosthesis { font-size: 11px; }
+    .card-stage-label { font-size: 11px; }
+    .empty-state p { font-size: 15px; }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <header>
-    <div id="headerContent" style="display: flex; align-items: center; gap: 12px; width: 100%; font-size: 13px; font-weight: 600; color: var(--text-primary);">
-      <span id="headerTimeCat">—</span>
-      <span style="color: var(--text-light);">·</span>
-      <span id="headerTime">—</span>
-      <span style="color: var(--text-light);">·</span>
-      <span id="headerOrderCount">0 đơn</span>
-      <span style="color: var(--text-light);">·</span>
-      <span id="headerToothCount">0 răng</span>
-    </div>
-  </header>
-
-  <!-- Stage Tabs -->
-  <div class="stage-tabs" id="stageTabs"></div>
-
-  <!-- Toolbar -->
-  <div class="toolbar" id="toolbar"></div>
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input id="searchInput" type="search" placeholder="Tìm mã đơn, bệnh nhân, nha khoa..." autocomplete="off">
+    <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
+  </div>
 
   <!-- Card List -->
   <div id="cardList"></div>
@@ -507,8 +437,7 @@
     }
 
     let allOrders = [];
-    let filterStage = 'all';
-    let filterDelivery = 'all';
+    let filterSearch = '';
 
     async function loadData() {
       try {
@@ -550,15 +479,26 @@
     }
 
     function getFiltered() {
-      return allOrders.filter(o => {
-        if (filterStage !== 'all' && o.current_stage !== filterStage) return false;
-        if (filterDelivery === 'today') {
-          const today = new Date().toISOString().split('T')[0];
-          if (!o.yc_giao.startsWith(today)) return false;
-        }
-        if (filterDelivery === 'urgent' && !o.urgent) return false;
-        return true;
-      });
+      if (!filterSearch) return allOrders;
+      const q = filterSearch.toLowerCase().trim();
+      return allOrders.filter(o =>
+        (o.ma_dh       || '').toLowerCase().includes(q) ||
+        (o.benh_nhan   || '').toLowerCase().includes(q) ||
+        (o.khach_hang  || '').toLowerCase().includes(q) ||
+        (o.phuc_hinh   || '').toLowerCase().includes(q) ||
+        (o.ghi_chu     || '').toLowerCase().includes(q) ||
+        (o.current_stage || '').toLowerCase().includes(q) ||
+        (o.loai_lenh   || '').toLowerCase().includes(q) ||
+        (o.yc_giao     || '').toLowerCase().includes(q)
+      );
+    }
+
+    function clearSearch() {
+      filterSearch = '';
+      const input = document.getElementById('searchInput');
+      if (input) input.value = '';
+      document.getElementById('searchClear').classList.remove('visible');
+      renderCards();
     }
 
     function groupByCompletionTime(orders) {
@@ -620,6 +560,9 @@
         const { orders, cat } = group;
         const totalSL = orders.reduce((s, o) => s + o.sl, 0);
         const time = formatTime(orders[0].yc_ht);
+        const dateRaw = (orders[0].yc_ht || '').split(' ')[0];
+        const dateParts = dateRaw ? dateRaw.split('-') : [];
+        const dateLabel = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}` : '';
 
         html += `
           <div class="time-group">
@@ -630,7 +573,7 @@
                 cat === 'afternoon' ? 'CHIỀU' :
                 cat === 'evening' ? 'TỐI' :
                 'KHÁC'
-              } · ${time}</div>
+              }${time !== '—' ? ` · ${time}` : ''}${dateLabel ? ` · ${dateLabel}` : ''}</div>
               <div class="tg-meta">
                 <div class="tg-count">${orders.length} đơn · ${totalSL} răng</div>
               </div>
@@ -646,67 +589,27 @@
     }
 
     function updateCounts() {
-      const now = new Date();
-      const hour = now.getHours();
-      const timeMin = String(now.getMinutes()).padStart(2, '0');
-
-      // Get time category (English internal)
-      let timeCatEn = 'default';
-      let timeCatVi = 'KHÁC';
-      if (hour >= 8 && hour < 11) { timeCatEn = 'morning'; timeCatVi = 'SÁNG'; }
-      else if (hour >= 11 && hour < 14) { timeCatEn = 'noon'; timeCatVi = 'TRƯA'; }
-      else if (hour >= 14 && hour < 18) { timeCatEn = 'afternoon'; timeCatVi = 'CHIỀU'; }
-      else if (hour >= 18 && hour <= 23) { timeCatEn = 'evening'; timeCatVi = 'TỐI'; }
-
-      // Count orders in current time category
-      const ordersInCat = getFiltered().filter(o => getCompletionTimeGroup(o.yc_ht) === timeCatEn);
-      const toothCount = ordersInCat.reduce((sum, o) => sum + o.sl, 0);
-
-      document.getElementById('headerTimeCat').textContent = timeCatVi;
-      document.getElementById('headerTime').textContent = `${hour}:${timeMin}`;
-      document.getElementById('headerOrderCount').textContent = `${ordersInCat.length} đơn`;
-      document.getElementById('headerToothCount').textContent = `${toothCount} răng`;
+      // no-op: header replaced by search bar
     }
 
     // ═════════════════════════════════════════════════════════════
     // INIT
     // ═════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
-      // Render stage tabs
-      const stageTabs = document.getElementById('stageTabs');
-      stageTabs.innerHTML = '<div class="stage-tab active" data-stage="all">ALL</div>' +
-        STAGE_NAMES.map(s => `<div class="stage-tab" data-stage="${s}">${s}</div>`).join('');
+      // Search input
+      const searchInput = document.getElementById('searchInput');
+      const searchClear = document.getElementById('searchClear');
 
-      document.querySelectorAll('.stage-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          filterStage = tab.dataset.stage;
-          renderCards();
-        });
-      });
-
-      // Render toolbar
-      const toolbar = document.getElementById('toolbar');
-      toolbar.innerHTML = `
-        <div class="toolbar-chip active" data-filter="all">ALL</div>
-        <div class="toolbar-chip" data-filter="today">TODAY</div>
-        <div class="toolbar-chip" data-filter="urgent">⚡ GẤP</div>
-      `;
-
-      document.querySelectorAll('.toolbar-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          document.querySelectorAll('.toolbar-chip').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          filterDelivery = chip.dataset.filter;
-          renderCards();
-        });
+      searchInput.addEventListener('input', () => {
+        filterSearch = searchInput.value;
+        searchClear.classList.toggle('visible', filterSearch.length > 0);
+        renderCards();
       });
 
       loadData();
       setInterval(loadData, 60_000);
 
-      // Add click handlers to cards
+      // Card click → modal
       document.addEventListener('click', (e) => {
         const card = e.target.closest('.card');
         if (card) {
@@ -727,9 +630,9 @@
         return `<div style="display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border-card);">
           <div style="display: flex; justify-content: space-between; font-size: 12px;">
             <span style="font-weight: 600;">${icon} ${s.n}${empName}</span>
-            <span style="color: var(--text-light); font-size: 11px;">${status}</span>
+            <span style="color: var(--text-primary); font-size: 11px;">${status}</span>
           </div>
-          ${s.tg ? `<div style="font-size: 11px; color: var(--text-light);">⏱ ${formatTime(s.tg)}</div>` : ''}
+          ${s.tg ? `<div style="font-size: 11px; color: var(--text-primary);">⏱ ${formatTime(s.tg)}</div>` : ''}
         </div>`;
       }).join('');
 
@@ -741,33 +644,33 @@
           </div>
 
           <div style="margin-bottom: 14px;">
-            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Bệnh nhân</div>
+            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Bệnh nhân</div>
             <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);">${o.benh_nhan || '—'}</div>
           </div>
 
           <div style="margin-bottom: 14px;">
-            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Nha khoa</div>
+            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Nha khoa</div>
             <div style="font-size: 14px; font-weight: 600; color: #5d7d70;">${o.khach_hang || '—'}</div>
           </div>
 
           <div style="margin-bottom: 14px;">
-            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
+            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
             <div style="font-size: 12px; color: var(--terracotta); font-weight: 600;">${o.phuc_hinh || '—'}</div>
           </div>
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
             <div style="flex: 1;">
-              <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
+              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
               <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${o.sl}</div>
             </div>
             <div style="flex: 1;">
-              <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
+              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
               <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">${o.yc_giao || '—'}</div>
             </div>
           </div>
 
           ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(196, 131, 111, 0.1); border-left: 3px solid var(--terracotta-light); border-radius: 4px;">
-            <div style="color: var(--text-light); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
+            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
             <div style="font-size: 12px; color: var(--text-primary);">${o.ghi_chu}</div>
           </div>` : ''}
 
@@ -776,7 +679,7 @@
             ${stageHtml}
           </div>
 
-          <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-card); font-size: 11px; color: var(--text-light);">
+          <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-card); font-size: 11px; color: var(--text-primary);">
             <span>📥 ${o.nhan || '—'}</span>
             <span>⏱ ${o.yc_ht || '—'}</span>
           </div>
