@@ -1,0 +1,4 @@
+# Thay YOUR_DOMAIN bằng tên miền thật, ví dụ: asialab.vn
+YOUR_DOMAIN {
+    reverse_proxy localhost:3000
+}

@@ -457,7 +457,7 @@ app.use((req, res, next) => {
 app.use(express.static(BASE_DIR));
 
 // ── START ──────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, '127.0.0.1', () => {
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
   const jsonFile  = findLatest(DATA_DIR, ['.json']);
 
