@@ -1,4 +1,4 @@
-# Thay YOUR_DOMAIN bằng tên miền thật, ví dụ: asialab.vn
-YOUR_DOMAIN {
+# Thay YOUR_SUBDOMAIN bằng tên bạn đăng ký, ví dụ: asialab.duckdns.org
+YOUR_SUBDOMAIN.duckdns.org {
     reverse_proxy localhost:3000
 }
