@@ -42,9 +42,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 .ph-chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;letter-spacing:.3px;}
 .ph-zirc{color:#5bbfff;border-color:rgba(91,191,255,.35);background:rgba(91,191,255,.08);}
-.ph-ti{color:#c47fff;border-color:rgba(196,127,255,.35);background:rgba(196,127,255,.08);}
 .ph-vnr{color:#ff8090;border-color:rgba(255,128,144,.35);background:rgba(255,128,144,.08);}
 .ph-kl{color:var(--text2);border-color:rgba(139,149,176,.3);background:rgba(139,149,176,.06);}
+.ph-hon{color:var(--amber);border-color:rgba(245,166,35,.35);background:rgba(245,166,35,.08);}
 .ph-oth{color:var(--amber);border-color:rgba(245,166,35,.3);background:var(--amber-s);}
 
 .lk-moi{color:var(--blue);border-color:rgba(61,159,255,.3);background:var(--blue-s);}
@@ -562,7 +562,8 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div class="chip" data-f="done" onclick="mSetF(this,'done')">✓ Xong</div>
     <div class="chip" data-f="sua" onclick="mSetF(this,'sua')">⟳ Sửa</div>
     <div class="chip" data-f="zirc" onclick="mSetF(this,'zirc')">Zirconia</div>
-    <div class="chip" data-f="ti" onclick="mSetF(this,'ti')">Titanium</div>
+    <div class="chip" data-f="kl" onclick="mSetF(this,'kl')">Kim loại</div>
+    <div class="chip" data-f="vnr" onclick="mSetF(this,'vnr')">Mặt dán</div>
   </div>
 </div>
 
@@ -887,14 +888,16 @@ function gcTimeSortVal(o) {
 
 function phType(ph) {
   const p = (ph || '').toLowerCase();
-  if (p.includes('zircornia') || p.includes('ziconia') || p.includes('cercon') || p.includes('diamond') || p.includes('zirconia ht')) return 'zirc';
-  if (p.includes('titanium') || p.includes('titan')) return 'ti';
-  if (p.includes('veneer') || p.includes('mặt dán')) return 'vnr';
+  if (p.includes('cùi giả zirconia') || p.includes('cui gia zirconia')) return 'hon';
+  if (p.includes('mặt dán')) return 'vnr';
+  if (p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') ||
+      p.includes('zir-') || p.includes('zolid') || p.includes('cercon') ||
+      p.includes('la va') || p.includes('full zirconia')) return 'zirc';
   return 'kl';
 }
 function phShort(ph) {
   if (!ph) return 'SỨ';
-  if (ph.includes('Zircornia') || ph.includes('Ziconia') || ph.includes('Zirconia HT')) return 'ZIRC';
+  if (ph.includes('Zircornia') || ph.includes('Ziconia') || ph.includes('Zirconia') || ph.includes('Zolid')) return 'ZIRC';
   if (ph.includes('Diamond')) return 'ZIR-D';
   if (ph.includes('Cercon')) return 'CERCON';
   if (ph.includes('Titanium') || ph.includes('Titan đắp')) return 'TITAN';
@@ -904,6 +907,7 @@ function phShort(ph) {
   if (ph.includes('Full') && ph.includes('kim loại')) return 'FULL-KL';
   if (ph.includes('Full')) return 'FULL-SỨ';
   if (ph.includes('Attachment')) return 'ATT';
+  if (ph.toLowerCase().includes('cùi giả zirconia') || ph.toLowerCase().includes('cui gia zirconia')) return 'HON HỢP';
   if (ph.includes('Cùi')) return 'CÙI';
   if (ph.includes('La Va')) return 'LA VA';
   return 'KL-SX';
@@ -965,6 +969,9 @@ function filterOrders(f, q) {
     if (f === 'sua'      && !lkL.includes('sửa')) return false;
     if (f === 'lai'      && !lkL.includes('lại')) return false;
     if (f === 'bh'       && !lkL.includes('bảo hành')) return false;
+    if (f === 'zirc' && phT !== 'zirc') return false;
+    if (f === 'kl'   && phT !== 'kl')   return false;
+    if (f === 'vnr'  && phT !== 'vnr')  return false;
     if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
     return true;
   }).sort((a, b) => {
