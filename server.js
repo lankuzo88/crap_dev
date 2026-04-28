@@ -16,6 +16,7 @@ const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
 const multer  = require('multer');
+const { spawn } = require('child_process');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +60,7 @@ const FILE_SACH_DIR = path.join(BASE_DIR, 'File_sach');
 const DATA_DIR      = path.join(BASE_DIR, 'Data');
 const DASHBOARD        = path.join(BASE_DIR, 'dashboard.html');
 const DASHBOARD_MOBILE = path.join(BASE_DIR, 'dashboard_mobile_terracotta.html');
+const EXCEL_DIR        = path.join(BASE_DIR, 'Excel');
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
@@ -358,10 +360,39 @@ function getData(forceReload = false) {
   return cache;
 }
 
+// ── SCRAPE STATUS ─────────────────────────────────────
+let scrapeJob = { running: false, file: null, log: [], exitCode: null, startedAt: null };
+
+function spawnScraper(filePath) {
+  scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
+  log(`🚀 Bắt đầu cào: ${scrapeJob.file}`);
+
+  const proc = spawn('python', ['run_scrape.py', filePath], {
+    cwd: BASE_DIR,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+  });
+
+  const pushLog = (chunk) => {
+    const lines = chunk.toString('utf-8').split('\n').filter(l => l.trim());
+    scrapeJob.log.push(...lines);
+    if (scrapeJob.log.length > 300) scrapeJob.log = scrapeJob.log.slice(-300);
+  };
+
+  proc.stdout.on('data', pushLog);
+  proc.stderr.on('data', d => pushLog('[err] ' + d));
+
+  proc.on('close', code => {
+    scrapeJob.running = false;
+    scrapeJob.exitCode = code;
+    cache = null; cacheKey = ''; cacheTime = 0;
+    log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
+  });
+}
+
 // ── UPLOAD (multer) ───────────────────────────────────
 const upload = multer({
   storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, FILE_SACH_DIR),
+    destination: (req, file, cb) => cb(null, EXCEL_DIR),
     filename:    (req, file, cb) => {
       const ext  = path.extname(file.originalname);
       const name = path.basename(file.originalname, ext)
@@ -378,7 +409,7 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
 });
 
-if (!fs.existsSync(FILE_SACH_DIR)) fs.mkdirSync(FILE_SACH_DIR, { recursive: true });
+if (!fs.existsSync(EXCEL_DIR)) fs.mkdirSync(EXCEL_DIR, { recursive: true });
 
 // ── ROUTES ────────────────────────────────────────────
 app.get('/login', (req, res) => {
@@ -418,19 +449,22 @@ app.post('/upload', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ ok: false, error: 'Không có file nào được gửi lên' });
     }
-    // Xóa cache để load lại data mới
-    cache = null; cacheKey = ''; cacheTime = 0;
-    log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB)`);
+    log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB) → cào tự động`);
+    spawnScraper(req.file.path);
     res.json({ ok: true, filename: req.file.filename, size: req.file.size });
   });
 });
 
+app.get('/scrape-status', requireAuth, (req, res) => {
+  res.json(scrapeJob);
+});
+
 app.get('/files', requireAuth, (req, res) => {
   try {
-    const files = fs.readdirSync(FILE_SACH_DIR)
+    const files = fs.readdirSync(EXCEL_DIR)
       .filter(f => ['.xlsx','.xls','.xlsm'].some(e => f.toLowerCase().endsWith(e)))
       .map(f => {
-        const stat = fs.statSync(path.join(FILE_SACH_DIR, f));
+        const stat = fs.statSync(path.join(EXCEL_DIR, f));
         return { name: f, size: stat.size, mtime: stat.mtimeMs };
       })
       .sort((a, b) => b.mtime - a.mtime);

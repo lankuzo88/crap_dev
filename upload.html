@@ -308,6 +308,73 @@
       font-size: 13px;
       padding: 20px 0;
     }
+
+    /* ── SCRAPE STATUS ── */
+    .scrape-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .badge-running {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 166, 35, 0.12);
+      border: 1px solid rgba(245, 166, 35, 0.35);
+      color: #f5a623;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .badge-running .dot {
+      width: 6px; height: 6px;
+      background: #f5a623;
+      border-radius: 50%;
+      animation: blink 1s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .badge-done {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .badge-error {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    .log-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 10px 12px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    .log-box .log-err { color: var(--red); }
+    .log-box .log-ok  { color: var(--green); }
+    .log-box .log-done{ color: #f5a623; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -354,9 +421,19 @@
       <button class="btn-upload" id="btnUpload" disabled>Chọn file trước</button>
     </div>
 
+    <!-- Scrape Status Card -->
+    <div class="card" id="scrapeCard" style="display:none">
+      <div class="scrape-header">
+        <div class="section-title" style="margin-bottom:0">Trạng thái cào</div>
+        <span id="scrapeBadge"></span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;" id="scrapeFile"></div>
+      <div class="log-box" id="logBox"></div>
+    </div>
+
     <!-- File List Card -->
     <div class="card">
-      <div class="section-title">File hiện có trong File_sach/</div>
+      <div class="section-title">File trong thư mục Excel/</div>
       <div class="file-list" id="fileList">
         <div class="empty-list">Đang tải...</div>
       </div>
@@ -465,9 +542,10 @@
         if (xhr.status === 200) {
           const res = JSON.parse(xhr.responseText);
           if (res.ok) {
-            showAlert('success', `Upload thành công: ${res.filename} (${formatSize(res.size)}) — Server đã load lại data mới.`);
+            showAlert('success', `Upload thành công: ${res.filename} — đang tự động cào...`);
             clearFile();
             loadFileList();
+            window._startScrapePolling();
           } else {
             showAlert('error', res.error || 'Upload thất bại');
             btnUpload.disabled = false;
@@ -512,6 +590,67 @@
     }
 
     loadFileList();
+
+    // ── Scrape status polling ──
+    let pollTimer = null;
+
+    function renderLog(lines) {
+      const box = document.getElementById('logBox');
+      box.innerHTML = lines.map(l => {
+        if (l.includes('ERROR') || l.includes('[err]') || l.includes('lỗi'))
+          return `<div class="log-err">${l}</div>`;
+        if (l.includes('HOÀN THÀNH') || l.includes('DONE'))
+          return `<div class="log-done">${l}</div>`;
+        if (l.includes('OK ') || l.includes('Làm sạch xong'))
+          return `<div class="log-ok">${l}</div>`;
+        return `<div>${l}</div>`;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function renderScrapeStatus(job) {
+      if (!job.file && !job.running) return;
+
+      document.getElementById('scrapeCard').style.display = 'block';
+      document.getElementById('scrapeFile').textContent = job.file || '';
+
+      const badge = document.getElementById('scrapeBadge');
+      if (job.running) {
+        badge.innerHTML = '<span class="badge-running"><span class="dot"></span>Đang cào...</span>';
+      } else if (job.exitCode === 0) {
+        badge.innerHTML = '<span class="badge-done">✓ Hoàn thành</span>';
+      } else if (job.exitCode !== null) {
+        badge.innerHTML = `<span class="badge-error">✗ Lỗi (code ${job.exitCode})</span>`;
+      }
+
+      renderLog(job.log || []);
+    }
+
+    async function pollScrapeStatus() {
+      try {
+        const res = await fetch('/scrape-status');
+        const job = await res.json();
+        renderScrapeStatus(job);
+        if (job.running) {
+          pollTimer = setTimeout(pollScrapeStatus, 1500);
+        } else {
+          pollTimer = null;
+          if (job.exitCode === 0) loadFileList();
+        }
+      } catch { pollTimer = null; }
+    }
+
+    // Kiểm tra trạng thái khi load trang
+    pollScrapeStatus();
+
+    // Sau khi upload thành công → bắt đầu poll
+    const origXhrLoad = XMLHttpRequest.prototype;
+    // Hook vào alert success để bắt đầu poll
+    const _origShowAlert = showAlert;
+    window._startScrapePolling = function() {
+      if (pollTimer) clearTimeout(pollTimer);
+      setTimeout(pollScrapeStatus, 800);
+    };
   </script>
 </body>
 </html>
