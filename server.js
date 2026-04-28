@@ -422,6 +422,9 @@ function getData(forceReload = false) {
 // ── SCRAPE STATUS ─────────────────────────────────────
 let scrapeJob = { running: false, file: null, log: [], exitCode: null, startedAt: null };
 
+// Tracks files uploaded via web UI so the watcher doesn't double-process them
+const webUploadFiles = new Set();
+
 function spawnScraper(filePath) {
   scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
   log(`🚀 Bắt đầu cào: ${scrapeJob.file}`);
@@ -461,6 +464,47 @@ function spawnScraper(filePath) {
     cache = null; cacheKey = ''; cacheTime = 0;
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
   });
+}
+
+// ── FILE WATCHER ──────────────────────────────────────
+function startExcelWatcher() {
+  if (!fs.existsSync(EXCEL_DIR)) return;
+
+  // Snapshot files already present at startup — don't process these
+  const existing = new Set(fs.readdirSync(EXCEL_DIR));
+  const pending  = new Map(); // debounce timers per filename
+
+  fs.watch(EXCEL_DIR, (eventType, filename) => {
+    if (!filename) return;
+    const ext = path.extname(filename).toLowerCase();
+    if (!['.xlsx', '.xls', '.xlsm'].includes(ext)) return;
+
+    // Skip files that existed before server started
+    if (existing.has(filename)) return;
+    existing.add(filename);
+
+    // Skip files that came in via web upload (already handled)
+    if (webUploadFiles.has(filename)) return;
+
+    // Debounce: wait 3s after last event before acting (file may still be writing)
+    if (pending.has(filename)) clearTimeout(pending.get(filename));
+
+    pending.set(filename, setTimeout(() => {
+      pending.delete(filename);
+      const filePath = path.join(EXCEL_DIR, filename);
+      if (!fs.existsSync(filePath)) return;
+
+      if (scrapeJob.running) {
+        log(`⚠ Watcher: scraper đang chạy, bỏ qua ${filename}`);
+        return;
+      }
+
+      log(`📂 Phát hiện file mới: ${filename} → cào tự động`);
+      spawnScraper(filePath);
+    }, 3000));
+  });
+
+  log(`👀 Đang theo dõi thư mục Excel/`);
 }
 
 // ── UPLOAD (multer) ───────────────────────────────────
@@ -532,6 +576,8 @@ app.post('/upload', requireAuth, (req, res) => {
       return res.status(400).json({ ok: false, error: 'Không có file nào được gửi lên' });
     }
     log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB) → cào tự động`);
+    webUploadFiles.add(req.file.filename);
+    setTimeout(() => webUploadFiles.delete(req.file.filename), 30000);
     spawnScraper(req.file.path);
     res.json({ ok: true, filename: req.file.filename, size: req.file.size });
   });
@@ -700,6 +746,7 @@ app.use(express.static(BASE_DIR));
 
 // ── START ──────────────────────────────────────────────
 loadUsers();
+startExcelWatcher();
 
 app.listen(PORT, '127.0.0.1', () => {
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
