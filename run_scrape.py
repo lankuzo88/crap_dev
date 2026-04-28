@@ -136,7 +136,20 @@ def run(excel_path: str):
 
     progress_df = build_progress_df(all_results)
     save_json(progress_df, json_out)
-    merge_back_to_workbook(str(p), scraped_xlsx, progress_df)
+
+    # openpyxl không đọc .xls → convert sang .xlsx trước khi merge
+    merge_input = str(p)
+    if p.suffix.lower() == '.xls':
+        import pandas as pd
+        xlsx_tmp = DATA_DIR / f'{stem}.xlsx'
+        xl = pd.ExcelFile(str(p))
+        with pd.ExcelWriter(str(xlsx_tmp), engine='openpyxl') as writer:
+            for sn in xl.sheet_names:
+                xl.parse(sheet_name=sn).to_excel(writer, sheet_name=sn, index=False)
+        merge_input = str(xlsx_tmp)
+        log(f'[runner] Đã convert {p.name} → {xlsx_tmp.name}')
+
+    merge_back_to_workbook(merge_input, scraped_xlsx, progress_df)
     log(f'[runner] Đã lưu: {Path(json_out).name} + {Path(scraped_xlsx).name}')
 
     # 7. Chạy labo_cleaner → File_sach/*_final.xlsx
