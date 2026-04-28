@@ -107,6 +107,46 @@
     }
 
     /* ═══════════════════════════════
+       FILTER BAR
+    ═══════════════════════════════ */
+    .filter-bar {
+      position: sticky;
+      top: var(--header-h);
+      z-index: 150;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-card);
+      padding: 8px 10px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .fchip {
+      flex-shrink: 0;
+      padding: 5px 13px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-card);
+      color: #666;
+      background: transparent;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .fchip.active { background: var(--terracotta); border-color: var(--terracotta); color: #fff; }
+
+    /* ═══════════════════════════════
+       PH BADGE
+    ═══════════════════════════════ */
+    .ph-badge { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:10px; border:1px solid; letter-spacing:.3px; white-space:nowrap; }
+    .ph-zirc { color:#1a7fc1; border-color:rgba(26,127,193,.35); background:rgba(26,127,193,.1); }
+    .ph-kl   { color:#555; border-color:rgba(100,100,100,.25); background:rgba(100,100,100,.07); }
+    .ph-vnr  { color:#c94f6d; border-color:rgba(201,79,109,.3); background:rgba(201,79,109,.08); }
+    .ph-hon  { color:#b5620a; border-color:rgba(181,98,10,.3); background:rgba(181,98,10,.08); }
+
+    /* ═══════════════════════════════
        CARD LIST
     ═══════════════════════════════ */
     #cardList {
@@ -390,6 +430,14 @@
     <a href="/logout" title="Đăng xuất" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);">↩</a>
   </div>
 
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="filterBar">
+    <button class="fchip active" data-f="all"  onclick="setFilter(this,'all')">Tất cả</button>
+    <button class="fchip" data-f="zirc" onclick="setFilter(this,'zirc')">Zirconia</button>
+    <button class="fchip" data-f="kl"   onclick="setFilter(this,'kl')">Kim loại</button>
+    <button class="fchip" data-f="vnr"  onclick="setFilter(this,'vnr')">Mặt dán</button>
+  </div>
+
   <!-- Card List -->
   <div id="cardList"></div>
 
@@ -438,8 +486,39 @@
       };
     }
 
+    function phType(ph) {
+      const p = (ph || '').toLowerCase();
+      if (p.includes('cùi giả zirconia') || p.includes('cui gia zirconia')) return 'hon';
+      if (p.includes('mặt dán')) return 'vnr';
+      if (p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') ||
+          p.includes('zir-') || p.includes('zolid') || p.includes('cercon') ||
+          p.includes('la va') || p.includes('full zirconia')) return 'zirc';
+      return 'kl';
+    }
+    function phShort(ph) {
+      if (!ph) return 'SỨ';
+      if (ph.includes('Zircornia') || ph.includes('Ziconia') || ph.includes('Zirconia') || ph.includes('Zolid')) return 'ZIRC';
+      if (ph.includes('Diamond') || ph.includes('Zir-')) return 'ZIR-D';
+      if (ph.includes('Cercon')) return 'CERCON';
+      if (ph.includes('Titanium') || ph.includes('Titan')) return 'TITAN';
+      if (ph.toLowerCase().includes('cùi giả zirconia')) return 'HON HỢP';
+      if (ph.includes('Veneer') || ph.includes('Mặt dán')) return 'VENEER';
+      if (ph.includes('Chrome')) return 'Cr-Co';
+      if (ph.includes('Cùi')) return 'CÙI';
+      if (ph.includes('La Va')) return 'LA VA';
+      return 'KL';
+    }
+
     let allOrders = [];
     let filterSearch = '';
+    let filterPh = 'all';
+
+    function setFilter(el, f) {
+      filterPh = f;
+      document.querySelectorAll('#filterBar .fchip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderCards();
+    }
 
     async function loadData() {
       try {
@@ -481,9 +560,11 @@
     }
 
     function getFiltered() {
-      if (!filterSearch) return allOrders;
+      let list = allOrders;
+      if (filterPh !== 'all') list = list.filter(o => phType(o.phuc_hinh) === filterPh);
+      if (!filterSearch) return list;
       const q = filterSearch.toLowerCase().trim();
-      return allOrders.filter(o =>
+      return list.filter(o =>
         (o.ma_dh       || '').toLowerCase().includes(q) ||
         (o.benh_nhan   || '').toLowerCase().includes(q) ||
         (o.khach_hang  || '').toLowerCase().includes(q) ||
@@ -521,6 +602,8 @@
       const short = STAGE_SHORT[o.current_stage] || o.current_stage;
       const cat = getCompletionTimeGroup(o.yc_ht);
       const urgentBadge = o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : '';
+      const phT = phType(o.phuc_hinh);
+      const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
 
       const pipsHtml = o.stagesData.map(s => {
@@ -534,7 +617,7 @@
           <div class="card-row1">
             <div class="order-code">${o.ma_dh}</div>
             <div class="card-customer" style="flex: 1; text-align: center; margin: 0;">${o.khach_hang}</div>
-            <div class="card-badges">${urgentBadge}</div>
+            <div class="card-badges">${phBadge}${urgentBadge}</div>
           </div>
           <div class="card-row2">
             <div class="card-patient">${patient}</div>
