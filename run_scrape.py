@@ -13,9 +13,33 @@ from laboasia_gui_scraper_tkinter import (
     DATA_DIR, CLEAN_DIR, BASE_DIR,
 )
 
-BASE_URL = 'https://laboasia.com.vn/scan'
-SHEET    = 'Đơn hàng'
-COL      = 'Mã ĐH'
+BASE_URL      = 'https://laboasia.com.vn/scan'
+SHEET_HINTS   = ['Đơn hàng', 'Don hang', 'Sheet1', 'Sheet']
+COL_HINTS     = ['Mã ĐH', 'mã_dh', 'ma_dh', 'Mã đơn', 'MaDH', 'ORDER_ID']
+
+def detect_sheet_col(xlsx_path: str):
+    """Tự nhận diện tên sheet và cột mã đơn hàng."""
+    import pandas as pd
+    xl = pd.ExcelFile(xlsx_path)
+    sheets = xl.sheet_names
+
+    # Chọn sheet: ưu tiên theo SHEET_HINTS, fallback lấy sheet đầu tiên
+    sheet = next((s for s in SHEET_HINTS if s in sheets), sheets[0])
+
+    df = xl.parse(sheet_name=sheet, nrows=1)
+    cols = list(df.columns)
+
+    # Chọn cột: so khớp không phân biệt hoa thường / dấu
+    def normalize(s):
+        return str(s).lower().replace(' ', '').replace('_', '').replace('đ', 'd')
+
+    norm_hints = [normalize(h) for h in COL_HINTS]
+    col = next(
+        (c for c in cols if normalize(c) in norm_hints),
+        cols[0]  # fallback: cột đầu tiên
+    )
+    log(f'[runner] Sheet: "{sheet}" | Cột mã đơn: "{col}" (trong {cols})')
+    return sheet, col
 
 def log(msg):
     print(msg, flush=True)
@@ -35,7 +59,8 @@ def run(excel_path: str):
 
     # 1. Load danh sách đơn hàng
     try:
-        order_ids = load_order_ids(str(p), SHEET, COL)
+        sheet, col = detect_sheet_col(str(p))
+        order_ids = load_order_ids(str(p), sheet, col)
     except Exception as e:
         log(f'[runner] ERROR load_order_ids: {e}')
         sys.exit(1)
