@@ -286,12 +286,12 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .m-gcard-prog{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:4px;}
   .m-gcard-prog-fill{height:100%;border-radius:2px;transition:width .3s;}
   /* Fixed bottom filter bar */
-  .m-filter-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(12,15,24,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:90;display:flex;gap:5px;overflow-x:auto;}
+  .m-filter-bar{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(12,15,24,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding:7px 10px 7px;z-index:95;display:flex;gap:5px;overflow-x:auto;}
   .m-filter-bar::-webkit-scrollbar{display:none;}
   .m-filter-bar .chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;transition:all .15s;white-space:nowrap;}
   .m-filter-bar .chip.active{background:var(--amber);border-color:var(--amber);color:#000;}
-  /* Scroll body padding */
-  #m-OB{padding-bottom:80px;}
+  /* Scroll body padding — nav(52) + filter bar(~58) + buffer */
+  #m-OB{padding-bottom:120px;}
   /* Header KPI glass upgrade */
   .m-hdr{background:rgba(20,24,36,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border);}
   .m-kpi{background:var(--glass-bg);border:1px solid var(--glass-border);}
@@ -1279,7 +1279,7 @@ function computeTimeGroups(list) {
   } else if (hasPM && !hasAM) {
     list.forEach(o => {
       const g = classifyTimeGroup(o);
-      if (g === 'today-am' || g === 'today-pm') map['today-pm'].orders.push(o);
+      if (g === 'today-am' || g === 'today-pm') map['today-am'].orders.push(o);
     });
   } else {
     list.forEach(o => map[classifyTimeGroup(o)]?.orders.push(o));
