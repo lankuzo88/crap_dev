@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ASIA LAB — Đăng nhập</title>
+  <style>
+    :root {
+      --bg-base:        #0c0f18;
+      --bg-card:        #161a26;
+      --border-card:    #252a3a;
+      --terracotta:     #a85a4f;
+      --terracotta-light: #c4836f;
+      --terracotta-glow:  rgba(168, 90, 79, 0.25);
+      --text-primary:   #e8e0d8;
+      --text-muted:     #6b7280;
+      --text-light:     #9ca3af;
+      --error-bg:       rgba(239, 68, 68, 0.12);
+      --error-border:   rgba(239, 68, 68, 0.35);
+      --error-text:     #f87171;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      background-image:
+        radial-gradient(ellipse 60% 50% at 50% -10%, rgba(168, 90, 79, 0.12) 0%, transparent 60%);
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 40px 36px 36px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    /* ── LOGO ── */
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--terracotta), var(--terracotta-light));
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px var(--terracotta-glow);
+    }
+
+    .logo-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .logo-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border-card);
+      margin-bottom: 28px;
+    }
+
+    /* ── ERROR ── */
+    .error-box {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--error-text);
+    }
+
+    .error-box.show {
+      display: flex;
+    }
+
+    /* ── FORM ── */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 7px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 15px;
+      color: var(--text-primary);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--terracotta);
+      box-shadow: 0 0 0 3px var(--terracotta-glow);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ── SUBMIT ── */
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, var(--terracotta), var(--terracotta-light));
+      border: none;
+      border-radius: 8px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s, transform 0.15s;
+      margin-top: 6px;
+      box-shadow: 0 4px 16px var(--terracotta-glow);
+    }
+
+    .btn-login:hover {
+      opacity: 0.9;
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── MOBILE adjustments ── */
+    @media (max-width: 420px) {
+      body { padding: 16px; align-items: flex-start; padding-top: 60px; }
+      .card { padding: 32px 24px 28px; border-radius: 14px; }
+      .logo-icon { width: 52px; height: 52px; font-size: 26px; }
+      .logo-title { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-wrap">
+      <div class="logo-icon">🦷</div>
+      <div class="logo-title">ASIA LAB</div>
+      <div class="logo-sub">Dashboard quản lý đơn hàng</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="error-box" id="errorBox">
+      <span>⚠</span>
+      <span>Tên đăng nhập hoặc mật khẩu không đúng</span>
+    </div>
+
+    <form method="POST" action="/login" autocomplete="on">
+      <div class="form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          placeholder="admin"
+          autocomplete="username"
+          autofocus
+          required
+        >
+      </div>
+      <div class="form-group">
+        <label for="password">Mật khẩu</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+      <button class="btn-login" type="submit">Đăng nhập</button>
+    </form>
+
+    <div class="footer">ASIA LAB © 2025</div>
+  </div>
+
+  <script>
+    if (new URLSearchParams(location.search).get('error')) {
+      document.getElementById('errorBox').classList.add('show');
+    }
+  </script>
+</body>
+</html>

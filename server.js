@@ -14,9 +14,43 @@ const express = require('express');
 const XLSX    = require('xlsx');
 const path    = require('path');
 const fs      = require('fs');
+const crypto  = require('crypto');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(express.urlencoded({ extended: false }));
+
+// ── AUTH ──────────────────────────────────────────────
+const USERS    = { admin: '142536' };
+const sessions = new Map();
+const SESS_TTL = 8 * 60 * 60 * 1000; // 8 giờ
+
+function genToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function getSessionToken(req) {
+  const cookieHeader = req.headers.cookie || '';
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq < 0) continue;
+    const k = part.slice(0, eq).trim();
+    const v = part.slice(eq + 1).trim();
+    if (k === 'sid') return decodeURIComponent(v);
+  }
+  return '';
+}
+
+function requireAuth(req, res, next) {
+  const token = getSessionToken(req);
+  const sess  = sessions.get(token);
+  if (!sess || sess.expires < Date.now()) {
+    sessions.delete(token);
+    return res.redirect('/login');
+  }
+  next();
+}
 
 // ── CẤU HÌNH ĐƯỜNG DẪN ───────────────────────────────
 const BASE_DIR      = __dirname;
@@ -324,12 +358,37 @@ function getData(forceReload = false) {
 }
 
 // ── ROUTES ────────────────────────────────────────────
+app.get('/login', (req, res) => {
+  const token = getSessionToken(req);
+  const sess  = sessions.get(token);
+  if (sess && sess.expires > Date.now()) return res.redirect('/');
+  res.sendFile(path.join(BASE_DIR, 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  if (USERS[username] && USERS[username] === password) {
+    const token = genToken();
+    sessions.set(token, { user: username, expires: Date.now() + SESS_TTL });
+    res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/`);
+    return res.redirect('/');
+  }
+  res.redirect('/login?error=1');
+});
+
+app.get('/logout', (req, res) => {
+  const token = getSessionToken(req);
+  sessions.delete(token);
+  res.setHeader('Set-Cookie', 'sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
+  res.redirect('/login');
+});
+
 function isMobile(req) {
   const ua = req.headers['user-agent'] || '';
   return /Mobile|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua);
 }
 
-app.get('/', (req, res) => {
+app.get('/', requireAuth, (req, res) => {
   const file = isMobile(req) ? DASHBOARD_MOBILE : DASHBOARD;
   if (fs.existsSync(file)) {
     res.sendFile(file);
@@ -340,7 +399,7 @@ app.get('/', (req, res) => {
   }
 });
 
-app.get('/data.json', (req, res) => {
+app.get('/data.json', requireAuth, (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
   try {
@@ -357,7 +416,7 @@ app.get('/data.json', (req, res) => {
   }
 });
 
-app.get('/reload', (req, res) => {
+app.get('/reload', requireAuth, (req, res) => {
   cache = null; cacheKey = ''; cacheTime = 0;
   try {
     const data = getData(true);
@@ -367,7 +426,7 @@ app.get('/reload', (req, res) => {
   }
 });
 
-app.get('/status', (req, res) => {
+app.get('/status', requireAuth, (req, res) => {
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
   const jsonFile  = findLatest(DATA_DIR, ['.json']);
   res.json({
@@ -382,9 +441,17 @@ app.get('/status', (req, res) => {
   });
 });
 
-app.get('/mobile', (req, res) => {
+app.get('/mobile', requireAuth, (req, res) => {
   if (fs.existsSync(DASHBOARD_MOBILE)) res.sendFile(DASHBOARD_MOBILE);
   else res.redirect('/');
+});
+
+// Chặn truy cập trực tiếp vào file HTML dashboard qua static (trừ login.html)
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') && req.path !== '/login.html') {
+    return requireAuth(req, res, next);
+  }
+  next();
 });
 
 app.use(express.static(BASE_DIR));
