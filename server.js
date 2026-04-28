@@ -383,8 +383,11 @@ function spawnScraper(filePath) {
     env: {
       ...process.env,
       PYTHONIOENCODING: 'utf-8',
-      // Playwright cài ở Administrator profile — phải chỉ rõ để Task Scheduler (SYSTEM) tìm đúng
       PLAYWRIGHT_BROWSERS_PATH: 'C:\\Users\\Administrator\\AppData\\Local\\ms-playwright',
+      LABO_USER1: 'lanhn',
+      LABO_PASS1: '796803',
+      LABO_USER2: 'kythuat',
+      LABO_PASS2: '670226',
     },
   });
 
