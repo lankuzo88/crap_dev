@@ -62,6 +62,17 @@ const DASHBOARD        = path.join(BASE_DIR, 'dashboard.html');
 const DASHBOARD_MOBILE = path.join(BASE_DIR, 'dashboard_mobile_terracotta.html');
 const EXCEL_DIR        = path.join(BASE_DIR, 'Excel');
 
+// Python: dùng full path để tránh lỗi PATH trong Task Scheduler
+const PYTHON = (() => {
+  const candidates = [
+    'C:\\Users\\Administrator\\AppData\\Local\\Python\\bin\\python.exe',
+    'C:\\Python312\\python.exe',
+    'C:\\Python311\\python.exe',
+    'python',
+  ];
+  return candidates.find(p => p === 'python' || fs.existsSync(p)) || 'python';
+})();
+
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
@@ -367,7 +378,7 @@ function spawnScraper(filePath) {
   scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
   log(`🚀 Bắt đầu cào: ${scrapeJob.file}`);
 
-  const proc = spawn('python', ['run_scrape.py', filePath], {
+  const proc = spawn(PYTHON, ['run_scrape.py', filePath], {
     cwd: BASE_DIR,
     env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
   });
@@ -379,7 +390,14 @@ function spawnScraper(filePath) {
   };
 
   proc.stdout.on('data', pushLog);
-  proc.stderr.on('data', d => pushLog('[err] ' + d));
+  proc.stderr.on('data', pushLog);
+
+  proc.on('error', err => {
+    scrapeJob.running = false;
+    scrapeJob.exitCode = -1;
+    scrapeJob.log.push(`[spawn error] ${err.message}`);
+    log(`❌ Scraper spawn error: ${err.message}`);
+  });
 
   proc.on('close', code => {
     scrapeJob.running = false;
