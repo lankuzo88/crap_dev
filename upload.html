@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ASIA LAB — Upload Excel</title>
+  <style>
+    :root {
+      --bg-base:          #0c0f18;
+      --bg-card:          #161a26;
+      --border-card:      #252a3a;
+      --terracotta:       #a85a4f;
+      --terracotta-light: #c4836f;
+      --terracotta-glow:  rgba(168, 90, 79, 0.25);
+      --green:            #2ed573;
+      --green-bg:         rgba(46, 213, 115, 0.1);
+      --green-border:     rgba(46, 213, 115, 0.3);
+      --red:              #f87171;
+      --red-bg:           rgba(239, 68, 68, 0.1);
+      --red-border:       rgba(239, 68, 68, 0.3);
+      --text-primary:     #e8e0d8;
+      --text-muted:       #6b7280;
+      --text-light:       #9ca3af;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 24px 16px;
+      background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(168,90,79,0.1) 0%, transparent 60%);
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--terracotta), var(--terracotta-light));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .page-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .page-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .btn-back {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid var(--border-card);
+      border-radius: 7px;
+      transition: color 0.2s;
+    }
+
+    .btn-back:hover { color: var(--text-primary); }
+
+    /* ── DROP ZONE ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border-card);
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--terracotta-light);
+      background: rgba(196, 131, 111, 0.05);
+    }
+
+    .drop-icon { font-size: 36px; margin-bottom: 12px; }
+
+    .drop-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .drop-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── SELECTED FILE ── */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+    }
+
+    .file-preview.show { display: flex; }
+
+    .file-icon { font-size: 24px; flex-shrink: 0; }
+
+    .file-info { flex: 1; min-width: 0; }
+
+    .file-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .file-remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .file-remove:hover { color: var(--red); }
+
+    /* ── UPLOAD BUTTON ── */
+    .btn-upload {
+      width: 100%;
+      background: linear-gradient(135deg, var(--terracotta), var(--terracotta-light));
+      border: none;
+      border-radius: 9px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 16px;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px var(--terracotta-glow);
+    }
+
+    .btn-upload:hover:not(:disabled) { opacity: 0.9; }
+    .btn-upload:active:not(:disabled) { transform: scale(0.98); }
+    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .progress-wrap.show { display: block; }
+
+    .progress-bar-bg {
+      background: var(--bg-base);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--terracotta), var(--terracotta-light));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* ── ALERT ── */
+    .alert {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 9px;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .alert.show { display: flex; }
+
+    .alert.success {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+    }
+
+    .alert.error {
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+    }
+
+    /* ── FILE LIST ── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 12px;
+    }
+
+    .file-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .file-row-name {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+
+    .file-row-size { color: var(--text-muted); flex-shrink: 0; font-size: 12px; }
+
+    .file-row-date { color: var(--text-muted); flex-shrink: 0; font-size: 11px; }
+
+    .badge-latest {
+      flex-shrink: 0;
+      background: var(--terracotta);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.3px;
+    }
+
+    .empty-list {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo-icon">🦷</div>
+        <div>
+          <div class="page-title">Upload Excel</div>
+          <div class="page-sub">Cập nhật dữ liệu đơn hàng</div>
+        </div>
+      </div>
+      <a href="/" class="btn-back">← Dashboard</a>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+        <div class="drop-icon">📊</div>
+        <div class="drop-title">Kéo thả file vào đây</div>
+        <div class="drop-sub">hoặc bấm để chọn file · .xlsx / .xls / .xlsm · tối đa 20 MB</div>
+      </div>
+
+      <div class="file-preview" id="filePreview">
+        <div class="file-icon">📄</div>
+        <div class="file-info">
+          <div class="file-name" id="previewName"></div>
+          <div class="file-size" id="previewSize"></div>
+        </div>
+        <button class="file-remove" id="fileRemove" title="Bỏ chọn">✕</button>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Đang upload...</div>
+      </div>
+
+      <div class="alert" id="alertBox"></div>
+
+      <button class="btn-upload" id="btnUpload" disabled>Chọn file trước</button>
+    </div>
+
+    <!-- File List Card -->
+    <div class="card">
+      <div class="section-title">File hiện có trong File_sach/</div>
+      <div class="file-list" id="fileList">
+        <div class="empty-list">Đang tải...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dropZone    = document.getElementById('dropZone');
+    const fileInput   = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const previewName = document.getElementById('previewName');
+    const previewSize = document.getElementById('previewSize');
+    const fileRemove  = document.getElementById('fileRemove');
+    const btnUpload   = document.getElementById('btnUpload');
+    const progressWrap= document.getElementById('progressWrap');
+    const progressFill= document.getElementById('progressFill');
+    const progressLabel=document.getElementById('progressLabel');
+    const alertBox    = document.getElementById('alertBox');
+
+    let selectedFile = null;
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+      return (bytes/1024/1024).toFixed(2) + ' MB';
+    }
+
+    function formatDate(ms) {
+      const d = new Date(ms);
+      return `${d.getDate()}/${d.getMonth()+1} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function showAlert(type, msg) {
+      alertBox.className = `alert show ${type}`;
+      alertBox.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
+    }
+
+    function hideAlert() {
+      alertBox.className = 'alert';
+    }
+
+    function setFile(file) {
+      if (!file) return;
+      selectedFile = file;
+      previewName.textContent = file.name;
+      previewSize.textContent = formatSize(file.size);
+      filePreview.classList.add('show');
+      btnUpload.disabled = false;
+      btnUpload.textContent = 'Upload lên server';
+      hideAlert();
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      btnUpload.disabled = true;
+      btnUpload.textContent = 'Chọn file trước';
+      hideAlert();
+    }
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    fileRemove.addEventListener('click', clearFile);
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) setFile(file);
+    });
+
+    btnUpload.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      btnUpload.disabled = true;
+      progressWrap.classList.add('show');
+      progressFill.style.width = '0%';
+      progressLabel.textContent = 'Đang upload...';
+      hideAlert();
+
+      const formData = new FormData();
+      formData.append('excel', selectedFile);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 100);
+          progressFill.style.width = pct + '%';
+          progressLabel.textContent = `Đang upload... ${pct}%`;
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        progressWrap.classList.remove('show');
+        if (xhr.status === 200) {
+          const res = JSON.parse(xhr.responseText);
+          if (res.ok) {
+            showAlert('success', `Upload thành công: ${res.filename} (${formatSize(res.size)}) — Server đã load lại data mới.`);
+            clearFile();
+            loadFileList();
+          } else {
+            showAlert('error', res.error || 'Upload thất bại');
+            btnUpload.disabled = false;
+          }
+        } else {
+          showAlert('error', 'Lỗi server: ' + xhr.status);
+          btnUpload.disabled = false;
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        progressWrap.classList.remove('show');
+        showAlert('error', 'Mất kết nối, thử lại nhé.');
+        btnUpload.disabled = false;
+      });
+
+      xhr.open('POST', '/upload');
+      xhr.send(formData);
+    });
+
+    async function loadFileList() {
+      try {
+        const res   = await fetch('/files');
+        const files = await res.json();
+        const list  = document.getElementById('fileList');
+        if (!files.length) {
+          list.innerHTML = '<div class="empty-list">Chưa có file nào trong File_sach/</div>';
+          return;
+        }
+        list.innerHTML = files.map((f, i) => `
+          <div class="file-row">
+            <span>📄</span>
+            <span class="file-row-name">${f.name}</span>
+            ${i === 0 ? '<span class="badge-latest">MỚI NHẤT</span>' : ''}
+            <span class="file-row-size">${formatSize(f.size)}</span>
+            <span class="file-row-date">${formatDate(f.mtime)}</span>
+          </div>
+        `).join('');
+      } catch {
+        document.getElementById('fileList').innerHTML = '<div class="empty-list">Không tải được danh sách file</div>';
+      }
+    }
+
+    loadFileList();
+  </script>
+</body>
+</html>

@@ -468,7 +468,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 </head>
 <body>
 
-<a href="/logout" title="Đăng xuất" style="position:fixed;top:10px;right:12px;z-index:9999;background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">↩ Đăng xuất</a>
+<div style="position:fixed;top:10px;right:12px;z-index:9999;display:flex;gap:6px;">
+  <a href="/upload" title="Upload Excel" style="background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">📤 Upload</a>
+  <a href="/logout" title="Đăng xuất" style="background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">↩ Đăng xuất</a>
+</div>
 
 <!-- BOOT -->
 <div id="boot">

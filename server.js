@@ -15,6 +15,7 @@ const XLSX    = require('xlsx');
 const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
+const multer  = require('multer');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -357,6 +358,28 @@ function getData(forceReload = false) {
   return cache;
 }
 
+// ── UPLOAD (multer) ───────────────────────────────────
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, FILE_SACH_DIR),
+    filename:    (req, file, cb) => {
+      const ext  = path.extname(file.originalname);
+      const name = path.basename(file.originalname, ext)
+                       .replace(/[^a-zA-Z0-9_\-À-ɏḀ-ỿ]/g, '_');
+      cb(null, `${name}_${Date.now()}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    const ok = ['.xlsx', '.xls', '.xlsm'].includes(
+      path.extname(file.originalname).toLowerCase()
+    );
+    cb(ok ? null : new Error('Chỉ chấp nhận file Excel (.xlsx/.xls/.xlsm)'), ok);
+  },
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+});
+
+if (!fs.existsSync(FILE_SACH_DIR)) fs.mkdirSync(FILE_SACH_DIR, { recursive: true });
+
 // ── ROUTES ────────────────────────────────────────────
 app.get('/login', (req, res) => {
   const token = getSessionToken(req);
@@ -381,6 +404,38 @@ app.get('/logout', (req, res) => {
   sessions.delete(token);
   res.setHeader('Set-Cookie', 'sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
   res.redirect('/login');
+});
+
+app.get('/upload', requireAuth, (req, res) => {
+  res.sendFile(path.join(BASE_DIR, 'upload.html'));
+});
+
+app.post('/upload', requireAuth, (req, res) => {
+  upload.single('excel')(req, res, err => {
+    if (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ ok: false, error: 'Không có file nào được gửi lên' });
+    }
+    // Xóa cache để load lại data mới
+    cache = null; cacheKey = ''; cacheTime = 0;
+    log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB)`);
+    res.json({ ok: true, filename: req.file.filename, size: req.file.size });
+  });
+});
+
+app.get('/files', requireAuth, (req, res) => {
+  try {
+    const files = fs.readdirSync(FILE_SACH_DIR)
+      .filter(f => ['.xlsx','.xls','.xlsm'].some(e => f.toLowerCase().endsWith(e)))
+      .map(f => {
+        const stat = fs.statSync(path.join(FILE_SACH_DIR, f));
+        return { name: f, size: stat.size, mtime: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime);
+    res.json(files);
+  } catch { res.json([]); }
 });
 
 function isMobile(req) {
