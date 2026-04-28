@@ -388,11 +388,21 @@
           <div class="page-sub">Cập nhật dữ liệu đơn hàng</div>
         </div>
       </div>
-      <a href="/" class="btn-back">← Dashboard</a>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span id="roleBadge" style="font-size: 12px; color: var(--text-muted); display: none;"></span>
+        <a href="/admin" id="adminLink" style="font-size: 13px; color: var(--terracotta); text-decoration: none; padding: 6px 12px; border: 1px solid var(--terracotta); border-radius: 7px; display: none;">⚙ Admin</a>
+        <a href="/" class="btn-back">← Dashboard</a>
+      </div>
+    </div>
+
+    <!-- No Permission Alert -->
+    <div id="noPermissionAlert" style="display: none; background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 14px; padding: 20px; margin-bottom: 24px; color: var(--red);">
+      <div style="font-weight: 600; margin-bottom: 8px;">🔒 Không có quyền</div>
+      <div style="font-size: 14px;">Chỉ admin có quyền upload file Excel. Hãy liên hệ quản trị viên để được cấp quyền.</div>
     </div>
 
     <!-- Upload Card -->
-    <div class="card">
+    <div class="card" id="uploadCard">
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
         <div class="drop-icon">📊</div>
@@ -454,6 +464,44 @@
     const alertBox    = document.getElementById('alertBox');
 
     let selectedFile = null;
+    let userRole = '';
+
+    // Check user role on page load
+    async function checkUserRole() {
+      try {
+        const res = await fetch('/user');
+        const data = await res.json();
+        userRole = data.role;
+
+        const roleBadge = document.getElementById('roleBadge');
+        const adminLink = document.getElementById('adminLink');
+        const noPermAlert = document.getElementById('noPermissionAlert');
+        const uploadCard = document.getElementById('uploadCard');
+        const scrapeCard = document.getElementById('scrapeCard');
+        const fileListCard = document.querySelector('.card:last-of-type');
+
+        roleBadge.textContent = `Vai trò: ${data.role === 'admin' ? '🔑 Admin' : '👤 User'}`;
+        roleBadge.style.display = 'block';
+
+        if (data.role === 'admin') {
+          adminLink.style.display = 'inline-block';
+          uploadCard.style.display = 'block';
+          scrapeCard.style.display = 'block';
+          fileListCard.style.display = 'block';
+          noPermAlert.style.display = 'none';
+        } else {
+          uploadCard.style.display = 'none';
+          scrapeCard.style.display = 'none';
+          fileListCard.style.display = 'none';
+          noPermAlert.style.display = 'block';
+          adminLink.style.display = 'none';
+        }
+      } catch (e) {
+        console.error('Error checking user role:', e);
+      }
+    }
+
+    checkUserRole();
 
     function formatSize(bytes) {
       if (bytes < 1024) return bytes + ' B';
