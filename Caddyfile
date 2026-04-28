@@ -1,4 +1,3 @@
-# Thay YOUR_SUBDOMAIN bằng tên bạn đăng ký, ví dụ: asialab.duckdns.org
-YOUR_SUBDOMAIN.duckdns.org {
+asiakanban.com {
     reverse_proxy localhost:3000
 }
