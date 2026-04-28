@@ -380,7 +380,12 @@ function spawnScraper(filePath) {
 
   const proc = spawn(PYTHON, ['run_scrape.py', filePath], {
     cwd: BASE_DIR,
-    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    env: {
+      ...process.env,
+      PYTHONIOENCODING: 'utf-8',
+      // Playwright cài ở Administrator profile — phải chỉ rõ để Task Scheduler (SYSTEM) tìm đúng
+      PLAYWRIGHT_BROWSERS_PATH: 'C:\\Users\\Administrator\\AppData\\Local\\ms-playwright',
+    },
   });
 
   const pushLog = (chunk) => {
