@@ -421,9 +421,23 @@ function getData(forceReload = false) {
 
 // ── SCRAPE STATUS ─────────────────────────────────────
 let scrapeJob = { running: false, file: null, log: [], exitCode: null, startedAt: null };
+const scrapeQueue = []; // Queue of filePaths waiting to be scraped
 
 // Tracks files uploaded via web UI so the watcher doesn't double-process them
 const webUploadFiles = new Set();
+
+function queueOrScrape(filePath) {
+  const filename = path.basename(filePath);
+  if (scrapeJob.running) {
+    // Avoid duplicates in queue
+    if (!scrapeQueue.some(f => path.basename(f) === filename)) {
+      scrapeQueue.push(filePath);
+      log(`📋 Xếp hàng: ${filename} (hàng chờ: ${scrapeQueue.length})`);
+    }
+  } else {
+    spawnScraper(filePath);
+  }
+}
 
 function spawnScraper(filePath) {
   scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
@@ -463,6 +477,12 @@ function spawnScraper(filePath) {
     scrapeJob.exitCode = code;
     cache = null; cacheKey = ''; cacheTime = 0;
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
+
+    if (scrapeQueue.length > 0) {
+      const next = scrapeQueue.shift();
+      log(`📋 Xử lý tiếp từ hàng chờ: ${path.basename(next)} (còn lại: ${scrapeQueue.length})`);
+      setTimeout(() => spawnScraper(next), 1000);
+    }
   });
 }
 
@@ -494,13 +514,8 @@ function startExcelWatcher() {
       const filePath = path.join(EXCEL_DIR, filename);
       if (!fs.existsSync(filePath)) return;
 
-      if (scrapeJob.running) {
-        log(`⚠ Watcher: scraper đang chạy, bỏ qua ${filename}`);
-        return;
-      }
-
-      log(`📂 Phát hiện file mới: ${filename} → cào tự động`);
-      spawnScraper(filePath);
+      log(`📂 Phát hiện file mới: ${filename}`);
+      queueOrScrape(filePath);
     }, 3000));
   });
 
@@ -578,13 +593,13 @@ app.post('/upload', requireAuth, (req, res) => {
     log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB) → cào tự động`);
     webUploadFiles.add(req.file.filename);
     setTimeout(() => webUploadFiles.delete(req.file.filename), 30000);
-    spawnScraper(req.file.path);
+    queueOrScrape(req.file.path);
     res.json({ ok: true, filename: req.file.filename, size: req.file.size });
   });
 });
 
 app.get('/scrape-status', requireAuth, (req, res) => {
-  res.json(scrapeJob);
+  res.json({ ...scrapeJob, queue: scrapeQueue.map(f => path.basename(f)) });
 });
 
 app.get('/files', requireAuth, (req, res) => {
