@@ -24,7 +24,42 @@ const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: false }));
 
 // ── AUTH ──────────────────────────────────────────────
-const USERS    = { admin: '142536' };
+const USERS_JSON_PATH = path.join(__dirname, 'users.json');
+let USERS = {};
+
+function loadUsers() {
+  try {
+    if (fs.existsSync(USERS_JSON_PATH)) {
+      const data = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
+      USERS = {};
+      data.users.forEach(u => {
+        USERS[u.username] = { password: u.password, role: u.role };
+      });
+      log(`📋 Loaded ${data.users.length} user(s) from users.json`);
+    } else {
+      USERS = { admin: { password: '142536', role: 'admin' } };
+      saveUsers();
+      log(`✅ Created default admin user`);
+    }
+  } catch (e) {
+    log(`⚠ Error loading users: ${e.message}`);
+    USERS = { admin: { password: '142536', role: 'admin' } };
+  }
+}
+
+function saveUsers() {
+  try {
+    const users = Object.entries(USERS).map(([username, data]) => ({
+      username,
+      password: data.password,
+      role: data.role,
+    }));
+    fs.writeFileSync(USERS_JSON_PATH, JSON.stringify({ users }, null, 2));
+  } catch (e) {
+    log(`❌ Error saving users: ${e.message}`);
+  }
+}
+
 const sessions = new Map();
 const SESS_TTL = 8 * 60 * 60 * 1000; // 8 giờ
 
@@ -50,6 +85,19 @@ function requireAuth(req, res, next) {
   if (!sess || sess.expires < Date.now()) {
     sessions.delete(token);
     return res.redirect('/login');
+  }
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  const token = getSessionToken(req);
+  const sess  = sessions.get(token);
+  if (!sess || sess.expires < Date.now()) {
+    sessions.delete(token);
+    return res.redirect('/login');
+  }
+  if (sess.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
   }
   next();
 }
@@ -373,6 +421,23 @@ function getData(forceReload = false) {
 
 // ── SCRAPE STATUS ─────────────────────────────────────
 let scrapeJob = { running: false, file: null, log: [], exitCode: null, startedAt: null };
+const scrapeQueue = []; // Queue of filePaths waiting to be scraped
+
+// Tracks files uploaded via web UI so the watcher doesn't double-process them
+const webUploadFiles = new Set();
+
+function queueOrScrape(filePath) {
+  const filename = path.basename(filePath);
+  if (scrapeJob.running) {
+    // Avoid duplicates in queue
+    if (!scrapeQueue.some(f => path.basename(f) === filename)) {
+      scrapeQueue.push(filePath);
+      log(`📋 Xếp hàng: ${filename} (hàng chờ: ${scrapeQueue.length})`);
+    }
+  } else {
+    spawnScraper(filePath);
+  }
+}
 
 function spawnScraper(filePath) {
   scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
@@ -412,7 +477,49 @@ function spawnScraper(filePath) {
     scrapeJob.exitCode = code;
     cache = null; cacheKey = ''; cacheTime = 0;
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
+
+    if (scrapeQueue.length > 0) {
+      const next = scrapeQueue.shift();
+      log(`📋 Xử lý tiếp từ hàng chờ: ${path.basename(next)} (còn lại: ${scrapeQueue.length})`);
+      setTimeout(() => spawnScraper(next), 1000);
+    }
   });
+}
+
+// ── FILE WATCHER ──────────────────────────────────────
+function startExcelWatcher() {
+  if (!fs.existsSync(EXCEL_DIR)) return;
+
+  // Snapshot files already present at startup — don't process these
+  const existing = new Set(fs.readdirSync(EXCEL_DIR));
+  const pending  = new Map(); // debounce timers per filename
+
+  fs.watch(EXCEL_DIR, (eventType, filename) => {
+    if (!filename) return;
+    const ext = path.extname(filename).toLowerCase();
+    if (!['.xlsx', '.xls', '.xlsm'].includes(ext)) return;
+
+    // Skip files that existed before server started
+    if (existing.has(filename)) return;
+    existing.add(filename);
+
+    // Skip files that came in via web upload (already handled)
+    if (webUploadFiles.has(filename)) return;
+
+    // Debounce: wait 3s after last event before acting (file may still be writing)
+    if (pending.has(filename)) clearTimeout(pending.get(filename));
+
+    pending.set(filename, setTimeout(() => {
+      pending.delete(filename);
+      const filePath = path.join(EXCEL_DIR, filename);
+      if (!fs.existsSync(filePath)) return;
+
+      log(`📂 Phát hiện file mới: ${filename}`);
+      queueOrScrape(filePath);
+    }, 3000));
+  });
+
+  log(`👀 Đang theo dõi thư mục Excel/`);
 }
 
 // ── UPLOAD (multer) ───────────────────────────────────
@@ -447,9 +554,10 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (USERS[username] && USERS[username] === password) {
+  const user = USERS[username];
+  if (user && user.password === password) {
     const token = genToken();
-    sessions.set(token, { user: username, expires: Date.now() + SESS_TTL });
+    sessions.set(token, { user: username, role: user.role, expires: Date.now() + SESS_TTL });
     res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/`);
     return res.redirect('/');
   }
@@ -468,6 +576,13 @@ app.get('/upload', requireAuth, (req, res) => {
 });
 
 app.post('/upload', requireAuth, (req, res) => {
+  const token = getSessionToken(req);
+  const sess = sessions.get(token);
+
+  if (sess.role !== 'admin') {
+    return res.status(403).json({ ok: false, error: 'Chỉ admin có quyền upload file' });
+  }
+
   upload.single('excel')(req, res, err => {
     if (err) {
       return res.status(400).json({ ok: false, error: err.message });
@@ -476,13 +591,15 @@ app.post('/upload', requireAuth, (req, res) => {
       return res.status(400).json({ ok: false, error: 'Không có file nào được gửi lên' });
     }
     log(`📤 Upload: ${req.file.filename} (${(req.file.size/1024).toFixed(0)} KB) → cào tự động`);
-    spawnScraper(req.file.path);
+    webUploadFiles.add(req.file.filename);
+    setTimeout(() => webUploadFiles.delete(req.file.filename), 30000);
+    queueOrScrape(req.file.path);
     res.json({ ok: true, filename: req.file.filename, size: req.file.size });
   });
 });
 
 app.get('/scrape-status', requireAuth, (req, res) => {
-  res.json(scrapeJob);
+  res.json({ ...scrapeJob, queue: scrapeQueue.map(f => path.basename(f)) });
 });
 
 app.get('/files', requireAuth, (req, res) => {
@@ -561,6 +678,77 @@ app.get('/mobile', requireAuth, (req, res) => {
   else res.redirect('/');
 });
 
+// ── USER API ──────────────────────────────────────────
+app.get('/user', requireAuth, (req, res) => {
+  const token = getSessionToken(req);
+  const sess = sessions.get(token);
+  res.json({ username: sess.user, role: sess.role });
+});
+
+app.get('/admin', requireAdmin, (req, res) => {
+  res.sendFile(path.join(BASE_DIR, 'admin.html'));
+});
+
+app.get('/admin/api/users', requireAdmin, (req, res) => {
+  const users = Object.entries(USERS).map(([username, data]) => ({
+    username,
+    role: data.role,
+  }));
+  res.json(users);
+});
+
+app.post('/admin/api/users', requireAdmin, express.json(), (req, res) => {
+  const { username, password, role } = req.body;
+  if (!username || !password || !role) {
+    return res.status(400).json({ error: 'Missing username, password, or role' });
+  }
+  if (USERS[username]) {
+    return res.status(400).json({ error: 'Username already exists' });
+  }
+  if (!['admin', 'user'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
+  USERS[username] = { password, role };
+  saveUsers();
+  log(`👤 New user created: ${username} (${role})`);
+  res.json({ ok: true, username, role });
+});
+
+app.delete('/admin/api/users/:username', requireAdmin, (req, res) => {
+  const { username } = req.params;
+  const token = getSessionToken(req);
+  const sess = sessions.get(token);
+
+  if (username === sess.user) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  if (!USERS[username]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  delete USERS[username];
+  saveUsers();
+  log(`🗑 User deleted: ${username}`);
+  res.json({ ok: true, username });
+});
+
+app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json(), (req, res) => {
+  const { username } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ error: 'newPassword is required' });
+  }
+  if (!USERS[username]) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  USERS[username].password = newPassword;
+  saveUsers();
+  log(`🔑 Password reset for: ${username}`);
+  res.json({ ok: true, username, newPassword });
+});
+
 // Chặn truy cập trực tiếp vào file HTML dashboard qua static (trừ login.html)
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') && req.path !== '/login.html') {
@@ -572,6 +760,9 @@ app.use((req, res, next) => {
 app.use(express.static(BASE_DIR));
 
 // ── START ──────────────────────────────────────────────
+loadUsers();
+startExcelWatcher();
+
 app.listen(PORT, '127.0.0.1', () => {
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
   const jsonFile  = findLatest(DATA_DIR, ['.json']);

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Quản lý người dùng</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-badge {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .btn-logout {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      transition: background 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: #e0e0e0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 24px;
+      color: #333;
+    }
+
+    .form-section {
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section h2 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .form-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #2196F3;
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #2196F3;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1976D2;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .btn-danger:hover {
+      background: #da190b;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .users-section {
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .users-section h2 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .users-table thead {
+      background: #f5f5f5;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .users-table th {
+      padding: 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .users-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .users-table tr:hover {
+      background: #f9f9f9;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .role-admin {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .role-user {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+
+    .alert-error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-body p {
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .password-box {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      word-break: break-all;
+      margin: 12px 0;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-copy {
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-copy:hover {
+      background: #1976D2;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <span>🦷</span>
+      <span>Admin - Quản lý Người dùng</span>
+    </div>
+    <div class="header-right">
+      <div class="user-badge" id="currentUser">Admin</div>
+      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Alert Messages -->
+    <div id="alert" class="alert"></div>
+
+    <!-- Create User Section -->
+    <div class="form-section">
+      <h2>Tạo Người dùng Mới</h2>
+      <form onsubmit="createUser(event)">
+        <div class="form-group">
+          <div>
+            <label for="username">Tên người dùng</label>
+            <input type="text" id="username" name="username" placeholder="username" required>
+          </div>
+          <div>
+            <label for="password">Mật khẩu</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required>
+          </div>
+          <div>
+            <label for="role">Vai trò</label>
+            <select id="role" name="role" required>
+              <option value="user">User (Xem dashboard)</option>
+              <option value="admin">Admin (Quản lý)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Tạo User</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Users List Section -->
+    <div class="users-section">
+      <h2>Danh sách Người dùng</h2>
+      <div id="usersList"></div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="resetModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Đặt lại Mật khẩu</div>
+      <div class="modal-body">
+        <p>Người dùng: <strong id="resetUsername"></strong></p>
+        <p>Nhập mật khẩu mới:</p>
+        <input type="password" id="newPassword" placeholder="••••••••" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeResetModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmReset()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title" id="confirmTitle">Xác nhận</div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeConfirmModal()">Hủy</button>
+        <button class="btn btn-danger" onclick="confirmAction()" id="confirmBtn">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Result Modal -->
+  <div id="resultModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title" id="resultTitle">Mật khẩu mới</div>
+      <div class="modal-body">
+        <p>Mật khẩu mới cho <strong id="resultUsername"></strong>:</p>
+        <div class="password-box" id="resultPassword"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-copy" onclick="copyPassword()">Sao chép</button>
+        <button class="btn btn-secondary" onclick="closeResultModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = '';
+    let pendingAction = null;
+
+    async function init() {
+      // Get current user info
+      const userRes = await fetch('/user');
+      const userData = await userRes.json();
+      currentUser = userData.username;
+      document.getElementById('currentUser').textContent = `${userData.username} (${userData.role})`;
+
+      // Load users
+      loadUsers();
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/admin/api/users');
+        const users = await res.json();
+
+        if (users.length === 0) {
+          document.getElementById('usersList').innerHTML = '<div class="empty-state"><p>Chưa có người dùng</p></div>';
+          return;
+        }
+
+        let html = `
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Tên người dùng</th>
+                <th>Vai trò</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        for (const user of users) {
+          const roleClass = user.role === 'admin' ? 'role-admin' : 'role-user';
+          const roleText = user.role === 'admin' ? 'Admin' : 'User';
+          const isCurrentUser = user.username === currentUser;
+
+          html += `
+            <tr>
+              <td>${user.username}${isCurrentUser ? ' <span style="color: #999; font-size: 12px;">(bạn)</span>' : ''}</td>
+              <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-secondary" onclick="openResetPassword('${user.username}')">Đặt lại pass</button>
+                  ${!isCurrentUser ? `<button class="btn btn-danger" onclick="openDeleteConfirm('${user.username}')">Xóa</button>` : '<button class="btn btn-secondary" disabled>Xóa</button>'}
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+
+        html += `
+            </tbody>
+          </table>
+        `;
+
+        document.getElementById('usersList').innerHTML = html;
+      } catch (e) {
+        showAlert('Lỗi khi tải danh sách người dùng: ' + e.message, 'error');
+      }
+    }
+
+    async function createUser(event) {
+      event.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+
+      if (!username || !password) {
+        showAlert('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/admin/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Lỗi tạo người dùng', 'error');
+          return;
+        }
+
+        showAlert(`✅ Tạo người dùng ${username} thành công!`, 'success');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        loadUsers();
+      } catch (e) {
+        showAlert('Lỗi: ' + e.message, 'error');
+      }
+    }
+
+    function openResetPassword(username) {
+      document.getElementById('resetUsername').textContent = username;
+      document.getElementById('newPassword').value = '';
+      document.getElementById('resetModal').classList.add('show');
+    }
+
+    function closeResetModal() {
+      document.getElementById('resetModal').classList.remove('show');
+    }
+
+    async function confirmReset() {
+      const username = document.getElementById('resetUsername').textContent;
+      const newPassword = document.getElementById('newPassword').value;
+
+      if (!newPassword) {
+        showAlert('Vui lòng nhập mật khẩu mới', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/admin/api/users/${username}/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPassword }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Lỗi đặt lại mật khẩu', 'error');
+          return;
+        }
+
+        closeResetModal();
+        showPasswordResult(username, newPassword);
+      } catch (e) {
+        showAlert('Lỗi: ' + e.message, 'error');
+      }
+    }
+
+    function showPasswordResult(username, password) {
+      document.getElementById('resultUsername').textContent = username;
+      document.getElementById('resultPassword').textContent = password;
+      document.getElementById('resultModal').classList.add('show');
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultModal').classList.remove('show');
+      loadUsers();
+    }
+
+    function copyPassword() {
+      const password = document.getElementById('resultPassword').textContent;
+      navigator.clipboard.writeText(password).then(() => {
+        showAlert('✅ Đã sao chép mật khẩu', 'success');
+      });
+    }
+
+    function openDeleteConfirm(username) {
+      document.getElementById('confirmTitle').textContent = 'Xóa Người dùng';
+      document.getElementById('confirmBody').innerHTML = `<p>Bạn có chắc chắn muốn xóa người dùng <strong>${username}</strong>?</p><p style="color: #999; font-size: 12px;">Hành động này không thể hoàn tác.</p>`;
+      document.getElementById('confirmBtn').textContent = 'Xóa';
+      pendingAction = { type: 'delete', username };
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+      pendingAction = null;
+    }
+
+    async function confirmAction() {
+      if (!pendingAction) return;
+
+      if (pendingAction.type === 'delete') {
+        try {
+          const res = await fetch(`/admin/api/users/${pendingAction.username}`, {
+            method: 'DELETE',
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            showAlert(data.error || 'Lỗi xóa người dùng', 'error');
+            return;
+          }
+
+          showAlert(`✅ Xóa người dùng ${pendingAction.username} thành công!`, 'success');
+          closeConfirmModal();
+          loadUsers();
+        } catch (e) {
+          showAlert('Lỗi: ' + e.message, 'error');
+        }
+      }
+    }
+
+    function showAlert(message, type) {
+      const alertEl = document.getElementById('alert');
+      alertEl.textContent = message;
+      alertEl.className = `alert show alert-${type}`;
+      setTimeout(() => {
+        alertEl.classList.remove('show');
+      }, 4000);
+    }
+
+    function logout() {
+      window.location.href = '/logout';
+    }
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>
