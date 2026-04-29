@@ -61,7 +61,34 @@ function saveUsers() {
 }
 
 const sessions = new Map();
-const SESS_TTL = 8 * 60 * 60 * 1000; // 8 giờ
+const SESS_TTL        = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;         // 7 ngày (giây, cho Max-Age)
+const SESSIONS_PATH   = path.join(__dirname, 'sessions.json');
+
+function loadSessions() {
+  try {
+    if (!fs.existsSync(SESSIONS_PATH)) return;
+    const raw = JSON.parse(fs.readFileSync(SESSIONS_PATH, 'utf8'));
+    const now = Date.now();
+    let loaded = 0;
+    for (const [token, sess] of Object.entries(raw)) {
+      if (sess.expires > now) { sessions.set(token, sess); loaded++; }
+    }
+    if (loaded) log(`🔑 Restored ${loaded} session(s)`);
+  } catch (e) {
+    log(`⚠ Could not load sessions: ${e.message}`);
+  }
+}
+
+function saveSessions() {
+  try {
+    const obj = {};
+    for (const [token, sess] of sessions) obj[token] = sess;
+    fs.writeFileSync(SESSIONS_PATH, JSON.stringify(obj));
+  } catch (e) {
+    log(`⚠ Could not save sessions: ${e.message}`);
+  }
+}
 
 function genToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -558,7 +585,8 @@ app.post('/login', (req, res) => {
   if (user && user.password === password) {
     const token = genToken();
     sessions.set(token, { user: username, role: user.role, expires: Date.now() + SESS_TTL });
-    res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/`);
+    saveSessions();
+    res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESS_COOKIE_AGE}`);
     return res.redirect('/');
   }
   res.redirect('/login?error=1');
@@ -567,6 +595,7 @@ app.post('/login', (req, res) => {
 app.get('/logout', (req, res) => {
   const token = getSessionToken(req);
   sessions.delete(token);
+  saveSessions();
   res.setHeader('Set-Cookie', 'sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
   res.redirect('/login');
 });
@@ -761,6 +790,7 @@ app.use(express.static(BASE_DIR));
 
 // ── START ──────────────────────────────────────────────
 loadUsers();
+loadSessions();
 startExcelWatcher();
 
 app.listen(PORT, '127.0.0.1', () => {

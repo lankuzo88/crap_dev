@@ -271,9 +271,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .m-gcard-tags{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;}
   /* Stage pips */
   .m-pip-row{display:flex;gap:3px;align-items:center;margin-bottom:5px;}
-  .m-pip{height:5px;border-radius:2px;}
-  .m-pip-cur{background:var(--amber);animation:blink 1.2s ease infinite;}
-  .m-pip-skip{background:var(--border);opacity:.25;border:1px dashed var(--text3);animation:none;}
+  .m-pip{height:6px;border-radius:3px;}
+  .m-pip-done{background:var(--green);box-shadow:0 0 5px rgba(46,213,115,.85),0 0 11px rgba(46,213,115,.4);}
+  .m-pip-cur{background:#f97316;}
+  .m-pip-skip{background:var(--border);opacity:.2;border:1px dashed var(--text3);animation:none;}
   /* Countdown */
   .m-cd-wrap{display:flex;align-items:center;gap:4px;}
   .m-countdown{font-family:var(--mono);font-size:10px;font-weight:700;}
@@ -1311,10 +1312,10 @@ function renderOrderCard(o) {
   const dc = (o.stages || []).filter(s => s.x).length;
   const total = (o.stages || []).filter(s => !s.sk).length;
   const pips = (o.stages || []).map((s, i) => {
-    if (s.sk) return `<div class="m-pip m-pip-skip" title="— ${s.n} KHÔNG LÀM —"></div>`;
-    if (s.x) return `<div class="m-pip" style="background:var(--green);width:10px;height:5px;border-radius:2px"></div>`;
-    if (i === dc) return `<div class="m-pip m-pip-cur" style="width:10px;height:5px"></div>`;
-    return `<div class="m-pip" style="background:var(--border);width:10px;height:5px;border-radius:2px"></div>`;
+    if (s.sk) return `<div class="m-pip m-pip-skip" style="width:10px"></div>`;
+    if (s.x) return `<div class="m-pip m-pip-done" style="width:10px"></div>`;
+    if (i === dc) return `<div class="m-pip m-pip-cur" style="width:10px"></div>`;
+    return `<div class="m-pip" style="width:10px;background:var(--border)"></div>`;
   }).join('');
 
   const pCol = progColor(o.pct);

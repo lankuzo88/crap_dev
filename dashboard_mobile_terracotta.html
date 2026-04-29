@@ -393,12 +393,18 @@
       position: absolute;
       left: 0; top: 0; bottom: 0;
       border-radius: 3px;
-      background: var(--terracotta);
       width: 0;
+      transition: width 0.3s ease, box-shadow 0.3s ease;
     }
-    .stage-pip.done .pip-fill { width: 100%; }
-    .stage-pip.current .pip-fill { width: 50%; animation: pulse-pip 1.5s ease-in-out infinite; }
-    @keyframes pulse-pip { 0%,100% { opacity:0.55; } 50% { opacity:1; } }
+    .stage-pip.done .pip-fill {
+      width: 100%;
+      background: #2ed573;
+      box-shadow: 0 0 6px rgba(46,213,115,.9), 0 0 12px rgba(46,213,115,.5);
+    }
+    .stage-pip.current .pip-fill {
+      width: 50%;
+      background: #f97316;
+    }
 
     /* ── FONT SCALE +10% (~30% gốc - 15%) ─── */
     html { font-size: 15px; }
