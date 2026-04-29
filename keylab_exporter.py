@@ -229,14 +229,49 @@ def run_export(win, filename: str) -> bool:
         save_btn.click_input()
         log.info(f"Da nhap ten va luu: {filename}")
         time.sleep(1.5)
+
+        # 5. Đóng dialog "How do you want to open this file?" nếu xuất hiện
+        _dismiss_open_with_dialog()
+
+        # 6. Minimize Keylab về taskbar
+        win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
+        log.info("Minimized Keylab xuong taskbar")
         return True
 
     except PWTimeoutError as e:
-        log.error(f"Timeout khi tìm control: {e}")
+        log.error(f"Timeout khi tim control: {e}")
         return False
     except Exception as e:
-        log.error(f"Lỗi khi xuất: {e}")
+        log.error(f"Loi khi xuat: {e}")
         return False
+
+
+def _dismiss_open_with_dialog():
+    """Dong dialog 'How do you want to open this file?' neu xuat hien."""
+    import win32gui, win32con
+    import ctypes
+
+    keywords = ("how do you want", "open with", "open this file")
+    deadline = time.time() + 5
+    while time.time() < deadline:
+        fg = win32gui.GetForegroundWindow()
+        title = win32gui.GetWindowText(fg).lower()
+        if any(k in title for k in keywords):
+            win32gui.PostMessage(fg, win32con.WM_KEYDOWN, win32con.VK_ESCAPE, 0)
+            time.sleep(0.3)
+            win32gui.PostMessage(fg, win32con.WM_KEYUP, win32con.VK_ESCAPE, 0)
+            log.info("Dismissed 'Open with' dialog")
+            return
+        # Scan tất cả top-level windows luôn (dialog có thể không phải foreground)
+        def _check(hwnd, _):
+            t = win32gui.GetWindowText(hwnd).lower()
+            if any(k in t for k in keywords):
+                win32gui.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_ESCAPE, 0)
+                time.sleep(0.2)
+                win32gui.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_ESCAPE, 0)
+                log.info(f"Dismissed 'Open with' dialog (hwnd={hwnd})")
+        win32gui.EnumWindows(_check, None)
+        time.sleep(0.3)
 
 
 # ── Scheduler ────────────────────────────────────────────────────────────────
