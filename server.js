@@ -10,13 +10,14 @@
  * Mở browser: http://localhost:3000
  */
 
-const express = require('express');
-const XLSX    = require('xlsx');
-const path    = require('path');
-const fs      = require('fs');
-const crypto  = require('crypto');
-const multer  = require('multer');
-const { spawn } = require('child_process');
+const express  = require('express');
+const XLSX     = require('xlsx');
+const path     = require('path');
+const fs       = require('fs');
+const crypto   = require('crypto');
+const multer   = require('multer');
+const { spawn }  = require('child_process');
+const Database = require('better-sqlite3');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -136,6 +137,162 @@ const DATA_DIR      = path.join(BASE_DIR, 'Data');
 const DASHBOARD        = path.join(BASE_DIR, 'dashboard.html');
 const DASHBOARD_MOBILE = path.join(BASE_DIR, 'dashboard_mobile_terracotta.html');
 const EXCEL_DIR        = path.join(BASE_DIR, 'Excel');
+const DB_PATH          = path.join(BASE_DIR, 'labo_data.db');
+
+// ── SQLITE ────────────────────────────────────────────
+let _db = null;
+function getDB() {
+  if (!_db) {
+    if (!fs.existsSync(DB_PATH)) return null;
+    try {
+      _db = new Database(DB_PATH, { readonly: true });
+    } catch (e) {
+      log(`⚠ SQLite open error: ${e.message}`);
+      return null;
+    }
+  }
+  return _db;
+}
+
+function dbHasData() {
+  const db = getDB();
+  if (!db) return false;
+  try {
+    const row = db.prepare('SELECT COUNT(*) as n FROM don_hang').get();
+    return row && row.n > 0;
+  } catch { return false; }
+}
+
+// Tên cột mã đơn hàng trong file keylab Excel
+const MADH_COL_HINTS = ['mã đh', 'mã_dh', 'ma_dh', 'mã đơn', 'madh', 'order_id'];
+
+function getActiveMaDhList() {
+  // Nguồn chính: file .xls mới nhất trong Excel/ (keylab export)
+  const excelFile = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);
+  if (excelFile) {
+    try {
+      const SHEET_HINTS = ['đơn hàng', 'don hang', 'sheet1', 'sheet'];
+      const wb   = XLSX.readFile(excelFile.path, { sheetRows: 0 });
+      const name = wb.SheetNames.find(n =>
+        SHEET_HINTS.some(h => n.toLowerCase().includes(h))
+      ) || wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' });
+      const h    = (rows[0] || []).map(c => str(c).toLowerCase().trim());
+      const col  = h.findIndex(c => MADH_COL_HINTS.some(hint => c.includes(hint)));
+      if (col >= 0) {
+        const ids = [...new Set(
+          rows.slice(1)
+            .map(r => str(r[col]).trim())
+            .filter(v => v && !v.toLowerCase().includes('tổng') && v !== 'Mã ĐH')
+        )];
+        if (ids.length > 0) return { ids, src: excelFile.name };
+      }
+    } catch (e) { log(`⚠ getActiveMaDhList: ${e.message}`); }
+  }
+  return null;
+}
+
+function getDataFromDB() {
+  const db = getDB();
+
+  // Chỉ lấy đơn hàng có trong file export mới nhất
+  const active = getActiveMaDhList();
+  let rows;
+  if (active && active.ids.length > 0) {
+    const ph = active.ids.map(() => '?').join(',');
+    rows = db.prepare(`
+      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
+             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             d.loai_lenh, d.ghi_chu, d.trang_thai, d.tai_khoan_cao,
+             GROUP_CONCAT(
+               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+               ';;'
+             ) AS stages_raw
+      FROM don_hang d
+      LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+      WHERE d.ma_dh IN (${ph})
+      GROUP BY d.ma_dh
+      ORDER BY d.yc_giao ASC, d.nhap_luc ASC
+    `).all(...active.ids);
+  } else {
+    // Không tìm được file active → fallback: lấy tất cả (cũ)
+    log('⚠ Không tìm được file active, hiển thị toàn bộ DB');
+    rows = db.prepare(`
+      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
+             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             d.loai_lenh, d.ghi_chu, d.trang_thai, d.tai_khoan_cao,
+             GROUP_CONCAT(
+               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+               ';;'
+             ) AS stages_raw
+      FROM don_hang d
+      LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+      GROUP BY d.ma_dh
+      ORDER BY d.yc_giao ASC, d.nhap_luc ASC
+    `).all();
+  }
+
+  const orders = [];
+  for (const row of rows) {
+    const lk   = row.loai_lenh || '';
+    const gc   = row.ghi_chu   || '';
+    const skip = getSkipStages(lk, gc);
+
+    const stagesMap = {};
+    for (const part of (row.stages_raw || '').split(';;')) {
+      const p = part.split('|');
+      if (p.length >= 5) {
+        const thu_tu = parseInt(p[0]);
+        if (!isNaN(thu_tu)) {
+          stagesMap[thu_tu] = { n: p[1], k: p[2], x: p[3] === 'Có', t: p[4] };
+        }
+      }
+    }
+
+    const stages = STAGE_NAMES.map((name, i) => {
+      const s = stagesMap[i + 1] || { n: name, k: '', x: false, t: '' };
+      return { n: name, k: s.k, x: s.x, t: s.t, sk: skip.includes(i) };
+    });
+
+    const active = stages.filter(s => !s.sk);
+    const done   = active.filter(s => s.x).length;
+    const total  = active.length;
+
+    let curKtv = '';
+    for (let i = stages.length - 1; i >= 0; i--) {
+      if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
+    }
+    let lastTg = '';
+    stages.forEach(s => { if (s.t) lastTg = s.t; });
+
+    orders.push({
+      ma_dh:   row.ma_dh,
+      nhan:    row.nhap_luc      || '',
+      yc_ht:   row.yc_hoan_thanh || '',
+      yc_giao: row.yc_giao       || '',
+      kh:      row.khach_hang    || '',
+      bn:      row.benh_nhan     || '',
+      ph:      row.phuc_hinh     || '',
+      sl:      row.sl            || 0,
+      gc:      row.ghi_chu       || '',
+      lk,
+      tk:      row.tai_khoan_cao || '',
+      stages, done, total,
+      pct:     total > 0 ? Math.round(done / total * 100) : 0,
+      curKtv,  lastTg,
+    });
+  }
+
+  orders.sort((a, b) => {
+    if (a.yc_giao && !b.yc_giao) return -1;
+    if (!a.yc_giao && b.yc_giao) return 1;
+    return (a.yc_giao || '').localeCompare(b.yc_giao || '');
+  });
+
+  return { source: { db: 'labo_data.db', active: active?.src || null }, orders };
+}
 
 // Python: dùng full path để tránh lỗi PATH trong Task Scheduler
 const PYTHON = (() => {
@@ -404,6 +561,25 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
 
 // ── LẤY DATA (cache) ──────────────────────────────────
 function getData(forceReload = false) {
+  // Ưu tiên SQLite nếu DB đã có dữ liệu
+  if (dbHasData()) {
+    const age = Date.now() - cacheTime;
+    const key = 'sqlite';
+    if (!forceReload && cache && cacheKey === key && age < TTL) {
+      return cache;
+    }
+    try {
+      cache     = getDataFromDB();
+      cacheKey  = key;
+      cacheTime = Date.now();
+      log(`✓ ${cache.orders.length} đơn (SQLite)`);
+      return cache;
+    } catch (e) {
+      log(`⚠ SQLite read error: ${e.message} — fallback to files`);
+    }
+  }
+
+  // Fallback: đọc từ file (trước khi import lịch sử)
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
   const jsonFile  = findLatest(DATA_DIR, ['.json']);
 
@@ -506,6 +682,8 @@ function spawnScraper(filePath) {
     scrapeJob.running = false;
     scrapeJob.exitCode = code;
     cache = null; cacheKey = ''; cacheTime = 0;
+    // Re-open DB để đọc dữ liệu mới vừa import
+    if (_db) { try { _db.close(); } catch {} _db = null; }
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
 
     if (scrapeQueue.length > 0) {
@@ -705,10 +883,10 @@ app.get('/data.json', requireAuth, (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   try {
     const data = getData();
-    if (!data.orders.length && !data.source.excel && !data.source.json) {
+    if (!data.orders.length) {
       return res.status(404).json({
         error: 'Không tìm thấy dữ liệu',
-        hint: `Kiểm tra thư mục File_sach/ (${FILE_SACH_DIR}) và Data/ (${DATA_DIR})`,
+        hint: `Kiểm tra thư mục Excel/ (${EXCEL_DIR}) và DB (${DB_PATH})`,
       });
     }
     res.json(data);
@@ -719,6 +897,8 @@ app.get('/data.json', requireAuth, (req, res) => {
 
 app.get('/reload', requireAuth, (req, res) => {
   cache = null; cacheKey = ''; cacheTime = 0;
+  // Re-open DB connection để nhận dữ liệu mới
+  if (_db) { try { _db.close(); } catch {} _db = null; }
   try {
     const data = getData(true);
     res.json({ ok: true, orders: data.orders.length, source: data.source });
@@ -727,18 +907,129 @@ app.get('/reload', requireAuth, (req, res) => {
   }
 });
 
+// ── ANALYTICS API ─────────────────────────────────────
+app.get('/api/orders', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo. Chạy: python db_manager.py import-all' });
+
+  const { ma_dh_goc, loai_lenh, tai_khoan, limit = 100, offset = 0 } = req.query;
+  let sql = `
+    SELECT d.*, GROUP_CONCAT(
+      t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+      COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+      ';;'
+    ) AS stages_raw
+    FROM don_hang d
+    LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+    WHERE 1=1
+  `;
+  const params = [];
+  if (ma_dh_goc)  { sql += ' AND d.ma_dh_goc = ?';     params.push(ma_dh_goc); }
+  if (loai_lenh)  { sql += ' AND d.loai_lenh = ?';      params.push(loai_lenh); }
+  if (tai_khoan)  { sql += ' AND d.tai_khoan_cao = ?';  params.push(tai_khoan); }
+  sql += ' GROUP BY d.ma_dh ORDER BY d.yc_giao ASC, d.nhap_luc ASC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+
+  try {
+    const rows = db.prepare(sql).all(...params);
+    res.json({ ok: true, count: rows.length, orders: rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/orders/:ma_dh', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
+  try {
+    const order  = db.prepare('SELECT * FROM don_hang WHERE ma_dh = ?').get(req.params.ma_dh);
+    if (!order) return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
+    const stages  = db.prepare('SELECT * FROM tien_do WHERE ma_dh = ? ORDER BY thu_tu').all(req.params.ma_dh);
+    const variants = db.prepare('SELECT * FROM don_hang WHERE ma_dh_goc = ? AND ma_dh != ?')
+                       .all(order.ma_dh_goc, order.ma_dh);
+    res.json({ order, stages, variants });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/analytics/ktv', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
+  try {
+    const rows = db.prepare(`
+      SELECT ten_ktv, cong_doan,
+             COUNT(*) AS tong,
+             SUM(CASE WHEN xac_nhan='Có' THEN 1 ELSE 0 END) AS da_xong
+      FROM tien_do
+      WHERE ten_ktv != ''
+      GROUP BY ten_ktv, cong_doan
+      ORDER BY ten_ktv, thu_tu
+    `).all();
+    res.json({ ok: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/analytics/daily', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
+  try {
+    const rows = db.prepare(`
+      SELECT substr(thoi_gian_hoan_thanh, 7, 4)||'-'||
+             substr(thoi_gian_hoan_thanh, 4, 2)||'-'||
+             substr(thoi_gian_hoan_thanh, 1, 2) AS ngay,
+             cong_doan,
+             COUNT(*) AS so_cong_doan
+      FROM tien_do
+      WHERE xac_nhan='Có' AND thoi_gian_hoan_thanh != ''
+      GROUP BY ngay, cong_doan
+      ORDER BY ngay DESC
+      LIMIT 90
+    `).all();
+    res.json({ ok: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/db/stats', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
+  try {
+    const n_dh   = db.prepare('SELECT COUNT(*) as n FROM don_hang').get().n;
+    const n_phu  = db.prepare('SELECT COUNT(*) as n FROM don_hang WHERE la_don_phu=1').get().n;
+    const n_td   = db.prepare('SELECT COUNT(*) as n FROM tien_do').get().n;
+    const n_log  = db.prepare("SELECT COUNT(*) as n FROM import_log WHERE trang_thai='ok'").get().n;
+    const last   = db.prepare('SELECT ngay_import, ten_file FROM import_log ORDER BY id DESC LIMIT 1').get();
+    res.json({ ok: true, don_hang: n_dh, don_phu: n_phu, tien_do: n_td, files_imported: n_log, last_import: last });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/status', requireAuth, (req, res) => {
-  const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
-  const jsonFile  = findLatest(DATA_DIR, ['.json']);
+  const latestExport = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);
+  const db = getDB();
+  let dbStats = null;
+  if (db) {
+    try {
+      dbStats = {
+        don_hang: db.prepare('SELECT COUNT(*) as n FROM don_hang').get().n,
+        tien_do:  db.prepare('SELECT COUNT(*) as n FROM tien_do').get().n,
+      };
+    } catch {}
+  }
   res.json({
     status:         'online',
     time:           new Date().toLocaleString('vi-VN'),
-    file_sach_dir:  FILE_SACH_DIR,
-    data_dir:       DATA_DIR,
-    latest_excel:   excelFile?.name || null,
-    latest_json:    jsonFile?.name  || null,
+    excel_dir:      EXCEL_DIR,
+    latest_export:  latestExport?.name || null,
+    active_source:  cache?.source?.active || null,
     cached_orders:  cache?.orders?.length || 0,
     cache_age_s:    cacheTime ? Math.round((Date.now()-cacheTime)/1000) : null,
+    db:             dbStats,
   });
 });
 
@@ -835,18 +1126,17 @@ startExcelWatcher();
 startKeylabExporter();
 
 app.listen(PORT, '127.0.0.1', () => {
-  const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
-  const jsonFile  = findLatest(DATA_DIR, ['.json']);
+  const latestExport = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);
 
   console.log('');
   console.log('  🦷  ASIA LAB Dashboard Server');
   console.log('  ──────────────────────────────────────');
-  console.log(`  URL      : http://localhost:${PORT}`);
-  console.log(`  File_sach: ${FILE_SACH_DIR}`);
-  console.log(`  Excel mới: ${excelFile?.name || '⚠ Chưa có file'}`);
-  console.log(`  Data/JSON: ${jsonFile?.name  || '⚠ Chưa có file'}`);
-  console.log(`  Reload   : http://localhost:${PORT}/reload`);
-  console.log(`  Status   : http://localhost:${PORT}/status`);
+  console.log(`  URL        : http://localhost:${PORT}`);
+  console.log(`  Excel dir  : ${EXCEL_DIR}`);
+  console.log(`  Export mới : ${latestExport?.name || '⚠ Chưa có file'}`);
+  console.log(`  DB         : ${DB_PATH}`);
+  console.log(`  Reload     : http://localhost:${PORT}/reload`);
+  console.log(`  Status     : http://localhost:${PORT}/status`);
   console.log('');
   console.log('  Nhấn Ctrl+C để dừng');
   console.log('');

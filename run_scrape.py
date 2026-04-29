@@ -176,6 +176,29 @@ def run(excel_path: str):
         encoding='utf-8',
     )
 
+    # 9. Import vào SQLite rồi xóa file tạm
+    try:
+        from db_manager import init_db, import_json, import_excel_final
+        init_db()
+        r_json = import_json(json_out)
+        log(f'[runner] DB import JSON: {r_json}')
+        if cleaner_path.exists():
+            r_xl = import_excel_final(clean_out)
+            log(f'[runner] DB import Excel: {r_xl}')
+    except Exception as e:
+        log(f'[runner] DB import lỗi (không ảnh hưởng scrape): {e}')
+
+    # 10. Xóa file tạm — Data/ và File_sach/ không cần tích lũy nữa
+    for tmp in [json_out, scraped_xlsx, clean_out]:
+        try:
+            Path(tmp).unlink(missing_ok=True)
+        except Exception:
+            pass
+    # Xóa file .xlsx tạm được tạo khi convert .xls
+    if p.suffix.lower() == '.xls':
+        (DATA_DIR / f'{stem}.xlsx').unlink(missing_ok=True)
+    log('[runner] Đã xóa file tạm (Data/, File_sach/)')
+
     log(f'[runner] HOÀN THÀNH: {len(all_results)} công đoạn, {len(all_failed)} thất bại.')
 
 if __name__ == '__main__':
