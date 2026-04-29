@@ -30,8 +30,9 @@ crap_dev/
 ├── login.html                       # Trang đăng nhập
 ├── upload.html                      # Trang upload Excel + xem log scraper
 ├── labo_config.json                 # Config: last_run_file path
+├── keylab_state.json                # State: daily export counter (auto-created)
 ├── package.json                     # Node deps: express, multer, xlsx
-├── requirements.txt                 # Python deps
+├── requirements.txt                 # Python deps (+ pywinauto, pywin32)
 ├── Caddyfile                        # Reverse proxy (optional)
 │
 ├── run_scrape.py                    # Orchestrator scraper (entry point Python)
@@ -40,11 +41,13 @@ crap_dev/
 ├── backfill_data_thang.py           # Tổng hợp dữ liệu theo tháng
 ├── labo_gui.py                      # GUI Tkinter standalone
 ├── build_app.py                     # PyInstaller → dist/LaboAsia.exe
+├── keylab_exporter.py               # Auto-export Excel từ Keylab2022 desktop (mỗi 10 phút, 7:30–20:00)
 │
 ├── File_sach/                       # Excel đã clean: *_final.xlsx
 ├── Data/                            # JSON scraper output: *_scraped.json
-├── Excel/                           # File Excel raw do admin upload
-└── Data_thang/                      # Archive tháng: MM_YYYY_final.xlsx
+├── Excel/                           # File Excel raw do admin upload + Keylab exports (DDMMYYYY_N.xls)
+├── Data_thang/                      # Archive tháng: MM_YYYY_final.xlsx
+└── keylab_export.log                # Keylab exporter log
 ```
 
 ---
@@ -292,14 +295,15 @@ Credentials được truyền qua `env` khi server.js spawn Python scraper.
 ## 12. Git history gần đây
 
 ```
-c94fd89  feat: thêm ph-badge và filter bar vào mobile dashboard (terracotta)
-eee713f  feat: mobile filter bar + sửa bug computeTimeGroups khi chỉ có PM orders
-929e240  feat: gộp nhóm phục hình thành 3 nhóm màu trên dashboard
-6bc378f  fix: pass scraper credentials via spawn env in server.js
-a7e1d4d  fix: convert .xls to .xlsx before merge_back_to_workbook
-110ac34  fix: set PLAYWRIGHT_BROWSERS_PATH for Task Scheduler (SYSTEM) context
-a0602e3  fix: auto-detect sheet name and order ID column in run_scrape.py
-5ed51dc  fix: prevent server crash when spawning python scraper
+50ab8f6  feat: auto-restart keylab exporter + /keylab-status endpoint
+7668b5b  feat: merge keylab-exporter — Keylab2022 desktop automation
+37113f9  refactor: extract _wait_for_save_dialog, minimize on error
+0f735b4  feat: dismiss 'Open with' dialog and minimize Keylab after export
+9eba7d8  fix: use foreground window detection for Save As dialog
+fb1235d  feat: add Keylab2022 desktop automation script (pywinauto)
+5279cb4  chore: ignore sessions.json (live session tokens)
+110149e  fix: persist sessions to file + orange pip for in-progress stage
+a38e965  merge: feat/multi-user-system → main
 ```
 
 ---
@@ -337,14 +341,58 @@ const USERS = {
 
 ---
 
-## 14. Chạy dự án
+## 14. Keylab2022 Desktop Automation
+
+**File:** `keylab_exporter.py` (commit fb1235d+)
+
+**Tính năng:**
+- Auto-export Excel từ ứng dụng Keylab2022 desktop
+- Lịch: mỗi 10 phút (7:30–20:00), ngoài giờ ngủ chế độ
+- Tên file: `{DDMMYYYY}_{n}` (ngày + số thứ tự trong ngày)
+- Ví dụ: `29042026_1`, `29042026_2`, ...
+
+**Quy trình xuất:**
+1. Click nút "Tìm kiếm" (refresh dữ liệu)
+2. Chờ 3 giây
+3. Click nút "Xuất Excel"
+4. Điền tên file vào hộp thoại Save As
+5. Click Save
+6. Đóng dialog "Open with" nếu xuất hiện
+7. Minimize Keylab xuống taskbar
+
+**Trạng thái & logs:**
+- Log: `keylab_export.log` (append mode)
+- State: `keylab_state.json` (`{"date": "DD/MM/YYYY", "export_count": N}`)
+- Reset counter mỗi ngày
+
+**Integration với server.js:**
+- `startKeylabExporter()` spawn khi server khởi động
+- Auto-restart sau 30s nếu process crash
+- GET `/keylab-status` (auth required) trả pid, startedAt, exitCode
+- File watcher tự động scrape Keylab exports (debounce 60s)
+
+**File watcher logic:**
+- Phát hiện file pattern `^\d{8}_\d+\.(xls|xlsx|xlsm)` từ Keylab
+- Debounce 60s (tránh scrape khi file vẫn đang viết)
+- Auto-queue cho scraper
+
+**Debug:**
+```bash
+python keylab_exporter.py --debug           # In control tree cửa sổ Keylab
+python keylab_exporter.py --debug-save      # Trace Save As dialog
+python keylab_exporter.py                   # Chạy bình thường (infinite loop)
+```
+
+---
+
+## 15. Chạy dự án
 
 ```bash
 # Install
 npm install
 pip install -r requirements.txt
 
-# Chạy server
+# Chạy server (tự spawn keylab_exporter + file watcher)
 node server.js
 # → http://localhost:3000
 # → Login: admin / 142536
@@ -357,4 +405,7 @@ node server.js
 
 # Xem status
 # → http://localhost:3000/status
+
+# Xem Keylab exporter status
+# → http://localhost:3000/keylab-status (phải auth)
 ```
