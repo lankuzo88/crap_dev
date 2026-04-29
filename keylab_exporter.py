@@ -26,12 +26,13 @@ except ImportError:
     sys.exit(1)
 
 # ── Config ──────────────────────────────────────────────────────────────────
-START_TIME = dtime(7, 30)
-END_TIME = dtime(20, 0)
-INTERVAL_SECONDS = 10 * 60  # 10 phút
+START_TIME = dtime(0, 0)   # 00:00 - chạy 24/24
+END_TIME = dtime(23, 59)   # 23:59 - chạy 24/24
+INTERVAL_SECONDS = 15 * 60  # 15 phút
 
 STATE_FILE = Path(__file__).parent / "keylab_state.json"
-LOG_FILE = Path(__file__).parent / "keylab_export.log"
+LOG_FILE   = Path(__file__).parent / "keylab_export.log"
+EXCEL_DIR  = Path(__file__).parent / "Excel"
 
 # Title bar: "LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : ..."
 KEYLAB_TITLE_CONTAINS = "keylab"
@@ -354,10 +355,47 @@ def main():
         time.sleep(INTERVAL_SECONDS)
 
 
+def run_once():
+    """Chay mot lan xuat duy nhat — dung boi server.js scheduler.
+    In 'SAVED:<filepath>' ra stdout khi thanh cong, exit 0/1.
+    """
+    state = load_state()
+    filename = next_filename(state)
+
+    win = find_keylab_window()
+    if not win:
+        print("ERROR: Keylab not found", flush=True)
+        sys.exit(1)
+
+    success = run_export(win, filename)
+    if not success:
+        print("ERROR: Export failed", flush=True)
+        sys.exit(1)
+
+    state["export_count"] += 1
+    save_state(state)
+
+    # Tìm file vừa lưu trong EXCEL_DIR (keylab2022 có thể thêm .xls hoặc .xlsx)
+    candidates = sorted(
+        EXCEL_DIR.glob(f"{filename}*"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not candidates:
+        print(f"ERROR: Saved file not found for {filename}", flush=True)
+        sys.exit(1)
+
+    saved = candidates[0]
+    print(f"SAVED:{saved}", flush=True)
+    sys.exit(0)
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--debug":
         debug_controls()
     elif len(sys.argv) > 1 and sys.argv[1] == "--debug-save":
         debug_save_dialog()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--once":
+        run_once()
     else:
         main()
