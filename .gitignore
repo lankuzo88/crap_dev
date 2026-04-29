@@ -83,3 +83,4 @@ ai_memory.json        # learned facts — KHÔNG push git (file thay đổi liê
 *.sqlite3
 .env.local
 .env.*.local
+sessions.json
