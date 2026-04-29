@@ -122,6 +122,60 @@ def _dump_children(ctrl, indent=0):
         pass
 
 
+def debug_save_dialog():
+    """Click Xuat Excel roi in control tree cua hop thoai Save As."""
+    import win32gui, win32con
+
+    win = find_keylab_window()
+    if not win:
+        print("[DEBUG] Khong tim thay Keylab2022")
+        return
+
+    win32gui.ShowWindow(win.handle, win32con.SW_RESTORE)
+    try:
+        win32gui.SetForegroundWindow(win.handle)
+    except Exception:
+        import ctypes
+        ctypes.windll.user32.SetForegroundWindow(win.handle)
+    time.sleep(0.8)
+
+    spec = Desktop(backend="uia").window(handle=win.handle)
+    export_btn = spec.child_window(auto_id="btnXuatExcel", control_type="Button")
+    export_btn.click_input()
+    print("[DEBUG] Clicked Xuat Excel, waiting for Save dialog...")
+
+    keylab_handle = win.handle
+    import os
+    my_pid = os.getpid()
+
+    # Cách 1: Theo dõi foreground window thay đổi
+    print("[DEBUG] Tracking foreground window changes...")
+    for i in range(20):
+        time.sleep(0.5)
+        fg = win32gui.GetForegroundWindow()
+        fg_title = win32gui.GetWindowText(fg)
+        print(f"[DEBUG] {i+1}/20 fg=[{fg_title}] handle={fg}")
+        if fg != keylab_handle and fg != 0:
+            try:
+                print(f"\n[DEBUG] Possible dialog: [{fg_title}] handle={fg}")
+                Desktop(backend="uia").window(handle=fg).print_control_identifiers()
+                return
+            except Exception as e:
+                print(f"  (error printing: {e})")
+
+    # Cách 2: EnumWindows tìm child dialogs của Keylab
+    print("\n[DEBUG] Fallback: EnumChildWindows of Keylab...")
+    children = []
+    win32gui.EnumChildWindows(keylab_handle, lambda h, _: children.append(h), None)
+    for h in children:
+        try:
+            t = win32gui.GetWindowText(h)
+            cls = win32gui.GetClassName(h)
+            print(f"  child handle={h} class={cls} title=[{t}]")
+        except Exception:
+            pass
+
+
 # ── Automation sequence ───────────────────────────────────────────────────────
 def run_export(win, filename: str) -> bool:
     try:
@@ -147,31 +201,33 @@ def run_export(win, filename: str) -> bool:
         log.info("Clicked 'Xuất Excel'")
         time.sleep(2)
 
-        # 4. Hộp thoại Save As (Windows dialog)
-        save_dlg = None
+        # 4. Hộp thoại Save As — chờ foreground window đổi thành dialog lưu file
+        save_dlg_handle = None
         deadline = time.time() + 15
         while time.time() < deadline:
-            for title_pat in [r"Save As", r"Lưu", r"Save", r"Export"]:
-                try:
-                    dlg = Desktop(backend="uia").window(title_re=title_pat)
-                    dlg.wait("visible", timeout=1)
-                    save_dlg = dlg
-                    break
-                except Exception:
-                    pass
-            if save_dlg:
+            fg = win32gui.GetForegroundWindow()
+            fg_title = win32gui.GetWindowText(fg)
+            if fg != win.handle and fg_title.lower() in ("save as", "save", "luu"):
+                save_dlg_handle = fg
                 break
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-        if save_dlg is None:
-            log.error("Hộp thoại lưu file không xuất hiện sau 15 giây")
+        if save_dlg_handle is None:
+            log.error("Hop thoai luu file khong xuat hien sau 15 giay")
             return False
 
-        # Xóa tên cũ, nhập tên mới và Enter
+        save_dlg = Desktop(backend="uia").window(handle=save_dlg_handle)
+
+        # Chọn hết tên cũ, gõ tên mới
         name_field = save_dlg.child_window(auto_id="1001", control_type="Edit")
-        name_field.set_edit_text(filename)
-        name_field.type_keys("{ENTER}")
-        log.info(f"Đã nhập tên file và lưu: {filename}")
+        name_field.click_input()
+        name_field.type_keys("^a", pause=0.1)
+        name_field.type_keys(filename, with_spaces=False)
+
+        # Click nút Save (auto_id="1")
+        save_btn = save_dlg.child_window(auto_id="1", control_type="Button")
+        save_btn.click_input()
+        log.info(f"Da nhap ten va luu: {filename}")
         time.sleep(1.5)
         return True
 
@@ -242,8 +298,9 @@ def main():
 
 
 if __name__ == "__main__":
-    # Thêm --debug để in control tree
     if len(sys.argv) > 1 and sys.argv[1] == "--debug":
         debug_controls()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--debug-save":
+        debug_save_dialog()
     else:
         main()
