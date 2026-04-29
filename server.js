@@ -453,6 +453,9 @@ const scrapeQueue = []; // Queue of filePaths waiting to be scraped
 // Tracks files uploaded via web UI so the watcher doesn't double-process them
 const webUploadFiles = new Set();
 
+// Pattern file do keylab_exporter tạo ra: DDMMYYYY_N.xls(x)
+const KEYLAB_FILE_RE = /^\d{8}_\d+\.(xls|xlsx|xlsm)$/i;
+
 function queueOrScrape(filePath) {
   const filename = path.basename(filePath);
   if (scrapeJob.running) {
@@ -533,7 +536,10 @@ function startExcelWatcher() {
     // Skip files that came in via web upload (already handled)
     if (webUploadFiles.has(filename)) return;
 
-    // Debounce: wait 3s after last event before acting (file may still be writing)
+    // Keylab files: chờ 60s (keylab export xong 1 phút mới scrape)
+    // File thường (upload tay): chờ 3s
+    const debounceMs = KEYLAB_FILE_RE.test(filename) ? 60_000 : 3_000;
+
     if (pending.has(filename)) clearTimeout(pending.get(filename));
 
     pending.set(filename, setTimeout(() => {
@@ -543,10 +549,40 @@ function startExcelWatcher() {
 
       log(`📂 Phát hiện file mới: ${filename}`);
       queueOrScrape(filePath);
-    }, 3000));
+    }, debounceMs));
   });
 
   log(`👀 Đang theo dõi thư mục Excel/`);
+}
+
+// ── KEYLAB EXPORTER ───────────────────────────────────
+// Spawn keylab_exporter.py khi server start — script tự quản lý schedule (7:30–20:00, 10 phút)
+// File watcher áp dụng delay 60s cho file keylab (^\d{8}_\d+) để scraper chạy sau 1 phút
+let keylabStatus = { running: false, pid: null, startedAt: null, exitCode: null };
+
+function startKeylabExporter() {
+  const proc = spawn(PYTHON, ['keylab_exporter.py'], {
+    cwd: BASE_DIR,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+  });
+
+  keylabStatus = { running: true, pid: proc.pid, startedAt: new Date().toISOString(), exitCode: null };
+
+  proc.stdout.on('data', data => {
+    data.toString().split('\n').filter(Boolean).forEach(l => log(`[keylab] ${l}`));
+  });
+  proc.stderr.on('data', data => {
+    data.toString().split('\n').filter(Boolean).forEach(l => log(`[keylab] ${l}`));
+  });
+  proc.on('error', err => log(`[keylab] spawn error: ${err.message}`));
+  proc.on('close', code => {
+    keylabStatus.running = false;
+    keylabStatus.exitCode = code;
+    log(`[keylab] process exited (code=${code}) — restarting in 30s...`);
+    setTimeout(startKeylabExporter, 30_000);
+  });
+
+  log(`⌨  Keylab exporter started (pid=${proc.pid}, 7:30–20:00, every 10 min)`);
 }
 
 // ── UPLOAD (multer) ───────────────────────────────────
@@ -629,6 +665,10 @@ app.post('/upload', requireAuth, (req, res) => {
 
 app.get('/scrape-status', requireAuth, (req, res) => {
   res.json({ ...scrapeJob, queue: scrapeQueue.map(f => path.basename(f)) });
+});
+
+app.get('/keylab-status', requireAuth, (req, res) => {
+  res.json(keylabStatus);
 });
 
 app.get('/files', requireAuth, (req, res) => {
@@ -792,6 +832,7 @@ app.use(express.static(BASE_DIR));
 loadUsers();
 loadSessions();
 startExcelWatcher();
+startKeylabExporter();
 
 app.listen(PORT, '127.0.0.1', () => {
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
