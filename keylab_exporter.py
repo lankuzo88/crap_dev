@@ -177,73 +177,95 @@ def debug_save_dialog():
 
 
 # ── Automation sequence ───────────────────────────────────────────────────────
-def run_export(win, filename: str) -> bool:
-    try:
-        import win32gui, win32con
+def _bm_click(parent_hwnd: int, btn_text: str) -> bool:
+    """SendMessage BM_CLICK den button theo text — khong can window visible/focused."""
+    import win32gui, win32con
+    found = []
+    def cb(hwnd, _):
+        if win32gui.GetWindowText(hwnd) == btn_text:
+            found.append(hwnd)
+    win32gui.EnumChildWindows(parent_hwnd, cb, None)
+    if not found:
+        log.error(f"Khong tim thay button: '{btn_text}'")
+        return False
+    win32gui.SendMessage(found[0], win32con.BM_CLICK, 0, 0)
+    return True
 
-        # 1. Restore + focus cửa sổ Keylab2022
+
+def run_export(win, filename: str) -> bool:
+    import win32gui, win32con
+    try:
+        # Restore + focus — WinForms yêu cầu window active để ShowDialog() hoạt động
         win32gui.ShowWindow(win.handle, win32con.SW_RESTORE)
-        win32gui.SetForegroundWindow(win.handle)
+        try:
+            win32gui.SetForegroundWindow(win.handle)
+        except Exception:
+            import ctypes
+            ctypes.windll.user32.SetForegroundWindow(win.handle)
         time.sleep(0.5)
 
-        # Dùng WindowSpecification để truy cập child controls
         spec = Desktop(backend="uia").window(handle=win.handle)
 
-        # 2. Click nút "Tìm kiếm" (auto_id=btnTimKiem) để refresh dữ liệu
-        search_btn = spec.child_window(auto_id="btnTimKiem", control_type="Button")
-        search_btn.click_input()
-        log.info("Clicked 'Tìm kiếm' — chờ 3 giây để tải dữ liệu...")
+        # 1. Click "Tim kiem"
+        spec.child_window(auto_id="btnTimKiem", control_type="Button").click_input()
+        log.info("Clicked 'Tim kiem' — cho 3 giay...")
         time.sleep(3)
 
-        # 3. Click nút "Xuất Excel" (auto_id=btnXuatExcel)
-        export_btn = spec.child_window(auto_id="btnXuatExcel", control_type="Button")
-        export_btn.click_input()
-        log.info("Clicked 'Xuất Excel'")
+        # 2. Click "Xuat Excel"
+        spec.child_window(auto_id="btnXuatExcel", control_type="Button").click_input()
+        log.info("Clicked 'Xuat Excel'")
         time.sleep(2)
 
-        # 4. Hộp thoại Save As — chờ foreground window đổi thành dialog lưu file
-        save_dlg_handle = None
-        deadline = time.time() + 15
-        while time.time() < deadline:
-            fg = win32gui.GetForegroundWindow()
-            fg_title = win32gui.GetWindowText(fg)
-            if fg != win.handle and fg_title.lower() in ("save as", "save", "luu"):
-                save_dlg_handle = fg
-                break
-            time.sleep(0.3)
-
+        # 3. Chờ Save As dialog qua GetForegroundWindow
+        save_dlg_handle = _wait_for_save_dialog(win.handle, timeout=15)
         if save_dlg_handle is None:
-            log.error("Hop thoai luu file khong xuat hien sau 15 giay")
+            log.error("Hop thoai Save As khong xuat hien sau 15 giay")
             return False
 
         save_dlg = Desktop(backend="uia").window(handle=save_dlg_handle)
-
-        # Chọn hết tên cũ, gõ tên mới
         name_field = save_dlg.child_window(auto_id="1001", control_type="Edit")
         name_field.click_input()
         name_field.type_keys("^a", pause=0.1)
         name_field.type_keys(filename, with_spaces=False)
-
-        # Click nút Save (auto_id="1")
-        save_btn = save_dlg.child_window(auto_id="1", control_type="Button")
-        save_btn.click_input()
-        log.info(f"Da nhap ten va luu: {filename}")
+        save_dlg.child_window(auto_id="1", control_type="Button").click_input()
+        log.info(f"Da luu: {filename}")
         time.sleep(1.5)
 
-        # 5. Đóng dialog "How do you want to open this file?" nếu xuất hiện
+        # 4. Đóng dialog "Open with" nếu xuất hiện
         _dismiss_open_with_dialog()
 
-        # 6. Minimize Keylab về taskbar
+        # 5. Minimize về taskbar
         win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
-        log.info("Minimized Keylab xuong taskbar")
         return True
 
     except PWTimeoutError as e:
-        log.error(f"Timeout khi tim control: {e}")
+        log.error(f"Timeout: {e}")
+        win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
         return False
     except Exception as e:
-        log.error(f"Loi khi xuat: {e}")
+        log.error(f"Loi xuat: {e}")
+        win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
         return False
+
+
+def _wait_for_save_dialog(keylab_handle: int, timeout: int = 15) -> int | None:
+    """Cho Save As dialog xuat hien — quet ca EnumWindows lan GetForegroundWindow."""
+    import win32gui
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        # Quet tat ca top-level windows
+        found = []
+        def _cb(hwnd, _):
+            if hwnd == keylab_handle:
+                return
+            t = win32gui.GetWindowText(hwnd).lower()
+            if t in ("save as", "save", "luu"):
+                found.append(hwnd)
+        win32gui.EnumWindows(_cb, None)
+        if found:
+            return found[0]
+        time.sleep(0.3)
+    return None
 
 
 def _dismiss_open_with_dialog():
