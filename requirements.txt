@@ -3,3 +3,5 @@ openpyxl
 xlrd
 requests
 playwright
+pywinauto
+pywin32
