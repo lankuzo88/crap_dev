@@ -423,6 +423,24 @@
     .card-prosthesis { font-size: 11px; }
     .card-stage-label { font-size: 11px; }
     .empty-state p { font-size: 15px; }
+    #m-export-btn {
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--terracotta);
+      padding: 4px 7px;
+      border-radius: 6px;
+      border: 1px solid var(--terracotta-light);
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      min-height: 32px;
+    }
+    #m-export-btn:active { opacity: 0.7; }
+    #m-export-btn.admin-visible { display: inline-flex; }
   </style>
 </head>
 <body>
@@ -432,7 +450,8 @@
     <span class="search-icon">🔍</span>
     <input id="searchInput" type="search" placeholder="Tìm mã đơn, bệnh nhân, nha khoa..." autocomplete="off">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
-    <a href="/upload" title="Upload Excel" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);">📤</a>
+    <a id="m-upload-btn" href="/upload" title="Upload Excel" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);display:none;">📤</a>
+    <button id="m-export-btn" onclick="triggerKeylabExport()" title="Xu&#7845;t Excel KeyLab">🔄</button>
     <a href="/logout" title="Đăng xuất" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);">↩</a>
   </div>
 
@@ -699,6 +718,7 @@
 
       loadData();
       setInterval(loadData, 60_000);
+      initAdminUI();
 
       // Card click → modal
       document.addEventListener('click', (e) => {
@@ -784,6 +804,37 @@
     function closeOrderDetail() {
       document.getElementById('modalOverlay').classList.remove('open');
     }
+
+    async function initAdminUI() {
+      try {
+        const r = await fetch('/user');
+        if (!r.ok) return;
+        const u = await r.json();
+        if (u.role === 'admin') {
+          document.getElementById('m-export-btn').classList.add('admin-visible');
+          const upBtn = document.getElementById('m-upload-btn');
+          if (upBtn) upBtn.style.display = '';
+        }
+      } catch {}
+    }
+
+    async function triggerKeylabExport() {
+      const btn = document.getElementById('m-export-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳';
+      try {
+        const r = await fetch('/keylab-export-now', { method: 'POST' });
+        const data = await r.json();
+        btn.textContent = data.ok ? '✅' : '⚠️';
+      } catch {
+        btn.textContent = '❌';
+      }
+      setTimeout(() => {
+        btn.textContent = '🔄';
+        btn.disabled = false;
+      }, 3500);
+    }
+
   </script>
 
   <!-- Modal -->

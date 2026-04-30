@@ -288,13 +288,30 @@ class LaboAsiaAPIClient:
 
                 # Lấy token từ cookie
                 cookies = context.cookies()
+                # Thử tìm auth_token trước
                 token = next(
                     (c["value"] for c in cookies if c["name"] == "auth_token"),
-                    "",
+                    None,
                 )
+                # Fallback: tìm JWT từ các cookies khác (có thể đổi tên)
                 if not token:
+                    jwt_cookies = [c["name"] for c in cookies if "token" in c["name"].lower() or "jwt" in c["name"].lower()]
+                    if jwt_cookies:
+                        token = next(
+                            (c["value"] for c in cookies if c["name"] == jwt_cookies[0]),
+                            None,
+                        )
+                # Fallback cuối: dùng session cookies nếu có
+                if not token:
+                    session_cookies = [c for c in cookies if c["name"] in ["session", "sessionid", "PHPSESSID"]]
+                    if session_cookies:
+                        token = session_cookies[0]["value"]
+
+                if not token:
+                    # In ra cookies để debug
+                    cookie_names = [c["name"] for c in cookies]
                     raise RuntimeError(
-                        "Dang nhap thanh cong nhung khong tim thay cookie auth_token"
+                        f"Dang nhap thanh cong nhung khong tim thay token. Cookies: {cookie_names}"
                     )
                 return token
             finally:

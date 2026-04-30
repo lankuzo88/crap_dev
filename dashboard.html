@@ -331,6 +331,10 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .d-nl.active{background:var(--amber-s);color:var(--amber);}
   .d-nl .ico{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
   .d-nl-badge{margin-left:auto;background:var(--amber-d);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:3px;}
+  .d-export-section{padding:6px 8px;border-top:1px solid var(--border2);}
+  .d-export-btn{width:100%;padding:8px 12px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:7px;color:var(--amber);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;font-family:'Inter',sans-serif;}
+  .d-export-btn:hover:not(:disabled){background:rgba(245,166,35,.18);}
+  .d-export-btn:disabled{opacity:.5;cursor:not-allowed;}
   .d-funnel{padding:8px 10px 10px;border-top:1px solid var(--border2);}
   .d-f-title{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:6px;}
   .d-sf{display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:pointer;border-radius:5px;padding:2px 4px;transition:background .1s;}
@@ -470,7 +474,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 <body>
 
 <div style="position:fixed;top:10px;right:12px;z-index:9999;display:flex;gap:6px;">
-  <a href="/upload" title="Upload Excel" style="background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">📤 Upload</a>
+  <a id="d-upload-btn" href="/upload" title="Upload Excel" style="background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;display:none;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">🔄 Upload</a>
   <a href="/logout" title="Đăng xuất" style="background:rgba(22,26,38,0.85);border:1px solid #252a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#9ca3af;text-decoration:none;backdrop-filter:blur(8px);font-family:inherit;transition:color 0.2s;" onmouseover="this.style.color='#e8e0d8'" onmouseout="this.style.color='#9ca3af'">↩ Đăng xuất</a>
 </div>
 
@@ -592,6 +596,12 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl active" id="d-nl-orders" onclick="dSw('orders',this)"><span class="ico">📋</span> Đơn Hàng<span class="d-nl-badge" id="d-nav-badge">—</span></div>
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
+      </div>
+      <div class="d-export-section" id="d-export-section" style="display:none">
+        <button class="d-export-btn" id="d-export-btn" onclick="triggerKeylabExport()">
+          <span id="d-export-ico">🔄</span>
+          <span id="d-export-lbl">Xuất Excel KeyLab</span>
+        </button>
       </div>
       <div class="d-funnel">
         <div class="d-f-title">TIẾN ĐỘ CÔNG ĐOẠN</div>
@@ -1779,6 +1789,50 @@ setInterval(async () => {
 
 // Boot
 fetchData();
+initAdminUI();
+
+/* ═══════ ADMIN UI ═══════ */
+async function initAdminUI() {
+  try {
+    const r = await fetch('/user');
+    if (!r.ok) return;
+    const u = await r.json();
+    if (u.role === 'admin') {
+      const el = document.getElementById('d-export-section');
+      if (el) el.style.display = '';
+      const upBtn = document.getElementById('d-upload-btn');
+      if (upBtn) upBtn.style.display = '';
+    }
+  } catch {}
+}
+
+async function triggerKeylabExport() {
+  const btn = document.getElementById('d-export-btn');
+  const ico = document.getElementById('d-export-ico');
+  const lbl = document.getElementById('d-export-lbl');
+  btn.disabled = true;
+  ico.textContent = '⏳';
+  lbl.textContent = 'Đang xuất...';
+  try {
+    const r = await fetch('/keylab-export-now', { method: 'POST' });
+    const data = await r.json();
+    if (data.ok) {
+      ico.textContent = '✅';
+      lbl.textContent = 'Đã kích hoạt!';
+    } else {
+      ico.textContent = '⚠️';
+      lbl.textContent = data.message || 'Lỗi';
+    }
+  } catch {
+    ico.textContent = '❌';
+    lbl.textContent = 'Không kết nối được';
+  }
+  setTimeout(() => {
+    ico.textContent = '🔄';
+    lbl.textContent = 'Xuất Excel KeyLab';
+    btn.disabled = false;
+  }, 3500);
+}
 
 </script>
 </body>
