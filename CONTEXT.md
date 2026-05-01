@@ -78,18 +78,22 @@ GET  /logout  → xóa session → redirect /login
 
 ## 4. Server routes
 
-| Route | Method | Auth | Mục đích |
-|---|---|---|---|
-| `/` | GET | ✅ | Serve dashboard (redirect /mobile nếu UA mobile) |
-| `/mobile` | GET | ✅ | Serve dashboard_mobile_terracotta.html |
-| `/data.json` | GET | ✅ | API trả về merged order data (cache 1 phút) |
-| `/upload` | GET/POST | ✅ | Upload Excel + trigger scraper |
-| `/reload` | GET | ✅ | Force reload data cache |
-| `/status` | GET | ✅ | Thông tin server, file đang dùng |
-| `/files` | GET | ✅ | Danh sách file Excel đã upload |
-| `/scrape-status` | GET | ✅ | Log & trạng thái scraper đang chạy |
-| `/login` | GET/POST | ❌ | Form đăng nhập |
-| `/logout` | GET | ❌ | Đăng xuất |
+| Route | Method | Auth | Admin? | Mục đích |
+|---|---|---|---|---|
+| `/` | GET | ✅ | — | Serve dashboard (redirect /mobile nếu UA mobile) |
+| `/mobile` | GET | ✅ | — | Serve dashboard_mobile_terracotta.html |
+| `/data.json` | GET | ✅ | — | API trả về merged order data (cache 1 phút) |
+| `/upload` | GET/POST | ✅ | ✅ | Upload Excel + trigger scraper (admin-only) |
+| `/reload` | GET | ✅ | — | Force reload data cache |
+| `/status` | GET | ✅ | — | Thông tin server, file đang dùng |
+| `/user` | GET | ✅ | — | Thông tin user hiện tại (username, role) |
+| `/files` | GET | ✅ | — | Danh sách file Excel đã upload |
+| `/scrape-status` | GET | ✅ | — | Log & trạng thái scraper đang chạy |
+| `/keylab-status` | GET | ✅ | — | Trạng thái Keylab export job |
+| `/keylab-export-now` | POST | ✅ | ✅ | Kích hoạt Keylab export thủ công (admin-only) |
+| `/keylab-export-status` | GET | ✅ | — | Trạng thái Keylab export job chi tiết |
+| `/login` | GET/POST | ❌ | — | Form đăng nhập |
+| `/logout` | GET | ❌ | — | Đăng xuất |
 
 ---
 
@@ -343,57 +347,126 @@ const USERS = {
 
 ## 14. Keylab2022 Desktop Automation
 
-**File:** `keylab_exporter.py` (commit fb1235d+)
+**Files:**
+- `keylab_exporter.py` — Python automation dùng pywinauto, hỗ trợ `--once` mode (trigger thủ công)
+- `AutoExportKeyLab.ahk` — AutoHotkey script, dùng cho reference (không dùng chính thức)
 
-**Tính năng:**
-- Auto-export Excel từ ứng dụng Keylab2022 desktop
-- Lịch: mỗi 10 phút (7:30–20:00), ngoài giờ ngủ chế độ
-- Tên file: `{DDMMYYYY}_{n}` (ngày + số thứ tự trong ngày)
-- Ví dụ: `29042026_1`, `29042026_2`, ...
+### 14.1 Quy trình xuất Excel thủ công
 
-**Quy trình xuất:**
-1. Click nút "Tìm kiếm" (refresh dữ liệu)
-2. Chờ 3 giây
-3. Click nút "Xuất Excel"
-4. Điền tên file vào hộp thoại Save As
-5. Click Save
-6. Đóng dialog "Open with" nếu xuất hiện
-7. Minimize Keylab xuống taskbar
+**Flow khi admin click nút 🔄 "Xuất Excel KeyLab":**
 
-**Trạng thái & logs:**
-- Log: `keylab_export.log` (append mode)
-- State: `keylab_state.json` (`{"date": "DD/MM/YYYY", "export_count": N}`)
-- Reset counter mỗi ngày
+```
+Admin click 🔄
+     ↓
+POST /keylab-export-now (requireAuth, requireAdmin)
+     ↓
+spawn: python keylab_exporter.py --once
+     ↓
+  ┌─ Open Keylab desktop app (headless browser Playwright)
+  ├─ Đăng nhập LaboAsia (login fallback: auth_token → jwt/token variants → session)
+  ├─ Click "Tìm kiếm" + "Xuất Excel"
+  ├─ Điền tên file {DDMMYYYY}_{n} vào Save As dialog
+  ├─ Click Save → lưu vào Excel/
+  └─ Đóng browser
+     ↓
+stdout: SAVED:<filepath>
+     ↓
+server.js parse → keylabExportJob.savedFile
+     ↓
+Mark filename vào manualKeyLabExports set
+     ↓
+File watcher detect → check manualKeyLabExports → OK, scrape!
+     ↓
+spawn: python run_scrape.py
+```
 
-**Integration với server.js:**
-- `startKeylabExporter()` spawn khi server khởi động
-- Auto-restart sau 30s nếu process crash
-- GET `/keylab-status` (auth required) trả pid, startedAt, exitCode
-- File watcher tự động scrape Keylab exports (debounce 60s)
+### 14.2 Credential handling
 
-**File watcher logic:**
-- Phát hiện file pattern `^\d{8}_\d+\.(xls|xlsx|xlsm)` từ Keylab
-- Debounce 60s (tránh scrape khi file vẫn đang viết)
-- Auto-queue cho scraper
+**Cookie fallback logic (khi login LaboAsia):**
+1. Thử tìm `auth_token` cookie
+2. Fallback: Tìm cookie có tên chứa "token" hoặc "jwt"
+3. Fallback: Tìm session cookies (session, sessionid, PHPSESSID)
+4. Nếu không có → in ra danh sách cookies để debug
 
-**Debug:**
+Giải quyết vấn đề cũ: "Đang nhập thành công nhưng không tìm thấy cookie auth_token"
+
+### 14.3 File watcher logic (mới: d091b6a)
+
+**Skip auto-export Keylab files:**
+- File pattern `^\d{8}_\d+\.(xls|xlsx|xlsm)` từ Keylab được phát hiện
+- **Nếu không từ manual export** → `log("Skip auto-export")` + return
+- **Nếu từ manual export** → `manualKeyLabExports.has(filename)` check → OK, scrape
+
+**Lợi ích:** Tránh scraper chạy định kỳ khi Keylab desktop app tự xuất (nếu có).
+
+### 14.4 Debug & status
+
 ```bash
-python keylab_exporter.py --debug           # In control tree cửa sổ Keylab
-python keylab_exporter.py --debug-save      # Trace Save As dialog
-python keylab_exporter.py                   # Chạy bình thường (infinite loop)
+# Check export status
+GET /keylab-export-status
+# → { running: false, startedAt: "...", exitCode: 0, savedFile: "..." }
+
+# Xem logs
+tail -f ~/.pm2/logs/asia-lab-out.log
+# → [keylab] Dang nhap OK: lanhn
+# → [keylab] OK 262704030: 7 công đoạn
+# → [keylab] done (exit=0)
 ```
 
 ---
 
-## 15. Chạy dự án
+## 15. UI Enhancements (commit d091b6a)
+
+### 15.1 Export button trên dashboard
+
+**Desktop (`dashboard.html`):**
+- Nút `🔄 Xuất Excel KeyLab` trong sidebar (dưới nav menu)
+- Ẩn mặc định, chỉ hiện khi `role === 'admin'`
+- Click → POST `/keylab-export-now` → icon: `⏳` → `✅`/`⚠️`/`❌` → reset sau 3.5s
+
+**Mobile (`dashboard_mobile_terracotta.html`):**
+- Nút `🔄` trong search bar (giữa nút upload và logout)
+- Ẩn mặc định, chỉ hiện khi `role === 'admin'`
+- Cùng behavior như desktop
+
+**Shared JS (`initAdminUI()`):**
+```javascript
+async function initAdminUI() {
+  const r = await fetch('/user');
+  const u = await r.json();
+  if (u.role === 'admin') {
+    // Hiện upload button
+    document.getElementById('[id]').style.display = '';
+    // Hiện export button (desktop)
+    document.getElementById('d-export-section').style.display = '';
+    // Hiện export button (mobile)
+    document.getElementById('m-export-btn').classList.add('admin-visible');
+  }
+}
+```
+
+### 15.2 Upload button (ẩn với non-admin)
+
+**Trước:** Link `📤 Upload` hiện cho tất cả user đăng nhập
+**Sau:** Chỉ hiện cho admin (dùng `initAdminUI()`)
+
+**ID elements:**
+- Desktop: `#d-upload-btn`
+- Mobile: `#m-upload-btn`
+
+---
+
+## 16. Chạy dự án
 
 ```bash
 # Install
 npm install
 pip install -r requirements.txt
 
-# Chạy server (tự spawn keylab_exporter + file watcher)
+# Chạy server (file watcher hoạt động, no auto-loop keylab_exporter)
 node server.js
+# hoặc qua PM2:
+pm2 start ecosystem.config.js
 # → http://localhost:3000
 # → Login: admin / 142536
 
@@ -406,6 +479,31 @@ node server.js
 # Xem status
 # → http://localhost:3000/status
 
-# Xem Keylab exporter status
-# → http://localhost:3000/keylab-status (phải auth)
+# Xem user info (cần auth)
+# → http://localhost:3000/user
+
+# Kích hoạt Keylab export thủ công (POST, admin-only)
+# → curl -X POST http://localhost:3000/keylab-export-now -b sid=<token>
+
+# Xem Keylab export status
+# → http://localhost:3000/keylab-export-status (phải auth)
+```
+
+---
+
+## 17. Git history (latest)
+
+```
+d091b6a  feat: Manual Keylab export + on-demand scraper
+├─ Remove auto-loop keylab_exporter
+├─ Add POST /keylab-export-now endpoint (admin-only)
+├─ Add fallback cookie lookup (auth_token → jwt → session)
+├─ Hide upload button from non-admin users
+├─ Add export button to admin dashboard (🔄) on desktop + mobile
+└─ Skip auto-export Keylab files in file watcher
+
+6606f2d  feat: SQLite storage + cleanup Data/ File_sach/ redundant files
+c4b7ef9  feat: PM2 integration + 24/7 keylab export (15min interval)
+80b2470  docs: update CONTEXT.md with Keylab2022 automation section
+50ab8f6  feat: auto-restart keylab exporter + /keylab-status endpoint
 ```
