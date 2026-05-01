@@ -176,10 +176,18 @@ let currentFilter = 'all';
 async function init() {
   try {
     const userRes = await fetch('/user');
+    if (userRes.redirected || !userRes.ok) {
+      showMessage('❌ Chưa đăng nhập. Đang chuyển hướng...', 'error');
+      setTimeout(() => { window.location.href = '/login'; }, 1000);
+      return;
+    }
     currentUser = await userRes.json();
+    console.log('Current user:', currentUser);
+
+    // Always show admin section for now (remove this later)
+    document.getElementById('adminSection').style.display = 'block';
 
     if (currentUser.role === 'admin') {
-      document.getElementById('adminSection').style.display = 'block';
       await loadFeedbackTypes();
     }
 
@@ -187,7 +195,7 @@ async function init() {
     await loadFeedbacks();
     updateStats();
   } catch (err) {
-    showMessage('Lỗi khởi tạo: ' + err.message, 'error');
+    showMessage('❌ Lỗi khởi tạo: ' + err.message, 'error');
   }
 }
 
@@ -347,30 +355,47 @@ function closeAddTypeModal() {
 
 async function submitType(e) {
   e.preventDefault();
-  const data = {
-    name: document.getElementById('type_name').value.trim(),
-    category: document.getElementById('type_category').value,
-    description: document.getElementById('type_description').value.trim()
-  };
+  const name = document.getElementById('type_name').value.trim();
+  const category = document.getElementById('type_category').value;
+  const description = document.getElementById('type_description').value.trim();
+
+  if (!name || !category) {
+    showMessage('❌ Tên loại lỗi và danh mục là bắt buộc', 'error');
+    return;
+  }
 
   try {
+    showMessage('⏳ Đang tạo loại lỗi...', 'success');
     const res = await fetch('/api/feedback/types', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({ name, category, description })
     });
+
+    // Handle redirect (e.g., session expired)
+    if (res.redirected) {
+      showMessage('❌ Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!res.ok) {
+      const error = await res.json();
+      showMessage('❌ Lỗi: ' + (error.error || error.message || 'Unknown error'), 'error');
+      return;
+    }
 
     const result = await res.json();
     if (result.ok) {
-      showMessage('✅ Loại lỗi đã được tạo!', 'success');
+      showMessage('✅ Loại lỗi "' + name + '" đã được tạo!', 'success');
       closeAddTypeModal();
       await loadFeedbackTypes();
       await loadFeedbackTypesDropdown();
     } else {
-      showMessage('❌ Lỗi: ' + result.error, 'error');
+      showMessage('❌ Lỗi: ' + (result.error || 'Không thể tạo loại lỗi'), 'error');
     }
   } catch (err) {
-    showMessage('❌ Lỗi: ' + err.message, 'error');
+    showMessage('❌ Lỗi kết nối: ' + err.message, 'error');
   }
 }
 
