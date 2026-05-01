@@ -54,24 +54,44 @@ crap_dev/
 
 ## 3. Authentication hiện tại
 
-**⚠️ Quan trọng cho session tiếp theo (thêm user/quyền):**
+**✅ ĐÃ HOÀN THÀNH: Multi-user system với phân quyền**
 
 ```javascript
-// server.js — hardcoded, cần refactor
-const USERS = { admin: '142536' };
-const sessions = new Map();           // In-memory, mất khi restart
-const SESS_TTL = 8 * 60 * 60 * 1000; // 8 giờ
+// server.js — users.json based
+const USERS_JSON_PATH = path.join(__dirname, 'users.json');
+let USERS = {};  // { username: { password, role } }
+
+const sessions = new Map();           // Persist to sessions.json
+const SESS_TTL = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;  // 7 ngày (giây)
 ```
 
-- Session token: 32-byte hex ngẫu nhiên (`crypto.randomBytes`)
-- Cookie: `sid=<token>; HttpOnly; SameSite=Strict`
-- Middleware `requireAuth` bảo vệ toàn bộ route trừ `/login`, `/logout`
-- **Chưa có:** phân quyền, nhiều user, user management UI
+**Cấu trúc users.json:**
+```json
+{
+  "users": [
+    { "username": "admin", "password": "142536", "role": "admin" },
+    { "username": "minhtuan", "password": "123456789", "role": "user" },
+    { "username": "test", "password": "123456", "role": "user" }
+  ]
+}
+```
+
+**Tính năng:**
+- ✅ Session token: 32-byte hex ngẫu nhiên (`crypto.randomBytes`)
+- ✅ Cookie: `sid=<token>; HttpOnly; SameSite=Strict; Max-Age=7days`
+- ✅ Session persist to `sessions.json` (survive restart)
+- ✅ Middleware `requireAuth` bảo vệ toàn bộ route trừ `/login`, `/logout`
+- ✅ Middleware `requireAdmin` bảo vệ admin-only routes
+- ✅ Admin panel UI tại `/admin` (admin.html)
+- ✅ User management API: GET/POST/DELETE `/admin/api/users`
+- ✅ Password reset API: POST `/admin/api/users/:username/reset-password`
 
 **Route auth:**
 ```
 POST /login   → validate user/pass → tạo session → redirect /
 GET  /logout  → xóa session → redirect /login
+GET  /user    → trả về { username, role } của user hiện tại
 ```
 
 ---
@@ -85,13 +105,18 @@ GET  /logout  → xóa session → redirect /login
 | `/data.json` | GET | ✅ | — | API trả về merged order data (cache 1 phút) |
 | `/upload` | GET/POST | ✅ | ✅ | Upload Excel + trigger scraper (admin-only) |
 | `/reload` | GET | ✅ | — | Force reload data cache |
-| `/status` | GET | ✅ | — | Thông tin server, file đang dùng |
+| `/status` | GET | ✅ | — | Thông tin server, file đang dùng, DB stats |
 | `/user` | GET | ✅ | — | Thông tin user hiện tại (username, role) |
 | `/files` | GET | ✅ | — | Danh sách file Excel đã upload |
 | `/scrape-status` | GET | ✅ | — | Log & trạng thái scraper đang chạy |
 | `/keylab-status` | GET | ✅ | — | Trạng thái Keylab export job |
 | `/keylab-export-now` | POST | ✅ | ✅ | Kích hoạt Keylab export thủ công (admin-only) |
 | `/keylab-export-status` | GET | ✅ | — | Trạng thái Keylab export job chi tiết |
+| `/admin` | GET | ✅ | ✅ | Admin panel UI (admin.html) |
+| `/admin/api/users` | GET | ✅ | ✅ | Danh sách users (không trả về password) |
+| `/admin/api/users` | POST | ✅ | ✅ | Tạo user mới (username, password, role) |
+| `/admin/api/users/:username` | DELETE | ✅ | ✅ | Xóa user (không thể xóa chính mình) |
+| `/admin/api/users/:username/reset-password` | POST | ✅ | ✅ | Reset password user |
 | `/login` | GET/POST | ❌ | — | Form đăng nhập |
 | `/logout` | GET | ❌ | — | Đăng xuất |
 
@@ -109,17 +134,23 @@ spawn: python run_scrape.py
   ┌─ detect sheet & cột mã đơn hàng
   ├─ load credentials từ env (LABO_USER1/PASS1 ... USER4/PASS4)
   ├─ scrape LaboAsia theo từng worker song song
-  ├─ ghi Data/{stem}_scraped.json + Data/{stem}_scraped.xlsx
-  └─ gọi labo_cleaner.py → File_sach/{stem}_final.xlsx
+  ├─ ghi vào SQLite: labo_data.db (tables: don_hang, tien_do)
+  └─ (legacy: Data/{stem}_scraped.json + File_sach/{stem}_final.xlsx)
        ↓
 GET /data.json
        ↓
-  ┌─ readExcel(File_sach/*_final.xlsx)  → orders + stageMap
-  ├─ readJsonScraper(Data/*_scraped.json) → scraper rows
-  └─ buildOrders() merge (JSON ưu tiên hơn Excel)
+  ┌─ Nguồn chính: SQLite labo_data.db
+  ├─ getActiveMaDhList() → đọc file Excel mới nhất để lấy danh sách mã đơn active
+  ├─ getDataFromDB() → query SQLite với filter theo active list
+  └─ buildOrders() → format thành order objects
        ↓
 Dashboard fetch /data.json → render cards + filter
 ```
+
+**Nguồn dữ liệu ưu tiên:**
+1. **SQLite** (`labo_data.db`) — nguồn chính, được scraper ghi vào
+2. **Active filter** — chỉ hiển thị đơn hàng có trong file Excel export mới nhất (Keylab)
+3. **Fallback** — nếu không tìm được file active, hiển thị toàn bộ DB
 
 **Cấu trúc order object (sau merge):**
 ```javascript
@@ -299,53 +330,122 @@ Credentials được truyền qua `env` khi server.js spawn Python scraper.
 ## 12. Git history gần đây
 
 ```
+3b89f6f  docs: update CONTEXT.md with manual Keylab export + UI enhancements (d091b6a)
+d091b6a  feat: Manual Keylab export + on-demand scraper
+6606f2d  feat: SQLite storage + cleanup Data/ File_sach/ redundant files
+c4b7ef9  feat: PM2 integration + 24/7 keylab export (15min interval)
+80b2470  docs: update CONTEXT.md with Keylab2022 automation section
 50ab8f6  feat: auto-restart keylab exporter + /keylab-status endpoint
 7668b5b  feat: merge keylab-exporter — Keylab2022 desktop automation
 37113f9  refactor: extract _wait_for_save_dialog, minimize on error
 0f735b4  feat: dismiss 'Open with' dialog and minimize Keylab after export
 9eba7d8  fix: use foreground window detection for Save As dialog
-fb1235d  feat: add Keylab2022 desktop automation script (pywinauto)
-5279cb4  chore: ignore sessions.json (live session tokens)
-110149e  fix: persist sessions to file + orange pip for in-progress stage
-a38e965  merge: feat/multi-user-system → main
 ```
+
+**Thay đổi quan trọng:**
+- **6606f2d**: Chuyển sang SQLite làm nguồn dữ liệu chính (thay vì Excel + JSON)
+- **d091b6a**: Keylab export chuyển sang manual trigger (POST /keylab-export-now)
+- **3b89f6f**: Cập nhật CONTEXT.md với multi-user system
 
 ---
 
-## 13. Task tiếp theo: Thêm user & phân quyền
+## 13. Multi-user system & Admin panel
 
-**Yêu cầu nghiệp vụ:** Tạo nhiều tài khoản với các mức quyền khác nhau.
+**✅ ĐÃ HOÀN THÀNH** (commit a38e965, 110149e, 5279cb4)
 
-**Điểm bắt đầu trong server.js:**
-```javascript
-// Hiện tại — cần thay bằng hệ thống linh hoạt hơn:
-const USERS = { admin: '142536' };
-```
+**Tính năng:**
+- ✅ File-based user storage: `users.json`
+- ✅ Session persistence: `sessions.json` (survive server restart)
+- ✅ Role-based access control: `admin` và `user`
+- ✅ Admin panel UI: `/admin` (admin.html)
+- ✅ User management: create, delete, reset password
+- ✅ Self-protection: admin không thể xóa chính mình
+- ✅ Session TTL: 7 ngày (thay vì 8 giờ cũ)
 
-**Gợi ý thiết kế (để session tiếp theo quyết định):**
+**Admin panel features:**
+- Danh sách users với role badge
+- Tạo user mới (username, password, role)
+- Xóa user (có confirm dialog)
+- Reset password user
+- Link quay về dashboard
 
-```javascript
-// Ví dụ cấu trúc user có phân quyền:
-const USERS = {
-  admin:    { password: '...', role: 'admin'  }, // Full access
-  ktv:      { password: '...', role: 'viewer' }, // Chỉ xem dashboard
-  manager:  { password: '...', role: 'manager'}, // Xem + upload
-};
+**Security:**
+- Password lưu plain text trong `users.json` (⚠️ chưa hash)
+- Session token: 32-byte hex random
+- HttpOnly cookie, SameSite=Strict
+- Admin-only routes protected by `requireAdmin` middleware
 
-// Roles gợi ý:
-// 'admin'   → toàn quyền (upload, reload, xem logs, manage users)
-// 'manager' → upload Excel, xem dashboard
-// 'viewer'  → chỉ xem dashboard, không upload
-```
-
-**Files cần sửa khi thêm user system:**
-- `server.js` — USERS object, requireAuth middleware, thêm route `/admin/users`
-- `login.html` — không cần sửa nhiều
-- Tùy chọn: tạo `users.json` để lưu users thay vì hardcode
+**Files liên quan:**
+- `server.js`: Auth logic, user management API
+- `admin.html`: Admin panel UI
+- `users.json`: User database
+- `sessions.json`: Active sessions (gitignored)
+- `dashboard.html`, `dashboard_mobile_terracotta.html`: Hide upload button for non-admin
 
 ---
 
-## 14. Keylab2022 Desktop Automation
+## 14. SQLite Database Schema
+
+**Database:** `labo_data.db` (created by scraper commit 6606f2d)
+
+**Tables:**
+
+### `don_hang` (Đơn hàng)
+```sql
+CREATE TABLE don_hang (
+  ma_dh TEXT PRIMARY KEY,
+  nhap_luc TEXT,           -- Thời gian nhập (ISO format)
+  yc_hoan_thanh TEXT,      -- Yêu cầu hoàn thành
+  yc_giao TEXT,            -- Yêu cầu giao
+  khach_hang TEXT,         -- Tên phòng khám
+  benh_nhan TEXT,          -- Tên bệnh nhân
+  phuc_hinh TEXT,          -- Mô tả phục hình
+  sl INTEGER,              -- Số lượng răng
+  loai_lenh TEXT,          -- Làm mới/Sửa/Làm lại/...
+  ghi_chu TEXT,            -- Ghi chú
+  trang_thai TEXT,         -- Trạng thái đơn
+  tai_khoan_cao TEXT       -- Tài khoản scraper
+);
+```
+
+### `tien_do` (Tiến độ công đoạn)
+```sql
+CREATE TABLE tien_do (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ma_dh TEXT,
+  thu_tu INTEGER,          -- 0-4 (CBM, SÁP, SƯỜN, ĐẮP, MÀI)
+  cong_doan TEXT,          -- Tên công đoạn
+  ten_ktv TEXT,            -- Tên KTV
+  xac_nhan TEXT,           -- 'Đã xác nhận' / 'Chưa'
+  thoi_gian_hoan_thanh TEXT, -- Thời gian hoàn thành
+  FOREIGN KEY (ma_dh) REFERENCES don_hang(ma_dh)
+);
+```
+
+**Query pattern trong server.js:**
+```javascript
+// Lấy đơn hàng + stages với GROUP_CONCAT
+SELECT d.*, 
+       GROUP_CONCAT(
+         t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+         COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+         ';;'
+       ) AS stages_raw
+FROM don_hang d
+LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+WHERE d.ma_dh IN (...)  -- Filter by active list
+GROUP BY d.ma_dh
+```
+
+**Active filter logic:**
+- Đọc file Excel mới nhất trong `Excel/` (Keylab export)
+- Extract danh sách `ma_dh` từ cột "Mã ĐH"
+- Chỉ query đơn hàng có trong danh sách này
+- Fallback: nếu không tìm được file → hiển thị toàn bộ DB
+
+---
+
+## 15. Keylab2022 Desktop Automation
 
 **Files:**
 - `keylab_exporter.py` — Python automation dùng pywinauto, hỗ trợ `--once` mode (trigger thủ công)
@@ -415,7 +515,7 @@ tail -f ~/.pm2/logs/asia-lab-out.log
 
 ---
 
-## 15. UI Enhancements (commit d091b6a)
+## 16. UI Enhancements (commit d091b6a)
 
 ### 15.1 Export button trên dashboard
 
@@ -456,7 +556,7 @@ async function initAdminUI() {
 
 ---
 
-## 16. Chạy dự án
+## 17. Chạy dự án
 
 ```bash
 # Install
@@ -491,9 +591,10 @@ pm2 start ecosystem.config.js
 
 ---
 
-## 17. Git history (latest)
+## 18. Git history (latest)
 
 ```
+3b89f6f  docs: update CONTEXT.md with manual Keylab export + UI enhancements (d091b6a)
 d091b6a  feat: Manual Keylab export + on-demand scraper
 ├─ Remove auto-loop keylab_exporter
 ├─ Add POST /keylab-export-now endpoint (admin-only)
@@ -503,7 +604,76 @@ d091b6a  feat: Manual Keylab export + on-demand scraper
 └─ Skip auto-export Keylab files in file watcher
 
 6606f2d  feat: SQLite storage + cleanup Data/ File_sach/ redundant files
+├─ Migrate from Excel/JSON to SQLite (labo_data.db)
+├─ Tables: don_hang, tien_do
+├─ Active filter: only show orders in latest Keylab export
+└─ Cleanup redundant Data/ and File_sach/ files
+
 c4b7ef9  feat: PM2 integration + 24/7 keylab export (15min interval)
 80b2470  docs: update CONTEXT.md with Keylab2022 automation section
 50ab8f6  feat: auto-restart keylab exporter + /keylab-status endpoint
+a38e965  merge: feat/multi-user-system → main
+110149e  fix: persist sessions to file + orange pip for in-progress stage
+5279cb4  chore: ignore sessions.json (live session tokens)
 ```
+
+---
+
+## 19. Package Dependencies
+
+**Node.js (`package.json`):**
+```json
+{
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",  // SQLite database
+    "express": "^5.2.1",           // Web server
+    "multer": "^2.1.1",            // File upload
+    "xlsx": "^0.18.5"              // Excel parsing
+  }
+}
+```
+
+**Python (`requirements.txt`):**
+- `playwright` — Browser automation for scraper
+- `openpyxl` — Excel read/write
+- `pywinauto` — Windows desktop automation (Keylab export)
+- `pywin32` — Windows API access
+
+---
+
+## 20. Current State Summary (2026-05-01)
+
+**✅ Hoàn thành:**
+- Multi-user authentication với role-based access control
+- Admin panel UI với user management
+- SQLite database làm nguồn dữ liệu chính
+- Keylab2022 desktop automation (manual trigger)
+- File watcher với auto-scraping
+- Session persistence (survive restart)
+- Mobile + desktop responsive dashboard
+- Active order filtering (chỉ hiện đơn trong file export mới nhất)
+
+**⚠️ Known limitations:**
+- Password lưu plain text (chưa hash)
+- SQLite database file (`labo_data.db`) tồn tại nhưng có thể chưa có data
+- Keylab export phụ thuộc vào desktop app Keylab2022 đang chạy
+- Scraper credentials hardcoded trong env vars
+
+**📁 Files quan trọng:**
+- `server.js` — Backend chính (1178 lines)
+- `dashboard.html` — Dashboard desktop/mobile responsive (101 KB)
+- `dashboard_mobile_terracotta.html` — Mobile theme sáng (28 KB)
+- `admin.html` — Admin panel UI
+- `users.json` — User database (3 users hiện tại)
+- `sessions.json` — Active sessions (gitignored)
+- `labo_data.db` — SQLite database (+ .db-shm, .db-wal)
+- `keylab_state.json` — Keylab export counter (32 exports hôm nay)
+- `labo_config.json` — Last run file path
+
+**🔄 Auto-processes:**
+- File watcher: detect new Excel → auto-scrape → update DB
+- Keylab export: manual trigger only (POST /keylab-export-now)
+
+---
+
+**Last updated:** 2026-05-01 by Claude Opus 4.6
