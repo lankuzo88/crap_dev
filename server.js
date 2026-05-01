@@ -647,7 +647,14 @@ function queueOrScrape(filePath) {
 }
 
 function spawnScraper(filePath) {
-  scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
+  scrapeJob = {
+    running: true,
+    file: path.basename(filePath),
+    log: [],
+    exitCode: null,
+    startedAt: new Date().toISOString(),
+    progress: { done: 0, failed: 0, total: 0 }
+  };
   log(`🚀 Bắt đầu cào: ${scrapeJob.file}`);
 
   const proc = spawn(PYTHON, ['run_scrape.py', filePath], {
@@ -665,6 +672,19 @@ function spawnScraper(filePath) {
 
   const pushLog = (chunk) => {
     const lines = chunk.toString('utf-8').split('\n').filter(l => l.trim());
+
+    // Parse progress from log lines
+    lines.forEach(l => {
+      if (l.includes('OK') && l.includes(':')) {
+        scrapeJob.progress.done++;
+      } else if (l.includes('FAIL') && l.includes(':')) {
+        scrapeJob.progress.failed++;
+      } else if (l.match(/Tổng \d+ đơn hàng/)) {
+        const match = l.match(/Tổng (\d+) đơn/);
+        if (match) scrapeJob.progress.total = parseInt(match[1]);
+      }
+    });
+
     scrapeJob.log.push(...lines);
     if (scrapeJob.log.length > 300) scrapeJob.log = scrapeJob.log.slice(-300);
   };
@@ -693,6 +713,38 @@ function spawnScraper(filePath) {
       setTimeout(() => spawnScraper(next), 1000);
     }
   });
+}
+
+// ── FILE STABILITY CHECK ──────────────────────────────
+async function waitForFileStable(filePath, filename, timeoutMs = 2000) {
+  const startTime = Date.now();
+  let lastSize = -1;
+  let stableCount = 0;
+  const requiredStableChecks = 4; // 4 checks × 500ms = 2s stable
+
+  while (Date.now() - startTime < timeoutMs + 2000) {
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File disappeared during stability check');
+    }
+
+    const stat = fs.statSync(filePath);
+    const currentSize = stat.size;
+
+    if (currentSize === lastSize && currentSize > 0) {
+      stableCount++;
+      if (stableCount >= requiredStableChecks) {
+        log(`  ✓ File stable: ${filename} (${currentSize} bytes)`);
+        return;
+      }
+    } else {
+      stableCount = 0;
+      lastSize = currentSize;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  throw new Error(`Timeout waiting for file stability (last size: ${lastSize})`);
 }
 
 // ── FILE WATCHER ──────────────────────────────────────
@@ -733,10 +785,22 @@ function startExcelWatcher() {
     pending.set(filename, setTimeout(() => {
       pending.delete(filename);
       const filePath = path.join(EXCEL_DIR, filename);
-      if (!fs.existsSync(filePath)) return;
 
-      log(`📂 Phát hiện file mới: ${filename}`);
-      queueOrScrape(filePath);
+      // Check file exists
+      if (!fs.existsSync(filePath)) {
+        log(`⚠ File disappeared: ${filename}`);
+        return;
+      }
+
+      // Wait for file size to stabilize (2 seconds)
+      waitForFileStable(filePath, filename, 2000)
+        .then(() => {
+          log(`📂 Phát hiện file mới (stable): ${filename}`);
+          queueOrScrape(filePath);
+        })
+        .catch(err => {
+          log(`⚠ File not stable after timeout: ${filename} - ${err.message}`);
+        });
     }, debounceMs));
   });
 
@@ -833,9 +897,103 @@ app.get('/keylab-status', requireAuth, (req, res) => {
   res.json(keylabExportJob);
 });
 
-app.post('/keylab-export-now', requireAuth, requireAdmin, (req, res) => {
+// ── KEYLAB HEALTH CHECK ───────────────────────────────
+app.get('/keylab-health', requireAuth, (req, res) => {
+  const proc = spawn(PYTHON, ['keylab_exporter.py', '--check'], {
+    cwd: BASE_DIR,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  proc.stdout.on('data', d => { stdout += d.toString(); });
+  proc.stderr.on('data', d => { stderr += d.toString(); });
+
+  const timeout = setTimeout(() => {
+    proc.kill();
+    res.json({ ok: false, message: 'Health check timeout' });
+  }, 3000);
+
+  proc.on('close', code => {
+    clearTimeout(timeout);
+    if (code === 0) {
+      const match = stdout.match(/OK: (.+)/);
+      const title = match ? match[1].trim() : 'Keylab2022';
+      res.json({ ok: true, message: `Keylab đang chạy: ${title}` });
+    } else {
+      const error = stdout.includes('ERROR:')
+        ? stdout.split('ERROR:')[1].trim()
+        : 'Keylab2022 không chạy';
+      res.json({ ok: false, message: error });
+    }
+  });
+
+  proc.on('error', err => {
+    clearTimeout(timeout);
+    res.json({ ok: false, message: `Spawn error: ${err.message}` });
+  });
+});
+
+// Helper function for health check
+function checkKeylabHealth() {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(PYTHON, ['keylab_exporter.py', '--check'], {
+      cwd: BASE_DIR,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    });
+
+    let stdout = '';
+    proc.stdout.on('data', d => { stdout += d.toString(); });
+
+    const timeout = setTimeout(() => {
+      proc.kill();
+      reject(new Error('Health check timeout'));
+    }, 3000);
+
+    proc.on('close', code => {
+      clearTimeout(timeout);
+      if (code === 0) {
+        const match = stdout.match(/OK: (.+)/);
+        const title = match ? match[1].trim() : 'Keylab2022';
+        resolve({ ok: true, message: `Keylab đang chạy: ${title}` });
+      } else {
+        const error = stdout.includes('ERROR:')
+          ? stdout.split('ERROR:')[1].trim()
+          : 'Keylab2022 không chạy';
+        resolve({ ok: false, message: error });
+      }
+    });
+
+    proc.on('error', err => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+  });
+}
+
+app.post('/keylab-export-now', requireAuth, requireAdmin, async (req, res) => {
   if (keylabExportJob.running) {
     return res.status(409).json({ ok: false, message: 'Đang chạy rồi, vui lòng đợi...' });
+  }
+
+  // Pre-flight health check
+  try {
+    const healthCheck = await checkKeylabHealth();
+    if (!healthCheck.ok) {
+      log(`⚠ Pre-flight check failed: ${healthCheck.message}`);
+      return res.status(503).json({
+        ok: false,
+        message: 'Keylab2022 không chạy. Vui lòng mở app trước.'
+      });
+    }
+    log(`✓ Pre-flight check passed: ${healthCheck.message}`);
+  } catch (err) {
+    log(`⚠ Health check error: ${err.message}`);
+    return res.status(500).json({
+      ok: false,
+      message: 'Không thể kiểm tra Keylab2022'
+    });
   }
 
   keylabExportJob = { running: true, startedAt: new Date().toISOString(), exitCode: null, savedFile: null };

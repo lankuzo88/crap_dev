@@ -112,6 +112,7 @@ GET  /user    → trả về { username, role } của user hiện tại
 | `/keylab-status` | GET | ✅ | — | Trạng thái Keylab export job |
 | `/keylab-export-now` | POST | ✅ | ✅ | Kích hoạt Keylab export thủ công (admin-only) |
 | `/keylab-export-status` | GET | ✅ | — | Trạng thái Keylab export job chi tiết |
+| `/keylab-health` | GET | ✅ | — | Health check Keylab2022 desktop app |
 | `/admin` | GET | ✅ | ✅ | Admin panel UI (admin.html) |
 | `/admin/api/users` | GET | ✅ | ✅ | Danh sách users (không trả về password) |
 | `/admin/api/users` | POST | ✅ | ✅ | Tạo user mới (username, password, role) |
@@ -448,10 +449,29 @@ GROUP BY d.ma_dh
 ## 15. Keylab2022 Desktop Automation
 
 **Files:**
-- `keylab_exporter.py` — Python automation dùng pywinauto, hỗ trợ `--once` mode (trigger thủ công)
+- `keylab_exporter.py` — Python automation dùng pywinauto
 - `AutoExportKeyLab.ahk` — AutoHotkey script, dùng cho reference (không dùng chính thức)
 
-### 14.1 Quy trình xuất Excel thủ công
+**⚠️ QUAN TRỌNG: Auto-loop đã TẮT**
+
+Keylab exporter có 2 modes:
+1. **Manual mode (`--once`):** ✅ ĐANG DÙNG
+   - Trigger: Admin click 🔄 trên dashboard
+   - Command: `python keylab_exporter.py --once`
+   - Tần suất: On-demand (khi cần)
+
+2. **Auto-loop mode (`main()`):** ❌ ĐÃ TẮT
+   - Xuất Excel tự động mỗi 15 phút, 24/7
+   - Command: `python keylab_exporter.py` (không có flag)
+   - Lý do tắt: Tránh conflict với manual export, file naming issues
+
+**Để bật lại auto-loop (không khuyến nghị):**
+```bash
+# Add vào PM2:
+pm2 start keylab_exporter.py --name keylab-auto --interpreter python
+```
+
+### 15.1 Quy trình xuất Excel thủ công (Manual mode)
 
 **Flow khi admin click nút 🔄 "Xuất Excel KeyLab":**
 
@@ -671,8 +691,45 @@ a38e965  merge: feat/multi-user-system → main
 - `labo_config.json` — Last run file path
 
 **🔄 Auto-processes:**
-- File watcher: detect new Excel → auto-scrape → update DB
+- File watcher (server.js): detect new Excel → auto-scrape → update DB
+- Auto-scrape headless (auto_scrape_headless.py): check every 10 min during working hours (7:00-20:30)
 - Keylab export: manual trigger only (POST /keylab-export-now)
+
+---
+
+## 21. Headless Auto-Scrape
+
+**File:** `auto_scrape_headless.py`
+
+**Mục đích:** Tự động scrape file Excel mới nhất mỗi 10 phút trong giờ làm việc, không cần GUI.
+
+**Logic:**
+```
+Mỗi 10 phút:
+  ┌─ Kiểm tra giờ làm việc (7:00 - 20:30)
+  ├─ Nếu ngoài giờ → chờ đến 7:00 sáng mai
+  ├─ Tìm file Excel mới nhất trong Excel/
+  ├─ So sánh với last_run_file (từ labo_config.json)
+  ├─ Nếu khác → chạy run_scrape.py
+  ├─ Nếu giống → skip (không scrape trùng)
+  └─ Chờ 10 phút → lặp lại
+```
+
+**Managed by PM2:**
+```bash
+pm2 start ecosystem.config.js  # Chạy cả server.js + auto-scrape
+pm2 status                     # Xem trạng thái
+pm2 logs auto-scrape           # Xem log
+pm2 restart auto-scrape        # Restart
+```
+
+**Khác biệt với File Watcher:**
+| Feature | File Watcher (server.js) | Auto-Scrape Headless |
+|---------|-------------------------|----------------------|
+| Trigger | Khi có file mới trong Excel/ | Check mỗi 10 phút |
+| Cần GUI | Không | Không |
+| Last-run check | Không | Có |
+| Duplicate prevention | manualKeyLabExports set | labo_config.json |
 
 ---
 

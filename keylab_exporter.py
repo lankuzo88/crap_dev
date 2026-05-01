@@ -30,6 +30,11 @@ START_TIME = dtime(0, 0)   # 00:00 - chạy 24/24
 END_TIME = dtime(23, 59)   # 23:59 - chạy 24/24
 INTERVAL_SECONDS = 15 * 60  # 15 phút
 
+# Retry config
+MAX_EXPORT_RETRIES = 2          # Số lần retry (tổng 3 attempts)
+SAVE_DIALOG_TIMEOUT = 5         # Timeout mỗi lần chờ dialog (giây)
+RETRY_DELAY = 2                 # Delay giữa các retry (giây)
+
 STATE_FILE = Path(__file__).parent / "keylab_state.json"
 LOG_FILE   = Path(__file__).parent / "keylab_export.log"
 EXCEL_DIR  = Path(__file__).parent / "Excel"
@@ -193,7 +198,8 @@ def _bm_click(parent_hwnd: int, btn_text: str) -> bool:
     return True
 
 
-def run_export(win, filename: str) -> bool:
+def _try_export_once(win, filename: str, attempt: int) -> bool:
+    """Single export attempt - không retry, chỉ thử 1 lần."""
     import win32gui, win32con
     try:
         # Restore + focus — WinForms yêu cầu window active để ShowDialog() hoạt động
@@ -208,53 +214,101 @@ def run_export(win, filename: str) -> bool:
         spec = Desktop(backend="uia").window(handle=win.handle)
 
         # 1. Click "Tim kiem"
+        log.info(f"  [{attempt}] Click 'Tìm kiếm'...")
         spec.child_window(auto_id="btnTimKiem", control_type="Button").click_input()
-        log.info("Clicked 'Tim kiem' — cho 3 giay...")
         time.sleep(3)
 
         # 2. Click "Xuat Excel"
+        log.info(f"  [{attempt}] Click 'Xuất Excel'...")
         spec.child_window(auto_id="btnXuatExcel", control_type="Button").click_input()
-        log.info("Clicked 'Xuat Excel'")
         time.sleep(2)
 
         # 3. Chờ Save As dialog qua GetForegroundWindow
-        save_dlg_handle = _wait_for_save_dialog(win.handle, timeout=15)
+        log.info(f"  [{attempt}] Chờ Save dialog (timeout {SAVE_DIALOG_TIMEOUT}s)...")
+        save_dlg_handle = _wait_for_save_dialog(win.handle, timeout=SAVE_DIALOG_TIMEOUT)
         if save_dlg_handle is None:
-            log.error("Hop thoai Save As khong xuat hien sau 15 giay")
+            log.warning(f"  [{attempt}] Save dialog không xuất hiện sau {SAVE_DIALOG_TIMEOUT}s")
+            win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
             return False
 
+        # 4. Type filename và Save
+        log.info(f"  [{attempt}] Nhập filename và Save...")
         save_dlg = Desktop(backend="uia").window(handle=save_dlg_handle)
         name_field = save_dlg.child_window(auto_id="1001", control_type="Edit")
         name_field.click_input()
         name_field.type_keys("^a", pause=0.1)
         name_field.type_keys(filename, with_spaces=False)
         save_dlg.child_window(auto_id="1", control_type="Button").click_input()
-        log.info(f"Da luu: {filename}")
+        log.info(f"  [{attempt}] Đã click Save")
         time.sleep(1.5)
 
-        # 4. Đóng dialog "Open with" nếu xuất hiện
+        # 5. Đóng dialog "Open with" nếu xuất hiện
         _dismiss_open_with_dialog()
 
-        # 5. Minimize về taskbar
+        # 6. Minimize về taskbar
         win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
         return True
 
     except PWTimeoutError as e:
-        log.error(f"Timeout: {e}")
-        win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
+        log.error(f"  [{attempt}] Timeout: {e}")
+        try:
+            win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
+        except:
+            pass
         return False
     except Exception as e:
-        log.error(f"Loi xuat: {e}")
-        win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
+        log.error(f"  [{attempt}] Lỗi: {e}")
+        try:
+            win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
+        except:
+            pass
         return False
 
 
-def _wait_for_save_dialog(keylab_handle: int, timeout: int = 15) -> int | None:
-    """Cho Save As dialog xuat hien — quet ca EnumWindows lan GetForegroundWindow."""
+def run_export(win, filename: str) -> bool:
+    """
+    Xuất Excel với retry logic.
+    Strategy: Click lại 'Tìm kiếm' + 'Xuất Excel' mỗi lần retry (full reset).
+    """
+    import win32gui, win32con
+
+    for attempt in range(1, MAX_EXPORT_RETRIES + 2):  # +1 cho lần đầu, +1 vì range
+        log.info(f"Export attempt {attempt}/{MAX_EXPORT_RETRIES + 1}: {filename}")
+
+        success = _try_export_once(win, filename, attempt)
+
+        if success:
+            log.info(f"✓ Export thành công (attempt {attempt})")
+            return True
+
+        # Nếu fail và còn retry
+        if attempt <= MAX_EXPORT_RETRIES:
+            log.warning(f"✗ Attempt {attempt} thất bại, retry sau {RETRY_DELAY}s...")
+            time.sleep(RETRY_DELAY)
+
+            # Reset window state trước khi retry
+            try:
+                win32gui.ShowWindow(win.handle, win32con.SW_RESTORE)
+                win32gui.SetForegroundWindow(win.handle)
+                time.sleep(0.5)
+            except Exception as e:
+                log.error(f"Không thể restore window cho retry: {e}")
+                # Vẫn tiếp tục retry
+        else:
+            log.error(f"✗ Export thất bại sau {MAX_EXPORT_RETRIES + 1} attempts")
+            return False
+
+    return False
+
+
+def _wait_for_save_dialog(keylab_handle: int, timeout: int = 5) -> int | None:
+    """Chờ Save As dialog xuất hiện — quét cả EnumWindows lẫn GetForegroundWindow."""
     import win32gui
     deadline = time.time() + timeout
+    checked_count = 0
+
     while time.time() < deadline:
-        # Quet tat ca top-level windows
+        # Quét tất cả top-level windows
         found = []
         def _cb(hwnd, _):
             if hwnd == keylab_handle:
@@ -264,8 +318,13 @@ def _wait_for_save_dialog(keylab_handle: int, timeout: int = 15) -> int | None:
                 found.append(hwnd)
         win32gui.EnumWindows(_cb, None)
         if found:
+            log.info(f"    Found Save dialog after {checked_count * 0.3:.1f}s")
             return found[0]
+
+        checked_count += 1
         time.sleep(0.3)
+
+    log.warning(f"    No Save dialog found after {timeout}s ({checked_count} checks)")
     return None
 
 
@@ -390,11 +449,25 @@ def run_once():
     sys.exit(0)
 
 
+def check_health():
+    """Check if Keylab2022 is running. Fast check (100-200ms)."""
+    win = find_keylab_window()
+    if not win:
+        print("ERROR: Keylab not found", flush=True)
+        sys.exit(1)
+
+    # Window found
+    print(f"OK: {win.window_text()}", flush=True)
+    sys.exit(0)
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--debug":
         debug_controls()
     elif len(sys.argv) > 1 and sys.argv[1] == "--debug-save":
         debug_save_dialog()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--check":
+        check_health()
     elif len(sys.argv) > 1 and sys.argv[1] == "--once":
         run_once()
     else:
