@@ -6,6 +6,8 @@ Env vars: LABO_USER1, LABO_PASS1  (tối đa 4 tài khoản: LABO_USER1..4)
 import sys, os, queue, threading, subprocess, json
 from pathlib import Path
 
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+
 sys.path.insert(0, str(Path(__file__).parent))
 from laboasia_gui_scraper_tkinter import (
     LaboAsiaAPIClient, load_order_ids, build_progress_df,
@@ -161,6 +163,7 @@ def run(excel_path: str):
             [sys.executable, str(cleaner_path), scraped_xlsx, clean_out],
             capture_output=True, text=True, encoding='utf-8', errors='replace',
             env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
+            creationflags=_NO_WINDOW,
         )
         if r.returncode == 0:
             log('[runner] Làm sạch xong!')

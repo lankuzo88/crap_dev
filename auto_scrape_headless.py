@@ -14,6 +14,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import pytz
 
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+
 # ── Config ──────────────────────────────────────────────────────────────────
 INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút
 START_HOUR = 7                 # Giờ bắt đầu (Vietnam time)
@@ -117,6 +119,7 @@ def scrape_excel(file_path: Path) -> bool:
             encoding="utf-8",
             errors="replace",
             timeout=300,  # 5 phút timeout
+            creationflags=_NO_WINDOW,
         )
         if result.returncode == 0:
             log.info(f"Scrape successful: {file_path.name}")

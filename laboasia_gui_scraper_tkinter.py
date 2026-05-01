@@ -37,6 +37,8 @@ from typing import Optional
 
 import requests
 
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -1211,6 +1213,7 @@ class App:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=str(BASE_DIR),
+                creationflags=_NO_WINDOW,
             )
             self.log("[Server] Da khoi dong node server.js")
         except Exception as e:
@@ -1641,6 +1644,7 @@ class App:
                     encoding="utf-8",
                     errors="replace",
                     env=env,
+                    creationflags=_NO_WINDOW,
                 )
                 self.event_q.put(
                     ("clean_done", clean_out, result.returncode,
