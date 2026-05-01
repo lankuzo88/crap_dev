@@ -29,9 +29,15 @@ crap_dev/
 ├── dashboard_mobile_ref.html        # Bản tham khảo cũ (không dùng chính thức)
 ├── login.html                       # Trang đăng nhập
 ├── upload.html                      # Trang upload Excel + xem log scraper
+├── analytics.html                   # Analytics dashboard (admin-only)
+├── feedback.html                    # Feedback system UI
+├── admin.html                       # Admin panel UI
 ├── labo_config.json                 # Config: last_run_file path
 ├── keylab_state.json                # State: daily export counter (auto-created)
-├── package.json                     # Node deps: express, multer, xlsx
+├── users.json                       # User database (username, password, role)
+├── sessions.json                    # Active sessions (gitignored)
+├── labo_data.db                     # SQLite database (don_hang, tien_do, feedback_types, feedbacks)
+├── package.json                     # Node deps: express, multer, xlsx, better-sqlite3
 ├── requirements.txt                 # Python deps (+ pywinauto, pywin32)
 ├── Caddyfile                        # Reverse proxy (optional)
 │
@@ -41,7 +47,8 @@ crap_dev/
 ├── backfill_data_thang.py           # Tổng hợp dữ liệu theo tháng
 ├── labo_gui.py                      # GUI Tkinter standalone
 ├── build_app.py                     # PyInstaller → dist/LaboAsia.exe
-├── keylab_exporter.py               # Auto-export Excel từ Keylab2022 desktop (mỗi 10 phút, 7:30–20:00)
+├── keylab_exporter.py               # Auto-export Excel từ Keylab2022 desktop (manual trigger)
+├── demo_metadata.js                 # Demo hybrid metadata approach (reference)
 │
 ├── File_sach/                       # Excel đã clean: *_final.xlsx
 ├── Data/                            # JSON scraper output: *_scraped.json
@@ -71,8 +78,7 @@ const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;  // 7 ngày (giây)
 {
   "users": [
     { "username": "admin", "password": "142536", "role": "admin" },
-    { "username": "minhtuan", "password": "123456789", "role": "user" },
-    { "username": "test", "password": "123456", "role": "user" }
+    { "username": "minhtuan", "password": "123456789", "role": "user" }
   ]
 }
 ```
@@ -82,10 +88,13 @@ const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;  // 7 ngày (giây)
 - ✅ Cookie: `sid=<token>; HttpOnly; SameSite=Strict; Max-Age=7days`
 - ✅ Session persist to `sessions.json` (survive restart)
 - ✅ Middleware `requireAuth` bảo vệ toàn bộ route trừ `/login`, `/logout`
+- ✅ Middleware `requireAuth` attach session: `req.session = sess` (quan trọng!)
 - ✅ Middleware `requireAdmin` bảo vệ admin-only routes
 - ✅ Admin panel UI tại `/admin` (admin.html)
 - ✅ User management API: GET/POST/DELETE `/admin/api/users`
 - ✅ Password reset API: POST `/admin/api/users/:username/reset-password`
+- ✅ **Admin-only features**: Analytics, Feedback, Export button, Upload button
+- ✅ User thường chỉ thấy: Đơn Hàng, Pipeline, Tổng Hợp
 
 **Route auth:**
 ```
@@ -118,6 +127,17 @@ GET  /user    → trả về { username, role } của user hiện tại
 | `/admin/api/users` | POST | ✅ | ✅ | Tạo user mới (username, password, role) |
 | `/admin/api/users/:username` | DELETE | ✅ | ✅ | Xóa user (không thể xóa chính mình) |
 | `/admin/api/users/:username/reset-password` | POST | ✅ | ✅ | Reset password user |
+| `/analytics.html` | GET | ✅ | ✅ | Analytics dashboard (admin-only) |
+| `/feedback.html` | GET | ✅ | — | Feedback system UI |
+| `/api/feedback/types` | GET | ✅ | — | Danh sách loại lỗi feedback |
+| `/api/feedback/types` | POST | ✅ | ✅ | Tạo loại lỗi mới (admin-only) |
+| `/api/feedback/types/:id` | DELETE | ✅ | ✅ | Xóa loại lỗi (admin-only) |
+| `/api/feedbacks` | GET | ✅ | — | Danh sách phản ánh (filter: ma_dh, status) |
+| `/api/feedbacks` | POST | ✅ | — | Tạo phản ánh mới |
+| `/api/feedbacks/:id` | PATCH | ✅ | — | Cập nhật trạng thái phản ánh |
+| `/api/orders` | GET | ✅ | — | Danh sách đơn hàng (limit, offset) |
+| `/api/auto-scrape/status` | GET | ✅ | — | Trạng thái auto-scrape 24/7 |
+| `/api/auto-scrape/run` | POST | ✅ | ✅ | Kích hoạt auto-scrape ngay (admin-only) |
 | `/login` | GET/POST | ❌ | — | Form đăng nhập |
 | `/logout` | GET | ❌ | — | Đăng xuất |
 
@@ -156,31 +176,62 @@ Dashboard fetch /data.json → render cards + filter
 **Cấu trúc order object (sau merge):**
 ```javascript
 {
-  ma_dh:    "262704030",           // Mã đơn hàng
-  id:       "262704030",
-  ma_dh:    "262704030",
-  nhan:     "2026-04-29 08:00:00", // Nhận lúc
-  yc_ht:    "2026-04-29 12:00:00", // Y/c hoàn thành
-  yc_giao:  "2026-04-29 14:00:00", // Y/c giao
-  kh:       "LA-Nk BS Thuy",       // Khách hàng (phòng khám)
-  bn:       "Trần T Ngon",         // Bệnh nhân
-  ph:       "Răng sứ Zircornia (R:21-23, - SL: 3)", // Phục hình
-  sl:       3,                     // Số lượng răng
-  gc:       "",                    // Ghi chú
-  lk:       "Làm mới",             // Loại lệnh
-  tai_khoan:"lanhn",               // Tài khoản scraper
-  allPh:    "...",                 // Tất cả phục hình (multi-line)
-  pct:      60,                    // % hoàn thành
-  done:     3,                     // Số công đoạn xong
-  total:    5,                     // Tổng công đoạn active
-  curKtv:   "Văn Huyến",          // KTV đang làm
-  stages: [                        // Mảng 5 công đoạn
+  ma_dh:      "262704030",         // Mã đơn hàng (gốc, không có suffix)
+  ma_dh_goc:  "262704030",         // Mã đơn gốc (nếu là đơn phụ: 262704030-1, -2...)
+  id:         "262704030",
+  nhan:       "2026-04-29 08:00:00", // Nhận lúc
+  yc_ht:      "2026-04-29 12:00:00", // Y/c hoàn thành
+  yc_giao:    "2026-04-29 14:00:00", // Y/c giao
+  kh:         "LA-Nk BS Thuy",      // Khách hàng (phòng khám)
+  bn:         "Trần T Ngon",        // Bệnh nhân
+  ph:         "Răng sứ Zircornia (R:21-23, - SL: 3)", // Phục hình
+  sl:         3,                    // Số lượng răng
+  gc:         "",                   // Ghi chú
+  lk:         "Làm mới",            // Loại lệnh
+  tai_khoan:  "lanhn",              // Tài khoản scraper
+  allPh:      "...",                // Tất cả phục hình (multi-line)
+  pct:        60,                   // % hoàn thành
+  done:       3,                    // Số công đoạn xong
+  total:      5,                    // Tổng công đoạn active
+  curKtv:     "Văn Huyến",          // KTV đang làm
+  stages_raw: "0|CBM|Minh|Có|2026-04-29 08:30;;1|SÁP/Cadcam|Hồng Thắm|Có|2026-04-29 09:00;;...", // GROUP_CONCAT từ SQLite
+  stages: [                         // Mảng 5 công đoạn (parsed từ stages_raw)
     { n:"CBM",        x:true,  k:"Minh",       t:"2026-04-29 08:30", sk:false },
     { n:"SÁP/Cadcam", x:true,  k:"Hồng Thắm",  t:"2026-04-29 09:00", sk:false },
     { n:"SƯỜN",       x:true,  k:"Văn Huyến",  t:"2026-04-29 10:30", sk:false },
     { n:"ĐẮP",        x:false, k:"",           t:"",                 sk:false },
     { n:"MÀI",        x:false, k:"",           t:"",                 sk:false },
   ]
+}
+```
+
+**Feedback object:**
+```javascript
+{
+  id: 1,
+  ma_dh: "262704030",
+  feedback_type_id: 1,
+  type_name: "Màu sắc không đúng",
+  description: "Răng sứ màu sáng hơn yêu cầu",
+  severity: "medium",  // low, medium, high
+  status: "open",      // open, in_progress, resolved, closed
+  reported_by: "admin",
+  assigned_to: null,
+  created_at: "2026-05-01 10:32:03",
+  updated_at: "2026-05-01 10:32:03",
+  resolved_at: null
+}
+```
+
+**Feedback type object:**
+```javascript
+{
+  id: 1,
+  name: "Màu sắc không đúng",
+  category: "mau_sac",  // mau_sac, hinh_the, don_hang, nha_khoa, khac
+  description: "Màu răng không khớp với mẫu yêu cầu",
+  active: 1,
+  created_at: "2026-05-01 10:32:03"
 }
 ```
 
@@ -614,6 +665,14 @@ pm2 start ecosystem.config.js
 ## 18. Git history (latest)
 
 ```
+54b2cfb  feat: Feedback system + Auto-scrape 24/7 + Admin-only features (2026-05-01)
+├─ Feedback system: create/list/update feedbacks with types
+├─ Auto-scrape: every 10 minutes, 24/7 (no working hours limit)
+├─ Session fix: attach req.session in requireAuth middleware
+├─ Admin-only: Analytics & Feedback links hidden for regular users
+├─ Feedback UI: collapsible sections, autocomplete with related orders + KTV info
+└─ Search: expanded fields (ma_dh, khach_hang, benh_nhan, phuc_hinh, loai_lenh, ghi_chu)
+
 3b89f6f  docs: update CONTEXT.md with manual Keylab export + UI enhancements (d091b6a)
 d091b6a  feat: Manual Keylab export + on-demand scraper
 ├─ Remove auto-loop keylab_exporter
@@ -733,4 +792,122 @@ pm2 restart auto-scrape        # Restart
 
 ---
 
-**Last updated:** 2026-05-01 by Claude Opus 4.6
+**Last updated:** 2026-05-01 by Claude Opus 4.7
+
+---
+
+## 22. Feedback System (2026-05-01)
+
+**Mục đích:** Hệ thống quản lý phản ánh lỗi từ nha khoa về chất lượng đơn hàng.
+
+**Files:**
+- `feedback.html` — UI feedback system
+- Database tables: `feedback_types`, `feedbacks`
+
+**Tính năng:**
+- ✅ Admin tạo/xóa loại lỗi (Màu sắc, Hình thể, Đơn hàng, Nha khoa, Khác)
+- ✅ User nhập phản ánh: chọn đơn hàng, loại lỗi, mức độ (low/medium/high), mô tả
+- ✅ Autocomplete đơn hàng: tìm theo mã đơn, tên nha khoa, bệnh nhân, phục hình, loại lệnh, ghi chú
+- ✅ Hiển thị đơn liên quan (cùng ma_dh_goc) + KTV đã làm
+- ✅ Filter phản ánh: Tất cả / Mở / Đang xử lý / Đã giải quyết / Đóng
+- ✅ Update trạng thái phản ánh
+- ✅ Collapsible sections: Quản lý loại lỗi, Danh sách phản ánh (mặc định ẩn)
+
+**Admin-only:**
+- Link "📝 Feedback" trong dashboard (ẩn với user thường)
+- Tạo/xóa loại lỗi
+
+**API endpoints:** (xem section 4)
+
+---
+
+## 23. Auto-Scrape 24/7 (2026-05-01)
+
+**Mục đích:** Tự động cào file Excel mới nhất mỗi 10 phút, liên tục 24/7.
+
+**Logic:**
+```
+Mỗi 10 phút (setInterval):
+  ├─ Kiểm tra scrapeJob.running → skip nếu đang chạy
+  ├─ Tìm file Excel mới nhất trong Excel/
+  ├─ Nếu không tìm thấy → log warning
+  └─ spawn: python run_scrape.py <filepath>
+```
+
+**Khác với auto_scrape_headless.py (đã loại bỏ):**
+- Không check giờ làm việc → chạy 24/7
+- Không check last_run_file → luôn scrape file mới nhất
+- Lý do: Tiến độ trong file luôn thay đổi, cần cập nhật liên tục
+
+**Khởi động:**
+```javascript
+// server.js
+startAutoScrapeTimer();  // Chạy ngay khi server start
+```
+
+**API endpoints:**
+- `GET /api/auto-scrape/status` — Trạng thái auto-scrape
+- `POST /api/auto-scrape/run` — Admin kích hoạt scrape ngay (admin-only)
+
+**Logs:**
+```
+[21:14:13] ⏰ Auto-scrape 24/7: chạy ngay, sau đó mỗi 10 phút
+[21:14:13] 🔄 Auto-scrape: 01052026_49.xls
+[21:14:13] 🚀 Bắt đầu cào: 01052026_49.xls
+[21:14:38] 🏁 Scraper done: 01052026_49.xls, exit=0
+```
+
+---
+
+## 24. Analytics Dashboard (Admin-only)
+
+**File:** `analytics.html`
+
+**Tính năng:**
+- 📈 Xu hướng đơn hàng (line chart): Tổng đơn, Hoàn thành (7/30 ngày)
+- 🍩 Phân bố loại phục hình (doughnut chart): Zirconia, Kim loại, Mặt dán, Hỗn hợp
+- 📊 Hiệu suất KTV (bar chart): Top 10 KTV theo số đơn hoàn thành
+- 🏥 Top 10 phòng khám (bar chart): Theo tổng đơn
+
+**API endpoints:**
+- `GET /api/analytics/trend?days=7|30` — Xu hướng đơn hàng
+- `GET /api/analytics/ktv?days=7` — Hiệu suất KTV
+- `GET /api/analytics/customers?limit=10` — Top khách hàng
+
+**Chart library:** Chart.js 4.4.0 (CDN)
+
+**Admin-only:** Link "📈 Analytics" ẩn với user thường
+
+---
+
+## 25. Admin-only Features Summary
+
+**Ẩn với user thường (`role !== 'admin'`):**
+- 📈 Analytics link
+- 📝 Feedback link
+- 🔄 Xuất Excel KeyLab button
+- 📤 Upload button
+- ⚙️ Admin panel (`/admin`)
+
+**Hiển thị cho tất cả user:**
+- 📋 Đơn Hàng
+- ⚙️ Pipeline
+- 📊 Tổng Hợp
+- 📝 Feedback form (nhập phản ánh)
+
+**Implementation:**
+```javascript
+// dashboard.html
+async function initAdminUI() {
+  const u = await fetch('/user').then(r => r.json());
+  if (u.role === 'admin') {
+    document.getElementById('d-nl-analytics').style.display = '';
+    document.getElementById('d-nl-feedback').style.display = '';
+    document.getElementById('d-export-section').style.display = '';
+    document.getElementById('d-upload-btn').style.display = '';
+  }
+}
+```
+
+---
+
