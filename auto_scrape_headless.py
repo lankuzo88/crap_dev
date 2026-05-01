@@ -12,12 +12,14 @@ import subprocess
 import logging
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # ── Config ──────────────────────────────────────────────────────────────────
 INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút
-START_HOUR = 7                 # Giờ bắt đầu
-END_HOUR = 20                  # Giờ kết thúc (20:30 thực tế)
+START_HOUR = 7                 # Giờ bắt đầu (Vietnam time)
+END_HOUR = 20                  # Giờ kết thúc (20:30 thực tế, Vietnam time)
 END_MINUTE = 30
+VIETNAM_TZ = ZoneInfo("Asia/Ho_Chi_Minh")  # UTC+7
 
 BASE_DIR   = Path(__file__).parent
 EXCEL_DIR  = BASE_DIR / "Excel"
@@ -41,8 +43,8 @@ log = logging.getLogger("auto-scrape")
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def is_within_working_hours():
-    """Kiểm tra có đang trong giờ làm việc không."""
-    now = datetime.now()
+    """Kiểm tra có đang trong giờ làm việc không (Vietnam time)."""
+    now = datetime.now(VIETNAM_TZ)
     start = now.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
     end = now.replace(hour=END_HOUR, minute=END_MINUTE, second=0, microsecond=0)
     return start <= now <= end
@@ -125,23 +127,23 @@ def scrape_excel(file_path: Path) -> bool:
 
 def main():
     log.info("=== Auto-Scrape Headless start ===")
-    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, {START_HOUR:02d}:00 - {END_HOUR:02d}:{END_MINUTE:02d}")
+    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, {START_HOUR:02d}:00 - {END_HOUR:02d}:{END_MINUTE:02d} (Vietnam time)")
 
     while True:
-        now = datetime.now()
+        now = datetime.now(VIETNAM_TZ)
 
         if not is_within_working_hours():
             # Ngoài giờ làm việc → tính thời gian chờ
             start_today = now.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
             if now < start_today:
                 wait = int((start_today - now).total_seconds())
-                log.info(f"Outside working hours. Waiting {wait // 60} min until {START_HOUR:02d}:00...")
+                log.info(f"Outside working hours. Waiting {wait // 60} min until {START_HOUR:02d}:00 Vietnam time...")
                 time.sleep(min(wait, 60))
             else:
                 # Quá END_HOUR → chờ đến 7h sáng mai
                 tomorrow = start_today.replace(day=start_today.day + 1)
                 wait = int((tomorrow - now).total_seconds())
-                log.info(f"After working hours. Waiting {wait // 3600:.1f}h until tomorrow {START_HOUR:02d}:00...")
+                log.info(f"After working hours. Waiting {wait // 3600:.1f}h until tomorrow {START_HOUR:02d}:00 Vietnam time...")
                 time.sleep(min(wait, 300))  # Check every 5 min instead of 1
             continue
 
