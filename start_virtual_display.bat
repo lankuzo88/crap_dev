@@ -15,47 +15,42 @@ echo   START VIRTUAL DISPLAY
 echo ===========================
 echo.
 
-:: ── 1. KICH HOAT MAN HINH AO ─────────────────
-if not exist "C:\usbmmidd\deviceinstaller64.exe" (
-    echo [LOI] usbmmidd chua duoc cai dat. Chay setup_virtual_display.bat truoc!
-    pause
-    exit /b 1
-)
-
-echo [1/2] Kich hoat man hinh ao usbmmidd...
-cd /d C:\usbmmidd
-deviceinstaller64 enableidd 1
+:: ── 1. KIEM TRA PARSEC-VDD ───────────────────
+echo [1/2] Kiem tra Parsec Virtual Display...
+wmic path Win32_VideoController get Name 2>nul | find /i "Parsec" >nul
 if %errorlevel% equ 0 (
-    echo   -> Virtual display: OK
+    echo   -^> Parsec Virtual Display: ACTIVE
 ) else (
-    echo   [CANH BAO] Lenh enableidd tra ve loi - co the man hinh da active san.
+    echo   [CANH BAO] Parsec VDD chua active.
+    echo   Chay setup_virtual_display.bat truoc!
 )
 
-:: ── 2. KHOI DONG TIGHTVNC SERVICE ────────────
+:: ── 2. KHOI DONG TIGHTVNC ────────────────────
 echo [2/2] Kiem tra TightVNC Service...
 sc query "tvnserver" | find "RUNNING" >nul 2>&1
 if %errorlevel% neq 0 (
     net start tvnserver >nul 2>&1
     if %errorlevel% equ 0 (
-        echo   -> TightVNC: Started
+        echo   -^> TightVNC: Started
     ) else (
-        echo   [LOI] Khong the start TightVNC. Kiem tra lai cai dat.
+        echo   [CANH BAO] TightVNC chua duoc cai. Chay setup truoc.
     )
 ) else (
-    echo   -> TightVNC: Already running
+    echo   -^> TightVNC: Already running
 )
 
-:: ── HIEN THI THONG TIN KET NOI ───────────────
+:: ── HIEN THI IP KET NOI ──────────────────────
 echo.
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| find "IPv4"') do (
+    set "RAW_IP=%%a"
+    set "IP=!RAW_IP: =!"
+    goto :show
+)
+:show
 echo ===========================
 echo   READY
 echo ===========================
-for /f "tokens=2 delims=:" %%a in ('ipconfig ^| find "IPv4"') do (
-    set "IP=%%a"
-    goto :show_ip
-)
-:show_ip
-echo   VNC: %IP::=%:5900
+echo   VNC: %IP%:5900
 echo.
 echo Nho dong RDP bang nut X (Disconnect)
 echo KHONG bam Sign Out / Log Off
