@@ -448,10 +448,29 @@ GROUP BY d.ma_dh
 ## 15. Keylab2022 Desktop Automation
 
 **Files:**
-- `keylab_exporter.py` — Python automation dùng pywinauto, hỗ trợ `--once` mode (trigger thủ công)
+- `keylab_exporter.py` — Python automation dùng pywinauto
 - `AutoExportKeyLab.ahk` — AutoHotkey script, dùng cho reference (không dùng chính thức)
 
-### 14.1 Quy trình xuất Excel thủ công
+**⚠️ QUAN TRỌNG: Auto-loop đã TẮT**
+
+Keylab exporter có 2 modes:
+1. **Manual mode (`--once`):** ✅ ĐANG DÙNG
+   - Trigger: Admin click 🔄 trên dashboard
+   - Command: `python keylab_exporter.py --once`
+   - Tần suất: On-demand (khi cần)
+
+2. **Auto-loop mode (`main()`):** ❌ ĐÃ TẮT
+   - Xuất Excel tự động mỗi 15 phút, 24/7
+   - Command: `python keylab_exporter.py` (không có flag)
+   - Lý do tắt: Tránh conflict với manual export, file naming issues
+
+**Để bật lại auto-loop (không khuyến nghị):**
+```bash
+# Add vào PM2:
+pm2 start keylab_exporter.py --name keylab-auto --interpreter python
+```
+
+### 15.1 Quy trình xuất Excel thủ công (Manual mode)
 
 **Flow khi admin click nút 🔄 "Xuất Excel KeyLab":**
 
