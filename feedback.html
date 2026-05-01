@@ -2,76 +2,407 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Feedback - ASIA LAB</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback · ASIA LAB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial;padding:20px;background:#0c0f18;color:#e8edf8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0c0f18;--surface:#141824;--surface2:#1a2030;
+  --border:#252d42;--border2:#1e2638;
+  --amber:#f5a623;--green:#2ed573;--blue:#3d9fff;--red:#ff4757;--purple:#a55eea;
+  --text:#e8edf8;--text2:#8b95b0;--text3:#4a5270;
+}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);padding:20px;}
 .container{max-width:1200px;margin:0 auto;}
-h1{color:#f5a623;}
-.section{background:#141824;border:1px solid #252d42;border-radius:10px;padding:20px;margin-bottom:20px;}
-input,select,textarea{width:100%;padding:10px;margin:5px 0;background:#1a2030;border:1px solid #252d42;color:#e8edf8;border-radius:6px;}
-button{background:#f5a623;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;}
-.fb-card{background:#1a2030;border:1px solid #252d42;padding:15px;margin:10px 0;border-radius:8px;}
-.filter-btn{background:#1a2030;border:1px solid #252d42;padding:6px 12px;margin:5px;border-radius:6px;cursor:pointer;color:#e8edf8;}
-.filter-btn.active{background:#f5a623;color:#000;}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;}
+.title{font-size:28px;font-weight:700;color:var(--amber);}
+.nav-back{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);text-decoration:none;font-size:14px;}
+.nav-back:hover{border-color:var(--amber);color:var(--amber);}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+.section-title{font-size:18px;font-weight:600;margin-bottom:15px;display:flex;align-items:center;gap:8px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;}
+.form-group{margin-bottom:15px;}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);font-family:inherit;font-size:14px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--amber);}
+.form-textarea{min-height:100px;resize:vertical;}
+.btn{background:var(--amber);border:none;padding:10px 20px;border-radius:6px;color:#000;font-weight:600;cursor:pointer;font-size:14px;}
+.btn:hover{opacity:0.9;}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.btn-small{padding:6px 12px;font-size:12px;}
+.filters{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface2);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);cursor:pointer;font-size:13px;font-weight:500;}
+.filter-btn.active{background:var(--amber);border-color:var(--amber);color:#000;}
+.fb-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:15px;margin-bottom:12px;}
+.fb-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.fb-madh{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--amber);}
+.fb-type{font-size:12px;padding:4px 10px;border-radius:4px;background:var(--blue);color:#000;font-weight:600;}
+.fb-severity{font-size:11px;padding:3px 8px;border-radius:3px;font-weight:700;text-transform:uppercase;}
+.fb-severity.low{background:var(--green);color:#000;}
+.fb-severity.medium{background:var(--amber);color:#000;}
+.fb-severity.high{background:var(--red);color:#fff;}
+.fb-desc{color:var(--text);font-size:14px;margin-bottom:12px;line-height:1.5;}
+.fb-footer{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text3);gap:10px;flex-wrap:wrap;}
+.fb-meta{display:flex;align-items:center;gap:8px;}
+.fb-status-select{background:var(--surface);border:1px solid var(--border);padding:6px 10px;border-radius:4px;color:var(--text);font-size:13px;font-weight:500;}
+.admin-section{border-top:2px solid var(--border);padding-top:20px;margin-top:20px;}
+.type-grid{display:grid;gap:10px;}
+.type-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);padding:12px;border-radius:6px;}
+.type-info{flex:1;}
+.type-name{font-weight:600;font-size:14px;}
+.type-category{font-size:12px;color:var(--text3);margin-left:10px;padding:2px 6px;background:var(--surface);border-radius:3px;}
+.btn-delete{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-delete:hover{opacity:0.9;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
+.modal.open{display:flex;}
+.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;max-width:500px;width:90%;}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:20px;color:var(--amber);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.message{padding:12px;border-radius:6px;margin-bottom:15px;font-size:14px;}
+.message.success{background:rgba(46,213,115,0.1);border:1px solid rgba(46,213,115,0.3);color:var(--green);}
+.message.error{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--red);}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);padding:12px;border-radius:6px;text-align:center;}
+.stat-value{font-size:24px;font-weight:700;color:var(--amber);}
+.stat-label{font-size:12px;color:var(--text3);margin-top:4px;}
 </style>
 </head>
 <body>
+
 <div class="container">
-<h1>Feedback System</h1>
-<a href="/" style="color:#f5a623">Back to Dashboard</a>
+  <div class="header">
+    <h1 class="title">📝 Feedback System</h1>
+    <a href="/" class="nav-back">← Về Dashboard</a>
+  </div>
 
-<div class="section">
-<h3>New Feedback</h3>
-<form id="fbForm">
-<input type="text" id="ma_dh" placeholder="Order ID" required>
-<select id="type_id" required></select>
-<select id="severity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
-<textarea id="desc" placeholder="Description" required></textarea>
-<button type="submit">Submit</button>
-</form>
+  <div id="message" class="message" style="display:none;"></div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats"></div>
+
+  <!-- Admin: Quản lý loại lỗi -->
+  <div id="adminSection" class="section" style="display:none;">
+    <div class="section-title">⚙️ Quản lý loại lỗi (Admin)</div>
+    <button class="btn btn-small" onclick="openAddTypeModal()">+ Thêm loại lỗi</button>
+    <div class="admin-section">
+      <div id="typeList" class="type-grid"></div>
+    </div>
+  </div>
+
+  <!-- Form nhập phản ánh -->
+  <div class="section">
+    <div class="section-title">✍️ Nhập phản ánh mới</div>
+    <form id="feedbackForm" onsubmit="submitFeedback(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mã đơn hàng *</label>
+          <input type="text" class="form-input" id="ma_dh" placeholder="Ví dụ: 262704030" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loại lỗi *</label>
+          <select class="form-select" id="feedback_type_id" required></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mức độ *</label>
+        <select class="form-select" id="severity">
+          <option value="low">🟢 Thấp - Không ảnh hưởng nhiều</option>
+          <option value="medium" selected>🟡 Trung bình - Cần xử lý</option>
+          <option value="high">🔴 Cao - Ưu tiên cao</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả chi tiết *</label>
+        <textarea class="form-textarea" id="description" placeholder="Mô tả chi tiết vấn đề, bao gồm: vị trí răng, hiện tượng, yêu cầu..." required></textarea>
+      </div>
+      <button type="submit" class="btn">📤 Gửi phản ánh</button>
+    </form>
+  </div>
+
+  <!-- Danh sách phản ánh -->
+  <div class="section">
+    <div class="section-title">📋 Danh sách phản ánh</div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterFeedbacks('all')">Tất cả</button>
+      <button class="filter-btn" onclick="filterFeedbacks('open')">🔴 Mở</button>
+      <button class="filter-btn" onclick="filterFeedbacks('in_progress')">🟡 Đang xử lý</button>
+      <button class="filter-btn" onclick="filterFeedbacks('resolved')">🟢 Đã giải quyết</button>
+      <button class="filter-btn" onclick="filterFeedbacks('closed')">⚫ Đóng</button>
+    </div>
+    <div id="feedbackList"></div>
+  </div>
 </div>
 
-<div class="section">
-<h3>Feedbacks</h3>
-<div>
-<button class="filter-btn active" onclick="filter('all')">All</button>
-<button class="filter-btn" onclick="filter('open')">Open</button>
-<button class="filter-btn" onclick="filter('resolved')">Resolved</button>
-</div>
-<div id="list"></div>
-</div>
+<!-- Modal thêm loại lỗi -->
+<div id="addTypeModal" class="modal" onclick="if(event.target===this)closeAddTypeModal()">
+  <div class="modal-content">
+    <div class="modal-title">Thêm loại lỗi mới</div>
+    <form id="addTypeForm" onsubmit="submitType(event)">
+      <div class="form-group">
+        <label class="form-label">Tên loại lỗi *</label>
+        <input type="text" class="form-input" id="type_name" placeholder="Ví dụ: Màu sắc không đúng" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Danh mục *</label>
+        <select class="form-select" id="type_category" required>
+          <option value="hinh_the">Hình thể</option>
+          <option value="mau_sac">Màu sắc</option>
+          <option value="don_hang">Đơn hàng</option>
+          <option value="nha_khoa">Nha khoa</option>
+          <option value="khac">Khác</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả</label>
+        <textarea class="form-textarea" id="type_description" placeholder="Mô tả chi tiết loại lỗi này..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddTypeModal()">Hủy</button>
+        <button type="submit" class="btn">Tạo</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-let types=[];
-async function init(){
-const r=await fetch('/api/feedback/types');
-types=(await r.json()).data;
-document.getElementById('type_id').innerHTML=types.map(t=>'<option value="'+t.id+'">'+t.name+'</option>').join('');
-load();
+let currentUser = null;
+let feedbackTypes = [];
+let feedbacks = [];
+let currentFilter = 'all';
+
+async function init() {
+  try {
+    const userRes = await fetch('/user');
+    currentUser = await userRes.json();
+
+    if (currentUser.role === 'admin') {
+      document.getElementById('adminSection').style.display = 'block';
+      await loadFeedbackTypes();
+    }
+
+    await loadFeedbackTypesDropdown();
+    await loadFeedbacks();
+    updateStats();
+  } catch (err) {
+    showMessage('Lỗi khởi tạo: ' + err.message, 'error');
+  }
 }
-async function load(s){
-const r=await fetch(s?'/api/feedbacks?status='+s:'/api/feedbacks');
-const fbs=(await r.json()).data;
-document.getElementById('list').innerHTML=fbs.map(f=>'<div class="fb-card"><b>'+f.ma_dh+'</b> - '+f.type_name+' ['+f.severity+']<br>'+f.description+'<br><small>'+f.reported_by+' '+f.created_at+'</small><br><select onchange="upd('+f.id+',this.value)"><option '+(f.status=='open'?'selected':'')+'>open</option><option '+(f.status=='in_progress'?'selected':'')+'>in_progress</option><option '+(f.status=='resolved'?'selected':'')+'>resolved</option></select></div>').join('');
+
+async function loadFeedbackTypes() {
+  const res = await fetch('/api/feedback/types');
+  const data = await res.json();
+  feedbackTypes = data.data;
+
+  const list = document.getElementById('typeList');
+  if (feedbackTypes.length === 0) {
+    list.innerHTML = '<div class="empty-state">Chưa có loại lỗi nào</div>';
+    return;
+  }
+
+  list.innerHTML = feedbackTypes.map(t => `
+    <div class="type-item">
+      <div class="type-info">
+        <span class="type-name">${t.name}</span>
+        <span class="type-category">${t.category}</span>
+      </div>
+      <button class="btn-delete" onclick="deleteType(${t.id})">Xóa</button>
+    </div>
+  `).join('');
 }
-function filter(s){
-document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-event.target.classList.add('active');
-load(s=='all'?null:s);
+
+async function loadFeedbackTypesDropdown() {
+  const res = await fetch('/api/feedback/types');
+  const data = await res.json();
+  const select = document.getElementById('feedback_type_id');
+  select.innerHTML = data.data.map(t => `<option value="${t.id}">${t.name} (${t.category})</option>`).join('');
 }
-document.getElementById('fbForm').onsubmit=async(e)=>{
-e.preventDefault();
-await fetch('/api/feedbacks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ma_dh:document.getElementById('ma_dh').value,feedback_type_id:+document.getElementById('type_id').value,severity:document.getElementById('severity').value,description:document.getElementById('desc').value})});
-alert('Submitted');
-e.target.reset();
-load();
-};
-async function upd(id,s){
-await fetch('/api/feedbacks/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:s})});
-load();
+
+async function loadFeedbacks(status = null) {
+  const url = status && status !== 'all' ? `/api/feedbacks?status=${status}` : '/api/feedbacks';
+  const res = await fetch(url);
+  const data = await res.json();
+  feedbacks = data.data;
+
+  const list = document.getElementById('feedbackList');
+  if (feedbacks.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>Chưa có phản ánh nào</div></div>';
+    return;
+  }
+
+  list.innerHTML = feedbacks.map(fb => `
+    <div class="fb-card">
+      <div class="fb-header">
+        <span class="fb-madh">${fb.ma_dh}</span>
+        <span class="fb-type">${fb.type_name}</span>
+        <span class="fb-severity ${fb.severity}">${fb.severity}</span>
+      </div>
+      <div class="fb-desc">${fb.description}</div>
+      <div class="fb-footer">
+        <div class="fb-meta">
+          <span>👤 ${fb.reported_by}</span>
+          <span>•</span>
+          <span>🕐 ${fb.created_at}</span>
+        </div>
+        <select class="fb-status-select" onchange="updateStatus(${fb.id}, this.value)">
+          <option value="open" ${fb.status==='open'?'selected':''}>🔴 Mở</option>
+          <option value="in_progress" ${fb.status==='in_progress'?'selected':''}>🟡 Đang xử lý</option>
+          <option value="resolved" ${fb.status==='resolved'?'selected':''}>🟢 Đã giải quyết</option>
+          <option value="closed" ${fb.status==='closed'?'selected':''}>⚫ Đóng</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+
+  updateStats();
 }
+
+function updateStats() {
+  const total = feedbacks.length;
+  const open = feedbacks.filter(f => f.status === 'open').length;
+  const inProgress = feedbacks.filter(f => f.status === 'in_progress').length;
+  const resolved = feedbacks.filter(f => f.status === 'resolved').length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Tổng số</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--red)">${open}</div><div class="stat-label">Mở</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${inProgress}</div><div class="stat-label">Đang xử lý</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${resolved}</div><div class="stat-label">Đã giải quyết</div></div>
+  `;
+}
+
+function filterFeedbacks(status) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const isActive =
+      (status === 'all' && btn.textContent.includes('Tất cả')) ||
+      (status === 'open' && btn.textContent.includes('Mở')) ||
+      (status === 'in_progress' && btn.textContent.includes('Đang xử lý')) ||
+      (status === 'resolved' && btn.textContent.includes('Đã giải quyết')) ||
+      (status === 'closed' && btn.textContent.includes('Đóng'));
+    btn.classList.toggle('active', isActive);
+  });
+  loadFeedbacks(status === 'all' ? null : status);
+}
+
+async function submitFeedback(e) {
+  e.preventDefault();
+  const data = {
+    ma_dh: document.getElementById('ma_dh').value.trim(),
+    feedback_type_id: parseInt(document.getElementById('feedback_type_id').value),
+    severity: document.getElementById('severity').value,
+    description: document.getElementById('description').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/feedbacks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Phản ánh đã được gửi thành công!', 'success');
+      document.getElementById('feedbackForm').reset();
+      await loadFeedbacks(currentFilter === 'all' ? null : currentFilter);
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi kết nối: ' + err.message, 'error');
+  }
+}
+
+async function updateStatus(id, status) {
+  try {
+    const res = await fetch(`/api/feedbacks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Cập nhật trạng thái thành công!', 'success');
+      await loadFeedbacks(currentFilter === 'all' ? null : currentFilter);
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi: ' + err.message, 'error');
+  }
+}
+
+function openAddTypeModal() {
+  document.getElementById('addTypeModal').classList.add('open');
+}
+
+function closeAddTypeModal() {
+  document.getElementById('addTypeModal').classList.remove('open');
+  document.getElementById('addTypeForm').reset();
+}
+
+async function submitType(e) {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('type_name').value.trim(),
+    category: document.getElementById('type_category').value,
+    description: document.getElementById('type_description').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/feedback/types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Loại lỗi đã được tạo!', 'success');
+      closeAddTypeModal();
+      await loadFeedbackTypes();
+      await loadFeedbackTypesDropdown();
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi: ' + err.message, 'error');
+  }
+}
+
+async function deleteType(id) {
+  if (!confirm('Xóa loại lỗi này? Các phản ánh đã tạo sẽ không bị ảnh hưởng.')) return;
+
+  try {
+    const res = await fetch(`/api/feedback/types/${id}`, { method: 'DELETE' });
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Đã xóa loại lỗi!', 'success');
+      await loadFeedbackTypes();
+      await loadFeedbackTypesDropdown();
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi: ' + err.message, 'error');
+  }
+}
+
+function showMessage(text, type) {
+  const msg = document.getElementById('message');
+  msg.className = 'message ' + type;
+  msg.textContent = text;
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 init();
 </script>
+
 </body>
 </html>
