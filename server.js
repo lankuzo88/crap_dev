@@ -647,7 +647,14 @@ function queueOrScrape(filePath) {
 }
 
 function spawnScraper(filePath) {
-  scrapeJob = { running: true, file: path.basename(filePath), log: [], exitCode: null, startedAt: new Date().toISOString() };
+  scrapeJob = {
+    running: true,
+    file: path.basename(filePath),
+    log: [],
+    exitCode: null,
+    startedAt: new Date().toISOString(),
+    progress: { done: 0, failed: 0, total: 0 }
+  };
   log(`🚀 Bắt đầu cào: ${scrapeJob.file}`);
 
   const proc = spawn(PYTHON, ['run_scrape.py', filePath], {
@@ -665,6 +672,19 @@ function spawnScraper(filePath) {
 
   const pushLog = (chunk) => {
     const lines = chunk.toString('utf-8').split('\n').filter(l => l.trim());
+
+    // Parse progress from log lines
+    lines.forEach(l => {
+      if (l.includes('OK') && l.includes(':')) {
+        scrapeJob.progress.done++;
+      } else if (l.includes('FAIL') && l.includes(':')) {
+        scrapeJob.progress.failed++;
+      } else if (l.match(/Tổng \d+ đơn hàng/)) {
+        const match = l.match(/Tổng (\d+) đơn/);
+        if (match) scrapeJob.progress.total = parseInt(match[1]);
+      }
+    });
+
     scrapeJob.log.push(...lines);
     if (scrapeJob.log.length > 300) scrapeJob.log = scrapeJob.log.slice(-300);
   };
@@ -693,6 +713,38 @@ function spawnScraper(filePath) {
       setTimeout(() => spawnScraper(next), 1000);
     }
   });
+}
+
+// ── FILE STABILITY CHECK ──────────────────────────────
+async function waitForFileStable(filePath, filename, timeoutMs = 2000) {
+  const startTime = Date.now();
+  let lastSize = -1;
+  let stableCount = 0;
+  const requiredStableChecks = 4; // 4 checks × 500ms = 2s stable
+
+  while (Date.now() - startTime < timeoutMs + 2000) {
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File disappeared during stability check');
+    }
+
+    const stat = fs.statSync(filePath);
+    const currentSize = stat.size;
+
+    if (currentSize === lastSize && currentSize > 0) {
+      stableCount++;
+      if (stableCount >= requiredStableChecks) {
+        log(`  ✓ File stable: ${filename} (${currentSize} bytes)`);
+        return;
+      }
+    } else {
+      stableCount = 0;
+      lastSize = currentSize;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  throw new Error(`Timeout waiting for file stability (last size: ${lastSize})`);
 }
 
 // ── FILE WATCHER ──────────────────────────────────────
@@ -733,10 +785,22 @@ function startExcelWatcher() {
     pending.set(filename, setTimeout(() => {
       pending.delete(filename);
       const filePath = path.join(EXCEL_DIR, filename);
-      if (!fs.existsSync(filePath)) return;
 
-      log(`📂 Phát hiện file mới: ${filename}`);
-      queueOrScrape(filePath);
+      // Check file exists
+      if (!fs.existsSync(filePath)) {
+        log(`⚠ File disappeared: ${filename}`);
+        return;
+      }
+
+      // Wait for file size to stabilize (2 seconds)
+      waitForFileStable(filePath, filename, 2000)
+        .then(() => {
+          log(`📂 Phát hiện file mới (stable): ${filename}`);
+          queueOrScrape(filePath);
+        })
+        .catch(err => {
+          log(`⚠ File not stable after timeout: ${filename} - ${err.message}`);
+        });
     }, debounceMs));
   });
 

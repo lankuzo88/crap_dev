@@ -822,17 +822,84 @@
       const btn = document.getElementById('m-export-btn');
       btn.disabled = true;
       btn.textContent = '⏳';
+
       try {
         const r = await fetch('/keylab-export-now', { method: 'POST' });
         const data = await r.json();
-        btn.textContent = data.ok ? '✅' : '⚠️';
+
+        if (!data.ok) {
+          btn.textContent = '⚠️';
+          setTimeout(() => {
+            btn.textContent = '🔄';
+            btn.disabled = false;
+          }, 3500);
+          return;
+        }
+
+        // Start polling
+        pollExportStatusMobile();
+
       } catch {
         btn.textContent = '❌';
+        setTimeout(() => {
+          btn.textContent = '🔄';
+          btn.disabled = false;
+        }, 3500);
       }
-      setTimeout(() => {
-        btn.textContent = '🔄';
-        btn.disabled = false;
-      }, 3500);
+    }
+
+    let pollIntervalMobile = null;
+
+    async function pollExportStatusMobile() {
+      if (pollIntervalMobile) clearInterval(pollIntervalMobile);
+
+      const btn = document.getElementById('m-export-btn');
+
+      pollIntervalMobile = setInterval(async () => {
+        try {
+          const exportRes = await fetch('/keylab-export-status');
+          const exportData = await exportRes.json();
+
+          if (exportData.running) {
+            btn.textContent = '⏳';
+            return;
+          }
+
+          if (exportData.exitCode !== 0) {
+            btn.textContent = '❌';
+            clearInterval(pollIntervalMobile);
+            setTimeout(() => {
+              btn.textContent = '🔄';
+              btn.disabled = false;
+            }, 3500);
+            return;
+          }
+
+          const scrapeRes = await fetch('/scrape-status');
+          const scrapeData = await scrapeRes.json();
+
+          if (scrapeData.running) {
+            btn.textContent = '🔄';
+            return;
+          }
+
+          if (scrapeData.exitCode === 0) {
+            btn.textContent = '✅';
+            clearInterval(pollIntervalMobile);
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            btn.textContent = '⚠️';
+            clearInterval(pollIntervalMobile);
+            setTimeout(() => {
+              btn.textContent = '🔄';
+              btn.disabled = false;
+            }, 3500);
+          }
+
+        } catch (err) {
+          console.error('Poll error:', err);
+        }
+      }, 2000);
     }
 
   </script>

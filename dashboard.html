@@ -1810,28 +1810,109 @@ async function triggerKeylabExport() {
   const btn = document.getElementById('d-export-btn');
   const ico = document.getElementById('d-export-ico');
   const lbl = document.getElementById('d-export-lbl');
+
   btn.disabled = true;
   ico.textContent = '⏳';
   lbl.textContent = 'Đang xuất...';
+
   try {
     const r = await fetch('/keylab-export-now', { method: 'POST' });
     const data = await r.json();
-    if (data.ok) {
-      ico.textContent = '✅';
-      lbl.textContent = 'Đã kích hoạt!';
-    } else {
+
+    if (!data.ok) {
       ico.textContent = '⚠️';
       lbl.textContent = data.message || 'Lỗi';
+      setTimeout(() => resetExportButton(), 3500);
+      return;
     }
-  } catch {
+
+    // Start polling status
+    pollExportStatus();
+
+  } catch (err) {
     ico.textContent = '❌';
     lbl.textContent = 'Không kết nối được';
+    setTimeout(() => resetExportButton(), 3500);
   }
-  setTimeout(() => {
-    ico.textContent = '🔄';
-    lbl.textContent = 'Xuất Excel KeyLab';
-    btn.disabled = false;
-  }, 3500);
+}
+
+function resetExportButton() {
+  const btn = document.getElementById('d-export-btn');
+  const ico = document.getElementById('d-export-ico');
+  const lbl = document.getElementById('d-export-lbl');
+  ico.textContent = '🔄';
+  lbl.textContent = 'Xuất Excel KeyLab';
+  btn.disabled = false;
+}
+
+let pollInterval = null;
+
+async function pollExportStatus() {
+  if (pollInterval) clearInterval(pollInterval);
+
+  const ico = document.getElementById('d-export-ico');
+  const lbl = document.getElementById('d-export-lbl');
+
+  pollInterval = setInterval(async () => {
+    try {
+      // Check keylab export status
+      const exportRes = await fetch('/keylab-export-status');
+      const exportData = await exportRes.json();
+
+      if (exportData.running) {
+        ico.textContent = '⏳';
+        lbl.textContent = 'Đang xuất Excel...';
+        return;
+      }
+
+      // Export done, check if failed
+      if (exportData.exitCode !== 0) {
+        ico.textContent = '❌';
+        lbl.textContent = 'Export thất bại';
+        clearInterval(pollInterval);
+        setTimeout(() => resetExportButton(), 3500);
+        return;
+      }
+
+      // Export success, check scraper status
+      const scrapeRes = await fetch('/scrape-status');
+      const scrapeData = await scrapeRes.json();
+
+      if (scrapeData.running) {
+        ico.textContent = '🔄';
+        // Show scraper progress
+        const done = scrapeData.progress?.done || 0;
+        const total = scrapeData.progress?.total || 0;
+        if (total > 0) {
+          lbl.textContent = `Đang scrape... (${done}/${total})`;
+        } else {
+          lbl.textContent = 'Đang scrape...';
+        }
+        return;
+      }
+
+      // Both done
+      if (scrapeData.exitCode === 0) {
+        ico.textContent = '✅';
+        lbl.textContent = 'Hoàn tất!';
+        clearInterval(pollInterval);
+
+        // Auto-reload data after 1s
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        ico.textContent = '⚠️';
+        lbl.textContent = 'Scrape thất bại';
+        clearInterval(pollInterval);
+        setTimeout(() => resetExportButton(), 3500);
+      }
+
+    } catch (err) {
+      console.error('Poll error:', err);
+      // Continue polling, don't stop on network error
+    }
+  }, 2000); // Poll every 2s
 }
 
 </script>
