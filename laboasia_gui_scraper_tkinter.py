@@ -854,6 +854,24 @@ class App:
             text="Chay ngay (file moi nhat)",
             command=self._run_now,
         ).pack(side="left", padx=6, ipadx=10, ipady=4)
+
+        # ── Process Management Buttons ────────────────────────────────────────
+        ttk.Button(
+            btns,
+            text="PM2 Status",
+            command=self._show_pm2_status,
+        ).pack(side="left", padx=6, ipadx=10, ipady=4)
+        ttk.Button(
+            btns,
+            text="Stop Server",
+            command=self._stop_server_manual,
+        ).pack(side="left", padx=6, ipadx=10, ipady=4)
+        ttk.Button(
+            btns,
+            text="Stop PM2 All",
+            command=self._stop_pm2_all,
+        ).pack(side="left", padx=6, ipadx=10, ipady=4)
+
         ttk.Button(btns, text="Thoat", command=self.root.destroy).pack(
             side="right", padx=6
         )
@@ -1212,6 +1230,56 @@ class App:
                 except Exception:
                     self.log("[Server] Khong the tat process")
             self._server_process = None
+
+    def _stop_server_manual(self):
+        """Stop server and show confirmation."""
+        self._stop_server()
+        messagebox.showinfo("Server", "Node server.js da tat")
+
+    def _show_pm2_status(self):
+        """Show PM2 process status in a popup."""
+        try:
+            result = subprocess.run(
+                ["pm2", "list"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            status = result.stdout if result.returncode == 0 else result.stderr
+            self.log("[PM2] Status:")
+            self.log(status)
+            messagebox.showinfo("PM2 Status", status)
+        except Exception as e:
+            msg = f"Loi khi lay PM2 status: {e}"
+            self.log(f"[PM2] {msg}")
+            messagebox.showerror("PM2 Error", msg)
+
+    def _stop_pm2_all(self):
+        """Stop all PM2 processes after confirmation."""
+        confirm = messagebox.askyesno(
+            "Xac nhan",
+            "Tat tat ca PM2 processes (asia-lab-server, auto-scrape)?\n\n"
+            "Canh bao: Server se ngung hoat dong!",
+        )
+        if not confirm:
+            return
+        try:
+            result = subprocess.run(
+                ["pm2", "stop", "all"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0:
+                self.log("[PM2] Da stop all processes")
+                messagebox.showinfo("PM2", "Da tat tat ca PM2 processes")
+            else:
+                self.log(f"[PM2] Stop failed: {result.stderr}")
+                messagebox.showerror("PM2 Error", result.stderr)
+        except Exception as e:
+            msg = f"Loi khi stop PM2: {e}"
+            self.log(f"[PM2] {msg}")
+            messagebox.showerror("PM2 Error", msg)
 
     # ── Logging ─────────────────────────────────────────────────────────────
 
