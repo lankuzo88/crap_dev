@@ -1,6 +1,7 @@
 """
 Keylab2022 Desktop Automation
-Tự động xuất Excel từ ứng dụng Keylab2022 mỗi 10 phút (7:30 - 20:00).
+Xuất Excel từ ứng dụng Keylab2022 theo yêu cầu (--once mode).
+Auto-scheduling được xử lý bởi auto_scrape_headless.py.
 """
 
 import io
@@ -26,10 +27,6 @@ except ImportError:
     sys.exit(1)
 
 # ── Config ──────────────────────────────────────────────────────────────────
-START_TIME = dtime(0, 0)   # 00:00 - chạy 24/24
-END_TIME = dtime(23, 59)   # 23:59 - chạy 24/24
-INTERVAL_SECONDS = 15 * 60  # 15 phút
-
 # Retry config
 MAX_EXPORT_RETRIES = 2          # Số lần retry (tổng 3 attempts)
 SAVE_DIALOG_TIMEOUT = 5         # Timeout mỗi lần chờ dialog (giây)
@@ -357,61 +354,7 @@ def _dismiss_open_with_dialog():
 
 
 # ── Scheduler ────────────────────────────────────────────────────────────────
-def should_run_now() -> bool:
-    now = datetime.now().time()
-    return START_TIME <= now <= END_TIME
-
-
-def seconds_until_start() -> int:
-    now = datetime.now()
-    start_today = now.replace(hour=START_TIME.hour, minute=START_TIME.minute, second=0, microsecond=0)
-    if now >= start_today:
-        return 0
-    return int((start_today - now).total_seconds())
-
-
-def main():
-    log.info("=== Keylab Exporter start ===")
-    log.info(f"Schedule: {START_TIME.strftime('%H:%M')} - {END_TIME.strftime('%H:%M')}, every {INTERVAL_SECONDS // 60} min")
-
-    win = find_keylab_window()
-    if not win:
-        log.warning(f"Warning: window '{KEYLAB_TITLE_CONTAINS}' not found. Will retry each cycle.")
-    else:
-        log.info(f"Found Keylab2022: '{win.window_text()}'")
-
-    while True:
-        now = datetime.now()
-
-        if not should_run_now():
-            wait = seconds_until_start()
-            if wait > 0:
-                log.info(f"Ngoai gio lam viec. Cho den {START_TIME.strftime('%H:%M')} ({wait // 60} phut nua)...")
-                time.sleep(min(wait, 60))
-            else:
-                log.info(f"Da qua {END_TIME.strftime('%H:%M')}. Cho den ngay mai...")
-                time.sleep(60)
-            continue
-
-        # Trong giờ làm việc → xuất Excel
-        state = load_state()
-        filename = next_filename(state)
-
-        win = find_keylab_window()
-        if not win:
-            log.error("Khong tim thay cua so Keylab2022. Bo qua luot nay.")
-        else:
-            log.info(f"Bat dau xuat: {filename}")
-            success = run_export(win, filename)
-            if success:
-                state["export_count"] += 1
-                save_state(state)
-                log.info(f"[OK] Xuat thanh cong: {filename} (luot {state['export_count'] - 1} hom nay)")
-            else:
-                log.warning(f"[FAIL] Xuat that bai luot nay, giu nguyen counter={state['export_count']}")
-
-        log.info(f"Cho {INTERVAL_SECONDS // 60} phut den luot tiep theo...")
-        time.sleep(INTERVAL_SECONDS)
+# main() function removed - use --once mode via server.js or auto_scrape_headless.py instead
 
 
 def run_once():
@@ -471,4 +414,5 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == "--once":
         run_once()
     else:
-        main()
+        print("ERROR: main() removed. Use --once mode or auto_scrape_headless.py", flush=True)
+        sys.exit(1)
