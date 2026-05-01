@@ -897,9 +897,103 @@ app.get('/keylab-status', requireAuth, (req, res) => {
   res.json(keylabExportJob);
 });
 
-app.post('/keylab-export-now', requireAuth, requireAdmin, (req, res) => {
+// ── KEYLAB HEALTH CHECK ───────────────────────────────
+app.get('/keylab-health', requireAuth, (req, res) => {
+  const proc = spawn(PYTHON, ['keylab_exporter.py', '--check'], {
+    cwd: BASE_DIR,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  proc.stdout.on('data', d => { stdout += d.toString(); });
+  proc.stderr.on('data', d => { stderr += d.toString(); });
+
+  const timeout = setTimeout(() => {
+    proc.kill();
+    res.json({ ok: false, message: 'Health check timeout' });
+  }, 3000);
+
+  proc.on('close', code => {
+    clearTimeout(timeout);
+    if (code === 0) {
+      const match = stdout.match(/OK: (.+)/);
+      const title = match ? match[1].trim() : 'Keylab2022';
+      res.json({ ok: true, message: `Keylab đang chạy: ${title}` });
+    } else {
+      const error = stdout.includes('ERROR:')
+        ? stdout.split('ERROR:')[1].trim()
+        : 'Keylab2022 không chạy';
+      res.json({ ok: false, message: error });
+    }
+  });
+
+  proc.on('error', err => {
+    clearTimeout(timeout);
+    res.json({ ok: false, message: `Spawn error: ${err.message}` });
+  });
+});
+
+// Helper function for health check
+function checkKeylabHealth() {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(PYTHON, ['keylab_exporter.py', '--check'], {
+      cwd: BASE_DIR,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    });
+
+    let stdout = '';
+    proc.stdout.on('data', d => { stdout += d.toString(); });
+
+    const timeout = setTimeout(() => {
+      proc.kill();
+      reject(new Error('Health check timeout'));
+    }, 3000);
+
+    proc.on('close', code => {
+      clearTimeout(timeout);
+      if (code === 0) {
+        const match = stdout.match(/OK: (.+)/);
+        const title = match ? match[1].trim() : 'Keylab2022';
+        resolve({ ok: true, message: `Keylab đang chạy: ${title}` });
+      } else {
+        const error = stdout.includes('ERROR:')
+          ? stdout.split('ERROR:')[1].trim()
+          : 'Keylab2022 không chạy';
+        resolve({ ok: false, message: error });
+      }
+    });
+
+    proc.on('error', err => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+  });
+}
+
+app.post('/keylab-export-now', requireAuth, requireAdmin, async (req, res) => {
   if (keylabExportJob.running) {
     return res.status(409).json({ ok: false, message: 'Đang chạy rồi, vui lòng đợi...' });
+  }
+
+  // Pre-flight health check
+  try {
+    const healthCheck = await checkKeylabHealth();
+    if (!healthCheck.ok) {
+      log(`⚠ Pre-flight check failed: ${healthCheck.message}`);
+      return res.status(503).json({
+        ok: false,
+        message: 'Keylab2022 không chạy. Vui lòng mở app trước.'
+      });
+    }
+    log(`✓ Pre-flight check passed: ${healthCheck.message}`);
+  } catch (err) {
+    log(`⚠ Health check error: ${err.message}`);
+    return res.status(500).json({
+      ok: false,
+      message: 'Không thể kiểm tra Keylab2022'
+    });
   }
 
   keylabExportJob = { running: true, startedAt: new Date().toISOString(), exitCode: null, savedFile: null };

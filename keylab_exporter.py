@@ -449,11 +449,25 @@ def run_once():
     sys.exit(0)
 
 
+def check_health():
+    """Check if Keylab2022 is running. Fast check (100-200ms)."""
+    win = find_keylab_window()
+    if not win:
+        print("ERROR: Keylab not found", flush=True)
+        sys.exit(1)
+
+    # Window found
+    print(f"OK: {win.window_text()}", flush=True)
+    sys.exit(0)
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--debug":
         debug_controls()
     elif len(sys.argv) > 1 and sys.argv[1] == "--debug-save":
         debug_save_dialog()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--check":
+        check_health()
     elif len(sys.argv) > 1 and sys.argv[1] == "--once":
         run_once()
     else:
