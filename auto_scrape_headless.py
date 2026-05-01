@@ -11,15 +11,19 @@ import time
 import subprocess
 import logging
 from pathlib import Path
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta
+import pytz
 
 # ── Config ──────────────────────────────────────────────────────────────────
 INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút
 START_HOUR = 7                 # Giờ bắt đầu (Vietnam time)
 END_HOUR = 20                  # Giờ kết thúc (20:30 thực tế, Vietnam time)
 END_MINUTE = 30
-VIETNAM_TZ = ZoneInfo("Asia/Ho_Chi_Minh")  # UTC+7
+VIETNAM_TZ = pytz.timezone("Asia/Ho_Chi_Minh")  # UTC+7
+
+# VPS system clock sai 7 tiếng (chậm hơn UTC thực tế)
+# Workaround: thêm offset để tính đúng giờ Vietnam
+SYSTEM_CLOCK_OFFSET_HOURS = 7
 
 BASE_DIR   = Path(__file__).parent
 EXCEL_DIR  = BASE_DIR / "Excel"
@@ -42,9 +46,16 @@ log = logging.getLogger("auto-scrape")
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+def get_vietnam_time():
+    """Lấy giờ Vietnam chính xác (workaround cho VPS system clock sai)."""
+    system_time = datetime.now()
+    corrected_time = system_time + timedelta(hours=SYSTEM_CLOCK_OFFSET_HOURS)
+    return corrected_time
+
+
 def is_within_working_hours():
     """Kiểm tra có đang trong giờ làm việc không (Vietnam time)."""
-    now = datetime.now(VIETNAM_TZ)
+    now = get_vietnam_time()
     start = now.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
     end = now.replace(hour=END_HOUR, minute=END_MINUTE, second=0, microsecond=0)
     return start <= now <= end
@@ -128,9 +139,10 @@ def scrape_excel(file_path: Path) -> bool:
 def main():
     log.info("=== Auto-Scrape Headless start ===")
     log.info(f"Schedule: Every {INTERVAL_MINUTES} min, {START_HOUR:02d}:00 - {END_HOUR:02d}:{END_MINUTE:02d} (Vietnam time)")
+    log.info(f"System clock offset: +{SYSTEM_CLOCK_OFFSET_HOURS}h (VPS sai giờ)")
 
     while True:
-        now = datetime.now(VIETNAM_TZ)
+        now = get_vietnam_time()
 
         if not is_within_working_hours():
             # Ngoài giờ làm việc → tính thời gian chờ
@@ -141,7 +153,7 @@ def main():
                 time.sleep(min(wait, 60))
             else:
                 # Quá END_HOUR → chờ đến 7h sáng mai
-                tomorrow = start_today.replace(day=start_today.day + 1)
+                tomorrow = start_today + timedelta(days=1)
                 wait = int((tomorrow - now).total_seconds())
                 log.info(f"After working hours. Waiting {wait // 3600:.1f}h until tomorrow {START_HOUR:02d}:00 Vietnam time...")
                 time.sleep(min(wait, 300))  # Check every 5 min instead of 1
