@@ -84,3 +84,5 @@ ai_memory.json        # learned facts — KHÔNG push git (file thay đổi liê
 .env.local
 .env.*.local
 sessions.json
+.db-shm
+.db-wal
