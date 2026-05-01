@@ -596,6 +596,8 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl active" id="d-nl-orders" onclick="dSw('orders',this)"><span class="ico">📋</span> Đơn Hàng<span class="d-nl-badge" id="d-nav-badge">—</span></div>
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
+        <a href="/analytics.html" class="d-nl" id="d-nl-analytics" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📈</span> Analytics</a>
+        <a href="/feedback.html" class="d-nl" id="d-nl-feedback" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📝</span> Feedback</a>
       </div>
       <div class="d-export-section" id="d-export-section" style="display:none">
         <button class="d-export-btn" id="d-export-btn" onclick="triggerKeylabExport()">
@@ -1802,6 +1804,12 @@ async function initAdminUI() {
       if (el) el.style.display = '';
       const upBtn = document.getElementById('d-upload-btn');
       if (upBtn) upBtn.style.display = '';
+
+      // Show Analytics & Feedback links for admin
+      const analyticsLink = document.getElementById('d-nl-analytics');
+      if (analyticsLink) analyticsLink.style.display = '';
+      const feedbackLink = document.getElementById('d-nl-feedback');
+      if (feedbackLink) feedbackLink.style.display = '';
     }
   } catch {}
 }

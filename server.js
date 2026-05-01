@@ -114,6 +114,7 @@ function requireAuth(req, res, next) {
     sessions.delete(token);
     return res.redirect('/login');
   }
+  req.session = sess;
   next();
 }
 
@@ -145,7 +146,7 @@ function getDB() {
   if (!_db) {
     if (!fs.existsSync(DB_PATH)) return null;
     try {
-      _db = new Database(DB_PATH, { readonly: true });
+      _db = new Database(DB_PATH, { readonly: false });
     } catch (e) {
       log(`⚠ SQLite open error: ${e.message}`);
       return null;
@@ -626,6 +627,34 @@ function getData(forceReload = false) {
 let scrapeJob = { running: false, file: null, log: [], exitCode: null, startedAt: null };
 const scrapeQueue = []; // Queue of filePaths waiting to be scraped
 
+// Auto-scrape interval: every 10 minutes, 24/7
+const AUTO_SCRAPE_INTERVAL = 10 * 60 * 1000; // 10 minutes
+let autoScrapeTimer = null;
+
+function autoScrape() {
+  if (scrapeJob.running) {
+    log(`⏳ Auto-scrape skipped (scraper đang chạy: ${scrapeJob.file})`);
+    return;
+  }
+
+  const latest = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);
+  if (!latest) {
+    log(`⚠ Auto-scrape: không tìm thấy file Excel trong ${EXCEL_DIR}`);
+    return;
+  }
+
+  log(`🔄 Auto-scrape: ${latest.name}`);
+  spawnScraper(latest.path);
+}
+
+function startAutoScrapeTimer() {
+  if (autoScrapeTimer) clearInterval(autoScrapeTimer);
+
+  log(`⏰ Auto-scrape 24/7: chạy ngay, sau đó mỗi 10 phút`);
+  autoScrape();
+  autoScrapeTimer = setInterval(autoScrape, AUTO_SCRAPE_INTERVAL);
+}
+
 // Tracks files uploaded via web UI so the watcher doesn't double-process them
 const webUploadFiles = new Set();
 const manualKeyLabExports = new Set(); // Track files từ manual export (admin click button)
@@ -891,6 +920,30 @@ app.post('/upload', requireAuth, (req, res) => {
 
 app.get('/scrape-status', requireAuth, (req, res) => {
   res.json({ ...scrapeJob, queue: scrapeQueue.map(f => path.basename(f)) });
+});
+
+app.get('/api/auto-scrape/status', requireAuth, (req, res) => {
+  res.json({
+    enabled: autoScrapeTimer !== null,
+    running: scrapeJob.running,
+    currentFile: scrapeJob.file,
+    nextRun: '10 phút',
+    mode: '24/7',
+    queue: scrapeQueue.length,
+  });
+});
+
+app.post('/api/auto-scrape/run', requireAuth, requireAdmin, (req, res) => {
+  if (scrapeJob.running) {
+    return res.json({ ok: false, error: 'Scraper đang chạy: ' + scrapeJob.file });
+  }
+  const latest = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);
+  if (!latest) {
+    return res.json({ ok: false, error: 'Không tìm thấy file Excel' });
+  }
+  log(`🔄 Manual auto-scrape: ${latest.name}`);
+  spawnScraper(latest.path);
+  res.json({ ok: true, file: latest.name });
 });
 
 app.get('/keylab-status', requireAuth, (req, res) => {
@@ -1299,6 +1352,230 @@ app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json
   res.json({ ok: true, username, newPassword });
 });
 
+// ── ANALYTICS API ──────────────────────────────────────────────────────────
+app.get('/api/analytics/trend', requireAuth, (req, res) => {
+  const days = parseInt(req.query.days) || 7;
+  try {
+    const sql = `
+      SELECT date, total_orders, completed_orders, zirc_count, kl_count, vnr_count, hon_count
+      FROM analytics_daily
+      WHERE date >= date('now', '-${days} days')
+      ORDER BY date ASC
+    `;
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching trend: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/ktv', requireAuth, (req, res) => {
+  const days = parseInt(req.query.days) || 7;
+  try {
+    const sql = `
+      SELECT ktv_name, stage, SUM(orders_completed) as total, AVG(avg_time_hours) as avg_time
+      FROM ktv_performance
+      WHERE date >= date('now', '-${days} days')
+      GROUP BY ktv_name, stage
+      ORDER BY total DESC
+    `;
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching KTV performance: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/customers', requireAuth, (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  try {
+    const sql = `
+      SELECT khach_hang, COUNT(*) as total_orders,
+             SUM(CASE WHEN trang_thai='Hoàn thành' THEN 1 ELSE 0 END) as completed,
+             ROUND(AVG(julianday(yc_giao) - julianday(nhap_luc)), 2) as avg_days
+      FROM don_hang
+      WHERE nhap_luc >= date('now', '-30 days')
+      GROUP BY khach_hang
+      ORDER BY total_orders DESC
+      LIMIT ?
+    `;
+    const rows = db.prepare(sql).all(limit);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching customers: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/analytics/refresh', requireAuth, requireAdmin, (req, res) => {
+  // TODO: Implement background job to calculate analytics_daily and ktv_performance
+  log('[Analytics] Refresh requested (not implemented yet)');
+  res.json({ ok: true, message: 'Analytics refresh queued (not implemented yet)' });
+});
+
+// ── FEEDBACK API ───────────────────────────────────────────────────────────
+app.get('/api/feedback/types', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const rows = db.prepare('SELECT * FROM feedback_types WHERE active=1 ORDER BY category, name').all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Feedback] Error fetching types: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/feedback/types', requireAuth, requireAdmin, express.json(), (req, res) => {
+  const { name, category, description } = req.body;
+  if (!name || !category) {
+    return res.status(400).json({ ok: false, error: 'name and category are required' });
+  }
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const stmt = db.prepare('INSERT INTO feedback_types (name, category, description) VALUES (?, ?, ?)');
+    const result = stmt.run(name, category, description || '');
+    log(`[Feedback] Type created: ${name} (${category})`);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    log(`[Feedback] Error creating type: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.delete('/api/feedback/types/:id', requireAuth, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    // Soft delete
+    db.prepare('UPDATE feedback_types SET active=0 WHERE id=?').run(id);
+    log(`[Feedback] Type deleted: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[Feedback] Error deleting type: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/feedbacks', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    let sql = `
+      SELECT f.*, ft.name as type_name, ft.category
+      FROM feedbacks f
+      JOIN feedback_types ft ON f.feedback_type_id=ft.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (req.query.ma_dh) {
+      sql += ' AND f.ma_dh=?';
+      params.push(req.query.ma_dh);
+    }
+    if (req.query.status) {
+      sql += ' AND f.status=?';
+      params.push(req.query.status);
+    }
+
+    sql += ' ORDER BY f.created_at DESC LIMIT 100';
+    const rows = db.prepare(sql).all(...params);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Feedback] Error fetching feedbacks: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/feedbacks', requireAuth, express.json(), (req, res) => {
+  const { ma_dh, feedback_type_id, description, severity } = req.body;
+  if (!ma_dh || !feedback_type_id || !description) {
+    return res.status(400).json({ ok: false, error: 'ma_dh, feedback_type_id, and description are required' });
+  }
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const username = req.session ? req.session.user : 'unknown';
+
+    const stmt = db.prepare(`
+      INSERT INTO feedbacks (ma_dh, feedback_type_id, description, severity, reported_by)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const result = stmt.run(ma_dh, feedback_type_id, description, severity || 'medium', username);
+    log(`[Feedback] Created: ${ma_dh} by ${username}`);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    log(`[Feedback] Error creating feedback: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Search đơn hàng cho autocomplete
+app.get('/api/orders/search', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const query = (req.query.q || '').trim();
+    if (!query || query.length < 2) {
+      return res.json({ ok: true, data: [] });
+    }
+
+    const searchPattern = `%${query}%`;
+    const sql = `
+      SELECT ma_dh, khach_hang, benh_nhan, loai_rang, trang_thai
+      FROM don_hang
+      WHERE ma_dh LIKE ? OR khach_hang LIKE ? OR benh_nhan LIKE ?
+      ORDER BY ma_dh DESC
+      LIMIT 20
+    `;
+    const rows = db.prepare(sql).all(searchPattern, searchPattern, searchPattern);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Search] Error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.patch('/api/feedbacks/:id', requireAuth, express.json(), (req, res) => {
+  const { id } = req.params;
+  const { status, assigned_to } = req.body;
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const updates = [];
+    const params = [];
+
+    if (status) {
+      updates.push('status=?');
+      params.push(status);
+      if (status === 'resolved' || status === 'closed') {
+        updates.push("resolved_at=datetime('now','localtime')");
+      }
+    }
+    if (assigned_to !== undefined) {
+      updates.push('assigned_to=?');
+      params.push(assigned_to);
+    }
+
+    updates.push("updated_at=datetime('now','localtime')");
+    params.push(id);
+
+    const sql = `UPDATE feedbacks SET ${updates.join(', ')} WHERE id=?`;
+    db.prepare(sql).run(...params);
+    log(`[Feedback] Updated: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[Feedback] Error updating feedback: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Chặn truy cập trực tiếp vào file HTML dashboard qua static (trừ login.html)
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') && req.path !== '/login.html') {
@@ -1313,6 +1590,7 @@ app.use(express.static(BASE_DIR));
 loadUsers();
 loadSessions();
 startExcelWatcher();
+startAutoScrapeTimer();
 
 app.listen(PORT, '127.0.0.1', () => {
   const latestExport = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);

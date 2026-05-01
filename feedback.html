@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback · ASIA LAB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0c0f18;--surface:#141824;--surface2:#1a2030;
+  --border:#252d42;--border2:#1e2638;
+  --amber:#f5a623;--green:#2ed573;--blue:#3d9fff;--red:#ff4757;--purple:#a55eea;
+  --text:#e8edf8;--text2:#8b95b0;--text3:#4a5270;
+}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);padding:20px;}
+.container{max-width:1200px;margin:0 auto;}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;}
+.title{font-size:28px;font-weight:700;color:var(--amber);}
+.nav-back{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);text-decoration:none;font-size:14px;}
+.nav-back:hover{border-color:var(--amber);color:var(--amber);}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+.section-title{font-size:18px;font-weight:600;margin-bottom:15px;display:flex;align-items:center;gap:8px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;}
+.form-group{margin-bottom:15px;}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);font-family:inherit;font-size:14px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--amber);}
+.form-textarea{min-height:100px;resize:vertical;}
+.btn{background:var(--amber);border:none;padding:10px 20px;border-radius:6px;color:#000;font-weight:600;cursor:pointer;font-size:14px;}
+.btn:hover{opacity:0.9;}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.btn-small{padding:6px 12px;font-size:12px;}
+.filters{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface2);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);cursor:pointer;font-size:13px;font-weight:500;}
+.filter-btn.active{background:var(--amber);border-color:var(--amber);color:#000;}
+.fb-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:15px;margin-bottom:12px;}
+.fb-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.fb-madh{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--amber);}
+.fb-type{font-size:12px;padding:4px 10px;border-radius:4px;background:var(--blue);color:#000;font-weight:600;}
+.fb-severity{font-size:11px;padding:3px 8px;border-radius:3px;font-weight:700;text-transform:uppercase;}
+.fb-severity.low{background:var(--green);color:#000;}
+.fb-severity.medium{background:var(--amber);color:#000;}
+.fb-severity.high{background:var(--red);color:#fff;}
+.fb-desc{color:var(--text);font-size:14px;margin-bottom:12px;line-height:1.5;}
+.fb-footer{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text3);gap:10px;flex-wrap:wrap;}
+.fb-meta{display:flex;align-items:center;gap:8px;}
+.fb-status-select{background:var(--surface);border:1px solid var(--border);padding:6px 10px;border-radius:4px;color:var(--text);font-size:13px;font-weight:500;}
+.admin-section{border-top:2px solid var(--border);padding-top:20px;margin-top:20px;}
+.type-grid{display:grid;gap:10px;}
+.type-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);padding:12px;border-radius:6px;}
+.type-info{flex:1;}
+.type-name{font-weight:600;font-size:14px;}
+.type-category{font-size:12px;color:var(--text3);margin-left:10px;padding:2px 6px;background:var(--surface);border-radius:3px;}
+.btn-delete{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-delete:hover{opacity:0.9;}
+.modal{display:none!important;position:fixed;inset:0;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
+.modal.open{display:flex!important;}
+.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;max-width:500px;width:90%;}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:20px;color:var(--amber);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.message{padding:12px;border-radius:6px;margin-bottom:15px;font-size:14px;}
+.message.success{background:rgba(46,213,115,0.1);border:1px solid rgba(46,213,115,0.3);color:var(--green);}
+.message.error{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--red);}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);padding:12px;border-radius:6px;text-align:center;}
+.stat-value{font-size:24px;font-weight:700;color:var(--amber);}
+.stat-label{font-size:12px;color:var(--text3);margin-top:4px;}
+.suggestions{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:300px;overflow-y:auto;z-index:100;display:none;}
+.suggestions.show{display:block;}
+.suggestion-item{padding:10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s;}
+.suggestion-item:hover{background:var(--surface);}
+.suggestion-item:last-child{border-bottom:none;}
+.suggestion-madh{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--amber);font-size:14px;}
+.suggestion-info{font-size:12px;color:var(--text2);margin-top:4px;}
+.suggestion-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1 class="title">📝 Feedback System</h1>
+    <a href="/" class="nav-back">← Về Dashboard</a>
+  </div>
+
+  <div id="message" class="message" style="display:none;"></div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats"></div>
+
+  <!-- Admin: Quản lý loại lỗi -->
+  <div id="adminSection" class="section" style="display:none;">
+    <div class="section-title" style="cursor:pointer;user-select:none;" onclick="toggleAdminSection()">
+      ⚙️ Quản lý loại lỗi (Admin) <span id="adminToggle">▼</span>
+    </div>
+    <div id="adminContent" style="display:none;">
+      <button class="btn btn-small" onclick="openAddTypeModal()">+ Thêm loại lỗi</button>
+      <div class="admin-section">
+        <div id="typeList" class="type-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form nhập phản ánh -->
+  <div class="section">
+    <div class="section-title">✍️ Nhập phản ánh mới</div>
+    <form id="feedbackForm" onsubmit="submitFeedback(event)">
+      <div class="form-row">
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">Mã đơn hàng *</label>
+          <input type="text" class="form-input" id="ma_dh" placeholder="Gõ mã đơn, tên nha khoa, hoặc bệnh nhân..." required autocomplete="off" oninput="searchOrders(this.value)">
+          <div id="orderSuggestions" class="suggestions"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loại lỗi *</label>
+          <select class="form-select" id="feedback_type_id" required></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mức độ *</label>
+        <select class="form-select" id="severity">
+          <option value="low">🟢 Thấp - Không ảnh hưởng nhiều</option>
+          <option value="medium" selected>🟡 Trung bình - Cần xử lý</option>
+          <option value="high">🔴 Cao - Ưu tiên cao</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả chi tiết *</label>
+        <textarea class="form-textarea" id="description" placeholder="Mô tả chi tiết vấn đề, bao gồm: vị trí răng, hiện tượng, yêu cầu..." required></textarea>
+      </div>
+      <button type="submit" class="btn">📤 Gửi phản ánh</button>
+    </form>
+  </div>
+
+  <!-- Danh sách phản ánh -->
+  <div class="section">
+    <div class="section-title" style="cursor:pointer;user-select:none;" onclick="toggleFeedbackList()">
+      📋 Danh sách phản ánh <span id="feedbackToggle">▼</span>
+    </div>
+    <div id="feedbackSection" style="display:none;">
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterFeedbacks('all')">Tất cả</button>
+        <button class="filter-btn" onclick="filterFeedbacks('open')">🔴 Mở</button>
+        <button class="filter-btn" onclick="filterFeedbacks('in_progress')">🟡 Đang xử lý</button>
+        <button class="filter-btn" onclick="filterFeedbacks('resolved')">🟢 Đã giải quyết</button>
+        <button class="filter-btn" onclick="filterFeedbacks('closed')">⚫ Đóng</button>
+      </div>
+      <div id="feedbackList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thêm loại lỗi -->
+<div id="addTypeModal" class="modal" onclick="if(event.target===this)closeAddTypeModal()">
+  <div class="modal-content">
+    <div class="modal-title">Thêm loại lỗi mới</div>
+    <form id="addTypeForm" onsubmit="submitType(event)">
+      <div class="form-group">
+        <label class="form-label">Tên loại lỗi *</label>
+        <input type="text" class="form-input" id="type_name" placeholder="Ví dụ: Màu sắc không đúng" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Danh mục *</label>
+        <select class="form-select" id="type_category" required>
+          <option value="hinh_the">Hình thể</option>
+          <option value="mau_sac">Màu sắc</option>
+          <option value="don_hang">Đơn hàng</option>
+          <option value="nha_khoa">Nha khoa</option>
+          <option value="khac">Khác</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả</label>
+        <textarea class="form-textarea" id="type_description" placeholder="Mô tả chi tiết loại lỗi này..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddTypeModal()">Hủy</button>
+        <button type="submit" class="btn">Tạo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let feedbackTypes = [];
+let feedbacks = [];
+let currentFilter = 'all';
+let searchTimeout = null;
+let allOrders = []; // Cache all orders for client-side search
+
+async function loadAllOrders() {
+  try {
+    const res = await fetch('/api/orders?limit=5000');
+    const data = await res.json();
+    if (data.ok) {
+      allOrders = data.orders || [];
+      console.log(`Loaded ${allOrders.length} orders for autocomplete`);
+      console.log('Sample order:', allOrders[0]);
+    }
+  } catch (err) {
+    console.error('Failed to load orders:', err);
+  }
+}
+
+async function searchOrders(query) {
+  const suggestionsDiv = document.getElementById('orderSuggestions');
+
+  if (!query || query.length < 2) {
+    suggestionsDiv.classList.remove('show');
+    return;
+  }
+
+  // Client-side search
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const q = query.toLowerCase().trim();
+    const results = allOrders.filter(o => {
+      const searchStr = [
+        o.ma_dh || '',
+        o.khach_hang || '',
+        o.benh_nhan || '',
+        o.phuc_hinh || '',
+        o.loai_lenh || '',
+        o.ghi_chu || ''
+      ].join(',').toLowerCase();
+      return searchStr.includes(q);
+    }).slice(0, 20);
+
+    if (results.length > 0) {
+      suggestionsDiv.innerHTML = results.map(order => `
+        <div class="suggestion-item" onclick="selectOrder('${order.ma_dh}', '${(order.khach_hang||'').replace(/'/g, "\\'")}', '${(order.benh_nhan||'').replace(/'/g, "\\'")}')">
+          <div class="suggestion-madh">${order.ma_dh}</div>
+          <div class="suggestion-info">${order.khach_hang || 'N/A'} · ${order.benh_nhan || 'N/A'}</div>
+        </div>
+      `).join('');
+      suggestionsDiv.classList.add('show');
+    } else {
+      suggestionsDiv.classList.remove('show');
+    }
+  }, 200);
+}
+
+function selectOrder(maDh, khachHang, benhNhan) {
+  document.getElementById('ma_dh').value = maDh;
+  document.getElementById('orderSuggestions').classList.remove('show');
+
+  // Find related orders (same ma_dh_goc)
+  const baseMaDh = maDh.split('-')[0];
+  const relatedOrders = allOrders.filter(o => o.ma_dh_goc === baseMaDh);
+
+  // Auto-fill description with context
+  const descField = document.getElementById('description');
+  if (!descField.value.trim()) {
+    let contextText = `Đơn hàng: ${maDh}\nNha khoa: ${khachHang}\nBệnh nhân: ${benhNhan}\n`;
+
+    if (relatedOrders.length > 1) {
+      contextText += `\nCác đơn liên quan:\n`;
+      relatedOrders.forEach(o => {
+        contextText += `  • ${o.ma_dh} - ${o.loai_lenh || 'N/A'} - ${o.phuc_hinh || 'N/A'}`;
+
+        // Extract KTV names from stages_raw
+        if (o.stages_raw) {
+          const stages = o.stages_raw.split(';;').filter(s => s.trim());
+          const ktvNames = stages.map(s => {
+            const parts = s.split('|');
+            return parts[2] || '';
+          }).filter(name => name.trim()).join(', ');
+
+          if (ktvNames) {
+            contextText += ` (KTV: ${ktvNames})`;
+          }
+        }
+
+        contextText += `\n`;
+      });
+    }
+
+    contextText += `\nVấn đề: `;
+    descField.value = contextText;
+    descField.focus();
+  }
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#ma_dh') && !e.target.closest('#orderSuggestions')) {
+    document.getElementById('orderSuggestions').classList.remove('show');
+  }
+});
+
+function toggleFeedbackList() {
+  const section = document.getElementById('feedbackSection');
+  const toggle = document.getElementById('feedbackToggle');
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    toggle.textContent = '▲';
+  } else {
+    section.style.display = 'none';
+    toggle.textContent = '▼';
+  }
+}
+
+function toggleAdminSection() {
+  const content = document.getElementById('adminContent');
+  const toggle = document.getElementById('adminToggle');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggle.textContent = '▲';
+  } else {
+    content.style.display = 'none';
+    toggle.textContent = '▼';
+  }
+}
+
+async function init() {
+  try {
+    const userRes = await fetch('/user');
+    if (userRes.redirected || !userRes.ok) {
+      showMessage('❌ Chưa đăng nhập. Đang chuyển hướng...', 'error');
+      setTimeout(() => { window.location.href = '/login'; }, 1000);
+      return;
+    }
+    currentUser = await userRes.json();
+    console.log('Current user:', currentUser);
+
+    // Always show admin section for now (remove this later)
+    document.getElementById('adminSection').style.display = 'block';
+
+    if (currentUser.role === 'admin') {
+      await loadFeedbackTypes();
+    }
+
+    await loadFeedbackTypesDropdown();
+    await loadFeedbacks();
+    await loadAllOrders(); // Load orders for autocomplete
+    updateStats();
+  } catch (err) {
+    showMessage('❌ Lỗi khởi tạo: ' + err.message, 'error');
+  }
+}
+
+async function loadFeedbackTypes() {
+  const res = await fetch('/api/feedback/types');
+  const data = await res.json();
+  feedbackTypes = data.data;
+
+  const list = document.getElementById('typeList');
+  if (feedbackTypes.length === 0) {
+    list.innerHTML = '<div class="empty-state">Chưa có loại lỗi nào</div>';
+    return;
+  }
+
+  list.innerHTML = feedbackTypes.map(t => `
+    <div class="type-item">
+      <div class="type-info">
+        <span class="type-name">${t.name}</span>
+        <span class="type-category">${t.category}</span>
+      </div>
+      <button class="btn-delete" onclick="deleteType(${t.id})">Xóa</button>
+    </div>
+  `).join('');
+}
+
+async function loadFeedbackTypesDropdown() {
+  const res = await fetch('/api/feedback/types');
+  const data = await res.json();
+  const select = document.getElementById('feedback_type_id');
+  select.innerHTML = data.data.map(t => `<option value="${t.id}">${t.name} (${t.category})</option>`).join('');
+}
+
+async function loadFeedbacks(status = null) {
+  const url = status && status !== 'all' ? `/api/feedbacks?status=${status}` : '/api/feedbacks';
+  const res = await fetch(url);
+  const data = await res.json();
+  feedbacks = data.data;
+
+  const list = document.getElementById('feedbackList');
+  if (feedbacks.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>Chưa có phản ánh nào</div></div>';
+    return;
+  }
+
+  list.innerHTML = feedbacks.map(fb => `
+    <div class="fb-card">
+      <div class="fb-header">
+        <span class="fb-madh">${fb.ma_dh}</span>
+        <span class="fb-type">${fb.type_name}</span>
+        <span class="fb-severity ${fb.severity}">${fb.severity}</span>
+      </div>
+      <div class="fb-desc">${fb.description}</div>
+      <div class="fb-footer">
+        <div class="fb-meta">
+          <span>👤 ${fb.reported_by}</span>
+          <span>•</span>
+          <span>🕐 ${fb.created_at}</span>
+        </div>
+        <select class="fb-status-select" onchange="updateStatus(${fb.id}, this.value)">
+          <option value="open" ${fb.status==='open'?'selected':''}>🔴 Mở</option>
+          <option value="in_progress" ${fb.status==='in_progress'?'selected':''}>🟡 Đang xử lý</option>
+          <option value="resolved" ${fb.status==='resolved'?'selected':''}>🟢 Đã giải quyết</option>
+          <option value="closed" ${fb.status==='closed'?'selected':''}>⚫ Đóng</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+
+  updateStats();
+}
+
+function updateStats() {
+  const total = feedbacks.length;
+  const open = feedbacks.filter(f => f.status === 'open').length;
+  const inProgress = feedbacks.filter(f => f.status === 'in_progress').length;
+  const resolved = feedbacks.filter(f => f.status === 'resolved').length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Tổng số</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--red)">${open}</div><div class="stat-label">Mở</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${inProgress}</div><div class="stat-label">Đang xử lý</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${resolved}</div><div class="stat-label">Đã giải quyết</div></div>
+  `;
+}
+
+function filterFeedbacks(status) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const isActive =
+      (status === 'all' && btn.textContent.includes('Tất cả')) ||
+      (status === 'open' && btn.textContent.includes('Mở')) ||
+      (status === 'in_progress' && btn.textContent.includes('Đang xử lý')) ||
+      (status === 'resolved' && btn.textContent.includes('Đã giải quyết')) ||
+      (status === 'closed' && btn.textContent.includes('Đóng'));
+    btn.classList.toggle('active', isActive);
+  });
+  loadFeedbacks(status === 'all' ? null : status);
+}
+
+async function submitFeedback(e) {
+  e.preventDefault();
+  const data = {
+    ma_dh: document.getElementById('ma_dh').value.trim(),
+    feedback_type_id: parseInt(document.getElementById('feedback_type_id').value),
+    severity: document.getElementById('severity').value,
+    description: document.getElementById('description').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/feedbacks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Phản ánh đã được gửi thành công!', 'success');
+      document.getElementById('feedbackForm').reset();
+      await loadFeedbacks(currentFilter === 'all' ? null : currentFilter);
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi kết nối: ' + err.message, 'error');
+  }
+}
+
+async function updateStatus(id, status) {
+  try {
+    const res = await fetch(`/api/feedbacks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Cập nhật trạng thái thành công!', 'success');
+      await loadFeedbacks(currentFilter === 'all' ? null : currentFilter);
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi: ' + err.message, 'error');
+  }
+}
+
+function openAddTypeModal() {
+  document.getElementById('addTypeModal').classList.add('open');
+}
+
+function closeAddTypeModal() {
+  document.getElementById('addTypeModal').classList.remove('open');
+  document.getElementById('addTypeForm').reset();
+}
+
+async function submitType(e) {
+  e.preventDefault();
+  const name = document.getElementById('type_name').value.trim();
+  const category = document.getElementById('type_category').value;
+  const description = document.getElementById('type_description').value.trim();
+
+  if (!name || !category) {
+    showMessage('❌ Tên loại lỗi và danh mục là bắt buộc', 'error');
+    return;
+  }
+
+  try {
+    showMessage('⏳ Đang tạo loại lỗi...', 'success');
+    const res = await fetch('/api/feedback/types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, category, description })
+    });
+
+    // Handle redirect (e.g., session expired)
+    if (res.redirected) {
+      showMessage('❌ Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!res.ok) {
+      const error = await res.json();
+      showMessage('❌ Lỗi: ' + (error.error || error.message || 'Unknown error'), 'error');
+      return;
+    }
+
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Loại lỗi "' + name + '" đã được tạo!', 'success');
+      closeAddTypeModal();
+      await loadFeedbackTypes();
+      await loadFeedbackTypesDropdown();
+    } else {
+      showMessage('❌ Lỗi: ' + (result.error || 'Không thể tạo loại lỗi'), 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi kết nối: ' + err.message, 'error');
+  }
+}
+
+async function deleteType(id) {
+  if (!confirm('Xóa loại lỗi này? Các phản ánh đã tạo sẽ không bị ảnh hưởng.')) return;
+
+  try {
+    const res = await fetch(`/api/feedback/types/${id}`, { method: 'DELETE' });
+    const result = await res.json();
+    if (result.ok) {
+      showMessage('✅ Đã xóa loại lỗi!', 'success');
+      await loadFeedbackTypes();
+      await loadFeedbackTypesDropdown();
+    } else {
+      showMessage('❌ Lỗi: ' + result.error, 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Lỗi: ' + err.message, 'error');
+  }
+}
+
+function showMessage(text, type) {
+  const msg = document.getElementById('message');
+  msg.className = 'message ' + type;
+  msg.textContent = text;
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+init();
+</script>
+
+</body>
+</html>
