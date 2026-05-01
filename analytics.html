@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics · ASIA LAB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0c0f18;--surface:#141824;--surface2:#1a2030;
+  --border:#252d42;--border2:#1e2638;
+  --amber:#f5a623;--green:#2ed573;--blue:#3d9fff;--red:#ff4757;
+  --text:#e8edf8;--text2:#8b95b0;--text3:#4a5270;
+}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);padding:20px;}
+.container{max-width:1400px;margin:0 auto;}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;}
+.title{font-size:28px;font-weight:700;color:var(--amber);}
+.nav-back{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);text-decoration:none;font-size:14px;}
+.nav-back:hover{border-color:var(--amber);color:var(--amber);}
+.controls{display:flex;gap:10px;margin-bottom:20px;}
+.btn{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:6px;color:var(--text2);cursor:pointer;font-size:14px;}
+.btn.active{background:var(--amber);border-color:var(--amber);color:#000;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:20px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.chart-title{font-size:16px;font-weight:600;margin-bottom:15px;color:var(--text);}
+.chart-container{position:relative;height:300px;}
+.loading{text-align:center;padding:40px;color:var(--text3);}
+.error{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);padding:12px;border-radius:6px;color:var(--red);margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1 class="title">📊 Analytics Dashboard</h1>
+    <a href="/" class="nav-back">← Về Dashboard</a>
+  </div>
+
+  <div class="controls">
+    <button class="btn active" onclick="loadData(7)">7 ngày</button>
+    <button class="btn" onclick="loadData(30)">30 ngày</button>
+  </div>
+
+  <div id="error" class="error" style="display:none;"></div>
+  <div id="loading" class="loading">Đang tải dữ liệu...</div>
+
+  <div id="charts" class="grid" style="display:none;">
+    <div class="chart-card">
+      <div class="chart-title">Xu hướng đơn hàng</div>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Phân bố loại phục hình</div>
+      <div class="chart-container"><canvas id="typeChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Hiệu suất KTV (Top 10)</div>
+      <div class="chart-container"><canvas id="ktvChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Top 10 phòng khám</div>
+      <div class="chart-container"><canvas id="customerChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let charts = {};
+
+async function loadData(days = 7) {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('charts').style.display = 'none';
+  document.getElementById('error').style.display = 'none';
+
+  // Update button states
+  document.querySelectorAll('.btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && days === 7) || (i === 1 && days === 30));
+  });
+
+  try {
+    const [trendRes, ktvRes, customerRes] = await Promise.all([
+      fetch(`/api/analytics/trend?days=${days}`),
+      fetch(`/api/analytics/ktv?days=${days}`),
+      fetch('/api/analytics/customers?limit=10')
+    ]);
+
+    const trendData = await trendRes.json();
+    const ktvData = await ktvRes.json();
+    const customerData = await customerRes.json();
+
+    if (!trendData.ok || !ktvData.ok || !customerData.ok) {
+      throw new Error('API error');
+    }
+
+    renderCharts(trendData.data, ktvData.data, customerData.data);
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('charts').style.display = 'grid';
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').textContent = 'Lỗi tải dữ liệu: ' + err.message;
+    document.getElementById('error').style.display = 'block';
+  }
+}
+
+function renderCharts(trendData, ktvData, customerData) {
+  // Destroy old charts
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+
+  // 1. Trend Chart
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  charts.trend = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: trendData.map(d => d.date),
+      datasets: [{
+        label: 'Tổng đơn',
+        data: trendData.map(d => d.total_orders),
+        borderColor: '#3d9fff',
+        backgroundColor: 'rgba(61,159,255,0.1)',
+        tension: 0.3,
+        fill: true
+      }, {
+        label: 'Hoàn thành',
+        data: trendData.map(d => d.completed_orders),
+        borderColor: '#2ed573',
+        backgroundColor: 'rgba(46,213,115,0.1)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#e8edf8' } } },
+      scales: {
+        y: { ticks: { color: '#8b95b0' }, grid: { color: '#252d42' } },
+        x: { ticks: { color: '#8b95b0' }, grid: { color: '#252d42' } }
+      }
+    }
+  });
+
+  // 2. Type Distribution Chart
+  const totalZirc = trendData.reduce((sum, d) => sum + (d.zirc_count || 0), 0);
+  const totalKL = trendData.reduce((sum, d) => sum + (d.kl_count || 0), 0);
+  const totalVNR = trendData.reduce((sum, d) => sum + (d.vnr_count || 0), 0);
+  const totalHon = trendData.reduce((sum, d) => sum + (d.hon_count || 0), 0);
+
+  const typeCtx = document.getElementById('typeChart').getContext('2d');
+  charts.type = new Chart(typeCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Zirconia', 'Kim loại', 'Mặt dán', 'Hỗn hợp'],
+      datasets: [{
+        data: [totalZirc, totalKL, totalVNR, totalHon],
+        backgroundColor: ['#5bbfff', '#8b95b0', '#ff8090', '#f5a623']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#e8edf8' } } }
+    }
+  });
+
+  // 3. KTV Performance Chart
+  const topKTV = ktvData.slice(0, 10);
+  const ktvCtx = document.getElementById('ktvChart').getContext('2d');
+  charts.ktv = new Chart(ktvCtx, {
+    type: 'bar',
+    data: {
+      labels: topKTV.map(k => `${k.ktv_name} (${k.stage})`),
+      datasets: [{
+        label: 'Số đơn hoàn thành',
+        data: topKTV.map(k => k.total),
+        backgroundColor: '#a855f7'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#8b95b0' }, grid: { display: false } },
+        x: { ticks: { color: '#8b95b0' }, grid: { color: '#252d42' } }
+      }
+    }
+  });
+
+  // 4. Customer Chart
+  const customerCtx = document.getElementById('customerChart').getContext('2d');
+  charts.customer = new Chart(customerCtx, {
+    type: 'bar',
+    data: {
+      labels: customerData.data.map(c => c.khach_hang),
+      datasets: [{
+        label: 'Tổng đơn',
+        data: customerData.data.map(c => c.total_orders),
+        backgroundColor: '#f5a623'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#8b95b0' }, grid: { display: false } },
+        x: { ticks: { color: '#8b95b0' }, grid: { color: '#252d42' } }
+      }
+    }
+  });
+}
+
+// Load initial data
+loadData(7);
+</script>
+
+</body>
+</html>

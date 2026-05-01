@@ -1299,6 +1299,188 @@ app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json
   res.json({ ok: true, username, newPassword });
 });
 
+// ── ANALYTICS API ──────────────────────────────────────────────────────────
+app.get('/api/analytics/trend', requireAuth, (req, res) => {
+  const days = parseInt(req.query.days) || 7;
+  try {
+    const sql = `
+      SELECT date, total_orders, completed_orders, zirc_count, kl_count, vnr_count, hon_count
+      FROM analytics_daily
+      WHERE date >= date('now', '-${days} days')
+      ORDER BY date ASC
+    `;
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching trend: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/ktv', requireAuth, (req, res) => {
+  const days = parseInt(req.query.days) || 7;
+  try {
+    const sql = `
+      SELECT ktv_name, stage, SUM(orders_completed) as total, AVG(avg_time_hours) as avg_time
+      FROM ktv_performance
+      WHERE date >= date('now', '-${days} days')
+      GROUP BY ktv_name, stage
+      ORDER BY total DESC
+    `;
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching KTV performance: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/customers', requireAuth, (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  try {
+    const sql = `
+      SELECT khach_hang, COUNT(*) as total_orders,
+             SUM(CASE WHEN trang_thai='Hoàn thành' THEN 1 ELSE 0 END) as completed,
+             ROUND(AVG(julianday(yc_giao) - julianday(nhap_luc)), 2) as avg_days
+      FROM don_hang
+      WHERE nhap_luc >= date('now', '-30 days')
+      GROUP BY khach_hang
+      ORDER BY total_orders DESC
+      LIMIT ?
+    `;
+    const rows = db.prepare(sql).all(limit);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching customers: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/analytics/refresh', requireAuth, requireAdmin, (req, res) => {
+  // TODO: Implement background job to calculate analytics_daily and ktv_performance
+  log('[Analytics] Refresh requested (not implemented yet)');
+  res.json({ ok: true, message: 'Analytics refresh queued (not implemented yet)' });
+});
+
+// ── FEEDBACK API ───────────────────────────────────────────────────────────
+app.get('/api/feedback/types', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM feedback_types WHERE active=1 ORDER BY category, name').all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Feedback] Error fetching types: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/feedback/types', requireAuth, requireAdmin, express.json(), (req, res) => {
+  const { name, category, description } = req.body;
+  if (!name || !category) {
+    return res.status(400).json({ ok: false, error: 'name and category are required' });
+  }
+  try {
+    const stmt = db.prepare('INSERT INTO feedback_types (name, category, description) VALUES (?, ?, ?)');
+    const result = stmt.run(name, category, description || '');
+    log(`[Feedback] Type created: ${name} (${category})`);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    log(`[Feedback] Error creating type: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.delete('/api/feedback/types/:id', requireAuth, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  try {
+    // Soft delete
+    db.prepare('UPDATE feedback_types SET active=0 WHERE id=?').run(id);
+    log(`[Feedback] Type deleted: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[Feedback] Error deleting type: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/feedbacks', requireAuth, (req, res) => {
+  try {
+    let sql = `
+      SELECT f.*, ft.name as type_name, ft.category
+      FROM feedbacks f
+      JOIN feedback_types ft ON f.feedback_type_id=ft.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (req.query.ma_dh) {
+      sql += ' AND f.ma_dh=?';
+      params.push(req.query.ma_dh);
+    }
+    if (req.query.status) {
+      sql += ' AND f.status=?';
+      params.push(req.query.status);
+    }
+
+    sql += ' ORDER BY f.created_at DESC LIMIT 100';
+    const rows = db.prepare(sql).all(...params);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Feedback] Error fetching feedbacks: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/feedbacks', requireAuth, express.json(), (req, res) => {
+  const { ma_dh, feedback_type_id, description, severity } = req.body;
+  if (!ma_dh || !feedback_type_id || !description) {
+    return res.status(400).json({ ok: false, error: 'ma_dh, feedback_type_id, and description are required' });
+  }
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO feedbacks (ma_dh, feedback_type_id, description, severity, reported_by)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const result = stmt.run(ma_dh, feedback_type_id, description, severity || 'medium', req.session.username);
+    log(`[Feedback] Created: ${ma_dh} by ${req.session.username}`);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    log(`[Feedback] Error creating feedback: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.patch('/api/feedbacks/:id', requireAuth, express.json(), (req, res) => {
+  const { id } = req.params;
+  const { status, assigned_to } = req.body;
+  try {
+    const updates = [];
+    const params = [];
+
+    if (status) {
+      updates.push('status=?');
+      params.push(status);
+      if (status === 'resolved' || status === 'closed') {
+        updates.push("resolved_at=datetime('now','localtime')");
+      }
+    }
+    if (assigned_to !== undefined) {
+      updates.push('assigned_to=?');
+      params.push(assigned_to);
+    }
+
+    updates.push("updated_at=datetime('now','localtime')");
+    params.push(id);
+
+    const sql = `UPDATE feedbacks SET ${updates.join(', ')} WHERE id=?`;
+    db.prepare(sql).run(...params);
+    log(`[Feedback] Updated: ${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[Feedback] Error updating feedback: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Chặn truy cập trực tiếp vào file HTML dashboard qua static (trừ login.html)
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') && req.path !== '/login.html') {
