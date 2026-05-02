@@ -598,6 +598,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
         <a href="/analytics.html" class="d-nl" id="d-nl-analytics" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📈</span> Analytics</a>
         <a href="/feedback.html" class="d-nl" id="d-nl-feedback" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📝</span> Feedback</a>
+        <a href="/munger" class="d-nl" id="d-nl-munger" style="text-decoration:none;color:inherit;display:none;"><span class="ico">⚖️</span> Munger</a>
       </div>
       <div class="d-export-section" id="d-export-section" style="display:none">
         <button class="d-export-btn" id="d-export-btn" onclick="triggerKeylabExport()">
@@ -1810,6 +1811,8 @@ async function initAdminUI() {
       if (analyticsLink) analyticsLink.style.display = '';
       const feedbackLink = document.getElementById('d-nl-feedback');
       if (feedbackLink) feedbackLink.style.display = '';
+      const mungerLink = document.getElementById('d-nl-munger');
+      if (mungerLink) mungerLink.style.display = '';
     }
   } catch {}
 }

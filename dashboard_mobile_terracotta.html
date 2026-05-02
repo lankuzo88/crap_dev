@@ -452,6 +452,7 @@
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
     <a id="m-upload-btn" href="/upload" title="Upload Excel" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);display:none;">📤</a>
     <button id="m-export-btn" onclick="triggerKeylabExport()" title="Xu&#7845;t Excel KeyLab">🔄</button>
+    <a id="m-munger-btn" href="/munger" title="Munger Dashboard" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);display:none;">⚖️</a>
     <a href="/logout" title="Đăng xuất" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);">↩</a>
   </div>
 
@@ -814,6 +815,8 @@
           document.getElementById('m-export-btn').classList.add('admin-visible');
           const upBtn = document.getElementById('m-upload-btn');
           if (upBtn) upBtn.style.display = '';
+          const mungerBtn = document.getElementById('m-munger-btn');
+          if (mungerBtn) mungerBtn.style.display = '';
         }
       } catch {}
     }

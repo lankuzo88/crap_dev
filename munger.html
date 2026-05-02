@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng Điều Khiển Munger — ASIA LAB</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:#0f172a;color:#e2e8f0;
+      min-height:100vh;padding:24px 20px 40px;
+    }
+    a{color:inherit;text-decoration:none;}
+
+    /* ── HEADER ── */
+    .header{
+      display:flex;justify-content:space-between;align-items:flex-start;
+      margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #1e293b;
+    }
+    .header-left h1{font-size:22px;color:#f8fafc;font-weight:700;letter-spacing:-0.3px;}
+    .header-left h1 span{color:#f59e0b;}
+    .header-left .tagline{font-size:12px;color:#64748b;margin-top:4px;font-style:italic;}
+    .header-right{display:flex;align-items:center;gap:10px;}
+    .back-btn{
+      padding:7px 14px;background:#1e293b;border-radius:7px;
+      font-size:13px;color:#94a3b8;border:1px solid #334155;
+      cursor:pointer;transition:background 0.15s;
+    }
+    .back-btn:hover{background:#334155;color:#e2e8f0;}
+    .refresh-btn{
+      padding:7px 14px;background:#1e3a5f;border-radius:7px;
+      font-size:13px;color:#60a5fa;border:1px solid #1d4ed8;
+      cursor:pointer;transition:background 0.15s;
+    }
+    .refresh-btn:hover{background:#1d4ed8;color:#fff;}
+    .refresh-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .days-select{
+      padding:6px 10px;background:#1e293b;border:1px solid #334155;
+      border-radius:7px;color:#e2e8f0;font-size:13px;cursor:pointer;
+    }
+
+    /* ── STATUS BAR ── */
+    .statusbar{
+      display:flex;align-items:center;gap:16px;
+      margin-bottom:24px;font-size:12px;color:#64748b;
+    }
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;margin-right:4px;}
+    .status-dot.loading{background:#f59e0b;animation:pulse 1s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+    /* ── SECTION LABELS ── */
+    .section-label{
+      font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+      color:#475569;margin-bottom:12px;margin-top:24px;display:flex;align-items:center;gap:8px;
+    }
+    .section-label::after{content:'';flex:1;height:1px;background:#1e293b;}
+
+    /* ── METRIC GRID ── */
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    @media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(1,1fr);}}
+    @media(max-width:600px){.grid-4,.grid-3{grid-template-columns:1fr;}}
+
+    /* ── METRIC CARD ── */
+    .card{
+      background:#1e293b;border-radius:12px;padding:20px;
+      border:1px solid #334155;position:relative;overflow:hidden;
+      transition:border-color 0.2s;
+    }
+    .card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;
+    }
+    .card.green::before{background:#10b981;}
+    .card.yellow::before{background:#f59e0b;}
+    .card.red::before{background:#ef4444;}
+    .card.loading::before{background:#334155;}
+
+    .card-label{font-size:11px;color:#64748b;font-weight:600;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;}
+    .card-value{font-size:42px;font-weight:800;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums;}
+    .card.green .card-value{color:#10b981;}
+    .card.yellow .card-value{color:#f59e0b;}
+    .card.red .card-value{color:#ef4444;}
+    .card.loading .card-value{color:#475569;}
+    .card-unit{font-size:18px;font-weight:500;margin-left:2px;}
+    .card-sub{font-size:12px;color:#64748b;line-height:1.5;margin-top:6px;}
+    .card-sub b{color:#94a3b8;}
+
+    /* ── TARGET BAR ── */
+    .target-bar{
+      margin-top:12px;height:5px;background:#0f172a;border-radius:3px;overflow:hidden;
+    }
+    .target-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+    .green .target-fill{background:#10b981;}
+    .yellow .target-fill{background:#f59e0b;}
+    .red .target-fill{background:#ef4444;}
+
+    /* ── BUS FACTOR DETAIL ── */
+    .stage-rows{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+    .stage-row{display:flex;align-items:center;gap:8px;font-size:11px;}
+    .stage-name{width:80px;color:#94a3b8;flex-shrink:0;}
+    .stage-bar-wrap{flex:1;height:5px;background:#0f172a;border-radius:3px;overflow:hidden;}
+    .stage-bar-fill{height:100%;border-radius:3px;}
+    .stage-ktv{font-size:10px;color:#64748b;white-space:nowrap;}
+    .stage-pct{font-size:11px;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
+
+    /* ── CUSTOMER LIST ── */
+    .cust-list{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+    .cust-row{display:flex;align-items:center;gap:8px;font-size:11px;}
+    .cust-name{flex:1;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .cust-bar-wrap{width:60px;height:5px;background:#0f172a;border-radius:3px;overflow:hidden;}
+    .cust-bar-fill{height:100%;background:#60a5fa;border-radius:3px;}
+    .cust-pct{width:28px;text-align:right;color:#64748b;flex-shrink:0;}
+
+    /* ── SPARKLINE ── */
+    .sparkline-wrap{margin-top:10px;}
+    canvas.sparkline{width:100%;height:48px;display:block;}
+
+    /* ── WIP TABLE ── */
+    .wip-table{margin-top:10px;display:flex;flex-direction:column;gap:4px;}
+    .wip-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;}
+    .wip-stage{color:#94a3b8;}
+    .wip-val{font-weight:600;color:#e2e8f0;}
+    .wip-sep{height:1px;background:#0f172a;margin:2px 0;}
+
+    /* ── COUNTDOWN ── */
+    .countdown-wrap{text-align:center;padding:8px 0;}
+    .countdown-big{font-size:52px;font-weight:900;line-height:1;}
+    .countdown-label{font-size:12px;color:#64748b;margin-top:4px;}
+    .progress-ring{margin:14px auto 0;width:80px;height:80px;position:relative;}
+    .progress-ring svg{transform:rotate(-90deg);}
+    .progress-ring .ring-bg{fill:none;stroke:#0f172a;stroke-width:8;}
+    .progress-ring .ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 0.6s ease;}
+    .ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+    .ring-center span{font-size:14px;font-weight:700;}
+    .ring-center small{font-size:9px;color:#64748b;display:block;}
+
+    /* ── LOADING SKELETON ── */
+    .skeleton{background:#334155;border-radius:4px;animation:shimmer 1.5s infinite;}
+    @keyframes shimmer{0%{opacity:1;}50%{opacity:0.4;}100%{opacity:1;}}
+
+    /* ── ERROR ── */
+    .error-banner{
+      background:#3f1515;border:1px solid #7f1d1d;border-radius:8px;
+      padding:12px 16px;color:#fca5a5;font-size:13px;margin-bottom:20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>⚖️ Bảng Điều Khiển <span>Munger</span></h1>
+    <div class="tagline">"Đảo ngược, luôn luôn đảo ngược." — Charlie Munger</div>
+  </div>
+  <div class="header-right">
+    <select class="days-select" id="daysSelect" onchange="load()">
+      <option value="7">7 ngày gần</option>
+      <option value="30" selected>Kỳ tháng (26–25)</option>
+      <option value="60">60 ngày gần</option>
+    </select>
+    <button class="refresh-btn" id="refreshBtn" onclick="load()">↻ Làm mới</button>
+    <a href="/" class="back-btn">← Trang chính</a>
+  </div>
+</div>
+
+<div class="statusbar">
+  <span><span class="status-dot" id="statusDot"></span><span id="statusText">Đang tải...</span></span>
+  <span id="updatedAt"></span>
+  <span id="autoRefreshLabel" style="margin-left:auto;"></span>
+</div>
+
+<div id="errorBanner" style="display:none" class="error-banner"></div>
+
+<!-- ── VẬN HÀNH ── -->
+<div class="section-label">🔧 Vận hành — 4 điểm có thể sập</div>
+<div class="grid-4" id="gridOps">
+  <div class="card loading" id="c-bus"><div class="card-label">Phụ Thuộc Nhân Sự</div><div class="card-value skeleton" style="width:60px;height:42px;border-radius:6px;"></div></div>
+  <div class="card loading" id="c-wip"><div class="card-label">Tắc Nghẽn Pipeline</div><div class="card-value skeleton" style="width:60px;height:42px;border-radius:6px;"></div></div>
+  <div class="card loading" id="c-fpy"><div class="card-label">Làm Đúng Ngay Lần Đầu</div><div class="card-value skeleton" style="width:80px;height:42px;border-radius:6px;"></div></div>
+  <div class="card loading" id="c-ot"><div class="card-label">Giao Đúng Hạn</div><div class="card-value skeleton" style="width:80px;height:42px;border-radius:6px;"></div></div>
+</div>
+
+<!-- ── KHÁCH HÀNG ── -->
+<div class="section-label">🏥 Khách hàng — 3 điểm có thể mất</div>
+<div class="grid-3" id="gridCust">
+  <div class="card loading" id="c-conc"><div class="card-label">Tập Trung Doanh Thu</div><div class="card-value skeleton" style="width:60px;height:42px;border-radius:6px;"></div></div>
+  <div class="card loading" id="c-trend"><div class="card-label">Xu Hướng Đơn Hàng</div><div class="card-value skeleton" style="width:60px;height:42px;border-radius:6px;"></div></div>
+  <div class="card loading" id="c-scale"><div class="card-label">Tiến Độ Mục Tiêu 10K</div><div class="card-value skeleton" style="width:80px;height:42px;border-radius:6px;"></div></div>
+</div>
+
+<script>
+let autoTimer = null;
+const AUTO_INTERVAL = 5 * 60 * 1000; // 5 phút
+
+function status(ok, msg) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot' + (ok === null ? ' loading' : '');
+  dot.style.background = ok === null ? '#f59e0b' : ok ? '#10b981' : '#ef4444';
+  txt.textContent = msg;
+}
+
+function cls(s) {
+  return s === 'green' ? 'green' : s === 'yellow' ? 'yellow' : 'red';
+}
+
+function bar(pct, max = 100) {
+  const w = Math.min(Math.round(pct / max * 100), 100);
+  return `<div class="target-bar"><div class="target-fill" style="width:${w}%"></div></div>`;
+}
+
+function stageColor(pct) {
+  if (pct > 50) return '#ef4444';
+  if (pct > 35) return '#f59e0b';
+  return '#10b981';
+}
+
+function renderBusFactor(d) {
+  const c = document.getElementById('c-bus');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  c.innerHTML = `
+    <div class="card-label">Phụ Thuộc Nhân Sự</div>
+    <div class="card-value">${d.worst_pct}<span class="card-unit">%</span></div>
+    <div class="card-sub">Công đoạn rủi ro nhất: <b>${d.worst_stage}</b></div>
+    <div class="stage-rows">
+      ${d.stages.map(st => `
+        <div class="stage-row">
+          <span class="stage-name">${st.stage}</span>
+          <div class="stage-bar-wrap"><div class="stage-bar-fill" style="width:${st.top1_pct}%;background:${stageColor(st.top1_pct)}"></div></div>
+          <span class="stage-pct" style="color:${stageColor(st.top1_pct)}">${st.top1_pct}%</span>
+          <span class="stage-ktv">${st.top1_ktv}</span>
+        </div>`).join('')}
+    </div>
+    <div class="card-sub" style="margin-top:8px;">⚠ An toàn: 1 KTV gánh &lt; 35% công đoạn</div>`;
+}
+
+function renderWipRatio(d) {
+  const c = document.getElementById('c-wip');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  const stages = ['CBM','SÁP/Cadcam','SƯỜN','ĐẮP','MÀI'];
+  const maxWip = Math.max(...stages.map(st => d.by_stage[st] || 0), 1);
+  c.innerHTML = `
+    <div class="card-label">Tắc Nghẽn Pipeline</div>
+    <div class="card-value">${d.ratio.toFixed(2)}</div>
+    <div class="card-sub">Đầu dây (CBM+SÁP): <b>${d.head}</b> đơn &nbsp;|&nbsp; Cuối dây (ĐẮP+MÀI): <b>${d.tail}</b> đơn</div>
+    <div class="wip-table">
+      ${stages.map(st => {
+        const v = d.by_stage[st] || 0;
+        const pct = Math.round(v / maxWip * 100);
+        const color = (st === 'ĐẮP' || st === 'MÀI') && d.ratio > 1.1 ? '#ef4444' : '#60a5fa';
+        return `<div class="wip-row">
+          <span class="wip-stage">${st}</span>
+          <div class="stage-bar-wrap" style="flex:1;margin:0 8px"><div class="stage-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span class="wip-val">${v} đơn</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card-sub" style="margin-top:8px;">⚠ Tỉ lệ &gt; 1.1 = đơn đang ứ ở cuối dây</div>`;
+}
+
+function renderFPY(d) {
+  const c = document.getElementById('c-fpy');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  c.innerHTML = `
+    <div class="card-label">Làm Đúng Ngay Lần Đầu</div>
+    <div class="card-value">${d.value}<span class="card-unit">%</span></div>
+    <div class="card-sub">
+      <b>${d.rework}</b> đơn phải làm lại / <b>${d.total}</b> tổng đơn
+    </div>
+    ${bar(d.value, 100)}
+    <div class="card-sub" style="margin-top:8px;">Mục tiêu: <b>≥ 90%</b> &nbsp;|&nbsp; Hiện phải làm lại: <b>${100 - d.value}%</b></div>
+    <div class="card-sub">Cứ 6 đơn = 1 đơn làm lại → mất năng suất ngầm</div>`;
+}
+
+function renderOnTime(d) {
+  const c = document.getElementById('c-ot');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  c.innerHTML = `
+    <div class="card-label">Giao Đúng Hạn</div>
+    <div class="card-value">${d.value}<span class="card-unit">%</span></div>
+    <div class="card-sub">
+      <b>${d.on_time}</b> đúng hạn / <b>${d.total}</b> đơn đã xong công đoạn MÀI
+    </div>
+    ${bar(d.value, 100)}
+    <div class="card-sub" style="margin-top:8px;">Mục tiêu: <b>≥ 90%</b> &nbsp;|&nbsp; Trễ hạn: <b>${d.total - d.on_time}</b> đơn</div>`;
+}
+
+function renderConcentration(d) {
+  const c = document.getElementById('c-conc');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  const maxRang = d.top5[0]?.rang || 1;
+  c.innerHTML = `
+    <div class="card-label">Tập Trung Doanh Thu</div>
+    <div class="card-value">${d.top5_pct}<span class="card-unit">%</span></div>
+    <div class="card-sub">5 phòng khám lớn nhất chiếm <b>${d.top5_pct}%</b> trong tổng <b>${d.total_rang}</b> răng</div>
+    <div class="cust-list">
+      ${d.top5.map(k => `
+        <div class="cust-row">
+          <span class="cust-name" title="${k.name}">${k.name.replace(/^[A-Z]{2}-/,'')}</span>
+          <div class="cust-bar-wrap"><div class="cust-bar-fill" style="width:${Math.round(k.rang/maxRang*100)}%"></div></div>
+          <span class="cust-pct">${k.pct}%</span>
+        </div>`).join('')}
+    </div>
+    <div class="card-sub" style="margin-top:8px;">⚠ Mất 1 phòng lớn nhất = mất ~${d.top5[0]?.pct || 0}% doanh thu</div>`;
+}
+
+function renderDemand(d, billingPeriod) {
+  const c = document.getElementById('c-trend');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  const arrow = d.change_pct > 0 ? '↑' : d.change_pct < 0 ? '↓' : '→';
+  const signColor = d.change_pct > 0 ? '#10b981' : d.change_pct < 0 ? '#ef4444' : '#f59e0b';
+  const periodLabel = billingPeriod ? `${billingPeriod.label} (${billingPeriod.range})` : d.trend_label;
+  c.innerHTML = `
+    <div class="card-label">Xu Hướng Đơn Hàng</div>
+    <div class="card-value" style="color:${signColor}">${arrow}${Math.abs(d.change_pct)}<span class="card-unit">%</span></div>
+    <div class="card-sub" style="color:#94a3b8;font-size:11px;margin-bottom:4px;">${periodLabel}</div>
+    <div class="card-sub">
+      Kỳ này: <b>${d.curr_rang.toLocaleString()}</b> răng &nbsp;|&nbsp; Kỳ trước (<b>${d.prev_label}</b>): <b>${d.prev_rang.toLocaleString()}</b> răng
+    </div>
+    <div class="card-sub">Trung bình/ngày: <b>${d.daily_avg}</b> &nbsp;|&nbsp; Kỳ trước (đầy đủ): <b>${(d.prev_full||0).toLocaleString()}</b> răng</div>
+    <div class="sparkline-wrap"><canvas id="sparkCanvas" class="sparkline"></canvas></div>`;
+
+  // Vẽ sparkline
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById('sparkCanvas');
+    if (!canvas || !d.sparkline?.length) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.offsetWidth || 200;
+    const h = 48;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    const vals = d.sparkline.map(r => r.rang);
+    const max = Math.max(...vals, 1);
+    const pad = 4;
+    const xStep = (w - pad * 2) / Math.max(vals.length - 1, 1);
+    const pts = vals.map((v, i) => [pad + i * xStep, h - pad - (v / max) * (h - pad * 2)]);
+    ctx.clearRect(0, 0, w, h);
+    // Fill
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    const col = d.change_pct > 0 ? '16,185,129' : d.change_pct < 0 ? '239,68,68' : '245,158,11';
+    // col defined above — used for gradient and line
+    grad.addColorStop(0, `rgba(${col},0.3)`);
+    grad.addColorStop(1, `rgba(${col},0)`);
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], h);
+    pts.forEach(([x, y]) => ctx.lineTo(x, y));
+    ctx.lineTo(pts[pts.length-1][0], h);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // Line
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+    ctx.strokeStyle = `rgb(${col})`;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  });
+}
+
+function renderScale(d) {
+  const c = document.getElementById('c-scale');
+  const s = cls(d.status);
+  c.className = `card ${s}`;
+  const color = s === 'green' ? '#10b981' : s === 'yellow' ? '#f59e0b' : '#ef4444';
+  const pct = Math.min(d.pct_of_target, 100);
+  const circumference = 2 * Math.PI * 32;
+  const offset = circumference - (pct / 100) * circumference;
+
+  let mainDisplay, subText;
+  if (d.days_until === 0) {
+    mainDisplay = `<div class="card-value" style="color:${color}">✓</div>`;
+    subText = '🎉 Đã đạt 10,000 răng/tháng!';
+  } else if (d.days_until !== null) {
+    mainDisplay = `<div class="card-value">${d.days_until}<span class="card-unit">ngày</span></div>`;
+    subText = `Ước tính đạt 10K răng/tháng trong <b>${d.days_until}</b> ngày nữa`;
+  } else {
+    mainDisplay = `<div class="card-value">—</div>`;
+    subText = 'Xu hướng không tăng — chưa dự báo được';
+  }
+
+  c.innerHTML = `
+    <div class="card-label">Tiến Độ Mục Tiêu → 10,000 răng/tháng</div>
+    ${mainDisplay}
+    <div class="card-sub">${subText}</div>
+    <div class="progress-ring">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle class="ring-bg" cx="40" cy="40" r="32"/>
+        <circle class="ring-fill" cx="40" cy="40" r="32"
+          stroke="${color}"
+          stroke-dasharray="${circumference.toFixed(1)}"
+          stroke-dashoffset="${offset.toFixed(1)}"/>
+      </svg>
+      <div class="ring-center">
+        <span style="color:${color}">${pct}%</span>
+        <small>đã đạt</small>
+      </div>
+    </div>
+    <div class="card-sub" style="margin-top:8px;">Thực tế kỳ này: <b>${d.current_rate.toLocaleString()}</b> / 10,000 răng</div>`;
+}
+
+async function load() {
+  const days = document.getElementById('daysSelect').value;
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  status(null, 'Đang tải...');
+  document.getElementById('statusDot').classList.add('loading');
+  document.getElementById('errorBanner').style.display = 'none';
+
+  try {
+    const r = await fetch(`/api/munger/metrics?days=${days}`);
+    if (!r.ok) {
+      if (r.status === 403) {
+        status(false, 'Không có quyền truy cập (Admin only)');
+        document.getElementById('errorBanner').textContent = '⛔ Trang này chỉ dành cho Admin.';
+        document.getElementById('errorBanner').style.display = 'block';
+        return;
+      }
+      throw new Error(`HTTP ${r.status}`);
+    }
+    const json = await r.json();
+    if (!json.ok) throw new Error(json.error);
+
+    const d = json.data;
+    renderBusFactor(d.bus_factor);
+    renderWipRatio(d.wip_ratio);
+    renderFPY(d.first_pass_yield);
+    renderOnTime(d.on_time_rate);
+    renderConcentration(d.customer_concentration);
+    renderDemand(d.demand_trend, json.billing_period);
+    renderScale(d.scale_countdown);
+
+    const t = new Date(json.updated_at);
+    document.getElementById('updatedAt').textContent =
+      'Cập nhật lúc ' + t.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    status(true, 'Dữ liệu mới nhất');
+  } catch (e) {
+    status(false, 'Lỗi: ' + e.message);
+    document.getElementById('errorBanner').textContent = '❌ Lỗi tải dữ liệu: ' + e.message;
+    document.getElementById('errorBanner').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    document.getElementById('statusDot').classList.remove('loading');
+  }
+}
+
+function startAutoRefresh() {
+  if (autoTimer) clearInterval(autoTimer);
+  autoTimer = setInterval(load, AUTO_INTERVAL);
+  let secs = AUTO_INTERVAL / 1000;
+  const lbl = document.getElementById('autoRefreshLabel');
+  lbl.textContent = `Tự làm mới sau: ${secs}s`;
+  const tick = setInterval(() => {
+    secs--;
+    if (secs <= 0) { secs = AUTO_INTERVAL / 1000; }
+    lbl.textContent = `Tự làm mới sau: ${secs}s`;
+  }, 1000);
+}
+
+load();
+startAutoRefresh();
+</script>
+</body>
+</html>
