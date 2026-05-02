@@ -24,14 +24,15 @@
 ```
 crap_dev/
 ├── server.js                        # Backend Express server (entry point)
-├── dashboard.html                   # Dashboard desktop + mobile responsive (101 KB)
-├── dashboard_mobile_terracotta.html # Dashboard mobile riêng, theme sáng (28 KB)
+├── dashboard.html                   # Dashboard desktop + mobile responsive (104 KB)
+├── dashboard_mobile_terracotta.html # Dashboard mobile riêng, theme sáng (31 KB)
 ├── dashboard_mobile_ref.html        # Bản tham khảo cũ (không dùng chính thức)
 ├── login.html                       # Trang đăng nhập
 ├── upload.html                      # Trang upload Excel + xem log scraper
 ├── analytics.html                   # Analytics dashboard (admin-only)
 ├── feedback.html                    # Feedback system UI
 ├── admin.html                       # Admin panel UI
+├── munger.html                      # Munger Dashboard - 7 metrics vận hành (21 KB, admin-only)
 ├── labo_config.json                 # Config: last_run_file path
 ├── keylab_state.json                # State: daily export counter (auto-created)
 ├── users.json                       # User database (username, password, role)
@@ -138,6 +139,9 @@ GET  /user    → trả về { username, role } của user hiện tại
 | `/api/orders` | GET | ✅ | — | Danh sách đơn hàng (limit, offset) |
 | `/api/auto-scrape/status` | GET | ✅ | — | Trạng thái auto-scrape 24/7 |
 | `/api/auto-scrape/run` | POST | ✅ | ✅ | Kích hoạt auto-scrape ngay (admin-only) |
+| `/munger` | GET | ✅ | ✅ | Munger Dashboard - 7 metrics vận hành (admin-only) |
+| `/api/munger/metrics` | GET | ✅ | ✅ | API trả về 7 metrics (query: days=7/30/60) |
+| `/api/analytics/history/overview` | GET | ✅ | ✅ | Historical analytics data (admin-only) |
 | `/login` | GET/POST | ❌ | — | Form đăng nhập |
 | `/logout` | GET | ❌ | — | Đăng xuất |
 
@@ -347,6 +351,129 @@ function phType(ph) {
 **Filter bar** (sticky, dưới search): Tất cả / Zirconia / Kim loại / Mặt dán
 
 **Ph badge** trên mỗi card (top-right): `ZIRC`, `KL`, `CERCON`, `ZIR-D`, `VENEER`
+
+---
+
+## 11. Munger Dashboard (munger.html) — ADDED 2026-05-02
+
+**Served tại:** `GET /munger` (admin-only)
+
+**Purpose:** 7 metrics vận hành & khách hàng theo tư duy Charlie Munger — "Inversion, always invert."
+
+**Theme:** Dark theme (`#0f172a` background), color-coded metrics (green/yellow/red)
+
+**7 Metrics Implemented:**
+
+| Metric | Purpose | Good | Bad | Status Colors |
+|---|---|---|---|---|
+| Bus Factor | Dependency risk per stage | <40% | >60% | 🟢🟡🔴 |
+| WIP Ratio | Pipeline balance | 0.7-0.9 | >1.1 | 🟢🟡🔴 |
+| First-pass Yield | Quality (% done right first time) | ≥90% | <85% | 🟢🟡🔴 |
+| On-time Rate | Delivery reliability | ≥90% | <80% | 🟢🟡🔴 |
+| Customer Concentration | Revenue risk from top 5 | <35% | >50% | 🟢🟡🔴 |
+| Demand Trend | Month-over-month growth | Positive | Negative | 🟢🟡🔴 |
+| Scale Countdown | Progress to 10K răng/month | On track | No path | 🟢🟡🔴 |
+
+**Billing Period Logic:**
+- Kỳ tháng: 26 tháng trước → 25 tháng này (ví dụ: 26/3–25/4 = Tháng 4)
+- So sánh công bằng: N ngày đầu kỳ hiện tại vs N ngày đầu kỳ trước
+- Tránh so sánh kỳ chưa xong với kỳ đã xong
+
+**API Response Structure:**
+```javascript
+{
+  ok: true,
+  updated_at: "2026-05-02T16:16:22.336Z",
+  days: 30,
+  billing_period: { curr: { start, end, label }, prev: { start, end, label } },
+  data: {
+    bus_factor: { worst_stage, worst_pct, stages: [{ stage, total, top1_ktv, top1_pct, top3 }] },
+    wip_ratio: { head, tail, ratio, by_stage: { CBM: n, SÁP/Cadcam: n, ĐẮP: n, MÀI: n }, status },
+    first_pass_yield: { value, total, rework, target: 90, status },
+    on_time_rate: { value, on_time, total, target: 90, status },
+    customer_concentration: { top5_pct, total_rang, top5_rang, top5: [{ name, rang, pct }], status },
+    demand_trend: { curr_rang, prev_rang, change_pct, prev_full, trend_label, prev_label, sparkline, status },
+    scale_countdown: { target: 10000, current_rate, pct_of_target, days_until, status }
+  }
+}
+```
+
+**Time Windows:**
+- `days=7` → 7 ngày gần nhất vs 7 ngày trước đó
+- `days=30` → Kỳ tháng hiện tại vs kỳ tháng trước (default)
+- `days=60` → 60 ngày gần nhất vs 60 ngày trước đó
+
+**Frontend Features:**
+- Responsive grid: 4 cols → 2 cols → 1 col
+- Real-time refresh button
+- Time window selector (7/30/60 ngày)
+- Sparkline charts cho demand trend (inline SVG)
+- Progress bars cho scale countdown
+- Color-coded cards with animated status bars
+
+**Access Control:**
+- Route `/munger` protected by `requireAuth` + `requireAdmin`
+- Sidebar link only shown for admin role
+- API endpoint admin-only
+
+---
+
+## 12. Analytics Dashboard (analytics.html) — ADDED 2026-05-02
+
+**Served tại:** `GET /analytics.html` (admin-only)
+
+**Purpose:** Historical analytics với biểu đồ xu hướng
+
+**Features:**
+- Historical order data visualization
+- Time-based charts
+- Trend analysis
+- KPI tracking over time
+
+---
+
+## 13. Key System State (2026-05-02)
+
+**Current Data:**
+- Total Orders: ~2,650 (Tháng 3-4)
+- Total Teeth: ~14,000 răng
+- Active Technicians: 23 KTV
+- Dental Clinics: 88 nha khoa
+- Database Records: 14,000+ rows
+- Export Count: 5 (keylab_state.json)
+- Latest Export File: `02052026_4.xls`
+
+**System Architecture:**
+```
+Keylab2022 Desktop App
+         ↓ (auto-export)
+      Excel/
+         ↓ (cleaner)
+    File_sach/*_final.xlsx
+         ↓ (scraper)
+  labo_data.db (SQLite)
+         ↓ (API)
+   server.js (Express)
+         ↓ (render)
+   dashboard.html / mobile / munger / analytics / feedback / admin
+```
+
+**Deployment:**
+- PM2 managed (process: `server`)
+- Port: 3000
+- Node.js v24.14.0
+- Windows 11 Pro
+- Virtual Display: parsec-vdd (VPS)
+
+---
+
+## 14. File watcher & Auto-scrape
+
+**Status:** DISABLED (2026-05-02, commit 7012270)
+
+**Reason:** File watcher was causing issues with data consistency. Auto-scrape timer also disabled to prevent race conditions with manual operations.
+
+**Manual Trigger:** Admin can still trigger scrape via `/upload` page or API `/api/auto-scrape/run`
 
 **Key JS functions:**
 
@@ -720,40 +847,48 @@ a38e965  merge: feat/multi-user-system → main
 
 ---
 
-## 20. Current State Summary (2026-05-01)
+## 20. Current State Summary (2026-05-02)
 
 **✅ Hoàn thành:**
 - Multi-user authentication với role-based access control
 - Admin panel UI với user management
 - SQLite database làm nguồn dữ liệu chính
 - Keylab2022 desktop automation (manual trigger)
-- File watcher với auto-scraping
 - Session persistence (survive restart)
 - Mobile + desktop responsive dashboard
 - Active order filtering (chỉ hiện đơn trong file export mới nhất)
+- **Munger Dashboard với 7 metrics vận hành** (2026-05-02)
+- **Analytics Dashboard với historical data** (2026-05-02)
+- **Feedback System** (2026-05-01)
+- **Auto-scrape 24/7 headless** (2026-05-02)
 
 **⚠️ Known limitations:**
 - Password lưu plain text (chưa hash)
 - SQLite database file (`labo_data.db`) tồn tại nhưng có thể chưa có data
 - Keylab export phụ thuộc vào desktop app Keylab2022 đang chạy
 - Scraper credentials hardcoded trong env vars
+- File watcher & auto-scrape timer trong server.js đã DISABLED (2026-05-02)
 
 **📁 Files quan trọng:**
-- `server.js` — Backend chính (1178 lines)
-- `dashboard.html` — Dashboard desktop/mobile responsive (101 KB)
-- `dashboard_mobile_terracotta.html` — Mobile theme sáng (28 KB)
-- `admin.html` — Admin panel UI
-- `users.json` — User database (3 users hiện tại)
+- `server.js` — Backend chính (75.5 KB, ~1400+ lines)
+- `dashboard.html` — Dashboard desktop/mobile responsive (104 KB)
+- `dashboard_mobile_terracotta.html` — Mobile theme sáng (31 KB)
+- `munger.html` — Munger Dashboard 7 metrics (21 KB, admin-only)
+- `analytics.html` — Analytics dashboard (10 KB, admin-only)
+- `feedback.html` — Feedback system UI (24 KB)
+- `admin.html` — Admin panel UI (17 KB)
+- `users.json` — User database (2 users: admin, minhtuan)
 - `sessions.json` — Active sessions (gitignored)
 - `labo_data.db` — SQLite database (+ .db-shm, .db-wal)
-- `keylab_state.json` — Keylab export counter (32 exports hôm nay)
-- `labo_config.json` — Last run file path
+- `keylab_state.json` — Keylab export counter (date: 02/05/2026, export_count: 5)
+- `labo_config.json` — Last run file: `02052026_4.xls`
 
 **🔄 Auto-processes:**
-- ~~File watcher (server.js)~~ — **DISABLED** (2026-05-02)
-- ~~Auto-scrape timer (server.js)~~ — **DISABLED** (2026-05-02)
+- ~~File watcher (server.js)~~ — **DISABLED** (2026-05-02, commit 7012270)
+- ~~Auto-scrape timer (server.js)~~ — **DISABLED** (2026-05-02, commit 7012270)
 - **Auto-scrape headless (auto_scrape_headless.py)**: chạy 24/7 qua PM2, mỗi 10 phút, không hiện CMD
 - Keylab export: manual trigger only (POST /keylab-export-now)
+- **PM2 server**: process `server` đang chạy (port 3000)
 
 ---
 
@@ -894,16 +1029,19 @@ startAutoScrapeTimer();  // Chạy ngay khi server start
 
 **Ẩn với user thường (`role !== 'admin'`):**
 - 📈 Analytics link
-- 📝 Feedback link
+- 📊 Munger Dashboard link
+- 📝 Feedback link (view all)
 - 🔄 Xuất Excel KeyLab button
 - 📤 Upload button
 - ⚙️ Admin panel (`/admin`)
+- 🔧 User management
+- 📊 Historical analytics
 
 **Hiển thị cho tất cả user:**
 - 📋 Đơn Hàng
 - ⚙️ Pipeline
 - 📊 Tổng Hợp
-- 📝 Feedback form (nhập phản ánh)
+- 📝 Feedback form (nhập phản ánh của chính mình)
 
 **Implementation:**
 ```javascript
@@ -912,12 +1050,125 @@ async function initAdminUI() {
   const u = await fetch('/user').then(r => r.json());
   if (u.role === 'admin') {
     document.getElementById('d-nl-analytics').style.display = '';
+    document.getElementById('d-nl-munger').style.display = '';
     document.getElementById('d-nl-feedback').style.display = '';
     document.getElementById('d-export-section').style.display = '';
     document.getElementById('d-upload-btn').style.display = '';
   }
 }
 ```
+
+---
+
+## 26. Munger Dashboard Details (2026-05-02)
+
+**Philosophy:** Áp dụng Charlie Munger mental models vào quản lý labo
+
+**7 Core Metrics:**
+
+1. **Bus Factor** — Dependency Risk
+   - Tracks: % công việc của KTV top 1 mỗi công đoạn
+   - Purpose: Phát hiện single point of failure
+   - Action: Cross-train khi >60%
+
+2. **WIP Ratio** — Pipeline Balance
+   - Formula: (ĐẮP + MÀI) / (CBM + SÁP)
+   - Purpose: Phát hiện bottleneck cuối pipeline
+   - Action: Rebalance capacity khi >1.1
+
+3. **First-pass Yield** — Quality
+   - Formula: % đơn không phải Sửa/Làm lại/Bảo hành
+   - Target: 90%
+   - Action: Quality review khi <85%
+
+4. **On-time Rate** — Delivery
+   - Formula: % đơn hoàn thành MÀI trước yc_hoan_thanh
+   - Target: 90%
+   - Action: Expedite khi <80%
+
+5. **Customer Concentration** — Revenue Risk
+   - Formula: % răng từ top 5 nha khoa
+   - Purpose: Phát hiện dependency risk
+   - Action: Diversify khi >50%
+
+6. **Demand Trend** — Growth
+   - Compares: Kỳ hiện tại vs kỳ trước (fair comparison)
+   - Purpose: Track growth trajectory
+   - Action: Sales intervention khi negative
+
+7. **Scale Countdown** — Progress to 10K
+   - Target: 10,000 răng/kỳ
+   - Current: ~2,650 răng/kỳ (13% of target)
+   - Purpose: Track scaling progress
+   - Action: Accelerate hiring khi off-track
+
+**Billing Period Logic:**
+```javascript
+// Kỳ tháng: 26 tháng trước → 25 tháng này
+// Ví dụ: 26/3 → 25/4 = Tháng 4
+// So sánh công bằng: N ngày đầu kỳ này vs N ngày đầu kỳ trước
+```
+
+**Color Coding:**
+- 🟢 Green: Healthy, no action needed
+- 🟡 Yellow: Caution, monitor closely
+- 🔴 Red: Danger, immediate action required
+
+**Documentation:** See `munger.md` for full details, playbooks, and scaling strategy
+
+---
+
+## 27. Recent Commits (2026-05-02)
+
+```
+6786c98  feat: add Munger Dashboard với 7 metrics vận hành và khách hàng
+├─ 7 metrics: Bus Factor, WIP Ratio, FPY, On-time, Customer Concentration, Demand Trend, Scale Countdown
+├─ Billing period logic (26-25 cycle)
+├─ Fair comparison: N ngày đầu kỳ này vs N ngày đầu kỳ trước
+├─ Admin-only route /munger + API /api/munger/metrics
+├─ Sidebar integration (desktop + mobile)
+└─ Documentation: munger.md (860 lines)
+
+adf3297  feat: add analytics dashboard with historical data
+├─ Historical order trends
+├─ Time-based charts
+└─ Admin-only access
+
+7012270  fix: disable file watcher and auto-scrape timer in server.js
+├─ Prevent race conditions
+└─ Use auto_scrape_headless.py only
+
+71845b7  chore: remove unused scripts
+
+3320ed1  fix: switch virtual display from usbmmidd to parsec-vdd (GitHub)
+```
+
+---
+
+## 28. System Health (2026-05-02 16:20)
+
+**Server Status:**
+- ✅ PM2 process `server` running (port 3000)
+- ✅ 97 restarts (stabilized after initial issues)
+- ✅ Uptime: 2 seconds (recent restart)
+- ✅ Memory: 93.5 MB
+- ✅ CPU: 0%
+
+**Database:**
+- ✅ labo_data.db: 65 đơn hàng
+- ✅ 2 users loaded
+- ✅ 43 sessions restored
+
+**Latest Data:**
+- Export file: `02052026_4.xls`
+- Export count today: 5
+- Date: 02/05/2026
+
+**Modified Files (uncommitted):**
+- `.claude/settings.local.json` — Permission updates
+- `keylab_state.json` — Export counter
+- `labo_config.json` — Last run file
+- `munger.md` — Documentation updates
 
 ---
 
