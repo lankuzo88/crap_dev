@@ -750,29 +750,38 @@ a38e965  merge: feat/multi-user-system → main
 - `labo_config.json` — Last run file path
 
 **🔄 Auto-processes:**
-- File watcher (server.js): detect new Excel → auto-scrape → update DB
-- Auto-scrape headless (auto_scrape_headless.py): check every 10 min during working hours (7:00-20:30)
+- ~~File watcher (server.js)~~ — **DISABLED** (2026-05-02)
+- ~~Auto-scrape timer (server.js)~~ — **DISABLED** (2026-05-02)
+- **Auto-scrape headless (auto_scrape_headless.py)**: chạy 24/7 qua PM2, mỗi 10 phút, không hiện CMD
 - Keylab export: manual trigger only (POST /keylab-export-now)
 
 ---
 
-## 21. Headless Auto-Scrape
+## 21. Headless Auto-Scrape (2026-05-02 UPDATE)
 
 **File:** `auto_scrape_headless.py`
 
-**Mục đích:** Tự động scrape file Excel mới nhất mỗi 10 phút trong giờ làm việc, không cần GUI.
+**Mục đích:** Tự động scrape file Excel mới nhất mỗi 10 phút, 24/7, không hiện cửa sổ CMD.
+
+**⚠️ QUAN TRỌNG: Đây là nguồn auto-scrape DUY NHẤT**
+- File watcher trong `server.js` đã **TẮT** (2026-05-02)
+- Auto-scrape timer trong `server.js` đã **TẮT** (2026-05-02)
+- Chỉ dùng `auto_scrape_headless.py` qua PM2
 
 **Logic:**
 ```
-Mỗi 10 phút:
-  ┌─ Kiểm tra giờ làm việc (7:00 - 20:30)
-  ├─ Nếu ngoài giờ → chờ đến 7:00 sáng mai
+Mỗi 10 phút (24/7):
   ├─ Tìm file Excel mới nhất trong Excel/
   ├─ So sánh với last_run_file (từ labo_config.json)
-  ├─ Nếu khác → chạy run_scrape.py
+  ├─ Nếu khác → chạy run_scrape.py (với CREATE_NO_WINDOW flag)
   ├─ Nếu giống → skip (không scrape trùng)
   └─ Chờ 10 phút → lặp lại
 ```
+
+**Thay đổi từ phiên bản cũ:**
+- ❌ Bỏ check giờ làm việc (7:00-20:30) → chạy 24/7
+- ✅ Dùng `CREATE_NO_WINDOW` flag → không hiện CMD
+- ✅ Chạy qua PM2 → auto-restart, persistent
 
 **Managed by PM2:**
 ```bash
@@ -782,13 +791,14 @@ pm2 logs auto-scrape           # Xem log
 pm2 restart auto-scrape        # Restart
 ```
 
-**Khác biệt với File Watcher:**
-| Feature | File Watcher (server.js) | Auto-Scrape Headless |
-|---------|-------------------------|----------------------|
-| Trigger | Khi có file mới trong Excel/ | Check mỗi 10 phút |
-| Cần GUI | Không | Không |
-| Last-run check | Không | Có |
-| Duplicate prevention | manualKeyLabExports set | labo_config.json |
+**Logs:**
+```
+[18:02:51] INFO Newest: 02052026_3.xls | Last: 02052026_3.xls
+[18:02:51] INFO File unchanged → skipping scrape
+[18:02:51] INFO Checking again in 10 min...
+[18:12:51] INFO Newest: 02052026_3.xls | Last: 02052026_3.xls
+[18:12:51] INFO File unchanged → skipping scrape
+```
 
 ---
 

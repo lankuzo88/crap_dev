@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - ASIA LAB</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #1e293b;
+    }
+    h1 { font-size: 28px; color: #60a5fa; }
+    .back-btn {
+      padding: 10px 20px;
+      background: #1e293b;
+      color: #e2e8f0;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: #334155; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #60a5fa;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .chart-card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .chart-card h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
+    .table-card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      margin-bottom: 20px;
+    }
+    .table-card h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    th {
+      background: #0f172a;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    td { color: #e2e8f0; }
+    tr:hover { background: #334155; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Analytics Dashboard</h1>
+      <a href="/" class="back-btn">← Quay lại</a>
+    </header>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading">Đang tải...</div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h2>Phân bố loại phục hình</h2>
+        <div class="chart-container">
+          <canvas id="phucHinhChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Thống kê công đoạn</h2>
+        <div class="chart-container">
+          <canvas id="stageChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h2>Top 10 KTV (theo số công đoạn)</h2>
+      <table id="ktvTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tên KTV</th>
+            <th>Tổng công đoạn</th>
+            <th>Hoàn thành</th>
+            <th>Đơn hàng</th>
+            <th>Tỷ lệ hoàn thành</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" class="loading">Đang tải...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <h2>Top 10 Nha khoa</h2>
+      <table id="customerTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tên nha khoa</th>
+            <th>Tổng đơn</th>
+            <th>Tổng răng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="loading">Đang tải...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Fetch and display overview stats
+    async function loadOverview() {
+      try {
+        const res = await fetch('/api/analytics/history/overview');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        const stats = json.data;
+        const grid = document.getElementById('stats-grid');
+        grid.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Tổng records</div>
+            <div class="stat-value">${stats.total_records.toLocaleString()}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Đơn hàng</div>
+            <div class="stat-value">${stats.unique_orders.toLocaleString()}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">KTV</div>
+            <div class="stat-value">${stats.unique_ktv}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Nha khoa</div>
+            <div class="stat-value">${stats.unique_customers}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Công đoạn hoàn thành</div>
+            <div class="stat-value">${stats.completed_stages.toLocaleString()}</div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Error loading overview:', err);
+      }
+    }
+
+    // Load phuc hinh distribution chart
+    async function loadPhucHinhChart() {
+      try {
+        const res = await fetch('/api/analytics/history/phuc-hinh-distribution');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        const data = json.data;
+        const labels = data.map(d => {
+          const map = { kl: 'Kim loại', zirc: 'Zirconia', vnr: 'Mặt dán', hon: 'Hỗn hợp' };
+          return map[d.loai_phuc_hinh] || d.loai_phuc_hinh;
+        });
+        const values = data.map(d => d.orders);
+        const colors = ['#94a3b8', '#60a5fa', '#f472b6', '#fbbf24'];
+
+        new Chart(document.getElementById('phucHinhChart'), {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#e2e8f0' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error loading phuc hinh chart:', err);
+      }
+    }
+
+    // Load stage stats chart
+    async function loadStageChart() {
+      try {
+        const res = await fetch('/api/analytics/history/stage-stats');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        const data = json.data;
+        const labels = data.map(d => d.cong_doan);
+        const completed = data.map(d => d.completed);
+        const total = data.map(d => d.total);
+
+        new Chart(document.getElementById('stageChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Hoàn thành',
+                data: completed,
+                backgroundColor: '#10b981'
+              },
+              {
+                label: 'Tổng',
+                data: total,
+                backgroundColor: '#334155'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#e2e8f0' } }
+            },
+            scales: {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+              y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error loading stage chart:', err);
+      }
+    }
+
+    // Load top KTV table
+    async function loadKTVTable() {
+      try {
+        const res = await fetch('/api/analytics/history/top-ktv?limit=10');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        const tbody = document.querySelector('#ktvTable tbody');
+        tbody.innerHTML = json.data.map((ktv, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${ktv.ten_ktv}</td>
+            <td>${ktv.total_stages}</td>
+            <td>${ktv.completed}</td>
+            <td>${ktv.unique_orders}</td>
+            <td>${ktv.completion_rate}%</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading KTV table:', err);
+      }
+    }
+
+    // Load top customers table
+    async function loadCustomerTable() {
+      try {
+        const res = await fetch('/api/analytics/history/top-customers?limit=10');
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error);
+
+        const tbody = document.querySelector('#customerTable tbody');
+        tbody.innerHTML = json.data.map((c, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${c.ten_nha_khoa}</td>
+            <td>${c.total_orders}</td>
+            <td>${c.total_rang || 0}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading customer table:', err);
+      }
+    }
+
+    // Load all data
+    window.addEventListener('DOMContentLoaded', () => {
+      loadOverview();
+      loadPhucHinhChart();
+      loadStageChart();
+      loadKTVTable();
+      loadCustomerTable();
+    });
+  </script>
+</body>
+</html>

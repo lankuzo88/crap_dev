@@ -1121,6 +1121,15 @@ app.get('/', requireAuth, (req, res) => {
   }
 });
 
+app.get('/analytics', requireAuth, requireAdmin, (req, res) => {
+  const analyticsFile = path.join(BASE_DIR, 'analytics.html');
+  if (fs.existsSync(analyticsFile)) {
+    res.sendFile(analyticsFile);
+  } else {
+    res.status(404).send('<h2>Không tìm thấy analytics.html</h2>');
+  }
+});
+
 app.get('/data.json', requireAuth, (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
@@ -1413,6 +1422,167 @@ app.post('/api/analytics/refresh', requireAuth, requireAdmin, (req, res) => {
   // TODO: Implement background job to calculate analytics_daily and ktv_performance
   log('[Analytics] Refresh requested (not implemented yet)');
   res.json({ ok: true, message: 'Analytics refresh queued (not implemented yet)' });
+});
+
+// ── HISTORICAL ANALYTICS API (tien_do_history) ────────────────────────────────
+app.get('/api/analytics/history/ktv-performance', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const sql = `
+      SELECT
+        ten_ktv,
+        cong_doan,
+        COUNT(*) as total_stages,
+        COUNT(CASE WHEN xac_nhan='Có' THEN 1 END) as completed,
+        COUNT(DISTINCT ma_dh) as unique_orders
+      FROM tien_do_history
+      WHERE ten_ktv != ''
+      GROUP BY ten_ktv, cong_doan
+      ORDER BY total_stages DESC
+    `;
+
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching KTV performance: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/history/top-ktv', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const limit = parseInt(req.query.limit) || 10;
+
+    const sql = `
+      SELECT
+        ten_ktv,
+        COUNT(*) as total_stages,
+        COUNT(CASE WHEN xac_nhan='Có' THEN 1 END) as completed,
+        COUNT(DISTINCT ma_dh) as unique_orders,
+        ROUND(COUNT(CASE WHEN xac_nhan='Có' THEN 1 END) * 100.0 / COUNT(*), 1) as completion_rate
+      FROM tien_do_history
+      WHERE ten_ktv != ''
+      GROUP BY ten_ktv
+      ORDER BY total_stages DESC
+      LIMIT ?
+    `;
+
+    const rows = db.prepare(sql).all(limit);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching top KTV: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/history/stage-stats', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const sql = `
+      SELECT
+        cong_doan,
+        COUNT(*) as total,
+        COUNT(CASE WHEN xac_nhan='Có' THEN 1 END) as completed,
+        COUNT(DISTINCT ten_ktv) as unique_ktv,
+        ROUND(COUNT(CASE WHEN xac_nhan='Có' THEN 1 END) * 100.0 / COUNT(*), 1) as completion_rate
+      FROM tien_do_history
+      WHERE cong_doan != ''
+      GROUP BY cong_doan
+      ORDER BY
+        CASE cong_doan
+          WHEN 'CBM' THEN 1
+          WHEN 'SÁP/Cadcam' THEN 2
+          WHEN 'SƯỜN' THEN 3
+          WHEN 'ĐẮP' THEN 4
+          WHEN 'MÀI' THEN 5
+          ELSE 6
+        END
+    `;
+
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching stage stats: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/history/phuc-hinh-distribution', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const sql = `
+      SELECT
+        loai_phuc_hinh,
+        COUNT(DISTINCT ma_dh) as orders,
+        SUM(so_luong) as total_rang
+      FROM tien_do_history
+      WHERE loai_phuc_hinh IS NOT NULL
+      GROUP BY loai_phuc_hinh
+      ORDER BY orders DESC
+    `;
+
+    const rows = db.prepare(sql).all();
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching phuc hinh distribution: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/history/top-customers', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const limit = parseInt(req.query.limit) || 10;
+
+    const sql = `
+      SELECT
+        ten_nha_khoa,
+        COUNT(DISTINCT ma_dh) as total_orders,
+        SUM(so_luong) as total_rang
+      FROM tien_do_history
+      WHERE ten_nha_khoa IS NOT NULL
+      GROUP BY ten_nha_khoa
+      ORDER BY total_orders DESC
+      LIMIT ?
+    `;
+
+    const rows = db.prepare(sql).all(limit);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[Analytics] Error fetching top customers: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/history/overview', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const stats = {
+      total_records: db.prepare('SELECT COUNT(*) as cnt FROM tien_do_history').get().cnt,
+      unique_orders: db.prepare('SELECT COUNT(DISTINCT ma_dh) as cnt FROM tien_do_history').get().cnt,
+      unique_ktv: db.prepare('SELECT COUNT(DISTINCT ten_ktv) as cnt FROM tien_do_history WHERE ten_ktv != ""').get().cnt,
+      unique_customers: db.prepare('SELECT COUNT(DISTINCT ten_nha_khoa) as cnt FROM tien_do_history WHERE ten_nha_khoa IS NOT NULL').get().cnt,
+      completed_stages: db.prepare('SELECT COUNT(*) as cnt FROM tien_do_history WHERE xac_nhan="Có"').get().cnt,
+    };
+
+    res.json({ ok: true, data: stats });
+  } catch (err) {
+    log(`[Analytics] Error fetching overview: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 // ── FEEDBACK API ───────────────────────────────────────────────────────────
