@@ -1589,8 +1589,8 @@ app.use(express.static(BASE_DIR));
 // ── START ──────────────────────────────────────────────
 loadUsers();
 loadSessions();
-startExcelWatcher();
-startAutoScrapeTimer();
+// startExcelWatcher(); // Disabled: use auto_scrape_headless.py via PM2 instead
+// startAutoScrapeTimer(); // Disabled: use auto_scrape_headless.py via PM2 instead
 
 app.listen(PORT, '127.0.0.1', () => {
   const latestExport = findLatest(EXCEL_DIR, ['.xls', '.xlsx', '.xlsm']);

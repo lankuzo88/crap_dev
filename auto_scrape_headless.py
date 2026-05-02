@@ -141,28 +141,10 @@ def scrape_excel(file_path: Path) -> bool:
 
 def main():
     log.info("=== Auto-Scrape Headless start ===")
-    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, {START_HOUR:02d}:00 - {END_HOUR:02d}:{END_MINUTE:02d} (Vietnam time)")
-    log.info(f"System clock offset: +{SYSTEM_CLOCK_OFFSET_HOURS}h (VPS sai giờ)")
+    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, 24/7 (no working hours restriction)")
 
     while True:
-        now = get_vietnam_time()
-
-        if not is_within_working_hours():
-            # Ngoài giờ làm việc → tính thời gian chờ
-            start_today = now.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
-            if now < start_today:
-                wait = int((start_today - now).total_seconds())
-                log.info(f"Outside working hours. Waiting {wait // 60} min until {START_HOUR:02d}:00 Vietnam time...")
-                time.sleep(min(wait, 60))
-            else:
-                # Quá END_HOUR → chờ đến 7h sáng mai
-                tomorrow = start_today + timedelta(days=1)
-                wait = int((tomorrow - now).total_seconds())
-                log.info(f"After working hours. Waiting {wait // 3600:.1f}h until tomorrow {START_HOUR:02d}:00 Vietnam time...")
-                time.sleep(min(wait, 300))  # Check every 5 min instead of 1
-            continue
-
-        # Trong giờ làm việc
+        # Chạy 24/7, không check giờ làm việc
         newest = find_newest_excel()
         if not newest:
             log.info(f"No Excel files found in {EXCEL_DIR}. Checking again in {INTERVAL_MINUTES} min...")
