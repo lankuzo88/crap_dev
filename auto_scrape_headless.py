@@ -154,7 +154,8 @@ def main():
         last_run = get_last_run_file()
         log.info(f"Newest: {newest.name} | Last: {last_run.name if last_run else 'None'}")
 
-        if newest != last_run:
+        # Compare resolved absolute paths to handle slash differences
+        if last_run is None or newest.resolve() != last_run.resolve():
             log.info(f"New file detected → scraping...")
             scrape_excel(newest)
         else:
