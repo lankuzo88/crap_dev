@@ -385,6 +385,24 @@
       <h2>Danh sách Người dùng</h2>
       <div id="usersList"></div>
     </div>
+
+    <!-- Scrape Status Section -->
+    <div class="form-section" style="margin-top: 24px;">
+      <h2>🔍 Trạng thái Auto-Scrape</h2>
+      <div id="scrapeStatus" style="margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span>File Excel mới nhất:</span>
+          <strong id="latestExcel" style="color: #2e7d32;">—</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span>Lần scrape cuối:</span>
+          <strong id="lastScrape" style="color: #666;">—</strong>
+        </div>
+      </div>
+      <div style="background: #f5f5f5; border-radius: 6px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
+        <pre id="scrapeLogs" style="margin: 0; white-space: pre-wrap; color: #333;"></pre>
+      </div>
+    </div>
   </div>
 
   <!-- Reset Password Modal -->
@@ -443,6 +461,9 @@
 
       // Load users
       loadUsers();
+
+      // Load scrape status
+      loadScrapeStatus();
     }
 
     async function loadUsers() {
@@ -639,6 +660,30 @@
 
     function logout() {
       window.location.href = '/logout';
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // SCRAPE LOGS
+    // ═════════════════════════════════════════════════════════════
+    async function loadScrapeStatus() {
+      try {
+        const res = await fetch('/admin/api/scrape-logs');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        document.getElementById('latestExcel').textContent = data.latestFile || 'Không có file';
+        document.getElementById('lastScrape').textContent = data.logs.length > 0 ? 'Đang chạy' : 'Không có log';
+
+        // Format logs
+        const logsEl = document.getElementById('scrapeLogs');
+        if (data.logs.length === 0) {
+          logsEl.textContent = 'Không có log nào.';
+        } else {
+          logsEl.textContent = data.logs.join('\n');
+        }
+      } catch (e) {
+        console.error('Lỗi fetch scrape status:', e);
+      }
     }
 
     // Initialize

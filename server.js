@@ -1366,6 +1366,33 @@ app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json
   res.json({ ok: true, username, newPassword });
 });
 
+// ── ADMIN SCRAPE LOGS API ──────────────────────────────────────────────────
+app.get('/admin/api/scrape-logs', requireAdmin, (req, res) => {
+  try {
+    const logFile = path.join(BASE_DIR, 'auto_scrape.log');
+    if (!fs.existsSync(logFile)) {
+      return res.json({ logs: [], latestFile: null });
+    }
+
+    // Read last 10 lines
+    const content = fs.readFileSync(logFile, 'utf8');
+    const lines = content.trim().split('\n');
+    const last10 = lines.slice(-10);
+
+    // Get latest Excel file (only DDMMYYYY_N.xls format)
+    const excelFiles = fs.readdirSync(EXCEL_DIR)
+      .filter(f => f.match(/^\d{8}_\d+\.xls$/))
+      .map(f => ({ name: f, mtime: fs.statSync(path.join(EXCEL_DIR, f)).mtimeMs }))
+      .sort((a, b) => b.mtime - a.mtime);
+    const latestFile = excelFiles[0] ? excelFiles[0].name : null;
+
+    res.json({ logs: last10, latestFile });
+  } catch (err) {
+    log(`[Admin] Error reading scrape logs: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── ANALYTICS API ──────────────────────────────────────────────────────────
 app.get('/api/analytics/trend', requireAuth, (req, res) => {
   const days = parseInt(req.query.days) || 7;
