@@ -632,9 +632,21 @@
       const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
 
-      // Get current KTV
-      const currentStage = o.stagesData.find(s => !s.sk && s.n === o.current_stage);
-      const currentKtv = currentStage && currentStage.k ? currentStage.k : '';
+      // Get current KTV - find last stage with KTV (for completed orders) or current stage
+      let currentKtv = '';
+      if (o.current_stage === 'HOÀN TẤT') {
+        // Order completed - get last KTV
+        for (let i = o.stagesData.length - 1; i >= 0; i--) {
+          if (!o.stagesData[i].sk && o.stagesData[i].k) {
+            currentKtv = o.stagesData[i].k;
+            break;
+          }
+        }
+      } else {
+        // Order in progress - get current stage KTV
+        const currentStage = o.stagesData.find(s => !s.sk && s.n === o.current_stage);
+        currentKtv = currentStage && currentStage.k ? currentStage.k : '';
+      }
 
       const pipsHtml = o.stagesData.map(s => {
         if (s.sk) return `<div class="stage-pip skip"><div class="pip-fill"></div></div>`;
