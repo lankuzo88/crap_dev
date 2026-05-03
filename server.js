@@ -247,7 +247,9 @@ function getDataFromDB() {
       if (p.length >= 5) {
         const thu_tu = parseInt(p[0]);
         if (!isNaN(thu_tu)) {
-          stagesMap[thu_tu] = { n: p[1], k: p[2], x: p[3] === 'Có', t: p[4] };
+          // Accept both "Có" and "xác nhận" as confirmed
+          const isConfirmed = p[3] === 'Có' || p[3] === 'xác nhận';
+          stagesMap[thu_tu] = { n: p[1], k: p[2], x: isConfirmed, t: p[4] };
         }
       }
     }
