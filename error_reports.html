@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo lỗi — ASIA LAB Admin</title>
+  <style>
+    :root {
+      --bg: #0c0f18;
+      --bg-card: #161b2e;
+      --bg-card2: #1e2540;
+      --border: #2a3255;
+      --text: #e8eaf6;
+      --text-muted: #8892b0;
+      --accent: #a85a4f;
+      --accent2: #c4836f;
+      --green: #27ae60;
+      --red: #c0392b;
+      --yellow: #f39c12;
+      --blue: #2980b9;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* Header */
+    .header {
+      background: #111827; border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 16px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-back { color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; }
+    .header-back:hover { color: var(--text); }
+    .header-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .header-spacer { flex: 1; }
+    .header-user { font-size: 12px; color: var(--text-muted); }
+
+    /* Layout */
+    .main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 800; }
+    .stat-value.pending  { color: var(--yellow); }
+    .stat-value.confirmed { color: var(--green); }
+    .stat-value.rejected  { color: var(--red); }
+    .stat-value.total     { color: var(--text); }
+
+    /* Stage breakdown */
+    .stage-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .stage-chip { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); }
+    .stage-chip strong { color: var(--text); margin-left: 4px; }
+
+    /* Filter bar */
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .filter-btn {
+      padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text-muted); cursor: pointer; font-size: 13px;
+    }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .filter-spacer { flex: 1; }
+    .refresh-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card2); color: var(--text-muted); cursor: pointer; font-size: 13px; }
+    .refresh-btn:hover { color: var(--text); }
+
+    /* Reports list */
+    .reports-list { display: flex; flex-direction: column; gap: 12px; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 60px 0; font-size: 15px; }
+
+    /* Report card */
+    .report-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; transition: border-color .15s;
+    }
+    .report-card:hover { border-color: #3a4470; }
+    .report-card.status-confirmed { border-left: 3px solid var(--green); }
+    .report-card.status-rejected  { border-left: 3px solid var(--red); }
+    .report-card.status-pending   { border-left: 3px solid var(--yellow); }
+
+    .card-top { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .card-madh { font-size: 16px; font-weight: 800; color: #f0b429; font-family: monospace; }
+    .stage-badge {
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .3px;
+    }
+    .stage-CBM     { background: #e67e2220; color: #e67e22; border: 1px solid #e67e2240; }
+    .stage-sáp     { background: #9b59b620; color: #9b59b6; border: 1px solid #9b59b640; }
+    .stage-CADCAM  { background: #2980b920; color: #2980b9; border: 1px solid #2980b940; }
+    .stage-sườn    { background: #27ae6020; color: #27ae60; border: 1px solid #27ae6040; }
+    .stage-đắp     { background: #c0392b20; color: #c0392b; border: 1px solid #c0392b40; }
+    .stage-mài     { background: #7f8c8d20; color: #aaa;    border: 1px solid #7f8c8d40; }
+    .stage-other   { background: #2a324520; color: var(--text-muted); border: 1px solid var(--border); }
+
+    .error-code { font-size: 13px; color: var(--text); font-weight: 600; }
+    .meta { font-size: 12px; color: var(--text-muted); margin-left: auto; text-align: right; }
+
+    .card-mid { margin-top: 10px; display: flex; gap: 14px; align-items: flex-start; }
+    .card-photo { flex-shrink: 0; }
+    .card-photo img {
+      width: 100px; height: 80px; object-fit: cover; border-radius: 7px;
+      border: 1px solid var(--border); cursor: pointer;
+    }
+    .card-photo img:hover { opacity: .85; }
+    .card-info { flex: 1; min-width: 0; }
+    .card-mo_ta { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+    .reviewed-info { font-size: 12px; color: var(--text-muted); padding: 6px 10px; background: var(--bg-card2); border-radius: 6px; }
+    .reviewed-info strong { color: var(--text); }
+
+    /* Status badge */
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+    .status-badge.pending   { background: #f39c1220; color: var(--yellow); border: 1px solid #f39c1240; }
+    .status-badge.confirmed { background: #27ae6020; color: var(--green);  border: 1px solid #27ae6040; }
+    .status-badge.rejected  { background: #c0392b20; color: var(--red);    border: 1px solid #c0392b40; }
+
+    /* Action buttons */
+    .card-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-confirm { padding: 6px 18px; border-radius: 6px; border: none; background: var(--green); color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .btn-confirm:hover { background: #219a52; }
+    .btn-reject  { padding: 6px 18px; border-radius: 6px; border: none; background: var(--red); color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .btn-reject:hover  { background: #a93226; }
+
+    /* Lightbox */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 999; align-items: center; justify-content: center; }
+    .lightbox.show { display: flex; }
+    .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; }
+    .lightbox-close { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; background: none; border: none; }
+
+    /* Reject modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 380px; max-width: 94vw; }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .modal-box textarea { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; resize: none; min-height: 80px; outline: none; }
+    .modal-box textarea:focus { border-color: var(--accent); }
+    .modal-btns { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+    .btn-secondary { padding: 7px 18px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card2); color: var(--text-muted); cursor: pointer; font-size: 13px; }
+    .btn-secondary:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .card-mid { flex-direction: column; }
+      .card-photo img { width: 100%; height: 160px; }
+      .meta { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="header-back" href="/admin">← Admin</a>
+  <span class="header-title">⚠ Báo cáo lỗi</span>
+  <span class="header-spacer"></span>
+  <span class="header-user" id="headerUser"></span>
+</div>
+
+<div class="main">
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="stat-label">Tổng</div><div class="stat-value total" id="sTotal">—</div></div>
+    <div class="stat-card"><div class="stat-label">Chờ duyệt</div><div class="stat-value pending" id="sPending">—</div></div>
+    <div class="stat-card"><div class="stat-label">Đã xác nhận</div><div class="stat-value confirmed" id="sConfirmed">—</div></div>
+    <div class="stat-card"><div class="stat-label">Từ chối</div><div class="stat-value rejected" id="sRejected">—</div></div>
+  </div>
+
+  <!-- Stage breakdown -->
+  <div class="stage-row" id="stageRow"></div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('', this)">Tất cả</button>
+    <button class="filter-btn" onclick="setFilter('pending', this)">⏳ Chờ duyệt</button>
+    <button class="filter-btn" onclick="setFilter('confirmed', this)">✅ Đã xác nhận</button>
+    <button class="filter-btn" onclick="setFilter('rejected', this)">❌ Từ chối</button>
+    <span class="filter-spacer"></span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Làm mới</button>
+  </div>
+
+  <!-- Reports -->
+  <div class="reports-list" id="reportsList">
+    <div class="empty-state">Đang tải...</div>
+  </div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- Reject modal -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal-box">
+    <div class="modal-title">❌ Từ chối báo cáo</div>
+    <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">Ghi chú (tùy chọn):</label>
+    <textarea id="rejectNote" placeholder="Lý do từ chối..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeRejectModal()">Hủy</button>
+      <button class="btn-reject" onclick="confirmReject()">Xác nhận từ chối</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentFilter = '';
+  let allReports = [];
+  let pendingRejectId = null;
+
+  const STAGE_CLASS = {
+    'CBM': 'stage-CBM', 'sáp': 'stage-sáp',
+    'CAD/CAM': 'stage-CADCAM', 'sườn': 'stage-sườn',
+    'đắp': 'stage-đắp', 'mài': 'stage-mài',
+  };
+
+  function stageClass(s) { return STAGE_CLASS[s] || 'stage-other'; }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return s.replace('T', ' ').slice(0, 16);
+  }
+
+  // Init
+  (async () => {
+    try {
+      const r = await fetch('/user');
+      if (!r.ok) { location.href = '/login'; return; }
+      const u = await r.json();
+      if (u.role !== 'admin') { location.href = '/'; return; }
+      document.getElementById('headerUser').textContent = u.username;
+    } catch(e) {}
+    loadAll();
+  })();
+
+  async function loadAll() {
+    loadStats();
+    loadReports();
+  }
+
+  async function loadStats() {
+    try {
+      const r = await fetch('/api/error-reports/stats');
+      const d = await r.json();
+      if (!d.ok) return;
+
+      const byStatus = {};
+      d.byStatus.forEach(x => byStatus[x.trang_thai] = x.n);
+      const total = d.byStatus.reduce((s, x) => s + x.n, 0);
+      document.getElementById('sTotal').textContent     = total;
+      document.getElementById('sPending').textContent   = byStatus['pending']   || 0;
+      document.getElementById('sConfirmed').textContent = byStatus['confirmed'] || 0;
+      document.getElementById('sRejected').textContent  = byStatus['rejected']  || 0;
+
+      // Stage chips
+      const stageEl = document.getElementById('stageRow');
+      if (d.byStage.length) {
+        stageEl.innerHTML = d.byStage.map(x =>
+          `<div class="stage-chip">${x.cong_doan || '?'}<strong>${x.n}</strong></div>`
+        ).join('');
+      }
+    } catch(e) {}
+  }
+
+  async function loadReports() {
+    const el = document.getElementById('reportsList');
+    el.innerHTML = '<div class="empty-state">Đang tải...</div>';
+    try {
+      const url = currentFilter ? `/api/error-reports?trang_thai=${currentFilter}` : '/api/error-reports';
+      const r = await fetch(url);
+      const d = await r.json();
+      if (!d.ok) { el.innerHTML = '<div class="empty-state">Lỗi tải dữ liệu</div>'; return; }
+      allReports = d.data;
+      renderReports();
+    } catch(e) {
+      el.innerHTML = '<div class="empty-state">Lỗi kết nối</div>';
+    }
+  }
+
+  function renderReports() {
+    const el = document.getElementById('reportsList');
+    if (!allReports.length) {
+      el.innerHTML = '<div class="empty-state">Không có báo cáo nào</div>';
+      return;
+    }
+    el.innerHTML = allReports.map(r => {
+      const sc = stageClass(r.cong_doan);
+      const statusLabel = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', rejected: 'Từ chối' }[r.trang_thai] || r.trang_thai;
+
+      const photoHtml = r.hinh_anh
+        ? `<div class="card-photo"><img src="/uploads/error-images/${r.hinh_anh}" alt="Ảnh lỗi" onclick="openLightbox('/uploads/error-images/${r.hinh_anh}')"></div>`
+        : '';
+
+      const reviewedHtml = (r.trang_thai === 'confirmed' || r.trang_thai === 'rejected')
+        ? `<div class="reviewed-info">
+            ${r.trang_thai === 'confirmed' ? '✅' : '❌'} Duyệt bởi <strong>${r.reviewed_by || '?'}</strong> lúc ${fmtDate(r.reviewed_at)}
+            ${r.ghi_chu_admin ? `<br>Ghi chú: <em>${r.ghi_chu_admin}</em>` : ''}
+           </div>`
+        : '';
+
+      const actionsHtml = r.trang_thai === 'pending'
+        ? `<div class="card-actions">
+            <button class="btn-confirm" onclick="confirmReport(${r.id})">✅ Xác nhận</button>
+            <button class="btn-reject"  onclick="openRejectModal(${r.id})">❌ Từ chối</button>
+           </div>`
+        : '';
+
+      return `
+        <div class="report-card status-${r.trang_thai}" id="card-${r.id}">
+          <div class="card-top">
+            <span class="card-madh">${r.ma_dh || '—'}</span>
+            <span class="stage-badge ${sc}">${r.cong_doan || '?'}</span>
+            <span class="error-code">${r.ma_loi_text || '—'}</span>
+            <span class="status-badge ${r.trang_thai}">${statusLabel}</span>
+            <div class="meta">
+              <div>${r.submitted_by || '?'}</div>
+              <div>${fmtDate(r.submitted_at)}</div>
+            </div>
+          </div>
+          <div class="card-mid">
+            ${photoHtml}
+            <div class="card-info">
+              ${r.mo_ta ? `<div class="card-mo_ta">${r.mo_ta}</div>` : ''}
+              ${reviewedHtml}
+            </div>
+          </div>
+          ${actionsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadReports();
+  }
+
+  async function confirmReport(id) {
+    try {
+      const r = await fetch(`/api/error-reports/${id}/confirm`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
+      });
+      const d = await r.json();
+      if (d.ok) loadAll();
+    } catch(e) {}
+  }
+
+  function openRejectModal(id) {
+    pendingRejectId = id;
+    document.getElementById('rejectNote').value = '';
+    document.getElementById('rejectModal').classList.add('show');
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.remove('show');
+    pendingRejectId = null;
+  }
+
+  async function confirmReject() {
+    if (!pendingRejectId) return;
+    const note = document.getElementById('rejectNote').value.trim();
+    try {
+      const r = await fetch(`/api/error-reports/${pendingRejectId}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ghi_chu_admin: note }),
+      });
+      const d = await r.json();
+      if (d.ok) { closeRejectModal(); loadAll(); }
+    } catch(e) {}
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('show');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); closeRejectModal(); } });
+</script>
+</body>
+</html>

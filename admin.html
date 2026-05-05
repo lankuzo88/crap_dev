@@ -3,691 +3,859 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Quản lý người dùng</title>
+  <title>Admin — ASIA LAB</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a1a; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-      background: #f8f9fa;
-      color: #333;
-    }
-
+    /* ── HEADER ── */
     .header {
-      background: #fff;
-      border-bottom: 1px solid #e0e0e0;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      background: #fff; border-bottom: 1px solid #e0e0e0;
+      padding: 0 24px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-badge { background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .btn-logout { padding: 6px 14px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; color: #666; }
+    .btn-logout:hover { background: #e0e0e0; }
+
+    /* ── TABS ── */
+    .tabs-bar {
+      background: #fff; border-bottom: 1px solid #e0e0e0;
+      padding: 0 24px; display: flex; gap: 0;
+    }
+    .tab-btn {
+      padding: 14px 22px; border: none; background: none; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: #888; border-bottom: 3px solid transparent;
+      transition: all .15s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: #333; }
+    .tab-btn.active { color: #1976d2; border-bottom-color: #1976d2; }
+    .tab-btn .badge {
+      display: inline-block; background: #f44336; color: #fff;
+      font-size: 10px; font-weight: 700; border-radius: 10px;
+      padding: 1px 6px; margin-left: 6px; vertical-align: middle;
     }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 18px;
-      font-weight: 600;
-    }
+    /* ── LAYOUT ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    /* ── CARDS / SECTIONS ── */
+    .section {
+      background: #fff; padding: 24px; border-radius: 10px;
+      margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
     }
+    .section h2 { font-size: 16px; margin-bottom: 18px; color: #333; display: flex; align-items: center; gap: 8px; }
 
-    .user-badge {
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
+    /* ── FORM GROUP ── */
+    .form-group { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; letter-spacing: .4px; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 5px;
+      font-size: 14px; font-family: inherit; outline: none;
     }
+    .form-group input:focus, .form-group select:focus { border-color: #1976d2; box-shadow: 0 0 0 3px rgba(25,118,210,.08); }
 
-    .btn-logout {
-      padding: 8px 16px;
-      background: #f0f0f0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #666;
-      transition: background 0.2s;
+    /* ── BUTTONS ── */
+    .btn { padding: 9px 18px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
+    .btn-primary   { background: #1976d2; color: #fff; }
+    .btn-primary:hover { background: #1565c0; }
+    .btn-secondary { background: #f0f0f0; color: #555; padding: 7px 12px; font-size: 12px; }
+    .btn-secondary:hover { background: #e0e0e0; }
+    .btn-danger    { background: #f44336; color: #fff; padding: 7px 12px; font-size: 12px; }
+    .btn-danger:hover { background: #d32f2f; }
+    .btn-success   { background: #2e7d32; color: #fff; padding: 7px 14px; font-size: 12px; }
+    .btn-success:hover { background: #1b5e20; }
+    .btn-outline   { background: transparent; color: #1976d2; border: 1px solid #1976d2; padding: 7px 14px; font-size: 12px; }
+    .btn-outline:hover { background: #e3f2fd; }
+
+    /* ── ALERT ── */
+    .alert { padding: 10px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 13px; display: none; }
+    .alert.show { display: block; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+    .alert-error   { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+
+    /* ── USERS TABLE ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table thead { background: #f5f7fa; }
+    .data-table th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888; border-bottom: 2px solid #e8e8e8; }
+    .data-table td { padding: 11px 12px; border-bottom: 1px solid #f0f0f0; }
+    .data-table tr:hover td { background: #fafbfc; }
+    .role-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .role-admin { background: #ffebee; color: #c62828; }
+    .role-user  { background: #e8f5e9; color: #2e7d32; }
+    .cd-badge   { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e3f2fd; color: #1565c0; }
+    .actions { display: flex; gap: 6px; }
+    .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+    /* ── MODALS ── */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: #fff; border-radius: 10px; padding: 24px; max-width: 420px; width: 92%; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+    .modal-body { margin-bottom: 20px; }
+    .modal-body p { font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
+    .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+    .password-box { background: #f5f5f5; padding: 12px; border-radius: 5px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 10px 0; }
+    .btn-copy { padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+    /* ── REJECT MODAL ── */
+    .modal-content textarea {
+      width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;
+      font-size: 13px; resize: none; min-height: 80px; outline: none; font-family: inherit;
     }
+    .modal-content textarea:focus { border-color: #1976d2; }
 
-    .btn-logout:hover {
-      background: #e0e0e0;
+    /* ── ERROR CODES ── */
+    .ec-form-grid { display: grid; grid-template-columns: 90px 1fr 120px 1fr auto; gap: 10px; align-items: flex-end; }
+    .ec-form-grid label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 4px; letter-spacing: .4px; }
+    .ec-form-grid input, .ec-form-grid select {
+      width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; font-family: inherit; outline: none;
     }
+    .ec-form-grid input:focus, .ec-form-grid select:focus { border-color: #1976d2; }
 
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 24px;
+    .stage-block { margin-bottom: 16px; }
+    .stage-label {
+      display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px;
+      border-radius: 4px; margin-bottom: 8px;
     }
+    .ec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ec-table td { padding: 8px 10px; border-bottom: 1px solid #f5f5f5; }
+    .ec-table tr:last-child td { border-bottom: none; }
+    .ec-table tr:hover td { background: #fafafa; }
+    .ec-ma_loi { font-weight: 700; font-family: monospace; font-size: 13px; width: 90px; }
+    .ec-mo_ta { color: #999; font-size: 12px; }
 
-    h1 {
-      font-size: 24px;
-      margin-bottom: 24px;
-      color: #333;
+    /* ── ERROR REPORTS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .stat-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; font-weight: 600; }
+    .stat-value { font-size: 28px; font-weight: 800; }
+    .sv-total     { color: #333; }
+    .sv-pending   { color: #f39c12; }
+    .sv-confirmed { color: #27ae60; }
+    .sv-rejected  { color: #e74c3c; }
+
+    .stage-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .stage-chip { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #e0e0e0; background: #fafafa; color: #666; }
+    .stage-chip strong { color: #333; margin-left: 4px; }
+
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+    .filter-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #e0e0e0; background: #fff; color: #888; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
+    .filter-btn.active { background: #1976d2; border-color: #1976d2; color: #fff; font-weight: 700; }
+    .filter-spacer { flex: 1; }
+    .refresh-btn { padding: 6px 14px; border-radius: 5px; border: 1px solid #e0e0e0; background: #fff; color: #888; cursor: pointer; font-size: 13px; }
+    .refresh-btn:hover { background: #f5f5f5; }
+
+    .reports-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .report-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
+    .report-card.s-pending   { border-left: 4px solid #f39c12; }
+    .report-card.s-confirmed { border-left: 4px solid #27ae60; }
+    .report-card.s-rejected  { border-left: 4px solid #e74c3c; }
 
-    .form-section {
-      background: #fff;
-      padding: 24px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    .rc-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rc-madh { font-size: 15px; font-weight: 800; color: #1976d2; font-family: monospace; }
+    .rc-stage {
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .3px;
     }
+    .st-CBM    { background: #fff3e0; color: #e65100; }
+    .st-sap    { background: #f3e5f5; color: #6a1b9a; }
+    .st-cadcam { background: #e3f2fd; color: #1565c0; }
+    .st-suon   { background: #e8f5e9; color: #1b5e20; }
+    .st-dap    { background: #ffebee; color: #b71c1c; }
+    .st-mai    { background: #f5f5f5; color: #424242; }
+    .st-other  { background: #f5f5f5; color: #888; }
 
-    .form-section h2 {
-      font-size: 16px;
-      margin-bottom: 16px;
-      color: #333;
-    }
+    .rc-error  { font-size: 13px; font-weight: 600; color: #444; }
+    .rc-meta   { margin-left: auto; font-size: 12px; color: #aaa; text-align: right; line-height: 1.5; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .sb-pending   { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+    .sb-confirmed { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+    .sb-rejected  { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
 
-    .form-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      align-items: flex-end;
-    }
+    .rc-mid { display: flex; gap: 14px; align-items: flex-start; }
+    .rc-photo img { width: 110px; height: 88px; object-fit: cover; border-radius: 7px; border: 1px solid #e0e0e0; cursor: pointer; transition: opacity .15s; }
+    .rc-photo img:hover { opacity: .85; }
+    .rc-info { flex: 1; min-width: 0; }
+    .rc-mo_ta { font-size: 13px; color: #777; margin-bottom: 8px; }
+    .reviewed-box { font-size: 12px; color: #888; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; line-height: 1.6; }
+    .reviewed-box strong { color: #444; }
 
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #666;
-      margin-bottom: 4px;
-    }
+    .rc-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-    .form-group input,
-    .form-group select {
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      font-family: inherit;
-    }
+    /* ── LIGHTBOX ── */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 2000; align-items: center; justify-content: center; }
+    .lightbox.show { display: flex; }
+    .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; }
+    .lightbox-close { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; background: none; border: none; }
 
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #2196F3;
-      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-    }
+    /* ── SCRAPE SECTION ── */
+    .scrape-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
+    .scrape-log { background: #f5f5f5; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; max-height: 180px; overflow-y: auto; }
+    .scrape-log pre { margin: 0; white-space: pre-wrap; color: #444; }
 
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: #2196F3;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #1976D2;
-    }
-
-    .btn-danger {
-      background: #f44336;
-      color: white;
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .btn-danger:hover {
-      background: #da190b;
-    }
-
-    .btn-secondary {
-      background: #f5f5f5;
-      color: #333;
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .btn-secondary:hover {
-      background: #e0e0e0;
-    }
-
-    .users-section {
-      background: #fff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .users-section h2 {
-      font-size: 16px;
-      margin-bottom: 16px;
-      color: #333;
-    }
-
-    .users-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .users-table thead {
-      background: #f5f5f5;
-      border-bottom: 2px solid #ddd;
-    }
-
-    .users-table th {
-      padding: 12px;
-      text-align: left;
-      font-size: 12px;
-      font-weight: 600;
-      color: #666;
-      text-transform: uppercase;
-    }
-
-    .users-table td {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-
-    .users-table tr:hover {
-      background: #f9f9f9;
-    }
-
-    .role-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .role-admin {
-      background: #ffebee;
-      color: #c62828;
-    }
-
-    .role-user {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .alert {
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .alert.show {
-      display: block;
-    }
-
-    .alert-success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-left: 4px solid #2e7d32;
-    }
-
-    .alert-error {
-      background: #ffebee;
-      color: #c62828;
-      border-left: 4px solid #c62828;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 8px;
-      padding: 24px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    .modal-body {
-      margin-bottom: 20px;
-    }
-
-    .modal-body p {
-      font-size: 14px;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-
-    .password-box {
-      background: #f5f5f5;
-      padding: 12px;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      word-break: break-all;
-      margin: 12px 0;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .btn-copy {
-      padding: 8px 16px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .btn-copy:hover {
-      background: #1976D2;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #999;
-    }
-
-    .empty-state p {
-      font-size: 14px;
-      margin-bottom: 8px;
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .form-group { grid-template-columns: 1fr 1fr; }
+      .ec-form-grid { grid-template-columns: 1fr 1fr; }
+      .rc-mid { flex-direction: column; }
+      .rc-photo img { width: 100%; height: 160px; }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <div class="header">
-    <div class="header-left">
-      <span>🦷</span>
-      <span>Admin - Quản lý Người dùng</span>
-    </div>
-    <div class="header-right">
-      <div class="user-badge" id="currentUser">Admin</div>
-      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
-    </div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">🦷 <span>Admin Dashboard</span></div>
+  <div class="header-right">
+    <div class="user-badge" id="currentUser">Admin</div>
+    <button class="btn-logout" onclick="location.href='/logout'">Đăng xuất</button>
+  </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('users', this)">👤 Người dùng</button>
+  <button class="tab-btn" onclick="switchTab('errorcodes', this)">🏷️ Mã lỗi</button>
+  <button class="tab-btn" onclick="switchTab('reports', this)" id="tabReports">📋 Báo cáo lỗi <span class="badge" id="pendingBadge" style="display:none">0</span></button>
+  <button class="tab-btn" onclick="switchTab('system', this)">⚙️ Hệ thống</button>
+</div>
+
+<!-- Alert (global) -->
+<div class="container" style="padding-bottom:0;">
+  <div id="alert" class="alert"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1: NGƯỜI DÙNG
+══════════════════════════════════════════ -->
+<div class="container">
+<div id="tab-users" class="tab-panel active">
+
+  <div class="section">
+    <h2>➕ Tạo Người dùng Mới</h2>
+    <form onsubmit="createUser(event)">
+      <div class="form-group">
+        <div>
+          <label for="username">Tên đăng nhập</label>
+          <input type="text" id="username" placeholder="username" required autocomplete="off">
+        </div>
+        <div>
+          <label for="password">Mật khẩu</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <div>
+          <label for="role">Vai trò</label>
+          <select id="role">
+            <option value="user">User (Nhân viên)</option>
+            <option value="admin">Admin (Quản lý)</option>
+          </select>
+        </div>
+        <div>
+          <label for="cong_doan_new">Công đoạn</label>
+          <select id="cong_doan_new">
+            <option value="">-- Không gán --</option>
+            <option value="CBM">CBM</option>
+            <option value="sáp">Sáp</option>
+            <option value="CAD/CAM">CAD/CAM</option>
+            <option value="sườn">Sườn</option>
+            <option value="đắp">Đắp</option>
+            <option value="mài">Mài</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Tạo</button>
+      </div>
+    </form>
   </div>
 
-  <!-- Main Content -->
-  <div class="container">
-    <!-- Alert Messages -->
-    <div id="alert" class="alert"></div>
+  <div class="section">
+    <h2>👥 Danh sách Người dùng</h2>
+    <div id="usersList"><div class="empty-state">Đang tải...</div></div>
+  </div>
 
-    <!-- Create User Section -->
-    <div class="form-section">
-      <h2>Tạo Người dùng Mới</h2>
-      <form onsubmit="createUser(event)">
-        <div class="form-group">
-          <div>
-            <label for="username">Tên người dùng</label>
-            <input type="text" id="username" name="username" placeholder="username" required>
-          </div>
-          <div>
-            <label for="password">Mật khẩu</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" required>
-          </div>
-          <div>
-            <label for="role">Vai trò</label>
-            <select id="role" name="role" required>
-              <option value="user">User (Xem dashboard)</option>
-              <option value="admin">Admin (Quản lý)</option>
+</div><!-- /tab-users -->
+
+<!-- ══════════════════════════════════════════
+     TAB 2: MÃ LỖI
+══════════════════════════════════════════ -->
+<div id="tab-errorcodes" class="tab-panel">
+
+  <div class="section">
+    <h2>➕ Thêm mã lỗi mới</h2>
+    <form onsubmit="createErrorCode(event)">
+      <div class="ec-form-grid">
+        <div>
+          <label for="ec_ma_loi">Mã lỗi</label>
+          <input type="text" id="ec_ma_loi" placeholder="VD: L001" required>
+        </div>
+        <div>
+          <label for="ec_ten_loi">Tên lỗi</label>
+          <input type="text" id="ec_ten_loi" placeholder="VD: Màu sắc không đúng" required>
+        </div>
+        <div>
+          <label for="ec_cong_doan">Công đoạn</label>
+          <select id="ec_cong_doan" required>
+            <option value="">-- Chọn --</option>
+            <option value="CBM">CBM</option>
+            <option value="sáp">Sáp</option>
+            <option value="CAD/CAM">CAD/CAM</option>
+            <option value="sườn">Sườn</option>
+            <option value="đắp">Đắp</option>
+            <option value="mài">Mài</option>
+          </select>
+        </div>
+        <div>
+          <label for="ec_mo_ta">Mô tả</label>
+          <input type="text" id="ec_mo_ta" placeholder="Tùy chọn">
+        </div>
+        <button type="submit" class="btn btn-primary">Thêm</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>🏷️ Danh sách mã lỗi theo công đoạn</h2>
+    <div id="errorCodeList"><div class="empty-state">Đang tải...</div></div>
+  </div>
+
+</div><!-- /tab-errorcodes -->
+
+<!-- ══════════════════════════════════════════
+     TAB 3: BÁO CÁO LỖI
+══════════════════════════════════════════ -->
+<div id="tab-reports" class="tab-panel">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Tổng báo cáo</div><div class="stat-value sv-total" id="sTotal">—</div></div>
+    <div class="stat-card"><div class="stat-label">Chờ duyệt</div><div class="stat-value sv-pending" id="sPending">—</div></div>
+    <div class="stat-card"><div class="stat-label">Đã xác nhận</div><div class="stat-value sv-confirmed" id="sConfirmed">—</div></div>
+    <div class="stat-card"><div class="stat-label">Từ chối</div><div class="stat-value sv-rejected" id="sRejected">—</div></div>
+  </div>
+
+  <!-- Stage breakdown -->
+  <div class="stage-chips" id="stageChips"></div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setReportFilter('', this)">Tất cả</button>
+    <button class="filter-btn" onclick="setReportFilter('pending', this)">⏳ Chờ duyệt</button>
+    <button class="filter-btn" onclick="setReportFilter('confirmed', this)">✅ Đã xác nhận</button>
+    <button class="filter-btn" onclick="setReportFilter('rejected', this)">❌ Từ chối</button>
+    <span class="filter-spacer"></span>
+    <button class="refresh-btn" onclick="loadReports()">↻ Làm mới</button>
+  </div>
+
+  <div class="reports-list" id="reportsList">
+    <div class="empty-state">Chuyển sang tab này để tải báo cáo</div>
+  </div>
+
+</div><!-- /tab-reports -->
+
+<!-- ══════════════════════════════════════════
+     TAB 4: HỆ THỐNG
+══════════════════════════════════════════ -->
+<div id="tab-system" class="tab-panel">
+
+  <div class="section">
+    <h2>🔍 Trạng thái Auto-Scrape</h2>
+    <div class="scrape-meta">
+      <span>File Excel mới nhất: <strong id="latestExcel" style="color:#2e7d32">—</strong></span>
+      <span>Trạng thái: <strong id="lastScrape" style="color:#666">—</strong></span>
+    </div>
+    <div class="scrape-log"><pre id="scrapeLogs">—</pre></div>
+  </div>
+
+</div><!-- /tab-system -->
+</div><!-- /container -->
+
+<!-- ════ MODALS ════ -->
+
+<!-- Reset Password -->
+<div id="resetModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title">🔑 Đặt lại Mật khẩu</div>
+    <div class="modal-body">
+      <p>Người dùng: <strong id="resetUsername"></strong></p>
+      <p>Nhập mật khẩu mới:</p>
+      <input type="password" id="newPassword" placeholder="••••••••" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:5px;font-size:14px;margin-top:6px;outline:none;">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeResetModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmReset()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Result -->
+<div id="resultModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title">✅ Mật khẩu mới</div>
+    <div class="modal-body">
+      <p>Mật khẩu mới cho <strong id="resultUsername"></strong>:</p>
+      <div class="password-box" id="resultPassword"></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-copy" onclick="copyPassword()">Sao chép</button>
+      <button class="btn btn-secondary" onclick="closeResultModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title" id="confirmTitle">Xác nhận</div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeConfirmModal()">Hủy</button>
+      <button class="btn btn-danger" onclick="confirmAction()" id="confirmBtn">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Report -->
+<div id="rejectModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title">❌ Từ chối báo cáo</div>
+    <div class="modal-body">
+      <p>Ghi chú lý do từ chối (tùy chọn):</p>
+      <textarea id="rejectNote" placeholder="Lý do từ chối..." style="margin-top:8px;"></textarea>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeRejectModal()">Hủy</button>
+      <button class="btn btn-danger" onclick="confirmReject()">Xác nhận từ chối</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+  let currentUser = '';
+  let pendingAction = null;
+  let pendingRejectId = null;
+  let reportFilter = '';
+  let reportsLoaded = false;
+
+  // ── TABS ──────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'reports' && !reportsLoaded) { reportsLoaded = true; loadReportStats(); loadReports(); }
+    if (name === 'errorcodes') loadErrorCodes();
+    if (name === 'system') loadScrapeStatus();
+  }
+
+  // ── INIT ──────────────────────────────────────
+  async function init() {
+    try {
+      const r = await fetch('/user');
+      const u = await r.json();
+      if (u.role !== 'admin') { location.href = '/'; return; }
+      currentUser = u.username;
+      document.getElementById('currentUser').textContent = `${u.username} (admin)`;
+    } catch(e) { location.href = '/login'; return; }
+
+    loadUsers();
+    loadPendingCount();
+    setInterval(loadPendingCount, 30000);
+  }
+
+  async function loadPendingCount() {
+    try {
+      const r = await fetch('/api/error-reports/stats');
+      const d = await r.json();
+      if (!d.ok) return;
+      const pending = d.byStatus.find(x => x.trang_thai === 'pending');
+      const n = pending?.n || 0;
+      const badge = document.getElementById('pendingBadge');
+      badge.textContent = n;
+      badge.style.display = n > 0 ? '' : 'none';
+    } catch(e) {}
+  }
+
+  // ── USERS ─────────────────────────────────────
+  async function loadUsers() {
+    try {
+      const res = await fetch('/admin/api/users');
+      const users = await res.json();
+      const el = document.getElementById('usersList');
+
+      if (!users.length) { el.innerHTML = '<div class="empty-state">Chưa có người dùng</div>'; return; }
+
+      const CONG_DOAN_OPTS = ['', 'CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+      let html = `<table class="data-table">
+        <thead><tr>
+          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Hành động</th>
+        </tr></thead><tbody>`;
+
+      for (const u of users) {
+        const isMe = u.username === currentUser;
+        const cdOpts = CONG_DOAN_OPTS.map(v =>
+          `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${v || '-- Không gán --'}</option>`
+        ).join('');
+        html += `<tr>
+          <td><strong>${u.username}</strong>${isMe ? ' <span style="color:#aaa;font-size:11px">(bạn)</span>' : ''}</td>
+          <td><span class="role-badge role-${u.role}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
+          <td>
+            <select onchange="setCongDoan('${u.username}', this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+              ${cdOpts}
             </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Tạo User</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Users List Section -->
-    <div class="users-section">
-      <h2>Danh sách Người dùng</h2>
-      <div id="usersList"></div>
-    </div>
-
-    <!-- Scrape Status Section -->
-    <div class="form-section" style="margin-top: 24px;">
-      <h2>🔍 Trạng thái Auto-Scrape</h2>
-      <div id="scrapeStatus" style="margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span>File Excel mới nhất:</span>
-          <strong id="latestExcel" style="color: #2e7d32;">—</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span>Lần scrape cuối:</span>
-          <strong id="lastScrape" style="color: #666;">—</strong>
-        </div>
-      </div>
-      <div style="background: #f5f5f5; border-radius: 6px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
-        <pre id="scrapeLogs" style="margin: 0; white-space: pre-wrap; color: #333;"></pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reset Password Modal -->
-  <div id="resetModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title">Đặt lại Mật khẩu</div>
-      <div class="modal-body">
-        <p>Người dùng: <strong id="resetUsername"></strong></p>
-        <p>Nhập mật khẩu mới:</p>
-        <input type="password" id="newPassword" placeholder="••••••••" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-      </div>
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeResetModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="confirmReset()">Xác nhận</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Confirm Modal -->
-  <div id="confirmModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title" id="confirmTitle">Xác nhận</div>
-      <div class="modal-body" id="confirmBody"></div>
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeConfirmModal()">Hủy</button>
-        <button class="btn btn-danger" onclick="confirmAction()" id="confirmBtn">Xác nhận</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Password Result Modal -->
-  <div id="resultModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title" id="resultTitle">Mật khẩu mới</div>
-      <div class="modal-body">
-        <p>Mật khẩu mới cho <strong id="resultUsername"></strong>:</p>
-        <div class="password-box" id="resultPassword"></div>
-      </div>
-      <div class="modal-buttons">
-        <button class="btn btn-copy" onclick="copyPassword()">Sao chép</button>
-        <button class="btn btn-secondary" onclick="closeResultModal()">Đóng</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentUser = '';
-    let pendingAction = null;
-
-    async function init() {
-      // Get current user info
-      const userRes = await fetch('/user');
-      const userData = await userRes.json();
-      currentUser = userData.username;
-      document.getElementById('currentUser').textContent = `${userData.username} (${userData.role})`;
-
-      // Load users
-      loadUsers();
-
-      // Load scrape status
-      loadScrapeStatus();
-    }
-
-    async function loadUsers() {
-      try {
-        const res = await fetch('/admin/api/users');
-        const users = await res.json();
-
-        if (users.length === 0) {
-          document.getElementById('usersList').innerHTML = '<div class="empty-state"><p>Chưa có người dùng</p></div>';
-          return;
-        }
-
-        let html = `
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Tên người dùng</th>
-                <th>Vai trò</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-        for (const user of users) {
-          const roleClass = user.role === 'admin' ? 'role-admin' : 'role-user';
-          const roleText = user.role === 'admin' ? 'Admin' : 'User';
-          const isCurrentUser = user.username === currentUser;
-
-          html += `
-            <tr>
-              <td>${user.username}${isCurrentUser ? ' <span style="color: #999; font-size: 12px;">(bạn)</span>' : ''}</td>
-              <td><span class="role-badge ${roleClass}">${roleText}</span></td>
-              <td>
-                <div class="actions">
-                  <button class="btn btn-secondary" onclick="openResetPassword('${user.username}')">Đặt lại pass</button>
-                  ${!isCurrentUser ? `<button class="btn btn-danger" onclick="openDeleteConfirm('${user.username}')">Xóa</button>` : '<button class="btn btn-secondary" disabled>Xóa</button>'}
-                </div>
-              </td>
-            </tr>
-          `;
-        }
-
-        html += `
-            </tbody>
-          </table>
-        `;
-
-        document.getElementById('usersList').innerHTML = html;
-      } catch (e) {
-        showAlert('Lỗi khi tải danh sách người dùng: ' + e.message, 'error');
+          </td>
+          <td><div class="actions">
+            <button class="btn btn-secondary" onclick="openResetPassword('${u.username}')">Đổi pass</button>
+            ${!isMe ? `<button class="btn btn-danger" onclick="openDeleteConfirm('${u.username}')">Xóa</button>` : '<button class="btn btn-secondary" disabled>Xóa</button>'}
+          </div></td>
+        </tr>`;
       }
-    }
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    } catch(e) { showAlert('Lỗi tải danh sách: ' + e.message, 'error'); }
+  }
 
-    async function createUser(event) {
-      event.preventDefault();
-
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const role = document.getElementById('role').value;
-
-      if (!username || !password) {
-        showAlert('Vui lòng điền đầy đủ thông tin', 'error');
-        return;
-      }
-
-      try {
-        const res = await fetch('/admin/api/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, role }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          showAlert(data.error || 'Lỗi tạo người dùng', 'error');
-          return;
-        }
-
-        showAlert(`✅ Tạo người dùng ${username} thành công!`, 'success');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        loadUsers();
-      } catch (e) {
-        showAlert('Lỗi: ' + e.message, 'error');
-      }
-    }
-
-    function openResetPassword(username) {
-      document.getElementById('resetUsername').textContent = username;
-      document.getElementById('newPassword').value = '';
-      document.getElementById('resetModal').classList.add('show');
-    }
-
-    function closeResetModal() {
-      document.getElementById('resetModal').classList.remove('show');
-    }
-
-    async function confirmReset() {
-      const username = document.getElementById('resetUsername').textContent;
-      const newPassword = document.getElementById('newPassword').value;
-
-      if (!newPassword) {
-        showAlert('Vui lòng nhập mật khẩu mới', 'error');
-        return;
-      }
-
-      try {
-        const res = await fetch(`/admin/api/users/${username}/reset-password`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newPassword }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          showAlert(data.error || 'Lỗi đặt lại mật khẩu', 'error');
-          return;
-        }
-
-        closeResetModal();
-        showPasswordResult(username, newPassword);
-      } catch (e) {
-        showAlert('Lỗi: ' + e.message, 'error');
-      }
-    }
-
-    function showPasswordResult(username, password) {
-      document.getElementById('resultUsername').textContent = username;
-      document.getElementById('resultPassword').textContent = password;
-      document.getElementById('resultModal').classList.add('show');
-    }
-
-    function closeResultModal() {
-      document.getElementById('resultModal').classList.remove('show');
-      loadUsers();
-    }
-
-    function copyPassword() {
-      const password = document.getElementById('resultPassword').textContent;
-      navigator.clipboard.writeText(password).then(() => {
-        showAlert('✅ Đã sao chép mật khẩu', 'success');
+  async function createUser(e) {
+    e.preventDefault();
+    const username   = document.getElementById('username').value.trim();
+    const password   = document.getElementById('password').value;
+    const role       = document.getElementById('role').value;
+    const cong_doan  = document.getElementById('cong_doan_new').value;
+    if (!username || !password) { showAlert('Vui lòng điền đầy đủ', 'error'); return; }
+    try {
+      const res = await fetch('/admin/api/users', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password, role, cong_doan }),
       });
-    }
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi tạo user', 'error'); return; }
+      showAlert(`✅ Tạo ${username} thành công!`, 'success');
+      e.target.reset();
+      loadUsers();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
 
-    function openDeleteConfirm(username) {
-      document.getElementById('confirmTitle').textContent = 'Xóa Người dùng';
-      document.getElementById('confirmBody').innerHTML = `<p>Bạn có chắc chắn muốn xóa người dùng <strong>${username}</strong>?</p><p style="color: #999; font-size: 12px;">Hành động này không thể hoàn tác.</p>`;
-      document.getElementById('confirmBtn').textContent = 'Xóa';
-      pendingAction = { type: 'delete', username };
-      document.getElementById('confirmModal').classList.add('show');
-    }
+  async function setCongDoan(username, cong_doan) {
+    try {
+      const res = await fetch(`/admin/api/users/${username}/cong-doan`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ cong_doan }),
+      });
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); return; }
+      showAlert(`✅ Gán "${cong_doan || 'Không gán'}" cho ${username}`, 'success');
+    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
+  }
 
-    function closeConfirmModal() {
-      document.getElementById('confirmModal').classList.remove('show');
-      pendingAction = null;
-    }
+  // ── ERROR CODES ───────────────────────────────
+  const STAGE_COLORS = { CBM:'#e65100', 'sáp':'#6a1b9a', 'CAD/CAM':'#1565c0', 'sườn':'#1b5e20', 'đắp':'#b71c1c', 'mài':'#424242' };
+  const STAGE_BG     = { CBM:'#fff3e0', 'sáp':'#f3e5f5', 'CAD/CAM':'#e3f2fd', 'sườn':'#e8f5e9', 'đắp':'#ffebee', 'mài':'#f5f5f5' };
 
-    async function confirmAction() {
-      if (!pendingAction) return;
-
-      if (pendingAction.type === 'delete') {
-        try {
-          const res = await fetch(`/admin/api/users/${pendingAction.username}`, {
-            method: 'DELETE',
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            showAlert(data.error || 'Lỗi xóa người dùng', 'error');
-            return;
-          }
-
-          showAlert(`✅ Xóa người dùng ${pendingAction.username} thành công!`, 'success');
-          closeConfirmModal();
-          loadUsers();
-        } catch (e) {
-          showAlert('Lỗi: ' + e.message, 'error');
-        }
+  async function loadErrorCodes() {
+    const el = document.getElementById('errorCodeList');
+    try {
+      const r = await fetch('/api/error-codes');
+      const d = await r.json();
+      if (!d.ok || !d.data.length) {
+        el.innerHTML = '<div class="empty-state">Chưa có mã lỗi nào. Thêm mã lỗi ở phía trên.</div>';
+        return;
       }
-    }
+      const groups = {};
+      d.data.forEach(c => { if (!groups[c.cong_doan]) groups[c.cong_doan] = []; groups[c.cong_doan].push(c); });
+      const ORDER = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+      const sorted = ORDER.filter(s => groups[s]).concat(Object.keys(groups).filter(s => !ORDER.includes(s)));
 
-    function showAlert(message, type) {
-      const alertEl = document.getElementById('alert');
-      alertEl.textContent = message;
-      alertEl.className = `alert show alert-${type}`;
-      setTimeout(() => {
-        alertEl.classList.remove('show');
-      }, 4000);
-    }
+      let html = '';
+      sorted.forEach(stage => {
+        const color = STAGE_COLORS[stage] || '#555';
+        const bg    = STAGE_BG[stage]    || '#f5f5f5';
+        html += `<div class="stage-block">
+          <span class="stage-label" style="color:${color};background:${bg};">${stage}</span>
+          <table class="ec-table"><tbody>`;
+        groups[stage].forEach(c => {
+          html += `<tr>
+            <td class="ec-ma_loi" style="color:${color};">${c.ma_loi}</td>
+            <td>${c.ten_loi}</td>
+            <td class="ec-mo_ta">${c.mo_ta || ''}</td>
+            <td style="text-align:right;"><button class="btn btn-danger" onclick="deleteErrorCode(${c.id},'${c.ma_loi}')">Xóa</button></td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      });
+      el.innerHTML = html;
+    } catch(e) { el.innerHTML = '<div class="empty-state" style="color:#c00">Lỗi tải dữ liệu</div>'; }
+  }
 
-    function logout() {
-      window.location.href = '/logout';
-    }
+  async function createErrorCode(e) {
+    e.preventDefault();
+    const ma_loi    = document.getElementById('ec_ma_loi').value.trim();
+    const ten_loi   = document.getElementById('ec_ten_loi').value.trim();
+    const cong_doan = document.getElementById('ec_cong_doan').value;
+    const mo_ta     = document.getElementById('ec_mo_ta').value.trim();
+    if (!ma_loi || !ten_loi || !cong_doan) { showAlert('Vui lòng điền mã lỗi, tên lỗi, công đoạn', 'error'); return; }
+    try {
+      const res = await fetch('/api/error-codes', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ ma_loi, ten_loi, cong_doan, mo_ta }),
+      });
+      const d = await res.json();
+      if (!d.ok) { showAlert(d.error || 'Lỗi tạo mã lỗi', 'error'); return; }
+      showAlert(`✅ Thêm [${ma_loi}] ${ten_loi} thành công`, 'success');
+      e.target.reset();
+      loadErrorCodes();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
 
-    // ═════════════════════════════════════════════════════════════
-    // SCRAPE LOGS
-    // ═════════════════════════════════════════════════════════════
-    async function loadScrapeStatus() {
+  async function deleteErrorCode(id, ma_loi) {
+    if (!confirm(`Xóa mã lỗi [${ma_loi}]?`)) return;
+    try {
+      const res = await fetch(`/api/error-codes/${id}`, { method: 'DELETE' });
+      const d = await res.json();
+      if (!d.ok) { showAlert(d.error || 'Lỗi xóa', 'error'); return; }
+      showAlert(`✅ Đã xóa [${ma_loi}]`, 'success');
+      loadErrorCodes();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
+
+  // ── ERROR REPORTS ─────────────────────────────
+  const STAGE_CLASS_MAP = {
+    'CBM':'st-CBM','sáp':'st-sap','CAD/CAM':'st-cadcam','sườn':'st-suon','đắp':'st-dap','mài':'st-mai'
+  };
+
+  function stageClass(s) { return STAGE_CLASS_MAP[s] || 'st-other'; }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return s.replace('T', ' ').slice(0, 16);
+  }
+
+  async function loadReportStats() {
+    try {
+      const r = await fetch('/api/error-reports/stats');
+      const d = await r.json();
+      if (!d.ok) return;
+
+      const byStatus = {};
+      d.byStatus.forEach(x => byStatus[x.trang_thai] = x.n);
+      const total = d.byStatus.reduce((s, x) => s + x.n, 0);
+      document.getElementById('sTotal').textContent     = total;
+      document.getElementById('sPending').textContent   = byStatus['pending']   || 0;
+      document.getElementById('sConfirmed').textContent = byStatus['confirmed'] || 0;
+      document.getElementById('sRejected').textContent  = byStatus['rejected']  || 0;
+
+      const ORDER = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+      const sorted = ORDER.filter(x => d.byStage.find(s => s.cong_doan === x))
+        .map(x => d.byStage.find(s => s.cong_doan === x))
+        .concat(d.byStage.filter(s => !ORDER.includes(s.cong_doan)));
+      document.getElementById('stageChips').innerHTML = sorted.map(x =>
+        `<div class="stage-chip">${x.cong_doan || '?'}<strong>${x.n}</strong></div>`
+      ).join('');
+
+      // Update badge
+      const n = byStatus['pending'] || 0;
+      const badge = document.getElementById('pendingBadge');
+      badge.textContent = n;
+      badge.style.display = n > 0 ? '' : 'none';
+    } catch(e) {}
+  }
+
+  async function loadReports() {
+    const el = document.getElementById('reportsList');
+    el.innerHTML = '<div class="empty-state">Đang tải...</div>';
+    loadReportStats();
+    try {
+      const url = reportFilter ? `/api/error-reports?trang_thai=${reportFilter}` : '/api/error-reports';
+      const r = await fetch(url);
+      const d = await r.json();
+      if (!d.ok) { el.innerHTML = '<div class="empty-state">Lỗi tải dữ liệu</div>'; return; }
+      if (!d.data.length) { el.innerHTML = '<div class="empty-state">Không có báo cáo nào</div>'; return; }
+
+      el.innerHTML = d.data.map(rep => {
+        const sc = stageClass(rep.cong_doan);
+        const statusLabel = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', rejected: 'Từ chối' }[rep.trang_thai] || rep.trang_thai;
+
+        const photoHtml = rep.hinh_anh
+          ? `<div class="rc-photo"><img src="/uploads/error-images/${rep.hinh_anh}" alt="" onclick="openLightbox('/uploads/error-images/${rep.hinh_anh}')"></div>`
+          : '';
+
+        const reviewedHtml = (rep.trang_thai === 'confirmed' || rep.trang_thai === 'rejected')
+          ? `<div class="reviewed-box">
+              ${rep.trang_thai === 'confirmed' ? '✅' : '❌'} Duyệt bởi <strong>${rep.reviewed_by || '?'}</strong> · ${fmtDate(rep.reviewed_at)}
+              ${rep.ghi_chu_admin ? `<br>Ghi chú: <em>${rep.ghi_chu_admin}</em>` : ''}
+             </div>`
+          : '';
+
+        const actionsHtml = rep.trang_thai === 'pending'
+          ? `<div class="rc-actions">
+              <button class="btn btn-success" onclick="confirmReport(${rep.id})">✅ Xác nhận</button>
+              <button class="btn btn-danger"  onclick="openRejectModal(${rep.id})">❌ Từ chối</button>
+             </div>`
+          : '';
+
+        return `<div class="report-card s-${rep.trang_thai}">
+          <div class="rc-top">
+            <span class="rc-madh">${rep.ma_dh || '—'}</span>
+            <span class="rc-stage ${sc}">${rep.cong_doan || '?'}</span>
+            <span class="rc-error">${rep.ma_loi_text || '—'}</span>
+            <span class="status-badge sb-${rep.trang_thai}">${statusLabel}</span>
+            <div class="rc-meta"><div>${rep.submitted_by || '?'}</div><div>${fmtDate(rep.submitted_at)}</div></div>
+          </div>
+          <div class="rc-mid">
+            ${photoHtml}
+            <div class="rc-info">
+              ${rep.mo_ta ? `<div class="rc-mo_ta">${rep.mo_ta}</div>` : ''}
+              ${reviewedHtml}
+            </div>
+          </div>
+          ${actionsHtml}
+        </div>`;
+      }).join('');
+    } catch(e) { el.innerHTML = '<div class="empty-state">Lỗi kết nối</div>'; }
+  }
+
+  function setReportFilter(f, btn) {
+    reportFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadReports();
+  }
+
+  async function confirmReport(id) {
+    try {
+      const r = await fetch(`/api/error-reports/${id}/confirm`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'}, body: '{}',
+      });
+      const d = await r.json();
+      if (d.ok) { showAlert('✅ Đã xác nhận báo cáo', 'success'); loadReports(); }
+    } catch(e) {}
+  }
+
+  function openRejectModal(id) {
+    pendingRejectId = id;
+    document.getElementById('rejectNote').value = '';
+    document.getElementById('rejectModal').classList.add('show');
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.remove('show');
+    pendingRejectId = null;
+  }
+
+  async function confirmReject() {
+    if (!pendingRejectId) return;
+    const note = document.getElementById('rejectNote').value.trim();
+    try {
+      const r = await fetch(`/api/error-reports/${pendingRejectId}/reject`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ ghi_chu_admin: note }),
+      });
+      const d = await r.json();
+      if (d.ok) { closeRejectModal(); showAlert('❌ Đã từ chối báo cáo', 'success'); loadReports(); }
+    } catch(e) {}
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+  // ── USER MODALS ───────────────────────────────
+  function openResetPassword(u) {
+    document.getElementById('resetUsername').textContent = u;
+    document.getElementById('newPassword').value = '';
+    document.getElementById('resetModal').classList.add('show');
+  }
+  function closeResetModal() { document.getElementById('resetModal').classList.remove('show'); }
+
+  async function confirmReset() {
+    const username    = document.getElementById('resetUsername').textContent;
+    const newPassword = document.getElementById('newPassword').value;
+    if (!newPassword) { showAlert('Vui lòng nhập mật khẩu mới', 'error'); return; }
+    try {
+      const res = await fetch(`/admin/api/users/${username}/reset-password`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ newPassword }),
+      });
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi', 'error'); return; }
+      closeResetModal();
+      document.getElementById('resultUsername').textContent = username;
+      document.getElementById('resultPassword').textContent = newPassword;
+      document.getElementById('resultModal').classList.add('show');
+    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
+  }
+
+  function closeResultModal() { document.getElementById('resultModal').classList.remove('show'); loadUsers(); }
+  function copyPassword() {
+    navigator.clipboard.writeText(document.getElementById('resultPassword').textContent);
+    showAlert('✅ Đã sao chép mật khẩu', 'success');
+  }
+
+  function openDeleteConfirm(username) {
+    document.getElementById('confirmTitle').textContent = 'Xóa Người dùng';
+    document.getElementById('confirmBody').innerHTML =
+      `<p>Xóa người dùng <strong>${username}</strong>?</p><p style="color:#aaa;font-size:12px;">Không thể hoàn tác.</p>`;
+    document.getElementById('confirmBtn').textContent = 'Xóa';
+    pendingAction = { type: 'delete', username };
+    document.getElementById('confirmModal').classList.add('show');
+  }
+  function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('show'); pendingAction = null; }
+
+  async function confirmAction() {
+    if (!pendingAction) return;
+    if (pendingAction.type === 'delete') {
       try {
-        const res = await fetch('/admin/api/scrape-logs');
-        const data = await res.json();
-        if (!res.ok) return;
-
-        document.getElementById('latestExcel').textContent = data.latestFile || 'Không có file';
-        document.getElementById('lastScrape').textContent = data.logs.length > 0 ? 'Đang chạy' : 'Không có log';
-
-        // Format logs
-        const logsEl = document.getElementById('scrapeLogs');
-        if (data.logs.length === 0) {
-          logsEl.textContent = 'Không có log nào.';
-        } else {
-          logsEl.textContent = data.logs.join('\n');
-        }
-      } catch (e) {
-        console.error('Lỗi fetch scrape status:', e);
-      }
+        const res = await fetch(`/admin/api/users/${pendingAction.username}`, { method: 'DELETE' });
+        const d = await res.json();
+        if (!res.ok) { showAlert(d.error || 'Lỗi xóa', 'error'); return; }
+        showAlert(`✅ Đã xóa ${pendingAction.username}`, 'success');
+        closeConfirmModal();
+        loadUsers();
+      } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
     }
+  }
 
-    // Initialize
-    init();
-  </script>
+  // ── SYSTEM ────────────────────────────────────
+  async function loadScrapeStatus() {
+    try {
+      const res = await fetch('/admin/api/scrape-logs');
+      const d = await res.json();
+      if (!res.ok) return;
+      document.getElementById('latestExcel').textContent = d.latestFile || 'Không có file';
+      document.getElementById('lastScrape').textContent = d.logs.length ? 'Có log' : 'Không có log';
+      document.getElementById('scrapeLogs').textContent = d.logs.length ? d.logs.join('\n') : 'Không có log nào.';
+    } catch(e) {}
+  }
+
+  // ── ALERT ─────────────────────────────────────
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert show alert-${type}`;
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeLightbox(); closeRejectModal(); closeResetModal(); closeConfirmModal(); }
+  });
+
+  init();
+</script>
 </body>
 </html>

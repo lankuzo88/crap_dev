@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Báo lỗi — ASIA LAB</title>
+  <style>
+    :root {
+      --bg-primary: #7a9b8a;
+      --bg-card: #f5f3f0;
+      --border-card: #e0d9d3;
+      --terracotta-light: #c4836f;
+      --terracotta: #a85a4f;
+      --rust-dark: #8b4438;
+      --text-primary: #1a1a1a;
+      --text-muted: #888;
+      --header-h: 56px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 14px; -webkit-text-size-adjust: 100%; }
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100dvh; }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+      background: var(--rust-dark); display: flex; align-items: center;
+      padding: 0 12px; gap: 10px; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .header-back {
+      color: #fff; text-decoration: none; font-size: 13px;
+      padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3);
+      white-space: nowrap;
+    }
+    .header-title { color: #fff; font-size: 16px; font-weight: 700; flex: 1; }
+
+    /* Body */
+    .body { padding-top: calc(var(--header-h) + 16px); padding-bottom: 40px; }
+
+    /* Card */
+    .card {
+      background: var(--bg-card); border-radius: 14px; margin: 0 12px 12px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }
+    .card-title {
+      font-size: 13px; font-weight: 700; color: var(--terracotta);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 14px; position: relative; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-card);
+      border-radius: 8px; font-size: 15px; background: #fff; color: var(--text-primary);
+      outline: none; appearance: none; -webkit-appearance: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(168,90,79,.12);
+    }
+    .field textarea { resize: none; min-height: 72px; }
+    .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+    /* Autocomplete */
+    .suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+      border: 1.5px solid var(--terracotta); border-top: none; border-radius: 0 0 8px 8px;
+      max-height: 200px; overflow-y: auto; z-index: 50; display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .suggestions.show { display: block; }
+    .suggestion-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0ede9; }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:active { background: #fdf2f0; }
+    .suggestion-madh { font-weight: 700; font-size: 14px; color: var(--terracotta); }
+    .suggestion-info { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Photo upload */
+    .photo-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 12px; border: 2px dashed var(--terracotta-light);
+      border-radius: 10px; background: #fdf2f0; color: var(--terracotta);
+      font-size: 14px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .photo-btn:active { background: #f5e6e3; }
+    #hinh_anh { display: none; }
+
+    .preview-wrap { margin-top: 10px; display: none; position: relative; }
+    .preview-wrap img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; border: 1.5px solid var(--border-card); }
+    .preview-remove {
+      position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55);
+      color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px;
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%; padding: 14px; background: var(--terracotta); color: #fff;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+      cursor: pointer; margin-top: 4px;
+    }
+    .btn-submit:active { background: var(--rust-dark); }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* Success state */
+    .success-banner {
+      display: none; background: #2d6a4f; color: #fff; padding: 14px 16px;
+      border-radius: 10px; margin: 0 12px 12px; text-align: center;
+      font-weight: 600; font-size: 15px;
+    }
+    .success-banner.show { display: block; }
+
+    /* Error msg */
+    .err-msg { color: #c0392b; font-size: 12px; margin-top: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    /* Info note */
+    .info-note { font-size: 12px; color: var(--text-muted); margin-top: 6px; text-align: center; }
+
+    /* Stage badge in dropdown */
+    .stage-label { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="header-back" href="/mobile">← Danh sách</a>
+  <span class="header-title">⚠ Báo lỗi</span>
+  <span id="userBadge" style="font-size:11px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;"></span>
+</div>
+
+<div class="body">
+
+  <div class="success-banner" id="successBanner">✅ Đã gửi báo lỗi thành công!</div>
+
+  <form id="reportForm" onsubmit="submitReport(event)" novalidate>
+
+    <div class="card">
+      <div class="card-title">Thông tin đơn hàng</div>
+
+      <div class="field">
+        <label for="ma_dh">Mã đơn hàng <span style="color:var(--terracotta)">*</span></label>
+        <input type="text" id="ma_dh" autocomplete="off" placeholder="Nhập mã đơn hàng..." oninput="searchOrders(this.value)">
+        <div class="suggestions" id="suggestions"></div>
+        <div class="err-msg" id="err_ma_dh">Vui lòng nhập mã đơn hàng</div>
+      </div>
+
+      <div class="field">
+        <label for="error_code_id">Mã lỗi <span style="color:var(--terracotta)">*</span></label>
+        <select id="error_code_id">
+          <option value="">-- Đang tải... --</option>
+        </select>
+        <div class="err-msg" id="err_code">Vui lòng chọn mã lỗi</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Hình ảnh minh chứng</div>
+
+      <label class="photo-btn" for="hinh_anh">
+        📷 Chụp ảnh / Chọn ảnh
+      </label>
+      <input type="file" id="hinh_anh" accept="image/*" capture="environment">
+
+      <div class="preview-wrap" id="previewWrap">
+        <img id="imgPreview" src="" alt="Ảnh đã chọn">
+        <button type="button" class="preview-remove" onclick="removeImage()">✕</button>
+      </div>
+      <p class="info-note">Tùy chọn — ảnh giúp admin xác nhận nhanh hơn</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ghi chú thêm</div>
+      <div class="field">
+        <textarea id="mo_ta" placeholder="Mô tả thêm về lỗi (tùy chọn)..."></textarea>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">Xác nhận & Gửi báo lỗi</button>
+      <div class="err-msg" id="err_submit" style="text-align:center;margin-top:8px;"></div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  let searchTimeout = null;
+
+  // Load user info and error codes on init
+  (async () => {
+    try {
+      const r = await fetch('/user');
+      if (!r.ok) { location.href = '/login'; return; }
+      const u = await r.json();
+      document.getElementById('userBadge').textContent = u.username + (u.cong_doan ? ' · ' + u.cong_doan : '');
+      await loadErrorCodes(u.cong_doan || '');
+    } catch(e) {
+      await loadErrorCodes('');
+    }
+  })();
+
+  async function loadErrorCodes(cong_doan) {
+    const sel = document.getElementById('error_code_id');
+    try {
+      const url = cong_doan ? `/api/error-codes?cong_doan=${encodeURIComponent(cong_doan)}` : '/api/error-codes';
+      const r = await fetch(url);
+      const d = await r.json();
+      if (!d.ok || !d.data.length) {
+        sel.innerHTML = '<option value="">-- Chưa có mã lỗi --</option>';
+        return;
+      }
+      // Group by cong_doan
+      const groups = {};
+      d.data.forEach(c => {
+        if (!groups[c.cong_doan]) groups[c.cong_doan] = [];
+        groups[c.cong_doan].push(c);
+      });
+      let html = '<option value="">-- Chọn mã lỗi --</option>';
+      for (const [stage, codes] of Object.entries(groups)) {
+        html += `<optgroup label="${stage}">`;
+        codes.forEach(c => {
+          html += `<option value="${c.id}">[${c.ma_loi}] ${c.ten_loi}</option>`;
+        });
+        html += '</optgroup>';
+      }
+      sel.innerHTML = html;
+    } catch(e) {
+      sel.innerHTML = '<option value="">-- Lỗi tải mã --</option>';
+    }
+  }
+
+  // Order autocomplete
+  async function searchOrders(q) {
+    const box = document.getElementById('suggestions');
+    clearTimeout(searchTimeout);
+    if (!q || q.length < 2) { box.classList.remove('show'); return; }
+    searchTimeout = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/orders/search?q=${encodeURIComponent(q)}`);
+        const d = await r.json();
+        if (!d.ok || !d.data.length) { box.classList.remove('show'); return; }
+        box.innerHTML = d.data.map(o => `
+          <div class="suggestion-item" onclick="selectOrder(${JSON.stringify(o.ma_dh)}, ${JSON.stringify(o.khach_hang||'')})">
+            <div class="suggestion-madh">${o.ma_dh}</div>
+            <div class="suggestion-info">${o.khach_hang || ''} · ${o.benh_nhan || ''}</div>
+          </div>
+        `).join('');
+        box.classList.add('show');
+      } catch(e) { box.classList.remove('show'); }
+    }, 200);
+  }
+
+  function selectOrder(maDh, khachHang) {
+    document.getElementById('ma_dh').value = maDh;
+    document.getElementById('suggestions').classList.remove('show');
+    document.getElementById('err_ma_dh').classList.remove('show');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#ma_dh') && !e.target.closest('#suggestions'))
+      document.getElementById('suggestions').classList.remove('show');
+  });
+
+  // Image preview
+  document.getElementById('hinh_anh').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imgPreview').src = e.target.result;
+      document.getElementById('previewWrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function removeImage() {
+    document.getElementById('hinh_anh').value = '';
+    document.getElementById('imgPreview').src = '';
+    document.getElementById('previewWrap').style.display = 'none';
+  }
+
+  // Submit
+  async function submitReport(e) {
+    e.preventDefault();
+    const ma_dh = document.getElementById('ma_dh').value.trim();
+    const error_code_id = document.getElementById('error_code_id').value;
+
+    let valid = true;
+    if (!ma_dh) { document.getElementById('err_ma_dh').classList.add('show'); valid = false; }
+    else document.getElementById('err_ma_dh').classList.remove('show');
+    if (!error_code_id) { document.getElementById('err_code').classList.add('show'); valid = false; }
+    else document.getElementById('err_code').classList.remove('show');
+    if (!valid) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang gửi...';
+    document.getElementById('err_submit').classList.remove('show');
+
+    try {
+      const fd = new FormData();
+      fd.append('ma_dh', ma_dh);
+      fd.append('error_code_id', error_code_id);
+      fd.append('mo_ta', document.getElementById('mo_ta').value.trim());
+      const imgFile = document.getElementById('hinh_anh').files[0];
+      if (imgFile) fd.append('hinh_anh', imgFile);
+
+      const r = await fetch('/api/error-reports', { method: 'POST', body: fd });
+      const d = await r.json();
+
+      if (d.ok) {
+        document.getElementById('successBanner').classList.add('show');
+        document.getElementById('reportForm').reset();
+        removeImage();
+        document.getElementById('successBanner').scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => document.getElementById('successBanner').classList.remove('show'), 4000);
+      } else {
+        const errEl = document.getElementById('err_submit');
+        errEl.textContent = '❌ ' + (d.error || 'Gửi thất bại, thử lại');
+        errEl.classList.add('show');
+      }
+    } catch(err) {
+      const errEl = document.getElementById('err_submit');
+      errEl.textContent = '❌ Lỗi kết nối, thử lại';
+      errEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Xác nhận & Gửi báo lỗi';
+    }
+  }
+</script>
+</body>
+</html>

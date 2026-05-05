@@ -34,7 +34,7 @@ function loadUsers() {
       const data = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
       USERS = {};
       data.users.forEach(u => {
-        USERS[u.username] = { password: u.password, role: u.role };
+        USERS[u.username] = { password: u.password, role: u.role, cong_doan: u.cong_doan || '' };
       });
       log(`📋 Loaded ${data.users.length} user(s) from users.json`);
     } else {
@@ -54,6 +54,7 @@ function saveUsers() {
       username,
       password: data.password,
       role: data.role,
+      cong_doan: data.cong_doan || '',
     }));
     fs.writeFileSync(USERS_JSON_PATH, JSON.stringify({ users }, null, 2));
   } catch (e) {
@@ -162,6 +163,38 @@ function dbHasData() {
     const row = db.prepare('SELECT COUNT(*) as n FROM don_hang').get();
     return row && row.n > 0;
   } catch { return false; }
+}
+
+function initErrorTables() {
+  const db = getDB();
+  if (!db) { log('⚠ initErrorTables: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS error_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_loi TEXT NOT NULL,
+      ten_loi TEXT NOT NULL,
+      cong_doan TEXT NOT NULL,
+      mo_ta TEXT,
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS error_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh TEXT,
+      error_code_id INTEGER,
+      ma_loi_text TEXT,
+      cong_doan TEXT,
+      hinh_anh TEXT,
+      mo_ta TEXT,
+      trang_thai TEXT DEFAULT 'pending',
+      submitted_by TEXT,
+      submitted_at TEXT DEFAULT (datetime('now','localtime')),
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      ghi_chu_admin TEXT
+    );
+  `);
+  log('✅ Error tables initialized');
 }
 
 // Tên cột mã đơn hàng trong file keylab Excel
@@ -864,6 +897,26 @@ const upload = multer({
 
 if (!fs.existsSync(EXCEL_DIR)) fs.mkdirSync(EXCEL_DIR, { recursive: true });
 
+// ── UPLOAD ẢNH (multer) ───────────────────────────────
+const IMAGES_DIR = path.join(BASE_DIR, 'uploads', 'error-images');
+if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
+
+const uploadImage = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, IMAGES_DIR),
+    filename: (req, file, cb) => {
+      const ext   = path.extname(file.originalname).toLowerCase() || '.jpg';
+      const ma_dh = (req.body.ma_dh || 'unknown').replace(/[^a-zA-Z0-9\-]/g, '_');
+      const suffix = Date.now();
+      cb(null, `${ma_dh}_${suffix}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    cb(null, file.mimetype.startsWith('image/'));
+  },
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
 // ── ROUTES ────────────────────────────────────────────
 app.get('/login', (req, res) => {
   const token = getSessionToken(req);
@@ -1299,7 +1352,7 @@ app.get('/mobile', requireAuth, (req, res) => {
 app.get('/user', requireAuth, (req, res) => {
   const token = getSessionToken(req);
   const sess = sessions.get(token);
-  res.json({ username: sess.user, role: sess.role });
+  res.json({ username: sess.user, role: sess.role, cong_doan: USERS[sess.user]?.cong_doan || '' });
 });
 
 app.get('/admin', requireAdmin, (req, res) => {
@@ -1310,12 +1363,13 @@ app.get('/admin/api/users', requireAdmin, (req, res) => {
   const users = Object.entries(USERS).map(([username, data]) => ({
     username,
     role: data.role,
+    cong_doan: data.cong_doan || '',
   }));
   res.json(users);
 });
 
 app.post('/admin/api/users', requireAdmin, express.json(), (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password, role, cong_doan } = req.body;
   if (!username || !password || !role) {
     return res.status(400).json({ error: 'Missing username, password, or role' });
   }
@@ -1325,10 +1379,26 @@ app.post('/admin/api/users', requireAdmin, express.json(), (req, res) => {
   if (!['admin', 'user'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role' });
   }
-  USERS[username] = { password, role };
+  const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài', ''];
+  if (cong_doan && !VALID_CD.includes(cong_doan)) {
+    return res.status(400).json({ error: 'Invalid cong_doan' });
+  }
+  USERS[username] = { password, role, cong_doan: cong_doan || '' };
   saveUsers();
-  log(`👤 New user created: ${username} (${role})`);
-  res.json({ ok: true, username, role });
+  log(`👤 New user created: ${username} (${role}) cong_doan=${cong_doan || 'none'}`);
+  res.json({ ok: true, username, role, cong_doan: cong_doan || '' });
+});
+
+app.patch('/admin/api/users/:username/cong-doan', requireAdmin, express.json(), (req, res) => {
+  const { username } = req.params;
+  const { cong_doan } = req.body;
+  const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài', ''];
+  if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
+  if (!VALID_CD.includes(cong_doan)) return res.status(400).json({ error: 'Invalid cong_doan' });
+  USERS[username].cong_doan = cong_doan;
+  saveUsers();
+  log(`🔧 cong_doan set: ${username} → ${cong_doan || 'none'}`);
+  res.json({ ok: true });
 });
 
 app.delete('/admin/api/users/:username', requireAdmin, (req, res) => {
@@ -1364,33 +1434,6 @@ app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json
   saveUsers();
   log(`🔑 Password reset for: ${username}`);
   res.json({ ok: true, username, newPassword });
-});
-
-// ── ADMIN SCRAPE LOGS API ──────────────────────────────────────────────────
-app.get('/admin/api/scrape-logs', requireAdmin, (req, res) => {
-  try {
-    const logFile = path.join(BASE_DIR, 'auto_scrape.log');
-    if (!fs.existsSync(logFile)) {
-      return res.json({ logs: [], latestFile: null });
-    }
-
-    // Read last 10 lines
-    const content = fs.readFileSync(logFile, 'utf8');
-    const lines = content.trim().split('\n');
-    const last10 = lines.slice(-10);
-
-    // Get latest Excel file (only DDMMYYYY_N.xls format)
-    const excelFiles = fs.readdirSync(EXCEL_DIR)
-      .filter(f => f.match(/^\d{8}_\d+\.xls$/))
-      .map(f => ({ name: f, mtime: fs.statSync(path.join(EXCEL_DIR, f)).mtimeMs }))
-      .sort((a, b) => b.mtime - a.mtime);
-    const latestFile = excelFiles[0] ? excelFiles[0].name : null;
-
-    res.json({ logs: last10, latestFile });
-  } catch (err) {
-    log(`[Admin] Error reading scrape logs: ${err.message}`);
-    res.status(500).json({ error: err.message });
-  }
 });
 
 // ── ANALYTICS API ──────────────────────────────────────────────────────────
@@ -2060,6 +2103,181 @@ app.patch('/api/feedbacks/:id', requireAuth, express.json(), (req, res) => {
   }
 });
 
+// ── BÁO LỖI PAGES ────────────────────────────────────
+app.get('/bao-loi', requireAuth, (req, res) => {
+  res.sendFile(path.join(BASE_DIR, 'bao_loi.html'));
+});
+
+app.get('/error-reports', requireAdmin, (req, res) => {
+  res.sendFile(path.join(BASE_DIR, 'error_reports.html'));
+});
+
+// ── ERROR CODES API ───────────────────────────────────
+app.get('/api/error-codes', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    let sql = 'SELECT * FROM error_codes WHERE active=1';
+    const params = [];
+    if (req.query.cong_doan) {
+      sql += ' AND cong_doan=?';
+      params.push(req.query.cong_doan);
+    }
+    sql += ' ORDER BY cong_doan, ma_loi';
+    const rows = db.prepare(sql).all(...params);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[ErrorCode] Error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/api/error-codes', requireAdmin, express.json(), (req, res) => {
+  const { ma_loi, ten_loi, cong_doan, mo_ta } = req.body;
+  if (!ma_loi || !ten_loi || !cong_doan) {
+    return res.status(400).json({ ok: false, error: 'ma_loi, ten_loi, cong_doan là bắt buộc' });
+  }
+  const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+  if (!VALID_CD.includes(cong_doan)) {
+    return res.status(400).json({ ok: false, error: 'cong_doan không hợp lệ' });
+  }
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const result = db.prepare(
+      'INSERT INTO error_codes (ma_loi, ten_loi, cong_doan, mo_ta) VALUES (?, ?, ?, ?)'
+    ).run(ma_loi, ten_loi, cong_doan, mo_ta || '');
+    log(`[ErrorCode] Created: ${ma_loi} - ${ten_loi} (${cong_doan})`);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    log(`[ErrorCode] Error creating: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.patch('/api/error-codes/:id', requireAdmin, express.json(), (req, res) => {
+  const { id } = req.params;
+  const { ma_loi, ten_loi, cong_doan, mo_ta } = req.body;
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    db.prepare(
+      'UPDATE error_codes SET ma_loi=COALESCE(?,ma_loi), ten_loi=COALESCE(?,ten_loi), cong_doan=COALESCE(?,cong_doan), mo_ta=COALESCE(?,mo_ta) WHERE id=?'
+    ).run(ma_loi || null, ten_loi || null, cong_doan || null, mo_ta || null, id);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[ErrorCode] Error updating: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.delete('/api/error-codes/:id', requireAdmin, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    db.prepare('UPDATE error_codes SET active=0 WHERE id=?').run(req.params.id);
+    log(`[ErrorCode] Deleted: ${req.params.id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[ErrorCode] Error deleting: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── ERROR REPORTS API ─────────────────────────────────
+app.post('/api/error-reports', requireAuth, (req, res) => {
+  uploadImage.single('hinh_anh')(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    const { ma_dh, error_code_id, mo_ta } = req.body;
+    if (!ma_dh || !error_code_id) {
+      return res.status(400).json({ ok: false, error: 'ma_dh và error_code_id là bắt buộc' });
+    }
+    try {
+      const db = getDB();
+      if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+      const code = db.prepare('SELECT * FROM error_codes WHERE id=? AND active=1').get(error_code_id);
+      if (!code) return res.status(400).json({ ok: false, error: 'Mã lỗi không hợp lệ' });
+      const hinh_anh = req.file ? req.file.filename : null;
+      const submitted_by = req.session ? req.session.user : 'unknown';
+      const result = db.prepare(`
+        INSERT INTO error_reports (ma_dh, error_code_id, ma_loi_text, cong_doan, hinh_anh, mo_ta, submitted_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(ma_dh, error_code_id, code.ma_loi + ' - ' + code.ten_loi, code.cong_doan, hinh_anh, mo_ta || '', submitted_by);
+      log(`[ErrorReport] Submitted: ${ma_dh} lỗi=${code.ma_loi} by ${submitted_by}`);
+      res.json({ ok: true, id: result.lastInsertRowid });
+    } catch (e) {
+      log(`[ErrorReport] Error: ${e.message}`);
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+});
+
+app.get('/api/error-reports', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    let sql = 'SELECT * FROM error_reports WHERE 1=1';
+    const params = [];
+    if (req.query.trang_thai) { sql += ' AND trang_thai=?'; params.push(req.query.trang_thai); }
+    if (req.query.cong_doan)  { sql += ' AND cong_doan=?';  params.push(req.query.cong_doan); }
+    if (req.query.submitted_by) { sql += ' AND submitted_by=?'; params.push(req.query.submitted_by); }
+    sql += ' ORDER BY submitted_at DESC LIMIT 100';
+    const rows = db.prepare(sql).all(...params);
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    log(`[ErrorReport] Error listing: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get('/api/error-reports/stats', requireAdmin, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const byStatus  = db.prepare("SELECT trang_thai, COUNT(*) as n FROM error_reports GROUP BY trang_thai").all();
+    const byStage   = db.prepare("SELECT cong_doan, COUNT(*) as n FROM error_reports GROUP BY cong_doan ORDER BY n DESC").all();
+    const byUser    = db.prepare("SELECT submitted_by, COUNT(*) as n FROM error_reports GROUP BY submitted_by ORDER BY n DESC").all();
+    const topErrors = db.prepare("SELECT ma_loi_text, COUNT(*) as n FROM error_reports GROUP BY ma_loi_text ORDER BY n DESC LIMIT 10").all();
+    res.json({ ok: true, byStatus, byStage, byUser, topErrors });
+  } catch (err) {
+    log(`[ErrorReport] Stats error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.patch('/api/error-reports/:id/confirm', requireAdmin, express.json(), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const reviewed_by = req.session ? req.session.user : 'admin';
+    db.prepare(`
+      UPDATE error_reports SET trang_thai='confirmed', reviewed_by=?, reviewed_at=datetime('now','localtime') WHERE id=?
+    `).run(reviewed_by, req.params.id);
+    log(`[ErrorReport] Confirmed: ${req.params.id} by ${reviewed_by}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[ErrorReport] Confirm error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.patch('/api/error-reports/:id/reject', requireAdmin, express.json(), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const reviewed_by = req.session ? req.session.user : 'admin';
+    const ghi_chu = req.body?.ghi_chu_admin || '';
+    db.prepare(`
+      UPDATE error_reports SET trang_thai='rejected', reviewed_by=?, reviewed_at=datetime('now','localtime'), ghi_chu_admin=? WHERE id=?
+    `).run(reviewed_by, ghi_chu, req.params.id);
+    log(`[ErrorReport] Rejected: ${req.params.id} by ${reviewed_by}`);
+    res.json({ ok: true });
+  } catch (err) {
+    log(`[ErrorReport] Reject error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Chặn truy cập trực tiếp vào file HTML dashboard qua static (trừ login.html)
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') && req.path !== '/login.html') {
@@ -2073,6 +2291,7 @@ app.use(express.static(BASE_DIR));
 // ── START ──────────────────────────────────────────────
 loadUsers();
 loadSessions();
+initErrorTables();
 // startExcelWatcher(); // Disabled: use auto_scrape_headless.py via PM2 instead
 // startAutoScrapeTimer(); // Disabled: use auto_scrape_headless.py via PM2 instead
 
