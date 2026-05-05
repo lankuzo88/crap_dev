@@ -114,13 +114,22 @@
     .vh-ok  { color: #2d7a50; }
     .vh-bad { color: var(--terracotta); }
 
-    /* Success state */
-    .success-banner {
-      display: none; background: #2d6a4f; color: #fff; padding: 14px 16px;
-      border-radius: 10px; margin: 0 12px 12px; text-align: center;
-      font-weight: 600; font-size: 15px;
+    /* Toast notification */
+    .toast {
+      position: fixed; top: calc(var(--header-h) + 16px); left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: #2d6a4f; color: #fff;
+      padding: 12px 28px; border-radius: 28px;
+      font-size: 15px; font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,.28);
+      z-index: 200; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
     }
-    .success-banner.show { display: block; }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
 
     /* Error msg */
     .err-msg { color: #c0392b; font-size: 12px; margin-top: 4px; display: none; }
@@ -143,7 +152,7 @@
 
 <div class="body">
 
-  <div class="success-banner" id="successBanner">✅ Đã gửi báo lỗi thành công!</div>
+  <div class="toast" id="toast"></div>
 
   <form id="reportForm" onsubmit="submitReport(event)" novalidate>
 
@@ -175,7 +184,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Hình ảnh minh chứng</div>
+      <div class="card-title">Hình ảnh minh chứng <span style="color:var(--terracotta)">*</span></div>
 
       <label class="photo-btn" for="hinh_anh">
         📷 Chụp ảnh / Chọn ảnh
@@ -186,7 +195,6 @@
         <img id="imgPreview" src="" alt="Ảnh đã chọn">
         <button type="button" class="preview-remove" onclick="removeImage()">✕</button>
       </div>
-      <p class="info-note">Tùy chọn — ảnh giúp admin xác nhận nhanh hơn</p>
     </div>
 
     <div class="card">
@@ -199,6 +207,7 @@
         <span class="vh-item vh-bad" id="vh_madh">✗ Mã đơn hàng</span>
         <span class="vh-item vh-bad" id="vh_stage">✗ Công đoạn</span>
         <span class="vh-item vh-bad" id="vh_code">✗ Mã lỗi</span>
+        <span class="vh-item vh-bad" id="vh_img">✗ Hình ảnh</span>
       </div>
       <button type="submit" class="btn-submit" id="submitBtn" disabled>Xác nhận & Gửi báo lỗi</button>
       <div class="err-msg" id="err_submit" style="text-align:center;margin-top:8px;"></div>
@@ -215,6 +224,7 @@
     const ma_dh        = document.getElementById('ma_dh').value.trim();
     const target_stage = document.getElementById('target_stage').value;
     const error_code   = document.getElementById('error_code_id').value;
+    const has_img      = !!document.getElementById('hinh_anh').files[0];
 
     const setItem = (id, ok, label) => {
       const el = document.getElementById(id);
@@ -224,10 +234,19 @@
     setItem('vh_madh',  !!ma_dh,        'Mã đơn hàng');
     setItem('vh_stage', !!target_stage, 'Công đoạn');
     setItem('vh_code',  !!error_code,   'Mã lỗi');
+    setItem('vh_img',   has_img,        'Hình ảnh');
 
-    const allOk = ma_dh && target_stage && error_code;
-    document.getElementById('submitBtn').disabled  = !allOk;
+    const allOk = ma_dh && target_stage && error_code && has_img;
+    document.getElementById('submitBtn').disabled = !allOk;
     document.getElementById('validationHint').style.display = allOk ? 'none' : '';
+  }
+
+  // ── Toast ─────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
   }
 
   // Load user info and allowed stages on init
@@ -329,22 +348,24 @@
   document.getElementById('target_stage').addEventListener('change', validateForm);
   document.getElementById('error_code_id').addEventListener('change', validateForm);
 
-  // Image preview
+  // Image preview + validation
   document.getElementById('hinh_anh').addEventListener('change', function() {
     const file = this.files[0];
-    if (!file) return;
+    if (!file) { validateForm(); return; }
     const reader = new FileReader();
     reader.onload = e => {
       document.getElementById('imgPreview').src = e.target.result;
       document.getElementById('previewWrap').style.display = 'block';
     };
     reader.readAsDataURL(file);
+    validateForm();
   });
 
   function removeImage() {
     document.getElementById('hinh_anh').value = '';
     document.getElementById('imgPreview').src = '';
     document.getElementById('previewWrap').style.display = 'none';
+    validateForm();
   }
 
   // Submit
@@ -380,14 +401,12 @@
       const d = await r.json();
 
       if (d.ok) {
-        document.getElementById('successBanner').classList.add('show');
+        showToast('✅ Đã báo lỗi thành công!');
         document.getElementById('reportForm').reset();
         removeImage();
         document.getElementById('target_stage').value = '';
         document.getElementById('error_code_id').innerHTML = '<option value="">-- Chọn công đoạn trước --</option>';
         validateForm();
-        document.getElementById('successBanner').scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => document.getElementById('successBanner').classList.remove('show'), 4000);
       } else {
         const errEl = document.getElementById('err_submit');
         errEl.textContent = '❌ ' + (d.error || 'Gửi thất bại, thử lại');
