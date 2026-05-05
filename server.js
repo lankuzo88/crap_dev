@@ -958,16 +958,16 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'login.html'));
 });
 
-app.post('/login', loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
-  const user = USERS[username];
-
-  if (!user) {
-    return res.redirect('/login?error=1');
-  }
-
+app.post('/login', loginLimiter, async (req, res, next) => {
   try {
-    // Verify password using bcrypt (handle both hashed and legacy plain text during migration)
+    const { username, password } = req.body;
+    const user = USERS[username];
+
+    if (!user) {
+      return res.redirect('/login?error=1');
+    }
+
+    // Verify password using bcrypt
     const isValid = await verifyPassword(password, user.passwordHash);
 
     if (isValid) {
@@ -978,11 +978,13 @@ app.post('/login', loginLimiter, async (req, res) => {
       res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESS_COOKIE_AGE}`);
       return res.redirect('/');
     }
-  } catch (err) {
-    log(`⚠ Login error for ${username}: ${err.message}`);
-  }
 
-  res.redirect('/login?error=1');
+    // Invalid password
+    return res.redirect('/login?error=1');
+  } catch (err) {
+    log(`❌ Login error: ${err.message}`);
+    next(err);
+  }
 });
 
 app.get('/logout', (req, res) => {
