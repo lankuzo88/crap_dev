@@ -3,12 +3,128 @@
     {
       "username": "admin",
       "password": "142536",
-      "role": "admin"
+      "role": "admin",
+      "cong_doan": "mài"
     },
     {
       "username": "minhtuan",
       "password": "123456789",
-      "role": "user"
+      "role": "user",
+      "cong_doan": "mài"
+    },
+    {
+      "username": "vanhuyen",
+      "password": "123456",
+      "role": "user",
+      "cong_doan": "CAD/CAM"
+    },
+    {
+      "username": "trucmy",
+      "password": "123456789",
+      "role": "qc",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "vanvan",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "CBM"
+    },
+    {
+      "username": "chitoan",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "CBM"
+    },
+    {
+      "username": "hongtham",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "sáp"
+    },
+    {
+      "username": "thihanh",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": ""
+    },
+    {
+      "username": "thaison",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "CAD/CAM"
+    },
+    {
+      "username": "tansi",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "sườn"
+    },
+    {
+      "username": "vantrai",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "sườn"
+    },
+    {
+      "username": "tandat",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "sườn"
+    },
+    {
+      "username": "vutruong",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "camhong",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "hoaitrang",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "yenvy",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "trungtruc",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "đắp"
+    },
+    {
+      "username": "thehy",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "mài"
+    },
+    {
+      "username": "baotran",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "mài"
+    },
+    {
+      "username": "giathu",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "mài"
+    },
+    {
+      "username": "tanhuu",
+      "password": "123456789",
+      "role": "user",
+      "cong_doan": "mài"
     }
   ]
 }

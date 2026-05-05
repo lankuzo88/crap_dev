@@ -198,6 +198,12 @@
     .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; }
     .lightbox-close { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; background: none; border: none; }
 
+    /* ── ORDER DETAIL MODAL ── */
+    .order-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1500; align-items: center; justify-content: center; padding: 20px; }
+    .order-modal.show { display: flex; }
+    .order-modal-content { background: #fff; border-radius: 12px; padding: 0; width: 600px; max-width: 94vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+    .order-modal-content * { box-sizing: border-box; }
+
     /* ── SCRAPE SECTION ── */
     .scrape-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
     .scrape-log { background: #f5f5f5; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; max-height: 180px; overflow-y: auto; }
@@ -443,6 +449,13 @@
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- Order Detail Modal -->
+<div class="order-modal" id="orderModal" onclick="if(event.target===this) closeOrderModal()">
+  <div class="order-modal-content" id="orderModalContent">
+    <!-- Content will be injected here -->
+  </div>
 </div>
 
 <script>
@@ -709,7 +722,7 @@
 
         return `<div class="report-card s-${rep.trang_thai}">
           <div class="rc-top">
-            <span class="rc-madh">${rep.ma_dh || '—'}</span>
+            <span class="rc-madh" style="cursor:pointer;" onclick="openOrderDetail('${rep.ma_dh}')">${rep.ma_dh || '—'}</span>
             <span class="rc-stage ${sc}">${rep.cong_doan || '?'}</span>
             <span class="rc-error">${rep.ma_loi_text || '—'}</span>
             <span class="status-badge sb-${rep.trang_thai}">${statusLabel}</span>
@@ -774,6 +787,97 @@
     document.getElementById('lightbox').classList.add('show');
   }
   function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+  async function openOrderDetail(ma_dh) {
+    const modal = document.getElementById('orderModal');
+    const content = document.getElementById('orderModalContent');
+
+    content.innerHTML = '<div style="padding: 40px; text-align: center; color: #888;">Đang tải...</div>';
+    modal.classList.add('show');
+
+    try {
+      const r = await fetch(`/api/orders/${encodeURIComponent(ma_dh)}`);
+      if (!r.ok) {
+        content.innerHTML = '<div style="padding: 40px; text-align: center; color: #888;">Không tìm thấy đơn hàng</div>';
+        return;
+      }
+      const data = await r.json();
+      const o = data.order || data;
+      const stages = data.stages || [];
+
+      // Render stages (copy from dashboard mobile)
+      const stageHtml = stages.map(s => {
+        const icon = s.xac_nhan === 'Có' ? '✓' : '○';
+        const status = s.xac_nhan === 'Có' ? 'Hoàn thành' : 'Chưa xong';
+        const empName = s.ten_ktv ? ` · ${s.ten_ktv}` : '';
+        return `<div style="display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span style="font-weight: 600;">${icon} ${s.cong_doan}${empName}</span>
+            <span style="color: #888; font-size: 11px;">${status}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Copy exact structure from dashboard mobile
+      const modalContent = `
+        <div style="background: #fff; border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: #1976d2; margin: 0;">${o.ma_dh}</h2>
+            <div style="cursor: pointer; font-size: 28px; color: #888; padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; transition: all 0.2s;" onclick="closeOrderModal()" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">✕</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Bệnh nhân</div>
+            <div style="font-size: 14px; font-weight: 600; color: #333;">${o.benh_nhan || '—'}</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Nha khoa</div>
+            <div style="font-size: 14px; font-weight: 600; color: #1976d2;">${o.khach_hang || '—'}</div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
+            <div style="font-size: 12px; color: #e65100; font-weight: 600;">${o.phuc_hinh || o.loai_lenh || '—'}</div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <div style="flex: 1;">
+              <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
+              <div style="font-size: 14px; font-weight: 700; color: #e65100;">${o.so_luong || o.sl || '—'}</div>
+            </div>
+            <div style="flex: 1;">
+              <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
+              <div style="font-size: 12px; font-weight: 600; color: #333;">${o.ngay_giao || o.yc_giao || '—'}</div>
+            </div>
+          </div>
+
+          ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(230, 81, 0, 0.1); border-left: 3px solid #e65100; border-radius: 4px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
+            <div style="font-size: 12px; color: #333;">${o.ghi_chu}</div>
+          </div>` : ''}
+
+          <div style="margin-bottom: 14px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Tiến độ công đoạn</div>
+            ${stageHtml}
+          </div>
+
+          <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid #e8e8e8; font-size: 11px; color: #888;">
+            <span>📥 ${o.ngay_nhan || o.nhan || '—'}</span>
+            <span>⏱ ${o.ngay_giao || o.yc_ht || '—'}</span>
+          </div>
+        </div>
+      `;
+
+      content.innerHTML = modalContent;
+    } catch(e) {
+      content.innerHTML = '<div style="padding: 40px; text-align: center; color: #888;">Lỗi tải dữ liệu: ' + e.message + '</div>';
+    }
+  }
+
+  function closeOrderModal() {
+    document.getElementById('orderModal').classList.remove('show');
+  }
 
   // ── USER MODALS ───────────────────────────────
   function openResetPassword(u) {
@@ -852,7 +956,7 @@
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeLightbox(); closeRejectModal(); closeResetModal(); closeConfirmModal(); }
+    if (e.key === 'Escape') { closeLightbox(); closeRejectModal(); closeResetModal(); closeConfirmModal(); closeOrderModal(); }
   });
 
   init();

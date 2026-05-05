@@ -2103,6 +2103,54 @@ app.patch('/api/feedbacks/:id', requireAuth, express.json(), (req, res) => {
   }
 });
 
+// ── BÁO LỖI LOGIC ─────────────────────────────────────
+const STAGE_ORDER = {
+  'kim_loai': ['CBM', 'sáp', 'sườn', 'đắp', 'mài'],
+  'zirconia': ['CBM', 'CAD/CAM', 'sườn', 'đắp', 'mài']
+};
+
+function getAllowedStages(username, userRole, userCongDoan) {
+  // QC và Admin: tất cả công đoạn
+  if (userRole === 'qc' || userRole === 'admin') {
+    return ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+  }
+
+  // CBM: chỉ báo lỗi CBM (lỗi thực tế)
+  if (userCongDoan === 'CBM') {
+    return ['CBM'];
+  }
+
+  // Đắp và Mài: báo lỗi lẫn nhau + tất cả công đoạn trước
+  if (userCongDoan === 'đắp' || userCongDoan === 'mài') {
+    const allowed = new Set();
+    // Thêm tất cả công đoạn trước trong cả 2 flow
+    for (const flow of Object.values(STAGE_ORDER)) {
+      const idx = flow.indexOf(userCongDoan);
+      if (idx > 0) {
+        for (let i = 0; i < idx; i++) {
+          allowed.add(flow[i]);
+        }
+      }
+    }
+    // Thêm đắp và mài (báo lẫn nhau)
+    allowed.add('đắp');
+    allowed.add('mài');
+    return Array.from(allowed);
+  }
+
+  // User thường: chỉ báo lỗi công đoạn TRƯỚC
+  const allowed = new Set();
+  for (const flow of Object.values(STAGE_ORDER)) {
+    const idx = flow.indexOf(userCongDoan);
+    if (idx > 0) {
+      for (let i = 0; i < idx; i++) {
+        allowed.add(flow[i]);
+      }
+    }
+  }
+  return Array.from(allowed);
+}
+
 // ── BÁO LỖI PAGES ────────────────────────────────────
 app.get('/bao-loi', requireAuth, (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'bao_loi.html'));
@@ -2110,6 +2158,21 @@ app.get('/bao-loi', requireAuth, (req, res) => {
 
 app.get('/error-reports', requireAdmin, (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'error_reports.html'));
+});
+
+// ── ERROR REPORTS ALLOWED STAGES API ──────────────────
+app.get('/api/error-reports/allowed-stages', requireAuth, (req, res) => {
+  try {
+    const username = req.session.user;
+    const userInfo = USERS[username];
+    if (!userInfo) return res.status(403).json({ ok: false, error: 'User not found' });
+
+    const allowed = getAllowedStages(username, userInfo.role, userInfo.cong_doan);
+    res.json({ ok: true, stages: allowed });
+  } catch (err) {
+    log(`[ErrorReport] Error getting allowed stages: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 // ── ERROR CODES API ───────────────────────────────────
@@ -2197,6 +2260,17 @@ app.post('/api/error-reports', requireAuth, (req, res) => {
       if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
       const code = db.prepare('SELECT * FROM error_codes WHERE id=? AND active=1').get(error_code_id);
       if (!code) return res.status(400).json({ ok: false, error: 'Mã lỗi không hợp lệ' });
+
+      // Validate permission: user có được phép báo lỗi công đoạn này không?
+      const username = req.session.user;
+      const userInfo = USERS[username];
+      if (!userInfo) return res.status(403).json({ ok: false, error: 'User not found' });
+
+      const allowedStages = getAllowedStages(username, userInfo.role, userInfo.cong_doan);
+      if (!allowedStages.includes(code.cong_doan)) {
+        return res.status(403).json({ ok: false, error: `Bạn không có quyền báo lỗi công đoạn ${code.cong_doan}` });
+      }
+
       const hinh_anh = req.file ? req.file.filename : null;
       const submitted_by = req.session ? req.session.user : 'unknown';
       const result = db.prepare(`

@@ -147,9 +147,17 @@
       </div>
 
       <div class="field">
+        <label for="target_stage">Công đoạn cần báo lỗi <span style="color:var(--terracotta)">*</span></label>
+        <select id="target_stage" onchange="loadErrorCodesForStage()">
+          <option value="">-- Đang tải... --</option>
+        </select>
+        <div class="err-msg" id="err_stage">Vui lòng chọn công đoạn</div>
+      </div>
+
+      <div class="field">
         <label for="error_code_id">Mã lỗi <span style="color:var(--terracotta)">*</span></label>
         <select id="error_code_id">
-          <option value="">-- Đang tải... --</option>
+          <option value="">-- Chọn công đoạn trước --</option>
         </select>
         <div class="err-msg" id="err_code">Vui lòng chọn mã lỗi</div>
       </div>
@@ -185,43 +193,58 @@
 <script>
   let searchTimeout = null;
 
-  // Load user info and error codes on init
+  // Load user info and allowed stages on init
   (async () => {
     try {
       const r = await fetch('/user');
       if (!r.ok) { location.href = '/login'; return; }
       const u = await r.json();
       document.getElementById('userBadge').textContent = u.username + (u.cong_doan ? ' · ' + u.cong_doan : '');
-      await loadErrorCodes(u.cong_doan || '');
+      await loadAllowedStages();
     } catch(e) {
-      await loadErrorCodes('');
+      console.error('Init error:', e);
     }
   })();
 
-  async function loadErrorCodes(cong_doan) {
-    const sel = document.getElementById('error_code_id');
+  async function loadAllowedStages() {
+    const sel = document.getElementById('target_stage');
     try {
-      const url = cong_doan ? `/api/error-codes?cong_doan=${encodeURIComponent(cong_doan)}` : '/api/error-codes';
-      const r = await fetch(url);
+      const r = await fetch('/api/error-reports/allowed-stages');
+      const d = await r.json();
+      if (!d.ok || !d.stages || !d.stages.length) {
+        sel.innerHTML = '<option value="">-- Không có công đoạn --</option>';
+        return;
+      }
+      let html = '<option value="">-- Chọn công đoạn --</option>';
+      d.stages.forEach(stage => {
+        html += `<option value="${stage}">${stage}</option>`;
+      });
+      sel.innerHTML = html;
+    } catch(e) {
+      sel.innerHTML = '<option value="">-- Lỗi tải công đoạn --</option>';
+    }
+  }
+
+  async function loadErrorCodesForStage() {
+    const stage = document.getElementById('target_stage').value;
+    const sel = document.getElementById('error_code_id');
+
+    if (!stage) {
+      sel.innerHTML = '<option value="">-- Chọn công đoạn trước --</option>';
+      return;
+    }
+
+    try {
+      const r = await fetch(`/api/error-codes?cong_doan=${encodeURIComponent(stage)}`);
       const d = await r.json();
       if (!d.ok || !d.data.length) {
         sel.innerHTML = '<option value="">-- Chưa có mã lỗi --</option>';
         return;
       }
-      // Group by cong_doan
-      const groups = {};
-      d.data.forEach(c => {
-        if (!groups[c.cong_doan]) groups[c.cong_doan] = [];
-        groups[c.cong_doan].push(c);
-      });
       let html = '<option value="">-- Chọn mã lỗi --</option>';
-      for (const [stage, codes] of Object.entries(groups)) {
-        html += `<optgroup label="${stage}">`;
-        codes.forEach(c => {
-          html += `<option value="${c.id}">[${c.ma_loi}] ${c.ten_loi}</option>`;
-        });
-        html += '</optgroup>';
-      }
+      d.data.forEach(c => {
+        html += `<option value="${c.id}">[${c.ma_loi}] ${c.ten_loi}</option>`;
+      });
       sel.innerHTML = html;
     } catch(e) {
       sel.innerHTML = '<option value="">-- Lỗi tải mã --</option>';
@@ -282,11 +305,14 @@
   async function submitReport(e) {
     e.preventDefault();
     const ma_dh = document.getElementById('ma_dh').value.trim();
+    const target_stage = document.getElementById('target_stage').value;
     const error_code_id = document.getElementById('error_code_id').value;
 
     let valid = true;
     if (!ma_dh) { document.getElementById('err_ma_dh').classList.add('show'); valid = false; }
     else document.getElementById('err_ma_dh').classList.remove('show');
+    if (!target_stage) { document.getElementById('err_stage').classList.add('show'); valid = false; }
+    else document.getElementById('err_stage').classList.remove('show');
     if (!error_code_id) { document.getElementById('err_code').classList.add('show'); valid = false; }
     else document.getElementById('err_code').classList.remove('show');
     if (!valid) return;
@@ -311,6 +337,8 @@
         document.getElementById('successBanner').classList.add('show');
         document.getElementById('reportForm').reset();
         removeImage();
+        document.getElementById('target_stage').value = '';
+        document.getElementById('error_code_id').innerHTML = '<option value="">-- Chọn công đoạn trước --</option>';
         document.getElementById('successBanner').scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => document.getElementById('successBanner').classList.remove('show'), 4000);
       } else {
