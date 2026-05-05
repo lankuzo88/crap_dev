@@ -101,7 +101,18 @@
       cursor: pointer; margin-top: 4px;
     }
     .btn-submit:active { background: var(--rust-dark); }
-    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-submit:disabled { background: #c8c8c8; cursor: not-allowed; opacity: .7; }
+
+    /* Validation hint */
+    .validation-hint {
+      font-size: 12px; background: #fdf2f0;
+      border: 1px solid #f0cfc9; border-radius: 8px;
+      padding: 9px 12px; margin-bottom: 10px; line-height: 1.8;
+    }
+    .validation-hint .vh-title { color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .validation-hint .vh-item { display: inline-block; margin-right: 10px; }
+    .vh-ok  { color: #2d7a50; }
+    .vh-bad { color: var(--terracotta); }
 
     /* Success state */
     .success-banner {
@@ -183,7 +194,13 @@
       <div class="field">
         <textarea id="mo_ta" placeholder="Mô tả thêm về lỗi (tùy chọn)..."></textarea>
       </div>
-      <button type="submit" class="btn-submit" id="submitBtn">Xác nhận & Gửi báo lỗi</button>
+      <div id="validationHint" class="validation-hint">
+        <div class="vh-title">Cần điền đủ trước khi gửi:</div>
+        <span class="vh-item vh-bad" id="vh_madh">✗ Mã đơn hàng</span>
+        <span class="vh-item vh-bad" id="vh_stage">✗ Công đoạn</span>
+        <span class="vh-item vh-bad" id="vh_code">✗ Mã lỗi</span>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>Xác nhận & Gửi báo lỗi</button>
       <div class="err-msg" id="err_submit" style="text-align:center;margin-top:8px;"></div>
     </div>
 
@@ -192,6 +209,26 @@
 
 <script>
   let searchTimeout = null;
+
+  // ── Live validation ──────────────────────────────────
+  function validateForm() {
+    const ma_dh        = document.getElementById('ma_dh').value.trim();
+    const target_stage = document.getElementById('target_stage').value;
+    const error_code   = document.getElementById('error_code_id').value;
+
+    const setItem = (id, ok, label) => {
+      const el = document.getElementById(id);
+      el.className = 'vh-item ' + (ok ? 'vh-ok' : 'vh-bad');
+      el.textContent = (ok ? '✓ ' : '✗ ') + label;
+    };
+    setItem('vh_madh',  !!ma_dh,        'Mã đơn hàng');
+    setItem('vh_stage', !!target_stage, 'Công đoạn');
+    setItem('vh_code',  !!error_code,   'Mã lỗi');
+
+    const allOk = ma_dh && target_stage && error_code;
+    document.getElementById('submitBtn').disabled  = !allOk;
+    document.getElementById('validationHint').style.display = allOk ? 'none' : '';
+  }
 
   // Load user info and allowed stages on init
   (async () => {
@@ -231,6 +268,7 @@
 
     if (!stage) {
       sel.innerHTML = '<option value="">-- Chọn công đoạn trước --</option>';
+      validateForm();
       return;
     }
 
@@ -239,6 +277,7 @@
       const d = await r.json();
       if (!d.ok || !d.data.length) {
         sel.innerHTML = '<option value="">-- Chưa có mã lỗi --</option>';
+        validateForm();
         return;
       }
       let html = '<option value="">-- Chọn mã lỗi --</option>';
@@ -249,6 +288,7 @@
     } catch(e) {
       sel.innerHTML = '<option value="">-- Lỗi tải mã --</option>';
     }
+    validateForm();
   }
 
   // Order autocomplete
@@ -276,12 +316,18 @@
     document.getElementById('ma_dh').value = maDh;
     document.getElementById('suggestions').classList.remove('show');
     document.getElementById('err_ma_dh').classList.remove('show');
+    validateForm();
   }
 
   document.addEventListener('click', e => {
     if (!e.target.closest('#ma_dh') && !e.target.closest('#suggestions'))
       document.getElementById('suggestions').classList.remove('show');
   });
+
+  // Live validation triggers
+  document.getElementById('ma_dh').addEventListener('input', validateForm);
+  document.getElementById('target_stage').addEventListener('change', validateForm);
+  document.getElementById('error_code_id').addEventListener('change', validateForm);
 
   // Image preview
   document.getElementById('hinh_anh').addEventListener('change', function() {
@@ -339,6 +385,7 @@
         removeImage();
         document.getElementById('target_stage').value = '';
         document.getElementById('error_code_id').innerHTML = '<option value="">-- Chọn công đoạn trước --</option>';
+        validateForm();
         document.getElementById('successBanner').scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => document.getElementById('successBanner').classList.remove('show'), 4000);
       } else {
