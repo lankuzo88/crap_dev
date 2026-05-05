@@ -18,6 +18,8 @@ const crypto   = require('crypto');
 const multer   = require('multer');
 const { spawn }  = require('child_process');
 const Database = require('better-sqlite3');
+const bcrypt   = require('bcrypt');
+const rateLimit = require('express-rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -28,23 +30,38 @@ app.use(express.urlencoded({ extended: false }));
 const USERS_JSON_PATH = path.join(__dirname, 'users.json');
 let USERS = {};
 
+// Bcrypt helper functions
+async function hashPassword(password) {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
+async function verifyPassword(password, hash) {
+  return bcrypt.compare(password, hash);
+}
+
 function loadUsers() {
   try {
     if (fs.existsSync(USERS_JSON_PATH)) {
       const data = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
       USERS = {};
       data.users.forEach(u => {
-        USERS[u.username] = { password: u.password, role: u.role, cong_doan: u.cong_doan || '' };
+        USERS[u.username] = {
+          passwordHash: u.passwordHash || u.password,  // Support both old/new format during migration
+          role: u.role,
+          cong_doan: u.cong_doan || ''
+        };
       });
       log(`📋 Loaded ${data.users.length} user(s) from users.json`);
     } else {
-      USERS = { admin: { password: '142536', role: 'admin' } };
+      // Create default admin with hashed password
+      USERS = { admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } };
       saveUsers();
       log(`✅ Created default admin user`);
     }
   } catch (e) {
     log(`⚠ Error loading users: ${e.message}`);
-    USERS = { admin: { password: '142536', role: 'admin' } };
+    USERS = { admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } };
   }
 }
 
@@ -52,7 +69,7 @@ function saveUsers() {
   try {
     const users = Object.entries(USERS).map(([username, data]) => ({
       username,
-      password: data.password,
+      passwordHash: data.passwordHash,
       role: data.role,
       cong_doan: data.cong_doan || '',
     }));
@@ -918,6 +935,22 @@ const uploadImage = multer({
 });
 
 // ── ROUTES ────────────────────────────────────────────
+// Rate limiter for login: 5 attempts per IP per 15 minutes
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 5,                     // 5 requests per windowMs
+  standardHeaders: false,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    log(`🚨 Login rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      ok: false,
+      error: 'Quá nhiều lần thử sai. Vui lòng thử lại sau 15 phút.',
+      retryAfter: 900
+    });
+  },
+});
+
 app.get('/login', (req, res) => {
   const token = getSessionToken(req);
   const sess  = sessions.get(token);
@@ -925,16 +958,30 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'login.html'));
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = USERS[username];
-  if (user && user.password === password) {
-    const token = genToken();
-    sessions.set(token, { user: username, role: user.role, expires: Date.now() + SESS_TTL });
-    saveSessions();
-    res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESS_COOKIE_AGE}`);
-    return res.redirect('/');
+
+  if (!user) {
+    return res.redirect('/login?error=1');
   }
+
+  try {
+    // Verify password using bcrypt (handle both hashed and legacy plain text during migration)
+    const isValid = await verifyPassword(password, user.passwordHash);
+
+    if (isValid) {
+      const token = genToken();
+      sessions.set(token, { user: username, role: user.role, expires: Date.now() + SESS_TTL });
+      saveSessions();
+      log(`✅ Login successful: ${username}`);
+      res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESS_COOKIE_AGE}`);
+      return res.redirect('/');
+    }
+  } catch (err) {
+    log(`⚠ Login error for ${username}: ${err.message}`);
+  }
+
   res.redirect('/login?error=1');
 });
 
@@ -1368,7 +1415,7 @@ app.get('/admin/api/users', requireAdmin, (req, res) => {
   res.json(users);
 });
 
-app.post('/admin/api/users', requireAdmin, express.json(), (req, res) => {
+app.post('/admin/api/users', requireAdmin, express.json(), async (req, res) => {
   const { username, password, role, cong_doan } = req.body;
   if (!username || !password || !role) {
     return res.status(400).json({ error: 'Missing username, password, or role' });
@@ -1376,17 +1423,24 @@ app.post('/admin/api/users', requireAdmin, express.json(), (req, res) => {
   if (USERS[username]) {
     return res.status(400).json({ error: 'Username already exists' });
   }
-  if (!['admin', 'user'].includes(role)) {
+  if (!['admin', 'user', 'qc'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role' });
   }
   const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài', ''];
   if (cong_doan && !VALID_CD.includes(cong_doan)) {
     return res.status(400).json({ error: 'Invalid cong_doan' });
   }
-  USERS[username] = { password, role, cong_doan: cong_doan || '' };
-  saveUsers();
-  log(`👤 New user created: ${username} (${role}) cong_doan=${cong_doan || 'none'}`);
-  res.json({ ok: true, username, role, cong_doan: cong_doan || '' });
+
+  try {
+    const passwordHash = await hashPassword(password);
+    USERS[username] = { passwordHash, role, cong_doan: cong_doan || '' };
+    saveUsers();
+    log(`👤 New user created: ${username} (${role}) cong_doan=${cong_doan || 'none'}`);
+    res.json({ ok: true, username, role, cong_doan: cong_doan || '' });
+  } catch (err) {
+    log(`❌ Error creating user: ${err.message}`);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
 });
 
 app.patch('/admin/api/users/:username/cong-doan', requireAdmin, express.json(), (req, res) => {
@@ -1419,7 +1473,7 @@ app.delete('/admin/api/users/:username', requireAdmin, (req, res) => {
   res.json({ ok: true, username });
 });
 
-app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json(), (req, res) => {
+app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json(), async (req, res) => {
   const { username } = req.params;
   const { newPassword } = req.body;
 
@@ -1430,10 +1484,16 @@ app.post('/admin/api/users/:username/reset-password', requireAdmin, express.json
     return res.status(404).json({ error: 'User not found' });
   }
 
-  USERS[username].password = newPassword;
-  saveUsers();
-  log(`🔑 Password reset for: ${username}`);
-  res.json({ ok: true, username, newPassword });
+  try {
+    const passwordHash = await hashPassword(newPassword);
+    USERS[username].passwordHash = passwordHash;
+    saveUsers();
+    log(`🔑 Password reset for: ${username}`);
+    res.json({ ok: true, username });
+  } catch (err) {
+    log(`❌ Error resetting password: ${err.message}`);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 // ── ANALYTICS API ──────────────────────────────────────────────────────────
