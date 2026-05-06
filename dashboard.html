@@ -731,6 +731,8 @@ const REFRESH_MS = 5 * 60 * 1000;     // auto-refresh mỗi 5 phút
 /* ═══════ STATE ═══════ */
 let ORDERS = [];
 let mCF = 'all', mPS = 'all', dCF = 'all', dPS = 'all';
+let CURRENT_USER = null;
+let USER_PENDING_ORDERS = [];
 
 /* ═══════ PARSE JSON ═══════ */
 function parseJson(raw) {
@@ -1753,10 +1755,14 @@ function updateUI() {
   if (IS_MOBILE) {
     mRender();
   } else {
-    dRender();
-    dRenderSfRows();
-    dRenderSummary();
-    dRenderPipeline();
+    if (CURRENT_USER?.role === 'user' && CURRENT_USER?.cong_doan) {
+      renderUserPendingOrders();
+    } else {
+      dRender();
+      dRenderSfRows();
+      dRenderSummary();
+      dRenderPipeline();
+    }
   }
 }
 
@@ -1782,39 +1788,111 @@ async function fetchData() {
 // Auto-refresh
 setInterval(async () => {
   try {
-    const res = await fetch(DATA_URL + '?t=' + Date.now());
-    if (!res.ok) return;
-    const raw = await res.json();
-    ORDERS = parseJson(raw);
-    updateUI();
+    if (CURRENT_USER?.role === 'user' && CURRENT_USER?.cong_doan) {
+      await loadUserPendingOrders();
+    } else {
+      const res = await fetch(DATA_URL + '?t=' + Date.now());
+      if (!res.ok) return;
+      const raw = await res.json();
+      ORDERS = parseJson(raw);
+      updateUI();
+    }
   } catch {}
-}, REFRESH_MS);
+}, CURRENT_USER?.role === 'user' ? 30 * 1000 : REFRESH_MS);
 
 // Boot
 fetchData();
 initAdminUI();
 
-/* ═══════ ADMIN UI ═══════ */
-async function initAdminUI() {
+/* ═══════ USER CONTEXT & UI ═══════ */
+async function initUserContext() {
   try {
     const r = await fetch('/user');
     if (!r.ok) return;
     const u = await r.json();
+    CURRENT_USER = u;
+
     if (u.role === 'admin') {
       const el = document.getElementById('d-export-section');
       if (el) el.style.display = '';
       const upBtn = document.getElementById('d-upload-btn');
       if (upBtn) upBtn.style.display = '';
-
-      // Show Analytics & Feedback links for admin
       const analyticsLink = document.getElementById('d-nl-analytics');
       if (analyticsLink) analyticsLink.style.display = '';
       const feedbackLink = document.getElementById('d-nl-feedback');
       if (feedbackLink) feedbackLink.style.display = '';
       const mungerLink = document.getElementById('d-nl-munger');
       if (mungerLink) mungerLink.style.display = '';
+    } else if (u.role === 'user' && u.cong_doan) {
+      setupUserDashboard();
     }
   } catch {}
+}
+
+async function setupUserDashboard() {
+  if (!CURRENT_USER?.cong_doan) return;
+
+  document.getElementById('d-nl-pipeline').style.display = 'none';
+  document.getElementById('d-nl-summary').style.display = 'none';
+  const sb = document.getElementById('d-sfRows');
+  if (sb) sb.style.display = 'none';
+
+  const titleEl = document.getElementById('d-tb-title');
+  if (titleEl) titleEl.textContent = `CÔNG ĐOẠN: ${CURRENT_USER.cong_doan.toUpperCase()}`;
+
+  await loadUserPendingOrders();
+}
+
+async function loadUserPendingOrders() {
+  try {
+    const r = await fetch('/api/user/pending-orders');
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.ok) {
+      USER_PENDING_ORDERS = data.orders;
+      renderUserPendingOrders();
+    }
+  } catch (e) {
+    console.error('[User Orders]', e);
+  }
+}
+
+function renderUserPendingOrders() {
+  const container = document.getElementById('d-OB');
+  if (!container) return;
+
+  if (USER_PENDING_ORDERS.length === 0) {
+    container.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text3)">Không có đơn chờ xử lý</td></tr>';
+    return;
+  }
+
+  let html = '';
+  USER_PENDING_ORDERS.forEach(o => {
+    html += `<tr onclick="openModal('${o.ma_dh}')" style="cursor:pointer">
+      <td style="width:3px;padding:0;background:var(--amber)"></td>
+      <td><strong>${o.ma_dh}</strong></td>
+      <td>—</td>
+      <td>${o.benh_nhan || '—'}</td>
+      <td>${o.khach_hang || '—'}</td>
+      <td>${o.phuc_hinh || '—'}</td>
+      <td>${o.sl || '—'}</td>
+      <td>—</td>
+      <td><span style="background:var(--amber);padding:2px 6px;border-radius:3px;font-size:10px">${CURRENT_USER.cong_doan}</span></td>
+      <td>—</td>
+      <td style="font-size:10px;color:var(--text3)">KTV: ${o.ten_ktv || '—'}</td>
+    </tr>`;
+  });
+
+  container.innerHTML = html;
+
+  const statusBar = document.getElementById('d-SBR');
+  if (statusBar) {
+    statusBar.innerHTML = `<div style="padding:8px;color:var(--text2);font-size:11px">📌 ${USER_PENDING_ORDERS.length} đơn chờ xác nhận</div>`;
+  }
+}
+
+async function initAdminUI() {
+  await initUserContext();
 }
 
 async function triggerKeylabExport() {

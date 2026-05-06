@@ -1467,6 +1467,38 @@ app.get('/user', requireAuth, (req, res) => {
   res.json({ username: sess.user, role: sess.role, cong_doan: USERS[sess.user]?.cong_doan || '' });
 });
 
+app.get('/api/user/pending-orders', requireAuth, (req, res) => {
+  const token = getSessionToken(req);
+  const sess = sessions.get(token);
+  const userCongDoan = USERS[sess.user]?.cong_doan;
+
+  if (!userCongDoan) {
+    return res.json({ ok: true, orders: [] });
+  }
+
+  const db = getDB();
+  if (!db) {
+    return res.status(503).json({ ok: false, error: 'Database not available' });
+  }
+
+  try {
+    const orders = db.prepare(`
+      SELECT DISTINCT d.ma_dh, d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             t.cong_doan, t.ten_ktv, t.thoi_gian_hoan_thanh
+      FROM tien_do t
+      JOIN don_hang d ON t.ma_dh = d.ma_dh
+      WHERE t.cong_doan = ?
+        AND (t.xac_nhan IS NULL OR t.xac_nhan != 'Có')
+      ORDER BY d.nhap_luc DESC
+    `).all(userCongDoan);
+
+    res.json({ ok: true, orders });
+  } catch (err) {
+    log(`[User Orders] Error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 app.get('/admin', requireAdmin, (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'admin.html'));
 });
