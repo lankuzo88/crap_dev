@@ -186,6 +186,34 @@ function getDB() {
   return _db;
 }
 
+let walCheckpointInterval = null;
+
+function startWALCheckpoint() {
+  const CHECKPOINT_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+  walCheckpointInterval = setInterval(() => {
+    const db = getDB();
+    if (db) {
+      try {
+        db.pragma('wal_checkpoint(TRUNCATE)');
+        log(`[WAL] Checkpoint completed at ${new Date().toISOString()}`);
+      } catch (err) {
+        log(`[WAL] Checkpoint error: ${err.message}`);
+      }
+    }
+  }, CHECKPOINT_INTERVAL);
+
+  log(`[WAL] Checkpoint started (every 30 minutes)`);
+}
+
+function stopWALCheckpoint() {
+  if (walCheckpointInterval) {
+    clearInterval(walCheckpointInterval);
+    walCheckpointInterval = null;
+    log(`[WAL] Checkpoint stopped`);
+  }
+}
+
 function dbHasData() {
   const db = getDB();
   if (!db) return false;
@@ -2481,6 +2509,9 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log('');
   console.log('  Nhấn Ctrl+C để dừng');
   console.log('');
+
+  // Start WAL checkpoint
+  startWALCheckpoint();
 
   // Pre-load ngay lúc khởi động
   try { getData(); } catch (e) { log(`⚠ Pre-load: ${e.message}`); }
