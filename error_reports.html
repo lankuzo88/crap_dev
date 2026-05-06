@@ -286,8 +286,11 @@
       const sc = stageClass(r.cong_doan);
       const statusLabel = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', rejected: 'Từ chối' }[r.trang_thai] || r.trang_thai;
 
-      const photoHtml = r.hinh_anh
-        ? `<div class="card-photo"><img src="/uploads/error-images/${r.hinh_anh}" alt="Ảnh lỗi" onclick="openLightbox('/uploads/error-images/${r.hinh_anh}')"></div>`
+      const imgUrl = r.hinh_anh
+        ? (r.hinh_anh.startsWith('http') ? r.hinh_anh : `/uploads/error-images/${r.hinh_anh}`)
+        : null;
+      const photoHtml = imgUrl
+        ? `<div class="card-photo"><img src="${imgUrl}" alt="Ảnh lỗi" onclick="openLightbox('${imgUrl}')"></div>`
         : '';
 
       const reviewedHtml = (r.trang_thai === 'confirmed' || r.trang_thai === 'rejected')

@@ -10,6 +10,8 @@
  * Mở browser: http://localhost:3000
  */
 
+require('dotenv').config();
+
 const express  = require('express');
 const XLSX     = require('xlsx');
 const path     = require('path');
@@ -20,6 +22,16 @@ const { spawn }  = require('child_process');
 const Database = require('better-sqlite3');
 const bcrypt   = require('bcrypt');
 const rateLimit = require('express-rate-limit');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -915,20 +927,42 @@ const upload = multer({
 
 if (!fs.existsSync(EXCEL_DIR)) fs.mkdirSync(EXCEL_DIR, { recursive: true });
 
-// ── UPLOAD ẢNH (multer) ───────────────────────────────
-const IMAGES_DIR = path.join(BASE_DIR, 'uploads', 'error-images');
-if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
+// ── UPLOAD ẢNH → Cloudflare R2 ───────────────────────
+class R2Storage {
+  _handleFile(req, file, cb) {
+    const ma_dh = (req.body?.ma_dh || 'unknown').replace(/[^a-zA-Z0-9\-]/g, '_');
+    const ext   = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const key   = `error-images/${ma_dh}_${Date.now()}${ext}`;
+    const chunks = [];
+
+    file.stream.on('data', chunk => chunks.push(chunk));
+    file.stream.on('end', async () => {
+      try {
+        const body = Buffer.concat(chunks);
+        await r2Client.send(new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME,
+          Key: key,
+          Body: body,
+          ContentType: file.mimetype,
+        }));
+        cb(null, {
+          key,
+          location: `${process.env.R2_PUBLIC_URL}/${key}`,
+          size: body.length,
+        });
+      } catch (err) {
+        log(`[R2] Upload failed: ${err.message}`);
+        cb(err);
+      }
+    });
+    file.stream.on('error', cb);
+  }
+
+  _removeFile(req, file, cb) { cb(null); }
+}
 
 const uploadImage = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, IMAGES_DIR),
-    filename: (req, file, cb) => {
-      const ext   = path.extname(file.originalname).toLowerCase() || '.jpg';
-      const ma_dh = (req.body.ma_dh || 'unknown').replace(/[^a-zA-Z0-9\-]/g, '_');
-      const suffix = Date.now();
-      cb(null, `${ma_dh}_${suffix}${ext}`);
-    },
-  }),
+  storage: new R2Storage(),
   fileFilter: (req, file, cb) => {
     cb(null, file.mimetype.startsWith('image/'));
   },
@@ -2334,7 +2368,7 @@ app.post('/api/error-reports', requireAuth, (req, res) => {
         return res.status(403).json({ ok: false, error: `Bạn không có quyền báo lỗi công đoạn ${code.cong_doan}` });
       }
 
-      const hinh_anh = req.file ? req.file.filename : null;
+      const hinh_anh = req.file ? req.file.location : null;
       const submitted_by = req.session ? req.session.user : 'unknown';
       const result = db.prepare(`
         INSERT INTO error_reports (ma_dh, error_code_id, ma_loi_text, cong_doan, hinh_anh, mo_ta, submitted_by)
