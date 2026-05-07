@@ -745,6 +745,28 @@
       return date;
     }
 
+    function formatStageDoneTime(dateStr) {
+      if (!dateStr) return '---';
+      const parts = String(dateStr).trim().split(/\s+/);
+      const date = parts[0] || '';
+      const time = parts[1] || '';
+      const hm = time ? time.substring(0, 5) : '';
+
+      if (date.includes('/')) {
+        const d = date.split('/');
+        const dayMonth = d.length >= 2 ? `${d[0]}/${d[1]}` : date;
+        return hm ? `${dayMonth} ${hm}` : dayMonth;
+      }
+
+      if (date.includes('-')) {
+        const d = date.split('-');
+        const dayMonth = d.length >= 3 ? `${d[2]}/${d[1]}` : date;
+        return hm ? `${dayMonth} ${hm}` : dayMonth;
+      }
+
+      return hm || date || '---';
+    }
+
     function getFiltered() {
       let list = allOrders;
       if (filterPh !== 'all') list = list.filter(o => phType(o.phuc_hinh) === filterPh);
@@ -967,14 +989,13 @@
       const stageHtml = o.stagesData.map(s => {
         if (s.sk) return '';
         const icon = s.x ? '✓' : (s.n === o.current_stage ? '●' : '○');
-        const status = s.x ? 'Xong' : (s.n === o.current_stage ? 'Đang làm' : 'Chờ');
+        const status = s.n === o.current_stage ? 'Đang làm' : 'Chờ';
         const empName = s.k ? ` · ${s.k}` : '';
         return `<div style="display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border-card);">
           <div style="display: flex; justify-content: space-between; font-size: 12px;">
             <span style="font-weight: 600;">${icon} ${s.n}${empName}</span>
-            <span style="color: var(--text-primary); font-size: 11px;">${status}</span>
+            <span style="color: var(--text-primary); font-size: 11px;">${s.x ? formatStageDoneTime(s.t || s.tg || '') : status}</span>
           </div>
-          ${s.tg ? `<div style="font-size: 11px; color: var(--text-primary);">⏱ ${formatTime(s.tg)}</div>` : ''}
         </div>`;
       }).join('');
 
