@@ -1495,6 +1495,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE t.cong_doan = ?
         AND (t.xac_nhan IS NULL OR LOWER(t.xac_nhan) != 'có')
+        AND d.loai_lenh != 'Sửa'
       GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
     `).all(userCongDoan);
