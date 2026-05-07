@@ -466,6 +466,11 @@ function getSkipStages(lk, gc) {
   return [];
 }
 
+function isThuSuonNote(gc) {
+  const gcLower = (gc || '').toLowerCase();
+  return gcLower.includes('ts') || gcLower.includes('thử sườn');
+}
+
 // ── CACHE ─────────────────────────────────────────────
 let cache     = null;
 let cacheKey  = '';
@@ -1549,7 +1554,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
     // Step 1: Find orders pending for user's công đoạn in Excel file
     const ph = active.ids.map(() => '?').join(',');
     const pendingOrders = db.prepare(`
-      SELECT DISTINCT d.ma_dh
+      SELECT DISTINCT d.ma_dh, d.loai_lenh, d.ghi_chu
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE d.ma_dh IN (${ph})
@@ -1558,7 +1563,17 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
         ${loaiLenhFilter}
     `).all(...active.ids, dbCongDoan);
 
-    const pendingMaDhs = pendingOrders.map(r => r.ma_dh);
+    const userStageIndex = STAGE_NAMES.indexOf(dbCongDoan);
+    const pendingMaDhs = pendingOrders
+      .filter(r => {
+        if (userStageIndex < 0) return true;
+        if ((dbCongDoan === 'ĐẮP' || dbCongDoan === 'MÀI') && isThuSuonNote(r.ghi_chu)) {
+          return false;
+        }
+        const skip = getSkipStages(r.loai_lenh || '', r.ghi_chu || '');
+        return !skip.includes(userStageIndex);
+      })
+      .map(r => r.ma_dh);
     if (pendingMaDhs.length === 0) {
       return res.json({ ok: true, orders: [] });
     }
