@@ -1482,15 +1482,72 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
   }
 
   try {
-    const orders = db.prepare(`
-      SELECT DISTINCT d.ma_dh, d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             t.cong_doan, t.ten_ktv, t.thoi_gian_hoan_thanh
+    const rows = db.prepare(`
+      SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
+             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             d.loai_lenh, d.ghi_chu,
+             GROUP_CONCAT(
+               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+               ';;'
+             ) AS stages_raw
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE t.cong_doan = ?
         AND (t.xac_nhan IS NULL OR LOWER(t.xac_nhan) != 'có')
+      GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
     `).all(userCongDoan);
+
+    const orders = [];
+    for (const row of rows) {
+      const lk = row.loai_lenh || '';
+      const gc = row.ghi_chu || '';
+
+      const stagesMap = {};
+      for (const part of (row.stages_raw || '').split(';;')) {
+        const p = part.split('|');
+        if (p.length >= 5) {
+          const thu_tu = parseInt(p[0]);
+          if (!isNaN(thu_tu)) {
+            const isConfirmed = p[3] === 'Có' || p[3] === 'xác nhận';
+            stagesMap[thu_tu] = { n: p[1], k: p[2], x: isConfirmed, t: p[4] };
+          }
+        }
+      }
+
+      const stages = STAGE_NAMES.map((name, i) => {
+        const s = stagesMap[i + 1] || { n: name, k: '', x: false, t: '' };
+        return { n: name, k: s.k, x: s.x, t: s.t, sk: false };
+      });
+
+      const active = stages.filter(s => !s.sk);
+      const done = active.filter(s => s.x).length;
+      const total = active.length;
+
+      let curKtv = '';
+      for (let i = stages.length - 1; i >= 0; i--) {
+        if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
+      }
+      let lastTg = '';
+      stages.forEach(s => { if (s.t) lastTg = s.t; });
+
+      orders.push({
+        ma_dh: row.ma_dh,
+        nhan: row.nhap_luc || '',
+        yc_ht: row.yc_hoan_thanh || '',
+        yc_giao: row.yc_giao || '',
+        kh: row.khach_hang || '',
+        bn: row.benh_nhan || '',
+        ph: row.phuc_hinh || '',
+        sl: row.sl || 0,
+        gc: row.ghi_chu || '',
+        lk,
+        stages, done, total,
+        pct: total > 0 ? Math.round(done / total * 100) : 0,
+        curKtv, lastTg,
+      });
+    }
 
     res.json({ ok: true, orders });
   } catch (err) {
