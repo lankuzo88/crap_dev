@@ -1493,8 +1493,25 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
     const showRepairs = userCongDoan === 'ĐẮP' || userCongDoan === 'MÀI';
     const repairFilter = showRepairs ? '' : `AND d.loai_lenh != 'Sửa'`;
 
-    // Filter by active Excel file orders + user's công đoạn + pending status + repair rules
+    // Step 1: Find orders pending for user's công đoạn in Excel file
     const ph = active.ids.map(() => '?').join(',');
+    const pendingOrders = db.prepare(`
+      SELECT DISTINCT d.ma_dh
+      FROM tien_do t
+      JOIN don_hang d ON t.ma_dh = d.ma_dh
+      WHERE d.ma_dh IN (${ph})
+        AND t.cong_doan = ?
+        AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
+        ${repairFilter}
+    `).all(...active.ids, userCongDoan);
+
+    const pendingMaDhs = pendingOrders.map(r => r.ma_dh);
+    if (pendingMaDhs.length === 0) {
+      return res.json({ ok: true, orders: [] });
+    }
+
+    // Step 2: Get all stages for those orders (not filtered by cong_doan)
+    const phPending = pendingMaDhs.map(() => '?').join(',');
     const rows = db.prepare(`
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
@@ -1506,13 +1523,10 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
              ) AS stages_raw
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
-      WHERE d.ma_dh IN (${ph})
-        AND t.cong_doan = ?
-        AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
-        ${repairFilter}
+      WHERE d.ma_dh IN (${phPending})
       GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
-    `).all(...active.ids, userCongDoan);
+    `).all(...pendingMaDhs);
 
     const orders = [];
     for (const row of rows) {
