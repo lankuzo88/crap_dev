@@ -443,66 +443,6 @@
     #m-export-btn.admin-visible { display: inline-flex; }
 
     /* ── STATS HEADER ─────────────────────────── */
-    #statsHeader {
-      display: none;
-      padding: 8px 10px 4px;
-    }
-    .stats-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.75);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .stats-scroll {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .stats-scroll::-webkit-scrollbar { display: none; }
-    .stats-day {
-      flex: 0 0 auto;
-      background: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      padding: 7px 10px;
-      min-width: 90px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    .stats-day.today {
-      background: rgba(255,255,255,0.28);
-      border-color: rgba(255,255,255,0.5);
-    }
-    .stats-day-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-    .stats-day.today .stats-day-label { color: #fff; }
-    .stats-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 2px;
-    }
-    .stats-row .sk { color: rgba(255,255,255,0.6); }
-    .stats-row .sv { font-weight: 600; color: #fff; }
-    .stats-total {
-      border-top: 1px solid rgba(255,255,255,0.25);
-      margin-top: 3px;
-      padding-top: 3px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-    }
   </style>
 </head>
 <body>
@@ -525,12 +465,6 @@
     <button class="fchip" data-f="zirc" onclick="setFilter(this,'zirc')">Zirconia</button>
     <button class="fchip" data-f="kl"   onclick="setFilter(this,'kl')">Kim loại</button>
     <button class="fchip" data-f="vnr"  onclick="setFilter(this,'vnr')">Mặt dán</button>
-  </div>
-
-  <!-- Stats Header -->
-  <div id="statsHeader">
-    <div class="stats-title">📊 Sản lượng theo ngày</div>
-    <div class="stats-scroll" id="statsScroll"></div>
   </div>
 
   <!-- Card List -->
@@ -649,48 +583,6 @@
       }
     }
 
-    async function loadStats() {
-      if (!currentUser?.can_view_stats && currentUser?.role !== 'admin') return;
-      try {
-        const r = await fetch('/api/stats/daily');
-        if (!r.ok) return;
-        const json = await r.json();
-        if (!json.ok) return;
-        renderStats(json.data);
-      } catch (e) {
-        console.error('Lỗi fetch stats:', e);
-      }
-    }
-
-    function renderStats(data) {
-      const header = document.getElementById('statsHeader');
-      const scroll = document.getElementById('statsScroll');
-      if (!header || !scroll) return;
-      if (!data || !data.length) { header.style.display = 'none'; return; }
-
-      const todayStr = (() => {
-        const d = new Date();
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yyyy = d.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
-      })();
-
-      scroll.innerHTML = data.map(item => {
-        const isToday = item.date === todayStr;
-        const label = item.date ? item.date.substring(0, 5) : '—';
-        return `<div class="stats-day${isToday ? ' today' : ''}">
-          <div class="stats-day-label">${label}</div>
-          <div class="stats-row"><span class="sk">Zirco</span><span class="sv">${item.zirco}</span></div>
-          <div class="stats-row"><span class="sk">KL</span><span class="sv">${item.kim_loai}</span></div>
-          <div class="stats-row"><span class="sk">Mặt dán</span><span class="sv">${item.mat_dan}</span></div>
-          <div class="stats-total"><span>Tổng</span><span>${item.total}</span></div>
-        </div>`;
-      }).join('');
-
-      header.style.display = 'block';
-    }
-
     async function initUserContext() {
       try {
         const r = await fetch('/user');
@@ -710,7 +602,9 @@
       if (searchBar) {
         const titleDiv = document.createElement('div');
         titleDiv.style.cssText = 'flex:1; font-weight: 600; font-size: 14px; color: var(--text-primary);';
-        titleDiv.textContent = `${currentUser.cong_doan.toUpperCase()}`;
+        const _cd = currentUser.cong_doan;
+        const _cdDisplay = { sáp: 'Sáp', sườn: 'Sườn', đắp: 'Đắp', mài: 'Mài' };
+        titleDiv.textContent = _cdDisplay[_cd] || _cd;
         const existingTitle = searchBar.querySelector('[data-title]');
         if (existingTitle) existingTitle.remove();
         titleDiv.setAttribute('data-title', '1');
@@ -967,9 +861,8 @@
       (async () => {
         await initUserContext();
         loadData();
-        loadStats();
         const interval = currentUser?.role === 'user' ? 30_000 : 60_000;
-        setInterval(() => { loadData(); loadStats(); }, interval);
+        setInterval(() => { loadData(); }, interval);
         initAdminUI();
       })();
 

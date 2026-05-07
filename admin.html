@@ -513,7 +513,15 @@
 
       if (!users.length) { el.innerHTML = '<div class="empty-state">Chưa có người dùng</div>'; return; }
 
-      const CONG_DOAN_OPTS = ['', 'CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+      const CONG_DOAN_OPTS = [
+        ['', '-- Không gán --'],
+        ['CBM', 'CBM'],
+        ['sáp', 'Sáp'],
+        ['CAD/CAM', 'CAD/CAM'],
+        ['sườn', 'Sườn'],
+        ['đắp', 'Đắp'],
+        ['mài', 'Mài'],
+      ];
       let html = `<table class="data-table">
         <thead><tr>
           <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Thống kê</th><th>Hành động</th>
@@ -521,8 +529,8 @@
 
       for (const u of users) {
         const isMe = u.username === currentUser;
-        const cdOpts = CONG_DOAN_OPTS.map(v =>
-          `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${v || '-- Không gán --'}</option>`
+        const cdOpts = CONG_DOAN_OPTS.map(([v, label]) =>
+          `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${label}</option>`
         ).join('');
         const statsChecked = u.can_view_stats ? 'checked' : '';
         html += `<tr>

@@ -403,6 +403,16 @@ const PYTHON = (() => {
 
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
 
+// Map từ cong_doan user (lưu lowercase) → cong_doan trong bảng tien_do (từ Excel)
+const CD_TO_DB = {
+  'CBM':     'CBM',
+  'sáp':     'SÁP/Cadcam',
+  'CAD/CAM': 'SÁP/Cadcam',
+  'sườn':    'SƯỜN',
+  'đắp':     'ĐẮP',
+  'mài':     'MÀI',
+};
+
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
 // - "Sửa" / "Làm tiếp" → bỏ CBM(0), SÁP(1), SƯỜN(2) → chỉ còn ĐẮP(3), MÀI(4) = 2 stage
 // - "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3), MÀI(4) → chỉ còn CBM(0), SÁP(1), SƯỜN(2) = 3 stage
@@ -1492,8 +1502,11 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       return res.json({ ok: true, orders: [] });
     }
 
+    // Map cong_doan user (lowercase) → giá trị trong bảng tien_do (từ Excel)
+    const dbCongDoan = CD_TO_DB[userCongDoan] || userCongDoan;
+
     // ĐẮP and MÀI see all orders including repairs; other công đoạn filter out 'Sửa'
-    const showRepairs = userCongDoan === 'ĐẮP' || userCongDoan === 'MÀI';
+    const showRepairs = dbCongDoan === 'ĐẮP' || dbCongDoan === 'MÀI';
     const repairFilter = showRepairs ? '' : `AND d.loai_lenh != 'Sửa'`;
 
     // Step 1: Find orders pending for user's công đoạn in Excel file
@@ -1506,7 +1519,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
         AND t.cong_doan = ?
         AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
         ${repairFilter}
-    `).all(...active.ids, userCongDoan);
+    `).all(...active.ids, dbCongDoan);
 
     const pendingMaDhs = pendingOrders.map(r => r.ma_dh);
     if (pendingMaDhs.length === 0) {
@@ -2621,34 +2634,65 @@ app.get('/api/stats/daily', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+
+    const active = getActiveMaDhList();
+    if (!active || !active.ids.length) {
+      return res.json({ ok: true, data: [] });
+    }
+    const ph = active.ids.map(() => '?').join(',');
+
     const rows = db.prepare(`
       SELECT
         substr(yc_hoan_thanh, 1, 10) AS ngay,
         substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2) AS ngay_sort,
-        SUM(CASE WHEN phuc_hinh LIKE '%Mặt dán%' OR phuc_hinh LIKE '%Veneer%'
+        SUM(CASE WHEN LOWER(phuc_hinh) LIKE '%mặt dán%' OR LOWER(phuc_hinh) LIKE '%veneer%'
             THEN COALESCE(sl,0) ELSE 0 END) AS mat_dan,
-        SUM(CASE WHEN (phuc_hinh LIKE '%Zirconia%' OR phuc_hinh LIKE '%Zircornia%' OR phuc_hinh LIKE '%Ziconia%' OR phuc_hinh LIKE '%Zolid%' OR phuc_hinh LIKE '%La Va%')
-            AND phuc_hinh NOT LIKE '%Mặt dán%' AND phuc_hinh NOT LIKE '%Veneer%'
+        SUM(CASE WHEN
+            LOWER(phuc_hinh) NOT LIKE '%mặt dán%' AND LOWER(phuc_hinh) NOT LIKE '%veneer%'
+            AND LOWER(phuc_hinh) NOT LIKE '%cùi giả zirconia%'
+            AND LOWER(phuc_hinh) NOT LIKE '%cui gia zirconia%'
+            AND (
+              LOWER(phuc_hinh) LIKE '%zirconia%' OR LOWER(phuc_hinh) LIKE '%zircornia%'
+              OR LOWER(phuc_hinh) LIKE '%ziconia%' OR LOWER(phuc_hinh) LIKE '%zir-%'
+              OR LOWER(phuc_hinh) LIKE '%zolid%' OR LOWER(phuc_hinh) LIKE '%cercon%'
+              OR LOWER(phuc_hinh) LIKE '%la va%'
+            )
             THEN COALESCE(sl,0) ELSE 0 END) AS zirco,
-        SUM(CASE WHEN phuc_hinh NOT LIKE '%Mặt dán%' AND phuc_hinh NOT LIKE '%Veneer%'
-            AND phuc_hinh NOT LIKE '%Zirconia%' AND phuc_hinh NOT LIKE '%Zircornia%'
-            AND phuc_hinh NOT LIKE '%Ziconia%' AND phuc_hinh NOT LIKE '%Zolid%'
-            AND phuc_hinh NOT LIKE '%La Va%'
+        SUM(CASE WHEN
+            LOWER(phuc_hinh) NOT LIKE '%mặt dán%' AND LOWER(phuc_hinh) NOT LIKE '%veneer%'
+            AND LOWER(phuc_hinh) NOT LIKE '%cùi giả zirconia%'
+            AND LOWER(phuc_hinh) NOT LIKE '%cui gia zirconia%'
+            AND LOWER(phuc_hinh) NOT LIKE '%zirconia%' AND LOWER(phuc_hinh) NOT LIKE '%zircornia%'
+            AND LOWER(phuc_hinh) NOT LIKE '%ziconia%' AND LOWER(phuc_hinh) NOT LIKE '%zir-%'
+            AND LOWER(phuc_hinh) NOT LIKE '%zolid%' AND LOWER(phuc_hinh) NOT LIKE '%cercon%'
+            AND LOWER(phuc_hinh) NOT LIKE '%la va%'
             THEN COALESCE(sl,0) ELSE 0 END) AS kim_loai
       FROM don_hang
-      WHERE yc_hoan_thanh IS NOT NULL AND yc_hoan_thanh != ''
-        AND substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2) >= date('now')
+      WHERE ma_dh IN (${ph})
+        AND yc_hoan_thanh IS NOT NULL AND yc_hoan_thanh != ''
       GROUP BY ngay
       ORDER BY ngay_sort
       LIMIT 14
-    `).all();
-    const data = rows.map(r => ({
-      date: r.ngay,
-      zirco: r.zirco || 0,
-      kim_loai: r.kim_loai || 0,
-      mat_dan: r.mat_dan || 0,
-      total: (r.zirco || 0) + (r.kim_loai || 0) + (r.mat_dan || 0),
-    }));
+    `).all(...active.ids);
+    const data = rows.map(r => {
+      const ngay = r.ngay || '';
+      let display;
+      if (ngay.includes('/')) {
+        display = ngay.slice(0, 5);           // "DD/MM" from "DD/MM/YYYY"
+      } else if (ngay.length >= 10) {
+        display = ngay.slice(8, 10) + '/' + ngay.slice(5, 7); // "DD/MM" from "YYYY-MM-DD"
+      } else {
+        display = ngay.slice(0, 5);
+      }
+      return {
+        date: ngay,
+        date_display: display,
+        zirco: r.zirco || 0,
+        kim_loai: r.kim_loai || 0,
+        mat_dan: r.mat_dan || 0,
+        total: (r.zirco || 0) + (r.kim_loai || 0) + (r.mat_dan || 0),
+      };
+    });
     res.json({ ok: true, data });
   } catch (err) {
     log(`[Stats] Daily error: ${err.message}`);
