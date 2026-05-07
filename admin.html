@@ -516,7 +516,7 @@
       const CONG_DOAN_OPTS = ['', 'CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
       let html = `<table class="data-table">
         <thead><tr>
-          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Hành động</th>
+          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Thống kê</th><th>Hành động</th>
         </tr></thead><tbody>`;
 
       for (const u of users) {
@@ -524,6 +524,7 @@
         const cdOpts = CONG_DOAN_OPTS.map(v =>
           `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${v || '-- Không gán --'}</option>`
         ).join('');
+        const statsChecked = u.can_view_stats ? 'checked' : '';
         html += `<tr>
           <td><strong>${u.username}</strong>${isMe ? ' <span style="color:#aaa;font-size:11px">(bạn)</span>' : ''}</td>
           <td><span class="role-badge role-${u.role}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
@@ -531,6 +532,12 @@
             <select onchange="setCongDoan('${u.username}', this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
               ${cdOpts}
             </select>
+          </td>
+          <td>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
+              <input type="checkbox" ${statsChecked} onchange="setStatsPerm('${u.username}', this.checked)" style="width:16px;height:16px;cursor:pointer;">
+              <span>${u.can_view_stats ? 'Bật' : 'Tắt'}</span>
+            </label>
           </td>
           <td><div class="actions">
             <button class="btn btn-secondary" onclick="openResetPassword('${u.username}')">Đổi pass</button>
@@ -572,6 +579,20 @@
       const d = await res.json();
       if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); return; }
       showAlert(`✅ Gán "${cong_doan || 'Không gán'}" cho ${username}`, 'success');
+    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
+  }
+
+  async function setStatsPerm(username, can_view_stats) {
+    try {
+      const res = await fetch(`/api/admin/users/${username}/stats-permission`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ can_view_stats }),
+      });
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); loadUsers(); return; }
+      const label = can_view_stats ? 'Bật' : 'Tắt';
+      showAlert(`✅ Thống kê ${label} cho ${username}`, 'success');
+      loadUsers();
     } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
   }
 
