@@ -62,7 +62,8 @@ function loadUsers() {
         USERS[u.username] = {
           passwordHash: u.passwordHash || u.password,  // Support both old/new format during migration
           role: u.role,
-          cong_doan: u.cong_doan || ''
+          cong_doan: u.cong_doan || '',
+          can_view_stats: u.can_view_stats === true
         };
       });
       log(`📋 Loaded ${data.users.length} user(s) from users.json`);
@@ -85,6 +86,7 @@ function saveUsers() {
       passwordHash: data.passwordHash,
       role: data.role,
       cong_doan: data.cong_doan || '',
+      can_view_stats: data.can_view_stats === true,
     }));
     fs.writeFileSync(USERS_JSON_PATH, JSON.stringify({ users }, null, 2));
   } catch (e) {
@@ -1464,7 +1466,8 @@ app.get('/mobile', requireAuth, (req, res) => {
 app.get('/user', requireAuth, (req, res) => {
   const token = getSessionToken(req);
   const sess = sessions.get(token);
-  res.json({ username: sess.user, role: sess.role, cong_doan: USERS[sess.user]?.cong_doan || '' });
+  const u = USERS[sess.user] || {};
+  res.json({ username: sess.user, role: sess.role, cong_doan: u.cong_doan || '', can_view_stats: u.can_view_stats === true });
 });
 
 app.get('/api/user/pending-orders', requireAuth, (req, res) => {
@@ -1594,6 +1597,7 @@ app.get('/admin/api/users', requireAdmin, (req, res) => {
     username,
     role: data.role,
     cong_doan: data.cong_doan || '',
+    can_view_stats: data.can_view_stats === true,
   }));
   res.json(users);
 });
@@ -2591,6 +2595,63 @@ app.patch('/api/error-reports/:id/reject', requireAdmin, express.json(), (req, r
     res.json({ ok: true });
   } catch (err) {
     log(`[ErrorReport] Reject error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── STATS PERMISSION ──────────────────────────────────────────────────────
+app.patch('/api/admin/users/:username/stats-permission', requireAdmin, express.json(), (req, res) => {
+  const { username } = req.params;
+  const { can_view_stats } = req.body;
+  if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
+  USERS[username].can_view_stats = can_view_stats === true;
+  saveUsers();
+  log(`📊 stats-permission: ${username} → ${USERS[username].can_view_stats}`);
+  res.json({ ok: true, username, can_view_stats: USERS[username].can_view_stats });
+});
+
+// ── DAILY STATS API ────────────────────────────────────────────────────────
+app.get('/api/stats/daily', requireAuth, (req, res) => {
+  const token = getSessionToken(req);
+  const sess = sessions.get(token);
+  const userInfo = USERS[sess.user];
+  if (!userInfo || (userInfo.role !== 'admin' && !userInfo.can_view_stats)) {
+    return res.status(403).json({ error: 'Không có quyền xem thống kê' });
+  }
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const rows = db.prepare(`
+      SELECT
+        substr(yc_hoan_thanh, 1, 10) AS ngay,
+        substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2) AS ngay_sort,
+        SUM(CASE WHEN phuc_hinh LIKE '%Mặt dán%' OR phuc_hinh LIKE '%Veneer%'
+            THEN COALESCE(sl,0) ELSE 0 END) AS mat_dan,
+        SUM(CASE WHEN (phuc_hinh LIKE '%Zirconia%' OR phuc_hinh LIKE '%Zircornia%' OR phuc_hinh LIKE '%Ziconia%' OR phuc_hinh LIKE '%Zolid%' OR phuc_hinh LIKE '%La Va%')
+            AND phuc_hinh NOT LIKE '%Mặt dán%' AND phuc_hinh NOT LIKE '%Veneer%'
+            THEN COALESCE(sl,0) ELSE 0 END) AS zirco,
+        SUM(CASE WHEN phuc_hinh NOT LIKE '%Mặt dán%' AND phuc_hinh NOT LIKE '%Veneer%'
+            AND phuc_hinh NOT LIKE '%Zirconia%' AND phuc_hinh NOT LIKE '%Zircornia%'
+            AND phuc_hinh NOT LIKE '%Ziconia%' AND phuc_hinh NOT LIKE '%Zolid%'
+            AND phuc_hinh NOT LIKE '%La Va%'
+            THEN COALESCE(sl,0) ELSE 0 END) AS kim_loai
+      FROM don_hang
+      WHERE yc_hoan_thanh IS NOT NULL AND yc_hoan_thanh != ''
+        AND substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2) >= date('now')
+      GROUP BY ngay
+      ORDER BY ngay_sort
+      LIMIT 14
+    `).all();
+    const data = rows.map(r => ({
+      date: r.ngay,
+      zirco: r.zirco || 0,
+      kim_loai: r.kim_loai || 0,
+      mat_dan: r.mat_dan || 0,
+      total: (r.zirco || 0) + (r.kim_loai || 0) + (r.mat_dan || 0),
+    }));
+    res.json({ ok: true, data });
+  } catch (err) {
+    log(`[Stats] Daily error: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
