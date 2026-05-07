@@ -673,6 +673,18 @@
       return grouped;
     }
 
+    function getLoaiLenhColor(lk) {
+      const colors = {
+        'Làm mới': { bg: '#4ade80', text: '#fff' },      // xanh lá
+        'Sửa': { bg: '#f97316', text: '#fff' },          // cam
+        'Làm lại': { bg: '#eab308', text: '#000' },      // vàng
+        'Bảo hành': { bg: '#a855f7', text: '#fff' },     // tím
+        'Làm thêm': { bg: '#0ea5e9', text: '#fff' },     // xanh dương
+        'Làm tiếp': { bg: '#0ea5e9', text: '#fff' },     // xanh dương
+      };
+      return colors[lk] || { bg: '#94a3b8', text: '#fff' };
+    }
+
     function renderCard(o) {
       const stageColor = STAGE_COLORS[o.current_stage] || '#94a3b8';
       const short = STAGE_SHORT[o.current_stage] || o.current_stage;
@@ -681,6 +693,10 @@
       const phT = phType(o.phuc_hinh);
       const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
+
+      // Loai lenh chip
+      const lkColor = getLoaiLenhColor(o.lk);
+      const lkChip = o.lk ? `<span style="position: absolute; bottom: 8px; right: 8px; font-size: 9px; padding: 2px 6px; border-radius: 3px; background: ${lkColor.bg}; color: ${lkColor.text}; font-weight: 500; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.lk}</span>` : '';
 
       // Get current KTV - find last stage with KTV (for completed orders) or current stage
       let currentKtv = '';
@@ -705,7 +721,7 @@
       }).join('');
 
       return `
-        <div class="card ${cat}" style="cursor: pointer;" data-ma-dh="${o.ma_dh}">
+        <div class="card ${cat}" style="cursor: pointer; position: relative;" data-ma-dh="${o.ma_dh}">
           <div class="card-row1">
             <div class="order-code">${o.ma_dh}</div>
             <div class="card-customer" style="flex: 1; text-align: center; margin: 0;">${o.khach_hang}</div>
@@ -718,6 +734,7 @@
           <div class="card-prosthesis">${o.phuc_hinh}</div>
           ${currentKtv ? `<div class="card-stage-label" style="font-size: 11px; color: var(--text-primary); margin-top: 4px;">👤 ${currentKtv}</div>` : ''}
           ${pipsHtml ? `<div class="stage-pips">${pipsHtml}</div>` : ''}
+          ${lkChip}
         </div>
       `;
     }
