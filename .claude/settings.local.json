@@ -57,7 +57,25 @@
       "Bash(git clean *)",
       "PowerShell(Move-Item *)",
       "Bash(git reset *)",
-      "Bash(pm2 start *)"
+      "Bash(pm2 start *)",
+      "Bash(node -e ' *)",
+      "PowerShell(Start-Service W32Time -ErrorAction SilentlyContinue)",
+      "PowerShell(w32tm /resync /force 2>&1)",
+      "Bash(npx pm2 *)",
+      "Bash(pm2 list *)",
+      "Bash(pm2 restart *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/error-reports -H 'Content-Type: application/json' -d '{}')",
+      "Bash(pm2 logs *)",
+      "Bash(tasklist /fi \"IMAGENAME eq node.exe\" /fo csv)",
+      "Bash(pm2 describe *)",
+      "Bash(netstat -ano)",
+      "Bash(PowerShell -Command \"Get-Process -Id 7148 | Select-Object Id, Parent* \")",
+      "Bash(PowerShell -Command \"\\(Get-Process -Id 7148\\).Parent\")",
+      "Bash(PowerShell -Command \"Stop-Process -Id 7148 -Force\")",
+      "Bash(pm2 status *)",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(pm2 stop *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)"
     ]
   }
 }

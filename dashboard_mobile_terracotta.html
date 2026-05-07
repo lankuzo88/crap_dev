@@ -784,10 +784,12 @@
         renderCards();
       });
 
-      initUserContext();
-      loadData();
-      setInterval(loadData, currentUser?.role === 'user' ? 30_000 : 60_000);
-      initAdminUI();
+      (async () => {
+        await initUserContext();
+        loadData();
+        setInterval(loadData, currentUser?.role === 'user' ? 30_000 : 60_000);
+        initAdminUI();
+      })();
 
       // Card click → modal
       document.addEventListener('click', (e) => {

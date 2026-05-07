@@ -4,25 +4,25 @@
       "username": "admin",
       "passwordHash": "$2b$10$xK1v0g48D1wnOU9MC97zDu75NHxAIFkWO.qGXTguutt5ayEdfQcES",
       "role": "admin",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     },
     {
       "username": "minhtuan",
       "passwordHash": "$2b$10$G5aQ/XG0nF/0FY6/boFHSOW7NbQY0J3RGZ.x6.Mvz69OSusjfdq.2",
       "role": "user",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     },
     {
       "username": "vanhuyen",
       "passwordHash": "$2b$10$CsZBdqFJp/ngbouSzdnEAeMWsq50fH3lJUwWZ3cAhSekCU19hKGzy",
       "role": "user",
-      "cong_doan": "CAD/CAM"
+      "cong_doan": "SÁP/Cadcam"
     },
     {
       "username": "trucmy",
       "passwordHash": "$2b$10$6.IDxvnFZ5uJvmg1n.KFbODDBeLXdv/JK/fpEx6Gros1vAdVUE0oK",
       "role": "qc",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "vanvan",
@@ -40,7 +40,7 @@
       "username": "hongtham",
       "passwordHash": "$2b$10$ZIZ2Bj7KqOKcvtrurkZ5bunmnsv8Vy65Q3d2XJ9yA.kcB9.L7nLXu",
       "role": "user",
-      "cong_doan": "sáp"
+      "cong_doan": "SÁP/Cadcam"
     },
     {
       "username": "thihanh",
@@ -50,81 +50,81 @@
     },
     {
       "username": "thaison",
-      "passwordHash": "$2b$10$tyKZZHCSXsUNM7Pj9i03yOAzu0PI7YBg9KkXiksFsmrxvMRM.5U/i",
+      "passwordHash": "$2b$10$tyKZCSXsUNM7Pj9i03yOAzu0PI7YBg9KkXiksFsmrxvMRM.5U/i",
       "role": "user",
-      "cong_doan": "CAD/CAM"
+      "cong_doan": "SÁP/Cadcam"
     },
     {
       "username": "tansi",
       "passwordHash": "$2b$10$Gs5o6mrGpdxVaz.ue.QKROBAl2zUUKlq/Bsz3/jMorsWEaxF46pZi",
       "role": "user",
-      "cong_doan": "sườn"
+      "cong_doan": "SƯỜN"
     },
     {
       "username": "vantrai",
       "passwordHash": "$2b$10$zkvxK4teR6WT3X5edYtiquvW430pem.gAZBy1qPa/Y1zQhJdYIOFy",
       "role": "user",
-      "cong_doan": "sườn"
+      "cong_doan": "SƯỜN"
     },
     {
       "username": "tandat",
       "passwordHash": "$2b$10$GbRwWQfsTvenKlkVZ6IugejT1nY3QfAiu8DrpZRwMqWyjmhplOdqe",
       "role": "user",
-      "cong_doan": "sườn"
+      "cong_doan": "SƯỜN"
     },
     {
       "username": "vutruong",
       "passwordHash": "$2b$10$0qBDqINt1N1Vdxn2x2507.1BiZfMXW8dZOS1fW/98dXrSoqltrv.y",
       "role": "user",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "camhong",
       "passwordHash": "$2b$10$2A9A0cueTV3hb8ffmKYBYuWVx5bv6UIsR89ZqgSDAISIDPRDVP6s2",
       "role": "user",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "hoaitrang",
       "passwordHash": "$2b$10$2.qIfd/mC9P.fjq6ehh6r./bR5KnLIwHIOFWCI68F9tOLU9KbVuiq",
       "role": "user",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "yenvy",
       "passwordHash": "$2b$10$eTfjKg3TFY1s7gv0YNjemew01.lukdKtArsNYnpREgqEM9ooO0ANC",
       "role": "user",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "trungtruc",
       "passwordHash": "$2b$10$83wdZoo/jAmIX0xz3f6HQ.HiHnlXm6Nhxcf1fme/1PNS0jZbYZ9aC",
       "role": "user",
-      "cong_doan": "đắp"
+      "cong_doan": "ĐẮP"
     },
     {
       "username": "thehy",
       "passwordHash": "$2b$10$9vaMn8E1RK2u4ORTk45LAuFg9wlVsXkRhMUosGMtL7RGG3HdwbIq2",
       "role": "user",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     },
     {
       "username": "baotran",
       "passwordHash": "$2b$10$uazCmJZsinInEk/l6dtzBuUHDjsk99adFfUNKEgjsa86qGOGC5jsG",
       "role": "user",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     },
     {
       "username": "giathu",
       "passwordHash": "$2b$10$jXq4keHQDH8Ur2yS7PsYUe5iY4GGwBEKq8V7PDQmrl9u/m8bIySCW",
       "role": "user",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     },
     {
       "username": "tanhuu",
       "passwordHash": "$2b$10$Xv90Uui4kdisa1t.yv11V.dYwwvoZlKNpIueend.W8UMGw.Ub4.zS",
       "role": "user",
-      "cong_doan": "mài"
+      "cong_doan": "MÀI"
     }
   ]
 }
