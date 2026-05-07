@@ -1498,7 +1498,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE t.cong_doan = ?
-        AND (t.xac_nhan IS NULL OR LOWER(t.xac_nhan) != 'có')
+        AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
         ${repairFilter}
       GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
