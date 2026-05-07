@@ -1482,6 +1482,10 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
   }
 
   try {
+    // ĐẮP and MÀI see all orders including repairs; other công đoạn filter out 'Sửa'
+    const showRepairs = userCongDoan === 'ĐẮP' || userCongDoan === 'MÀI';
+    const repairFilter = showRepairs ? '' : `AND d.loai_lenh != 'Sửa'`;
+
     const rows = db.prepare(`
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
@@ -1495,7 +1499,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE t.cong_doan = ?
         AND (t.xac_nhan IS NULL OR LOWER(t.xac_nhan) != 'có')
-        AND d.loai_lenh != 'Sửa'
+        ${repairFilter}
       GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
     `).all(userCongDoan);
