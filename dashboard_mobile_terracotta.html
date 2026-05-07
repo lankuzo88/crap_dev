@@ -539,6 +539,8 @@
     let allOrders = [];
     let filterSearch = '';
     let filterPh = 'all';
+    let currentUser = null;
+    let userPendingOrders = [];
 
     function setFilter(el, f) {
       filterPh = f;
@@ -549,13 +551,60 @@
 
     async function loadData() {
       try {
-        const res = await fetch('/data.json');
-        const json = await res.json();
-        allOrders = (json.orders || []).map(adaptOrder);
-        updateCounts();
-        renderCards();
+        if (currentUser?.role === 'user' && currentUser?.cong_doan) {
+          await loadUserPendingOrders();
+        } else {
+          const res = await fetch('/data.json');
+          const json = await res.json();
+          allOrders = (json.orders || []).map(adaptOrder);
+          updateCounts();
+          renderCards();
+        }
       } catch (e) {
         console.error('Lỗi fetch data:', e);
+      }
+    }
+
+    async function loadUserPendingOrders() {
+      try {
+        const r = await fetch('/api/user/pending-orders');
+        if (!r.ok) return;
+        const data = await r.json();
+        if (data.ok) {
+          userPendingOrders = data.orders;
+          allOrders = userPendingOrders.map(adaptOrder);
+          updateCounts();
+          renderCards();
+        }
+      } catch (e) {
+        console.error('Lỗi fetch pending orders:', e);
+      }
+    }
+
+    async function initUserContext() {
+      try {
+        const r = await fetch('/user');
+        if (!r.ok) return;
+        const u = await r.json();
+        currentUser = u;
+        if (u.role === 'user' && u.cong_doan) {
+          setupUserMobile();
+        }
+      } catch {}
+    }
+
+    function setupUserMobile() {
+      const filterBar = document.getElementById('filterBar');
+      if (filterBar) filterBar.style.display = 'none';
+      const searchBar = document.querySelector('.search-bar');
+      if (searchBar) {
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'flex:1; font-weight: 600; font-size: 14px; color: var(--text-primary);';
+        titleDiv.textContent = `${currentUser.cong_doan.toUpperCase()}`;
+        const existingTitle = searchBar.querySelector('[data-title]');
+        if (existingTitle) existingTitle.remove();
+        titleDiv.setAttribute('data-title', '1');
+        searchBar.insertBefore(titleDiv, searchBar.firstChild);
       }
     }
 
@@ -735,8 +784,9 @@
         renderCards();
       });
 
+      initUserContext();
       loadData();
-      setInterval(loadData, 60_000);
+      setInterval(loadData, currentUser?.role === 'user' ? 30_000 : 60_000);
       initAdminUI();
 
       // Card click → modal
