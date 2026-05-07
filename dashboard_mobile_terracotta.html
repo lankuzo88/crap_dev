@@ -588,6 +588,10 @@
     let currentUser = null;
     let userPendingOrders = [];
 
+    function canViewFilterSummary() {
+      return currentUser?.role === 'admin' || currentUser?.can_view_stats === true;
+    }
+
     function setFilter(el, f) {
       filterPh = f;
       document.querySelectorAll('#filterBar .fchip').forEach(c => c.classList.remove('active'));
@@ -753,6 +757,13 @@
     function renderFilterSummary(orders) {
       const el = document.getElementById('filterSummary');
       if (!el) return;
+      if (!canViewFilterSummary()) {
+        el.innerHTML = '';
+        el.style.display = 'none';
+        return;
+      }
+
+      el.style.display = '';
 
       const byDay = new Map();
       orders.forEach(o => {
@@ -965,7 +976,10 @@
         await initUserContext();
         loadData();
         const interval = currentUser?.role === 'user' ? 30_000 : 60_000;
-        setInterval(() => { loadData(); }, interval);
+        setInterval(async () => {
+          await initUserContext();
+          loadData();
+        }, interval);
         initAdminUI();
       })();
 
