@@ -673,6 +673,28 @@
       return grouped;
     }
 
+    function sortOrdersByDeadline(orders) {
+      return [...orders].sort((a, b) => {
+        const dateA = a.yc_ht ? new Date(a.yc_ht) : new Date('9999-12-31');
+        const dateB = b.yc_ht ? new Date(b.yc_ht) : new Date('9999-12-31');
+        if (dateA !== dateB) return dateA - dateB;
+        return (a.ma_dh || '').localeCompare(b.ma_dh || '');
+      });
+    }
+
+    function sortGroupsByDeadline(groups) {
+      return Array.from(groups.entries()).sort(([keyA], [keyB]) => {
+        const isNoA = keyA === 'no-deadline';
+        const isNoB = keyB === 'no-deadline';
+        if (isNoA && !isNoB) return 1;
+        if (!isNoA && isNoB) return -1;
+        if (isNoA && isNoB) return 0;
+        const dateA = new Date(keyA);
+        const dateB = new Date(keyB);
+        return dateA - dateB;
+      });
+    }
+
     function getLoaiLenhColor(lk) {
       const colors = {
         'Làm mới': { bg: '#4ade80', text: '#fff' },      // xanh lá
@@ -748,11 +770,20 @@
         return;
       }
 
-      const groups = groupByCompletionTime(list);
+      const sortedList = sortOrdersByDeadline(list);
+      const groups = groupByCompletionTime(sortedList);
+      const sortedGroups = sortGroupsByDeadline(groups);
       let html = '';
 
-      groups.forEach((group, key) => {
+      sortedGroups.forEach(([key, group]) => {
         const { orders, cat } = group;
+        orders.sort((a, b) => {
+          const dateA = a.yc_ht ? new Date(a.yc_ht) : new Date('9999-12-31');
+          const dateB = b.yc_ht ? new Date(b.yc_ht) : new Date('9999-12-31');
+          if (dateA !== dateB) return dateA - dateB;
+          return (a.ma_dh || '').localeCompare(b.ma_dh || '');
+        });
+
         const totalSL = orders.reduce((s, o) => s + o.sl, 0);
         const time = formatTime(orders[0].yc_ht);
         const dateRaw = (orders[0].yc_ht || '').split(' ')[0];
