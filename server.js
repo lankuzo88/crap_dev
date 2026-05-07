@@ -446,19 +446,20 @@ function userCongDoanToDB(value) {
 }
 
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
-// - "Sửa" / "Làm tiếp" → bỏ CBM(0), SÁP(1), SƯỜN(2) → chỉ còn ĐẮP(3), MÀI(4) = 2 stage
+// - "Sửa" → bỏ CBM(0), SÁP(1), SƯỜN(2) → chỉ còn ĐẮP(3), MÀI(4)
+// - "Làm tiếp" → bỏ CBM(0), SÁP(1) → bắt đầu từ SƯỜN(2)
 // - "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3), MÀI(4) → chỉ còn CBM(0), SÁP(1), SƯỜN(2) = 3 stage
 const SKIP_STAGES = {
-  sua_laitiep: [0, 1, 2],  // CBM, SÁP, SƯỜN
-  thusuon:     [3, 4],     // ĐẮP, MÀI
+  sua:      [0, 1, 2],  // CBM, SÁP, SƯỜN
+  lam_tiep: [0, 1],     // CBM, SÁP
+  thusuon:  [3, 4],     // ĐẮP, MÀI
 };
 
 function getSkipStages(lk, gc) {
   const lkLower = (lk || '').toLowerCase();
   const gcLower = (gc || '').toLowerCase();
-  if (lkLower.includes('sửa') || lkLower.includes('làm tiếp')) {
-    return SKIP_STAGES.sua_laitiep;
-  }
+  if (lkLower.includes('sửa')) return SKIP_STAGES.sua;
+  if (lkLower.includes('làm tiếp')) return SKIP_STAGES.lam_tiep;
   if (gcLower.includes('ts') || gcLower.includes('thử sườn')) {
     return SKIP_STAGES.thusuon;
   }
@@ -1537,9 +1538,13 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
     // Map cong_doan user (canonical) → giá trị trong bảng tien_do (từ Excel)
     const dbCongDoan = userCongDoanToDB(userCongDoan);
 
-    // ĐẮP and MÀI see all orders including repairs; other công đoạn filter out 'Sửa'
-    const showRepairs = dbCongDoan === 'ĐẮP' || dbCongDoan === 'MÀI';
-    const repairFilter = showRepairs ? '' : `AND d.loai_lenh != 'Sửa'`;
+    // "Sửa" starts at ĐẮP; "Làm tiếp" starts at SƯỜN.
+    let loaiLenhFilter = '';
+    if (dbCongDoan === 'CBM' || dbCongDoan === 'SÁP/Cadcam') {
+      loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') NOT IN ('Sửa', 'Làm tiếp')`;
+    } else if (dbCongDoan === 'SƯỜN') {
+      loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') != 'Sửa'`;
+    }
 
     // Step 1: Find orders pending for user's công đoạn in Excel file
     const ph = active.ids.map(() => '?').join(',');
@@ -1550,7 +1555,7 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       WHERE d.ma_dh IN (${ph})
         AND t.cong_doan = ?
         AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
-        ${repairFilter}
+        ${loaiLenhFilter}
     `).all(...active.ids, dbCongDoan);
 
     const pendingMaDhs = pendingOrders.map(r => r.ma_dh);
@@ -1593,9 +1598,10 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
         }
       }
 
+      const skip = getSkipStages(lk, gc);
       const stages = STAGE_NAMES.map((name, i) => {
         const s = stagesMap[i + 1] || { n: name, k: '', x: false, t: '' };
-        return { n: name, k: s.k, x: s.x, t: s.t, sk: false };
+        return { n: name, k: s.k, x: s.x, t: s.t, sk: skip.includes(i) };
       });
 
       const active = stages.filter(s => !s.sk);

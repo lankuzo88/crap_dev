@@ -711,16 +711,19 @@ function nkColor(kh) {
   return NK_CACHE[kh];
 }
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
-// "Sửa" / "Làm tiếp" → bỏ CBM(0),SÁP(1),SƯỜN(2) → chỉ còn ĐẮP(3),MÀI(4) = 2 stage
+// "Sửa" → bỏ CBM(0),SÁP(1),SƯỜN(2) → chỉ còn ĐẮP(3),MÀI(4)
+// "Làm tiếp" → bỏ CBM(0),SÁP(1) → bắt đầu từ SƯỜN(2)
 // "TS" / "Thử sườn" trong ghi chú → bỏ ĐẮP(3),MÀI(4) → chỉ còn CBM(0),SÁP(1),SƯỜN(2) = 3 stage
 const SKIP_STAGES = {
-  sua_laitiep: [0, 1, 2],
+  sua: [0, 1, 2],
+  lam_tiep: [0, 1],
   thusuon:     [3, 4],
 };
 function getSkipStages(lk, gc) {
   const lkLower = (lk || '').toLowerCase();
   const gcLower = (gc || '').toLowerCase();
-  if (lkLower.includes('sửa') || lkLower.includes('làm tiếp')) return SKIP_STAGES.sua_laitiep;
+  if (lkLower.includes('sửa')) return SKIP_STAGES.sua;
+  if (lkLower.includes('làm tiếp')) return SKIP_STAGES.lam_tiep;
   if (gcLower.includes('ts') || gcLower.includes('thử sườn')) return SKIP_STAGES.thusuon;
   return [];
 }
