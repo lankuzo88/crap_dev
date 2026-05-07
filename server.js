@@ -1482,10 +1482,19 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
   }
 
   try {
+    // Get active ma_dh list from latest Excel file
+    const active = getActiveMaDhList();
+    if (!active) {
+      log(`[User Orders] No active Excel file found`);
+      return res.json({ ok: true, orders: [] });
+    }
+
     // ĐẮP and MÀI see all orders including repairs; other công đoạn filter out 'Sửa'
     const showRepairs = userCongDoan === 'ĐẮP' || userCongDoan === 'MÀI';
     const repairFilter = showRepairs ? '' : `AND d.loai_lenh != 'Sửa'`;
 
+    // Filter by active Excel file orders + user's công đoạn + pending status + repair rules
+    const ph = active.ids.map(() => '?').join(',');
     const rows = db.prepare(`
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
@@ -1497,12 +1506,13 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
              ) AS stages_raw
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
-      WHERE t.cong_doan = ?
+      WHERE d.ma_dh IN (${ph})
+        AND t.cong_doan = ?
         AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
         ${repairFilter}
       GROUP BY d.ma_dh
       ORDER BY d.nhap_luc DESC
-    `).all(userCongDoan);
+    `).all(...active.ids, userCongDoan);
 
     const orders = [];
     for (const row of rows) {
