@@ -137,6 +137,48 @@
     }
     .fchip.active { background: var(--terracotta); border-color: var(--terracotta); color: #fff; }
 
+    .filter-summary {
+      position: sticky;
+      top: calc(var(--header-h) + 43px);
+      z-index: 145;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 7px 10px 8px;
+      background: rgba(255, 251, 248, 0.96);
+      border-bottom: 1px solid var(--border-card);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    }
+    .filter-summary::-webkit-scrollbar { display: none; }
+    .summary-pill {
+      flex: 0 0 auto;
+      min-width: 92px;
+      padding: 6px 9px;
+      border: 1px solid rgba(196, 131, 111, 0.26);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text-primary);
+    }
+    .summary-date {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--terracotta);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .summary-count {
+      margin-top: 3px;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+    .summary-empty {
+      padding: 6px 2px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     /* ═══════════════════════════════
        PH BADGE
     ═══════════════════════════════ */
@@ -467,6 +509,8 @@
     <button class="fchip" data-f="vnr"  onclick="setFilter(this,'vnr')">Mặt dán</button>
   </div>
 
+  <div class="filter-summary" id="filterSummary"></div>
+
   <!-- Card List -->
   <div id="cardList"></div>
 
@@ -676,6 +720,66 @@
       );
     }
 
+    function getChipFiltered() {
+      if (filterPh === 'all') return allOrders;
+      return allOrders.filter(o => phType(o.phuc_hinh) === filterPh);
+    }
+
+    function parseYcHtDay(ycHt) {
+      if (!ycHt) return null;
+      const raw = String(ycHt).trim();
+      if (!raw) return null;
+      const date = raw.split(/\s+/)[0];
+
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(date)) {
+        const [yyyy, mm, dd] = date.split('-');
+        return {
+          key: `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`,
+          label: `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}`,
+        };
+      }
+
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(date)) {
+        const [dd, mm, yyyy] = date.split('/');
+        return {
+          key: `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`,
+          label: `${dd.padStart(2, '0')}/${mm.padStart(2, '0')}`,
+        };
+      }
+
+      return { key: date, label: date.slice(0, 5) };
+    }
+
+    function renderFilterSummary(orders) {
+      const el = document.getElementById('filterSummary');
+      if (!el) return;
+
+      const byDay = new Map();
+      orders.forEach(o => {
+        const day = parseYcHtDay(o.yc_ht);
+        if (!day) return;
+        if (!byDay.has(day.key)) {
+          byDay.set(day.key, { label: day.label, orders: 0, qty: 0 });
+        }
+        const row = byDay.get(day.key);
+        row.orders += 1;
+        row.qty += Number(o.sl) || 0;
+      });
+
+      const rows = Array.from(byDay.entries()).sort(([a], [b]) => a.localeCompare(b));
+      if (!rows.length) {
+        el.innerHTML = '<div class="summary-empty">Chưa có ngày hoàn thành</div>';
+        return;
+      }
+
+      el.innerHTML = rows.map(([, r]) => `
+        <div class="summary-pill">
+          <div class="summary-date">${r.label}</div>
+          <div class="summary-count">${r.orders} đơn · ${r.qty} răng</div>
+        </div>
+      `).join('');
+    }
+
     function clearSearch() {
       filterSearch = '';
       const input = document.getElementById('searchInput');
@@ -787,6 +891,7 @@
 
     function renderCards() {
       const list = getFiltered();
+      renderFilterSummary(getChipFiltered());
       const container = document.getElementById('cardList');
 
       if (list.length === 0) {
