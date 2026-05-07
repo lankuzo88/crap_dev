@@ -4,42 +4,42 @@
       "username": "admin",
       "passwordHash": "$2b$10$xK1v0g48D1wnOU9MC97zDu75NHxAIFkWO.qGXTguutt5ayEdfQcES",
       "role": "admin",
-      "cong_doan": "MÀI",
-      "can_view_stats": true
+      "cong_doan": "mài",
+      "can_view_stats": false
     },
     {
       "username": "minhtuan",
       "passwordHash": "$2b$10$G5aQ/XG0nF/0FY6/boFHSOW7NbQY0J3RGZ.x6.Mvz69OSusjfdq.2",
       "role": "user",
-      "cong_doan": "MÀI",
+      "cong_doan": "mài",
       "can_view_stats": false
     },
     {
       "username": "vanhuyen",
       "passwordHash": "$2b$10$CsZBdqFJp/ngbouSzdnEAeMWsq50fH3lJUwWZ3cAhSekCU19hKGzy",
       "role": "user",
-      "cong_doan": "SÁP/Cadcam",
+      "cong_doan": "CAD/CAM",
       "can_view_stats": false
     },
     {
       "username": "trucmy",
       "passwordHash": "$2b$10$6.IDxvnFZ5uJvmg1n.KFbODDBeLXdv/JK/fpEx6Gros1vAdVUE0oK",
       "role": "qc",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "vanvan",
       "passwordHash": "$2b$10$cHOTf1yVITNkPwmvlcR8MOcMjnJTwv4ah6nbpDxU0zkUvM9x/tBSC",
       "role": "user",
-      "cong_doan": "",
+      "cong_doan": "CBM",
       "can_view_stats": false
     },
     {
       "username": "chitoan",
       "passwordHash": "$2b$10$SpxGEHADmqFUVtx4JPAHIu5EAjHqOTHBj971al.Pc9e8Ze3Hs0cRa",
       "role": "user",
-      "cong_doan": "",
+      "cong_doan": "CBM",
       "can_view_stats": false
     },
     {
@@ -47,104 +47,104 @@
       "passwordHash": "$2b$10$ZIZ2Bj7KqOKcvtrurkZ5bunmnsv8Vy65Q3d2XJ9yA.kcB9.L7nLXu",
       "role": "user",
       "cong_doan": "sáp",
-      "can_view_stats": true
+      "can_view_stats": false
     },
     {
       "username": "thihanh",
       "passwordHash": "$2b$10$MduNiE0xtzIyEr05d9zcnuaSnVsNkXpQq6uzLUdnxcRuMaQKu8Teq",
       "role": "user",
-      "cong_doan": "SÁP/Cadcam",
+      "cong_doan": "sáp",
       "can_view_stats": false
     },
     {
       "username": "thaison",
       "passwordHash": "$2b$10$tyKZCSXsUNM7Pj9i03yOAzu0PI7YBg9KkXiksFsmrxvMRM.5U/i",
       "role": "user",
-      "cong_doan": "SÁP/Cadcam",
+      "cong_doan": "CAD/CAM",
       "can_view_stats": false
     },
     {
       "username": "tansi",
       "passwordHash": "$2b$10$Gs5o6mrGpdxVaz.ue.QKROBAl2zUUKlq/Bsz3/jMorsWEaxF46pZi",
       "role": "user",
-      "cong_doan": "SƯỜN",
+      "cong_doan": "sườn",
       "can_view_stats": false
     },
     {
       "username": "vantrai",
       "passwordHash": "$2b$10$zkvxK4teR6WT3X5edYtiquvW430pem.gAZBy1qPa/Y1zQhJdYIOFy",
       "role": "user",
-      "cong_doan": "SƯỜN",
+      "cong_doan": "sườn",
       "can_view_stats": false
     },
     {
       "username": "tandat",
       "passwordHash": "$2b$10$GbRwWQfsTvenKlkVZ6IugejT1nY3QfAiu8DrpZRwMqWyjmhplOdqe",
       "role": "user",
-      "cong_doan": "SƯỜN",
+      "cong_doan": "sườn",
       "can_view_stats": false
     },
     {
       "username": "vutruong",
       "passwordHash": "$2b$10$0qBDqINt1N1Vdxn2x2507.1BiZfMXW8dZOS1fW/98dXrSoqltrv.y",
       "role": "user",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "camhong",
       "passwordHash": "$2b$10$2A9A0cueTV3hb8ffmKYBYuWVx5bv6UIsR89ZqgSDAISIDPRDVP6s2",
       "role": "user",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "hoaitrang",
       "passwordHash": "$2b$10$2.qIfd/mC9P.fjq6ehh6r./bR5KnLIwHIOFWCI68F9tOLU9KbVuiq",
       "role": "user",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "yenvy",
       "passwordHash": "$2b$10$eTfjKg3TFY1s7gv0YNjemew01.lukdKtArsNYnpREgqEM9ooO0ANC",
       "role": "user",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "trungtruc",
       "passwordHash": "$2b$10$83wdZoo/jAmIX0xz3f6HQ.HiHnlXm6Nhxcf1fme/1PNS0jZbYZ9aC",
       "role": "user",
-      "cong_doan": "ĐẮP",
+      "cong_doan": "đắp",
       "can_view_stats": false
     },
     {
       "username": "thehy",
       "passwordHash": "$2b$10$9vaMn8E1RK2u4ORTk45LAuFg9wlVsXkRhMUosGMtL7RGG3HdwbIq2",
       "role": "user",
-      "cong_doan": "MÀI",
+      "cong_doan": "mài",
       "can_view_stats": false
     },
     {
       "username": "baotran",
       "passwordHash": "$2b$10$uazCmJZsinInEk/l6dtzBuUHDjsk99adFfUNKEgjsa86qGOGC5jsG",
       "role": "user",
-      "cong_doan": "MÀI",
+      "cong_doan": "mài",
       "can_view_stats": false
     },
     {
       "username": "giathu",
       "passwordHash": "$2b$10$jXq4keHQDH8Ur2yS7PsYUe5iY4GGwBEKq8V7PDQmrl9u/m8bIySCW",
       "role": "user",
-      "cong_doan": "MÀI",
+      "cong_doan": "mài",
       "can_view_stats": false
     },
     {
       "username": "tanhuu",
       "passwordHash": "$2b$10$Xv90Uui4kdisa1t.yv11V.dYwwvoZlKNpIueend.W8UMGw.Ub4.zS",
       "role": "user",
-      "cong_doan": "MÀI",
+      "cong_doan": "mài",
       "can_view_stats": false
     }
   ]

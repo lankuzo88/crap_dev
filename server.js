@@ -44,6 +44,31 @@ app.use(express.urlencoded({ extended: false }));
 const USERS_JSON_PATH = path.join(__dirname, 'users.json');
 let USERS = {};
 
+const USER_CONG_DOAN_VALUES = ['', 'CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+const USER_CONG_DOAN_LEGACY_MAP = {
+  '': '',
+  'CBM': 'CBM',
+  'sáp': 'sáp',
+  'SÁP': 'sáp',
+  'SÁP/Cadcam': 'CAD/CAM',
+  'CAD/CAM': 'CAD/CAM',
+  'sườn': 'sườn',
+  'SƯỜN': 'sườn',
+  'đắp': 'đắp',
+  'ĐẮP': 'đắp',
+  'mài': 'mài',
+  'MÀI': 'mài',
+};
+
+function normalizeUserCongDoan(value) {
+  const raw = (value || '').trim();
+  return USER_CONG_DOAN_LEGACY_MAP[raw] ?? raw;
+}
+
+function isValidUserCongDoan(value) {
+  return USER_CONG_DOAN_VALUES.includes(value);
+}
+
 // Bcrypt helper functions
 async function hashPassword(password) {
   const salt = await bcrypt.genSalt(10);
@@ -60,10 +85,11 @@ function loadUsers() {
       const data = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
       USERS = {};
       data.users.forEach(u => {
+        const cong_doan = normalizeUserCongDoan(u.cong_doan);
         USERS[u.username] = {
           passwordHash: u.passwordHash || u.password,  // Support both old/new format during migration
           role: u.role,
-          cong_doan: u.cong_doan || '',
+          cong_doan,
           can_view_stats: u.can_view_stats === true
         };
       });
@@ -413,6 +439,11 @@ const CD_TO_DB = {
   'đắp':     'ĐẮP',
   'mài':     'MÀI',
 };
+
+function userCongDoanToDB(value) {
+  const normalized = normalizeUserCongDoan(value);
+  return CD_TO_DB[normalized] || normalized;
+}
 
 // Công đoạn bị bỏ qua theo loại đơn (0-indexed)
 // - "Sửa" / "Làm tiếp" → bỏ CBM(0), SÁP(1), SƯỜN(2) → chỉ còn ĐẮP(3), MÀI(4) = 2 stage
@@ -1503,8 +1534,8 @@ app.get('/api/user/pending-orders', requireAuth, (req, res) => {
       return res.json({ ok: true, orders: [] });
     }
 
-    // Map cong_doan user (lowercase) → giá trị trong bảng tien_do (từ Excel)
-    const dbCongDoan = CD_TO_DB[userCongDoan] || userCongDoan;
+    // Map cong_doan user (canonical) → giá trị trong bảng tien_do (từ Excel)
+    const dbCongDoan = userCongDoanToDB(userCongDoan);
 
     // ĐẮP and MÀI see all orders including repairs; other công đoạn filter out 'Sửa'
     const showRepairs = dbCongDoan === 'ĐẮP' || dbCongDoan === 'MÀI';
@@ -1627,17 +1658,17 @@ app.post('/admin/api/users', requireAdmin, express.json(), async (req, res) => {
   if (!['admin', 'user', 'qc'].includes(role)) {
     return res.status(400).json({ error: 'Invalid role' });
   }
-  const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài', ''];
-  if (cong_doan && !VALID_CD.includes(cong_doan)) {
+  const normalizedCongDoan = normalizeUserCongDoan(cong_doan);
+  if (!isValidUserCongDoan(normalizedCongDoan)) {
     return res.status(400).json({ error: 'Invalid cong_doan' });
   }
 
   try {
     const passwordHash = await hashPassword(password);
-    USERS[username] = { passwordHash, role, cong_doan: cong_doan || '' };
+    USERS[username] = { passwordHash, role, cong_doan: normalizedCongDoan };
     saveUsers();
-    log(`👤 New user created: ${username} (${role}) cong_doan=${cong_doan || 'none'}`);
-    res.json({ ok: true, username, role, cong_doan: cong_doan || '' });
+    log(`👤 New user created: ${username} (${role}) cong_doan=${normalizedCongDoan || 'none'}`);
+    res.json({ ok: true, username, role, cong_doan: normalizedCongDoan });
   } catch (err) {
     log(`❌ Error creating user: ${err.message}`);
     res.status(500).json({ error: 'Failed to create user' });
@@ -1647,12 +1678,12 @@ app.post('/admin/api/users', requireAdmin, express.json(), async (req, res) => {
 app.patch('/admin/api/users/:username/cong-doan', requireAdmin, express.json(), (req, res) => {
   const { username } = req.params;
   const { cong_doan } = req.body;
-  const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài', ''];
+  const normalizedCongDoan = normalizeUserCongDoan(cong_doan);
   if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
-  if (!VALID_CD.includes(cong_doan)) return res.status(400).json({ error: 'Invalid cong_doan' });
-  USERS[username].cong_doan = cong_doan;
+  if (!isValidUserCongDoan(normalizedCongDoan)) return res.status(400).json({ error: 'Invalid cong_doan' });
+  USERS[username].cong_doan = normalizedCongDoan;
   saveUsers();
-  log(`🔧 cong_doan set: ${username} → ${cong_doan || 'none'}`);
+  log(`🔧 cong_doan set: ${username} → ${normalizedCongDoan || 'none'}`);
   res.json({ ok: true });
 });
 
@@ -2371,6 +2402,8 @@ const STAGE_ORDER = {
 };
 
 function getAllowedStages(username, userRole, userCongDoan) {
+  userCongDoan = normalizeUserCongDoan(userCongDoan);
+
   // QC và Admin: tất cả công đoạn
   if (userRole === 'qc' || userRole === 'admin') {
     return ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];

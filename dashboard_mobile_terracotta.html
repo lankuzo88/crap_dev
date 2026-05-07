@@ -645,7 +645,7 @@
         const titleDiv = document.createElement('div');
         titleDiv.style.cssText = 'flex:1; font-weight: 600; font-size: 14px; color: var(--text-primary);';
         const _cd = currentUser.cong_doan;
-        const _cdDisplay = { sáp: 'Sáp', sườn: 'Sườn', đắp: 'Đắp', mài: 'Mài' };
+        const _cdDisplay = { CBM: 'CBM', sáp: 'Sáp', 'CAD/CAM': 'CAD/CAM', sườn: 'Sườn', đắp: 'Đắp', mài: 'Mài' };
         titleDiv.textContent = _cdDisplay[_cd] || _cd;
         const existingTitle = searchBar.querySelector('[data-title]');
         if (existingTitle) existingTitle.remove();

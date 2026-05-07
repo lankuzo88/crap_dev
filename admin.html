@@ -88,6 +88,7 @@
     .role-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
     .role-admin { background: #ffebee; color: #c62828; }
     .role-user  { background: #e8f5e9; color: #2e7d32; }
+    .role-qc    { background: #e3f2fd; color: #1565c0; }
     .cd-badge   { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e3f2fd; color: #1565c0; }
     .actions { display: flex; gap: 6px; }
     .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
@@ -264,6 +265,7 @@
           <label for="role">Vai trò</label>
           <select id="role">
             <option value="user">User (Nhân viên)</option>
+            <option value="qc">QC (Kiểm tra)</option>
             <option value="admin">Admin (Quản lý)</option>
           </select>
         </div>
@@ -464,6 +466,17 @@
   let pendingRejectId = null;
   let reportFilter = '';
   let reportsLoaded = false;
+  const USER_CONG_DOAN_OPTS = [
+    ['', '-- Không gán --'],
+    ['CBM', 'CBM'],
+    ['sáp', 'Sáp'],
+    ['CAD/CAM', 'CAD/CAM'],
+    ['sườn', 'Sườn'],
+    ['đắp', 'Đắp'],
+    ['mài', 'Mài'],
+  ];
+  const USER_CONG_DOAN_LABELS = Object.fromEntries(USER_CONG_DOAN_OPTS);
+  const ROLE_LABELS = { admin: 'Admin', user: 'User', qc: 'QC' };
 
   // ── TABS ──────────────────────────────────────
   function switchTab(name, btn) {
@@ -513,15 +526,6 @@
 
       if (!users.length) { el.innerHTML = '<div class="empty-state">Chưa có người dùng</div>'; return; }
 
-      const CONG_DOAN_OPTS = [
-        ['', '-- Không gán --'],
-        ['CBM', 'CBM'],
-        ['sáp', 'Sáp'],
-        ['CAD/CAM', 'CAD/CAM'],
-        ['sườn', 'Sườn'],
-        ['đắp', 'Đắp'],
-        ['mài', 'Mài'],
-      ];
       let html = `<table class="data-table">
         <thead><tr>
           <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Thống kê</th><th>Hành động</th>
@@ -529,13 +533,13 @@
 
       for (const u of users) {
         const isMe = u.username === currentUser;
-        const cdOpts = CONG_DOAN_OPTS.map(([v, label]) =>
+        const cdOpts = USER_CONG_DOAN_OPTS.map(([v, label]) =>
           `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${label}</option>`
         ).join('');
         const statsChecked = u.can_view_stats ? 'checked' : '';
         html += `<tr>
           <td><strong>${u.username}</strong>${isMe ? ' <span style="color:#aaa;font-size:11px">(bạn)</span>' : ''}</td>
-          <td><span class="role-badge role-${u.role}">${u.role === 'admin' ? 'Admin' : 'User'}</span></td>
+          <td><span class="role-badge role-${u.role}">${ROLE_LABELS[u.role] || u.role}</span></td>
           <td>
             <select onchange="setCongDoan('${u.username}', this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
               ${cdOpts}
@@ -586,7 +590,7 @@
       });
       const d = await res.json();
       if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); return; }
-      showAlert(`✅ Gán "${cong_doan || 'Không gán'}" cho ${username}`, 'success');
+      showAlert(`✅ Gán "${USER_CONG_DOAN_LABELS[cong_doan] || cong_doan || 'Không gán'}" cho ${username}`, 'success');
     } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
   }
 
