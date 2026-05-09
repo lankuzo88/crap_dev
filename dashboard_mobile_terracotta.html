@@ -187,6 +187,7 @@
     .ph-kl   { color:#555; border-color:rgba(100,100,100,.25); background:rgba(100,100,100,.07); }
     .ph-vnr  { color:#c94f6d; border-color:rgba(201,79,109,.3); background:rgba(201,79,109,.08); }
     .ph-hon  { color:#b5620a; border-color:rgba(181,98,10,.3); background:rgba(181,98,10,.08); }
+    .ph-inmau{ color:#7c3aed; border-color:rgba(124,58,237,.3); background:rgba(124,58,237,.08); }
 
     /* ═══════════════════════════════
        CARD LIST
@@ -507,6 +508,7 @@
     <button class="fchip" data-f="zirc" onclick="setFilter(this,'zirc')">Zirconia</button>
     <button class="fchip" data-f="kl"   onclick="setFilter(this,'kl')">Kim loại</button>
     <button class="fchip" data-f="vnr"  onclick="setFilter(this,'vnr')">Mặt dán</button>
+    <button class="fchip" data-f="inmau" onclick="setFilter(this,'inmau')">In mẫu</button>
   </div>
 
   <div class="filter-summary" id="filterSummary"></div>
@@ -559,14 +561,57 @@
       };
     }
 
-    function phType(ph) {
-      const p = (ph || '').toLowerCase();
-      if (p.includes('cùi giả zirconia') || p.includes('cui gia zirconia')) return 'hon';
-      if (p.includes('mặt dán')) return 'vnr';
+    function normalizePhText(value) {
+      return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+    function splitPhParts(ph) {
+      return String(ph || '').split(';').map(part => part.trim()).filter(Boolean);
+    }
+    function partQty(part) {
+      const m = String(part || '').match(/SL\s*:\s*(\d+)/i);
+      return m ? Number(m[1]) || 0 : 0;
+    }
+    function partType(part) {
+      const p = (part || '').toLowerCase();
+      const n = normalizePhText(part);
+      if (n.includes('in mau') || n.includes('mau ham')) return 'inmau';
+      if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
+      if (p.includes('mặt dán') || n.includes('mat dan') || p.includes('veneer')) return 'vnr';
       if (p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') ||
           p.includes('zir-') || p.includes('zolid') || p.includes('cercon') ||
           p.includes('la va') || p.includes('full zirconia')) return 'zirc';
       return 'kl';
+    }
+    function phBreakdown(ph, totalQty) {
+      const qty = { zirc: 0, kl: 0, vnr: 0, hon: 0, inmau: 0 };
+      const parts = splitPhParts(ph);
+      let assigned = 0;
+      parts.forEach(part => {
+        const q = partQty(part);
+        if (!q) return;
+        const type = partType(part);
+        qty[type] += q;
+        assigned += q;
+      });
+      if (!assigned) qty[partType(ph)] += Number(totalQty) || 0;
+      return qty;
+    }
+    function phMatches(o, filter) {
+      if (filter === 'all') return true;
+      return (phBreakdown(o.phuc_hinh, o.sl)[filter] || 0) > 0;
+    }
+    function filterQty(o, filter) {
+      if (filter === 'all') return Number(o.sl) || 0;
+      return phBreakdown(o.phuc_hinh, o.sl)[filter] || 0;
+    }
+    function phType(ph) {
+      const qty = phBreakdown(ph, 0);
+      if (qty.hon) return 'hon';
+      if (qty.vnr) return 'vnr';
+      if (qty.zirc) return 'zirc';
+      if (qty.kl) return 'kl';
+      if (qty.inmau) return 'inmau';
+      return partType(ph);
     }
     function phShort(ph) {
       if (!ph) return 'SỨ';
@@ -579,6 +624,7 @@
       if (ph.includes('Chrome')) return 'Cr-Co';
       if (ph.includes('Cùi')) return 'CÙI';
       if (ph.includes('La Va')) return 'LA VA';
+      if (phType(ph) === 'inmau') return 'IN MẪU';
       return 'KL';
     }
 
@@ -709,7 +755,7 @@
 
     function getFiltered() {
       let list = allOrders;
-      if (filterPh !== 'all') list = list.filter(o => phType(o.phuc_hinh) === filterPh);
+      if (filterPh !== 'all') list = list.filter(o => phMatches(o, filterPh));
       if (!filterSearch) return list;
       const q = filterSearch.toLowerCase().trim();
       return list.filter(o =>
@@ -726,7 +772,7 @@
 
     function getChipFiltered() {
       if (filterPh === 'all') return allOrders;
-      return allOrders.filter(o => phType(o.phuc_hinh) === filterPh);
+      return allOrders.filter(o => phMatches(o, filterPh));
     }
 
     function parseYcHtDay(ycHt) {
@@ -774,7 +820,7 @@
         }
         const row = byDay.get(day.key);
         row.orders += 1;
-        row.qty += Number(o.sl) || 0;
+        row.qty += filterQty(o, filterPh);
       });
 
       const rows = Array.from(byDay.entries()).sort(([a], [b]) => a.localeCompare(b));
@@ -924,7 +970,7 @@
           return (a.ma_dh || '').localeCompare(b.ma_dh || '');
         });
 
-        const totalSL = orders.reduce((s, o) => s + o.sl, 0);
+        const totalSL = orders.reduce((s, o) => s + filterQty(o, filterPh), 0);
         const time = formatTime(orders[0].yc_ht);
         const dateRaw = (orders[0].yc_ht || '').split(' ')[0];
         const dateParts = dateRaw ? dateRaw.split('-') : [];
