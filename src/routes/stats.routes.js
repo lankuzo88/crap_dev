@@ -19,15 +19,23 @@ function normalizeText(value) {
 function classifyPhucHinhPart(text) {
   const raw = String(text || '').toLowerCase();
   const normalized = normalizeText(text);
+  const isZirconiaMaterial =
+    raw.includes('zircornia') || raw.includes('zirconia') || raw.includes('ziconia') ||
+    raw.includes('zir-') || raw.includes('zolid') || raw.includes('cercon') ||
+    raw.includes('la va') || raw.includes('full zirconia') || normalized.includes('argen');
+  const isMetalMaterial =
+    normalized.includes('kim loai') || raw.includes('titanium') || normalized.includes('titan') ||
+    raw.includes('chrome') || raw.includes('cobalt');
 
   if (normalized.includes('in mau') || normalized.includes('mau ham')) return 'in_mau_ham';
   if (raw.includes('cùi giả zirconia') || normalized.includes('cui gia zirconia')) return 'cui_gia';
-  if (raw.includes('mặt dán') || normalized.includes('mat dan') || raw.includes('veneer')) return 'mat_dan';
-  if (
-    raw.includes('zircornia') || raw.includes('zirconia') || raw.includes('ziconia') ||
-    raw.includes('zir-') || raw.includes('zolid') || raw.includes('cercon') ||
-    raw.includes('la va') || raw.includes('full zirconia')
-  ) return 'zirconia';
+  if (raw.includes('veneer')) {
+    if (isZirconiaMaterial) return 'zirconia';
+    if (isMetalMaterial) return 'kim_loai';
+    return 'mat_dan';
+  }
+  if (raw.includes('mặt dán') || normalized.includes('mat dan')) return 'mat_dan';
+  if (isZirconiaMaterial) return 'zirconia';
   return 'kim_loai';
 }
 

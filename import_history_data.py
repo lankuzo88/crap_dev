@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 import re
 from datetime import datetime
+import unicodedata
 
 # Paths
 BASE_DIR = Path(__file__).parent
@@ -21,17 +22,32 @@ def parse_phuc_hinh_type(text):
         return 'kl'
 
     text_lower = text.lower()
+    text_ascii = ''.join(
+        ch for ch in unicodedata.normalize('NFD', text_lower)
+        if unicodedata.category(ch) != 'Mn'
+    ).replace('đ', 'd')
+
+    zirconia_keywords = ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va', 'full zirconia', 'argen']
+    metal_keywords = ['kim loai', 'titanium', 'titan', 'chrome', 'cobalt']
 
     # Hỗn hợp (cùi giả zirconia)
-    if 'cùi giả zirconia' in text_lower or 'cui gia zirconia' in text_lower:
+    if 'cùi giả zirconia' in text_lower or 'cui gia zirconia' in text_ascii:
         return 'hon'
 
-    # Mặt dán
-    if 'mặt dán' in text_lower:
+    # Veneer phân nhóm theo vật liệu phía sau.
+    if 'veneer' in text_lower:
+        if any(kw in text_lower or kw in text_ascii for kw in zirconia_keywords):
+            return 'zirc'
+        if any(kw in text_lower or kw in text_ascii for kw in metal_keywords):
+            return 'kl'
+        return 'vnr'
+
+    # Mặt dán không ghi vật liệu rõ thì giữ nhóm mặt dán.
+    if 'mặt dán' in text_lower or 'mat dan' in text_ascii:
         return 'vnr'
 
     # Zirconia
-    if any(kw in text_lower for kw in ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va', 'full zirconia']):
+    if any(kw in text_lower or kw in text_ascii for kw in zirconia_keywords):
         return 'zirc'
 
     # Kim loại (default)

@@ -574,12 +574,23 @@
     function partType(part) {
       const p = (part || '').toLowerCase();
       const n = normalizePhText(part);
+      const isZirconiaMaterial =
+        p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') ||
+        p.includes('zir-') || p.includes('zolid') || p.includes('cercon') ||
+        p.includes('la va') || p.includes('full zirconia') || n.includes('argen');
+      const isMetalMaterial =
+        n.includes('kim loai') || p.includes('titanium') || n.includes('titan') ||
+        p.includes('chrome') || p.includes('cobalt');
+
       if (n.includes('in mau') || n.includes('mau ham')) return 'inmau';
       if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
-      if (p.includes('mặt dán') || n.includes('mat dan') || p.includes('veneer')) return 'vnr';
-      if (p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') ||
-          p.includes('zir-') || p.includes('zolid') || p.includes('cercon') ||
-          p.includes('la va') || p.includes('full zirconia')) return 'zirc';
+      if (p.includes('veneer')) {
+        if (isZirconiaMaterial) return 'zirc';
+        if (isMetalMaterial) return 'kl';
+        return 'vnr';
+      }
+      if (p.includes('mặt dán') || n.includes('mat dan')) return 'vnr';
+      if (isZirconiaMaterial) return 'zirc';
       return 'kl';
     }
     function phBreakdown(ph, totalQty) {
@@ -618,6 +629,7 @@
       if (ph.includes('Zircornia') || ph.includes('Ziconia') || ph.includes('Zirconia') || ph.includes('Zolid')) return 'ZIRC';
       if (ph.includes('Diamond') || ph.includes('Zir-')) return 'ZIR-D';
       if (ph.includes('Cercon')) return 'CERCON';
+      if (ph.includes('Argen')) return 'ARGEN';
       if (ph.includes('Titanium') || ph.includes('Titan')) return 'TITAN';
       if (ph.toLowerCase().includes('cùi giả zirconia')) return 'HON HỢP';
       if (ph.includes('Veneer') || ph.includes('Mặt dán')) return 'VENEER';
