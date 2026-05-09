@@ -1150,6 +1150,12 @@ function openModal(id) {
     </div>`;
   }).join('');
   const allPhHtml = o.allPh.split('\n').filter(Boolean).map(l => `<div style="padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px;color:var(--text2)">${l}</div>`).join('');
+  const deliveryText = o.yc_giao ? `${fmtDate(o.yc_giao)} ${fmtTg(o.yc_giao)}` : '—';
+  const qtyDeliveryGrid = `
+    <div class="info-grid" style="margin-bottom:10px">
+      <div class="info-box"><div class="info-label">SL</div><div class="info-val amber">${o.sl || '—'}</div></div>
+      <div class="info-box"><div class="info-label">GIAO</div><div class="info-val amber">${deliveryText}</div></div>
+    </div>`;
   // Excel fields
   const hasExcel = o.bn || o.kh || o.yc_giao;
   const excelGrid = hasExcel ? `
@@ -1158,10 +1164,10 @@ function openModal(id) {
       ${o.kh ? `<div class="info-box"><div class="info-label">PHÒNG KHÁM</div><div class="info-val" style="font-family:'Lexend',sans-serif;color:${nkColor(o.kh)}">${o.kh}</div></div>` : ''}
       ${o.nhan ? `<div class="info-box"><div class="info-label">NHẬN LÚC</div><div class="info-val">${fmtDate(o.nhan)} ${fmtTg(o.nhan)}</div></div>` : ''}
       ${o.yc_ht ? `<div class="info-box"><div class="info-label">Y/C HOÀN THÀNH</div><div class="info-val amber">${fmtDate(o.yc_ht)} ${fmtTg(o.yc_ht)}</div></div>` : ''}
-      ${o.yc_giao ? `<div class="info-box"><div class="info-label">Y/C GIAO</div><div class="info-val amber">${fmtDate(o.yc_giao)} ${fmtTg(o.yc_giao)}</div></div>` : ''}
       ${o.gc ? `<div class="info-box" style="grid-column:span 2"><div class="info-label">GHI CHÚ</div><div class="info-val" style="color:var(--text2)">${o.gc}</div></div>` : ''}
     </div>` : '';
   document.getElementById('MB').innerHTML = `
+    ${qtyDeliveryGrid}
     ${excelGrid}
     <div class="info-grid">
       <div class="info-box"><div class="info-label">TIẾN ĐỘ</div><div class="info-val ${o.pct===100?'green':o.pct>0?'amber':''}">${o.done}/${o.total||5} · ${o.pct}%</div></div>

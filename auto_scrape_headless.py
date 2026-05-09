@@ -11,25 +11,33 @@ import time
 import subprocess
 import logging
 from pathlib import Path
-from datetime import datetime, timedelta
-import pytz
 
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
 
 # ── Config ──────────────────────────────────────────────────────────────────
-INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút
-START_HOUR = 7                 # Giờ bắt đầu (Vietnam time)
-END_HOUR = 20                  # Giờ kết thúc (20:30 thực tế, Vietnam time)
-END_MINUTE = 30
-VIETNAM_TZ = pytz.timezone("Asia/Ho_Chi_Minh")  # UTC+7
+INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút, chạy 24/7
 
-# VPS system clock sai 7 tiếng (chậm hơn UTC thực tế)
-# Workaround: thêm offset để tính đúng giờ Vietnam
-SYSTEM_CLOCK_OFFSET_HOURS = 7
 
 BASE_DIR   = Path(__file__).parent
 EXCEL_DIR  = BASE_DIR / "Excel"
 CONFIG_PATH = BASE_DIR / "labo_config.json"
+
+
+def load_env_file(path: Path):
+    if not path.is_file():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+load_env_file(BASE_DIR / ".env")
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 LOG_FILE = BASE_DIR / "auto_scrape.log"
@@ -47,21 +55,6 @@ log = logging.getLogger("auto-scrape")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
-
-def get_vietnam_time():
-    """Lấy giờ Vietnam chính xác (workaround cho VPS system clock sai)."""
-    system_time = datetime.now()
-    corrected_time = system_time + timedelta(hours=SYSTEM_CLOCK_OFFSET_HOURS)
-    return corrected_time
-
-
-def is_within_working_hours():
-    """Kiểm tra có đang trong giờ làm việc không (Vietnam time)."""
-    now = get_vietnam_time()
-    start = now.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
-    end = now.replace(hour=END_HOUR, minute=END_MINUTE, second=0, microsecond=0)
-    return start <= now <= end
-
 
 def find_newest_excel():
     """Tìm file Excel mới nhất trong Excel/ (exclude _scraped, _final, _cleaned)."""
@@ -141,10 +134,9 @@ def scrape_excel(file_path: Path) -> bool:
 
 def main():
     log.info("=== Auto-Scrape Headless start ===")
-    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, 24/7 (no working hours restriction)")
+    log.info(f"Schedule: Every {INTERVAL_MINUTES} min, 24/7")
 
     while True:
-        # Chạy 24/7, không check giờ làm việc
         newest = find_newest_excel()
         if not newest:
             log.info(f"No Excel files found in {EXCEL_DIR}. Checking again in {INTERVAL_MINUTES} min...")

@@ -31,7 +31,6 @@ app.use('/', require('./routes/stats.routes'));
 
 // ── Static: ảnh lỗi (auth protected) ─────────────────
 const { serveErrorImages, blockDirectHtml } = require('./middleware/security');
-const { ERROR_IMAGE_DIR } = require('./config/paths');
 app.use(blockDirectHtml);
 app.use('/uploads/error-images', serveErrorImages);
 

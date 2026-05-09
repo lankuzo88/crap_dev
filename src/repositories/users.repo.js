@@ -23,6 +23,11 @@ const USER_CONG_DOAN_LEGACY_MAP = {
 
 let USERS = {};
 
+function replaceUsers(nextUsers) {
+  for (const username of Object.keys(USERS)) delete USERS[username];
+  Object.assign(USERS, nextUsers);
+}
+
 function normalizeUserCongDoan(value) {
   const raw = (value || '').trim();
   return USER_CONG_DOAN_LEGACY_MAP[raw] ?? raw;
@@ -45,25 +50,26 @@ function loadUsers() {
   try {
     if (fs.existsSync(USERS_JSON_PATH)) {
       const data = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
-      USERS = {};
+      const loadedUsers = {};
       data.users.forEach(u => {
         const cong_doan = normalizeUserCongDoan(u.cong_doan);
-        USERS[u.username] = {
+        loadedUsers[u.username] = {
           passwordHash: u.passwordHash || u.password,
           role: u.role,
           cong_doan,
           can_view_stats: u.can_view_stats === true,
         };
       });
+      replaceUsers(loadedUsers);
       log(`📋 Loaded ${data.users.length} user(s) from users.json`);
     } else {
-      USERS = { admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } };
+      replaceUsers({ admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } });
       saveUsers();
       log(`✅ Created default admin user`);
     }
   } catch (e) {
     log(`⚠ Error loading users: ${e.message}`);
-    USERS = { admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } };
+    replaceUsers({ admin: { passwordHash: '$2b$10$placeholder', role: 'admin' } });
   }
 }
 

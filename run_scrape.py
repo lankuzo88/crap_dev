@@ -80,6 +80,10 @@ def run(excel_path: str):
     size   = max(1, (len(order_ids) + n - 1) // n)
     groups = [order_ids[i:i+size] for i in range(0, len(order_ids), size)]
     groups = groups[:n]
+    active_workers = min(n, len(groups))
+    if active_workers == 0:
+        log('[runner] Khong co don hang de cao.')
+        sys.exit(1)
 
     # 4. Khởi động workers
     event_q    = queue.Queue()
@@ -124,7 +128,7 @@ def run(excel_path: str):
             all_failed.extend(failed)
             finished[0] += 1
             log(f'[{w}] Xong: {len(results)} OK, {len(failed)} thất bại')
-            if finished[0] >= n:
+            if finished[0] >= active_workers:
                 done_event.set()
 
     if not all_results:

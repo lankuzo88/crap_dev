@@ -25,6 +25,7 @@ __pycache__/
 venv/
 env/
 .env
+.env.test
 .venv/
 *.egg-info/
 dist/

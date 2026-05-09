@@ -9,7 +9,7 @@ const { BASE_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
-router.get('/login', (req, res) => {
+router.get(['/login', '/login.html'], (req, res) => {
   const token = getSessionToken(req);
   const sess  = sessions.get(token);
   if (sess && sess.expires > Date.now()) return res.redirect('/');
@@ -18,7 +18,9 @@ router.get('/login', (req, res) => {
 
 router.post('/login', loginLimiter, async (req, res, next) => {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.redirect('/login?error=1');
+
     const user = USERS[username];
     if (!user) return res.redirect('/login?error=1');
 

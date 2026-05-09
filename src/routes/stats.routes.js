@@ -27,7 +27,11 @@ router.get('/api/stats/daily', requireAuth, (req, res) => {
     const rows = db.prepare(`
       SELECT
         substr(yc_hoan_thanh, 1, 10) AS ngay,
-        substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2) AS ngay_sort,
+        CASE
+          WHEN substr(yc_hoan_thanh, 3, 1) = '/'
+            THEN substr(yc_hoan_thanh,7,4)||'-'||substr(yc_hoan_thanh,4,2)||'-'||substr(yc_hoan_thanh,1,2)
+          ELSE substr(yc_hoan_thanh, 1, 10)
+        END AS ngay_sort,
         SUM(CASE WHEN LOWER(phuc_hinh) LIKE '%mặt dán%' OR LOWER(phuc_hinh) LIKE '%veneer%'
             THEN COALESCE(sl,0) ELSE 0 END) AS mat_dan,
         SUM(CASE WHEN
