@@ -2,7 +2,7 @@
 
 Tài liệu này là bản context hiện hành của dự án, dùng để onboard nhanh cho các phiên làm việc sau.
 
-Last updated: 2026-05-08.
+Last updated: 2026-05-09.
 
 ## 1. Tổng quan
 
@@ -47,11 +47,25 @@ asiakanban.com {
 }
 ```
 
-Trong `server.js` có `app.set('trust proxy', 1)` để chạy đúng sau Caddy.
+Trong `src/app.js` có `app.set('trust proxy', 1)` để chạy đúng sau Caddy.
 
 ## 3. File quan trọng
 
-- `server.js`: backend chính, Express routes, auth, DB query, business rules server-side.
+- `server.js`: entrypoint production; load users/sessions, init DB tables, start image cleanup, listen port, start WAL checkpoint.
+- `src/app.js`: wiring Express app, body parser, route modules, static/error middleware.
+- `src/config/env.js`: load `.env` and normalize runtime config.
+- `src/config/paths.js`: shared filesystem paths.
+- `src/db/index.js`: SQLite connection, PRAGMA settings, WAL checkpoint.
+- `src/db/migrations.js`: init/migrate runtime tables.
+- `src/middleware/auth.js`: `requireAuth`, `requireAdmin`.
+- `src/middleware/security.js`: login rate limiter, direct HTML guard, protected error image static serving.
+- `src/repositories/orders.repo.js`: order data access/cache, Excel/SQLite merge-facing reads.
+- `src/repositories/users.repo.js`: load/save users and bcrypt verification.
+- `src/routes/*.routes.js`: API/page routes split by feature (`auth`, `dashboard`, `orders`, `stats`, `admin`, `users`, `scraper`, `analytics`, `feedback`, `errorReports`, `munger`).
+- `src/services/image.service.js`: R2 image upload/compression/deletion/retention cleanup.
+- `src/services/r2.service.js`: Cloudflare R2 client wiring.
+- `src/services/scraper.service.js`: scraper/keylab job state, queue, process spawning.
+- `src/services/session.service.js`: session token storage and persistence.
 - `dashboard.html`: dashboard desktop/admin chính.
 - `dashboard_mobile_terracotta.html`: mobile dashboard chính tại `/mobile`.
 - `admin.html`: admin dashboard, quản lý user/công đoạn/quyền thống kê.
@@ -94,6 +108,7 @@ Node dependencies hiện có:
 - `bcrypt`
 - `express-rate-limit`
 - `multer`
+- `sharp`
 - `xlsx`
 - `dotenv`
 - `@aws-sdk/client-s3`
@@ -456,6 +471,8 @@ Các runtime/state file đã được ignore:
 
 ## 18. Recent important commits
 
+- `b44f242 fix: wire refactored server entrypoint`
+- `1e48b20 refactor: tách server.js thành src/ modules`
 - `297561d docs: document display and filter rules`
 - `4c2781b fix: hide try-in orders from dap mai users`
 - `a9ac0bc fix: split repair and continuation stage flow`
@@ -472,13 +489,18 @@ Các runtime/state file đã được ignore:
 Common checks:
 
 ```powershell
+npm run check
 node --check server.js
+Get-ChildItem -Path src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
+C:\Users\Administrator\AppData\Local\Python\bin\python.exe -m py_compile auto_scrape_headless.py run_scrape.py
+node test_login.js
 node -e "const fs=require('fs'); for (const f of ['admin.html','dashboard.html','dashboard_mobile_terracotta.html']) { const html=fs.readFileSync(f,'utf8'); const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]); scripts.forEach(s=>new Function(s)); console.log(f, 'scripts ok', scripts.length); }"
 git diff --check
 pm2 status
 pm2 describe asia-lab-server
 pm2 describe auto-scrape
-Get-Content auto_scrape.log -Tail 120
+pm2 logs asia-lab-server --lines 80 --nostream
+pm2 logs auto-scrape --lines 80 --nostream
 ```
 
 Restart production server after server-side code changes:
