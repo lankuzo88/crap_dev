@@ -615,6 +615,23 @@
       if (filter === 'all') return Number(o.sl) || 0;
       return phBreakdown(o.phuc_hinh, o.sl)[filter] || 0;
     }
+    function filterLabel(filter) {
+      return {
+        zirc: 'Zirconia',
+        kl: 'Kim loại',
+        vnr: 'Mặt dán',
+        hon: 'Hỗn hợp',
+        inmau: 'In mẫu',
+      }[filter] || 'Tổng';
+    }
+    function displayQty(o) {
+      const qty = filterQty(o, filterPh);
+      return {
+        qty,
+        label: filterPh === 'all' ? 'SL' : `SL ${filterLabel(filterPh)}`,
+        total: Number(o.sl) || 0,
+      };
+    }
     function phType(ph) {
       const qty = phBreakdown(ph, 0);
       if (qty.hon) return 'hon';
@@ -912,6 +929,7 @@
       const phT = phType(o.phuc_hinh);
       const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
+      const shownQty = displayQty(o);
 
       // Loai lenh chip
       const lkColor = getLoaiLenhColor(o.loai_lenh);
@@ -948,7 +966,7 @@
           </div>
           <div class="card-row2">
             <div class="card-patient">${patient}</div>
-            <div class="card-sl">SL: ${o.sl}</div>
+            <div class="card-sl">${shownQty.label}: ${shownQty.qty}</div>
           </div>
           <div class="card-prosthesis">${o.phuc_hinh}</div>
           ${currentKtv ? `<div class="card-stage-label" style="font-size: 11px; color: var(--text-primary); margin-top: 4px;">👤 ${currentKtv}</div>` : ''}
@@ -1054,6 +1072,7 @@
 
     // Modal functions
     function showOrderDetail(o) {
+      const shownQty = displayQty(o);
       const stageHtml = o.stagesData.map(s => {
         if (s.sk) return '';
         const icon = s.x ? '✓' : (s.n === o.current_stage ? '●' : '○');
@@ -1091,8 +1110,9 @@
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
             <div style="flex: 1;">
-              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
-              <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${o.sl}</div>
+              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">${shownQty.label}</div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${shownQty.qty}</div>
+              ${filterPh !== 'all' && shownQty.total !== shownQty.qty ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Tổng đơn: ${shownQty.total}</div>` : ''}
             </div>
             <div style="flex: 1;">
               <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
