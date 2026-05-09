@@ -26,8 +26,11 @@ function classifyPhucHinhPart(text) {
   const isMetalMaterial =
     normalized.includes('kim loai') || raw.includes('titanium') || normalized.includes('titan') ||
     raw.includes('chrome') || raw.includes('cobalt');
+  const isTemporaryMaterial =
+    normalized.includes('rang tam') || raw.includes('pmma') || normalized.includes('in resin');
 
   if (normalized.includes('in mau') || normalized.includes('mau ham')) return 'in_mau_ham';
+  if (isTemporaryMaterial) return 'rang_tam';
   if (raw.includes('cùi giả zirconia') || normalized.includes('cui gia zirconia')) return 'cui_gia';
   if (raw.includes('veneer')) {
     if (isZirconiaMaterial) return 'zirconia';
@@ -52,7 +55,7 @@ function splitPhucHinhParts(phucHinh) {
 }
 
 function summarizePhucHinh(phucHinh, totalQty) {
-  const summary = { mat_dan: 0, kim_loai: 0, zirconia: 0, cui_gia: 0, in_mau_ham: 0 };
+  const summary = { mat_dan: 0, kim_loai: 0, zirconia: 0, cui_gia: 0, in_mau_ham: 0, rang_tam: 0 };
   const parts = splitPhucHinhParts(phucHinh);
   if (!parts.length) {
     summary.kim_loai = Number(totalQty) || 0;
@@ -127,6 +130,7 @@ router.get('/api/stats/daily', requireAuth, (req, res) => {
           zirconia: 0,
           cui_gia: 0,
           in_mau_ham: 0,
+          rang_tam: 0,
           tong: 0,
         });
       }
@@ -138,7 +142,8 @@ router.get('/api/stats/daily', requireAuth, (req, res) => {
       target.zirconia += summary.zirconia;
       target.cui_gia += summary.cui_gia;
       target.in_mau_ham += summary.in_mau_ham;
-      target.tong += summary.mat_dan + summary.kim_loai + summary.zirconia + summary.cui_gia + summary.in_mau_ham;
+      target.rang_tam += summary.rang_tam;
+      target.tong += summary.mat_dan + summary.kim_loai + summary.zirconia + summary.cui_gia + summary.in_mau_ham + summary.rang_tam;
     }
 
     res.json({ ok: true, data: Array.from(byDay.values()).sort((a, b) => a.ngay_sort.localeCompare(b.ngay_sort)) });

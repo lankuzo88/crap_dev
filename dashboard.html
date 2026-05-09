@@ -45,6 +45,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .ph-vnr{color:#ff8090;border-color:rgba(255,128,144,.35);background:rgba(255,128,144,.08);}
 .ph-kl{color:var(--text2);border-color:rgba(139,149,176,.3);background:rgba(139,149,176,.06);}
 .ph-hon{color:var(--amber);border-color:rgba(245,166,35,.35);background:rgba(245,166,35,.08);}
+.ph-tam{color:#2dd4bf;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08);}
 .ph-oth{color:var(--amber);border-color:rgba(245,166,35,.3);background:var(--amber-s);}
 
 .lk-moi{color:var(--blue);border-color:rgba(61,159,255,.3);background:var(--blue-s);}
@@ -569,6 +570,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div class="chip" data-f="zirc" onclick="mSetF(this,'zirc')">Zirconia</div>
     <div class="chip" data-f="kl" onclick="mSetF(this,'kl')">Kim loại</div>
     <div class="chip" data-f="vnr" onclick="mSetF(this,'vnr')">Mặt dán</div>
+    <div class="chip" data-f="tam" onclick="mSetF(this,'tam')">Răng tạm</div>
   </div>
 </div>
 
@@ -915,7 +917,10 @@ function phType(ph) {
   const isMetalMaterial =
     n.includes('kim loai') || p.includes('titanium') || n.includes('titan') ||
     p.includes('chrome') || p.includes('cobalt');
+  const isTemporaryMaterial =
+    n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
   if (p.includes('cùi giả zirconia') || p.includes('cui gia zirconia')) return 'hon';
+  if (isTemporaryMaterial) return 'tam';
   if (p.includes('veneer')) {
     if (isZirconiaMaterial) return 'zirc';
     if (isMetalMaterial) return 'kl';
@@ -937,6 +942,7 @@ function phShort(ph) {
   if (ph.includes('Chrome')) return 'Cr-Co';
   if (ph.includes('Full') && ph.includes('kim loại')) return 'FULL-KL';
   if (ph.includes('Full')) return 'FULL-SỨ';
+  if (phType(ph) === 'tam') return 'RĂNG TẠM';
   if (ph.includes('Attachment')) return 'ATT';
   if (ph.toLowerCase().includes('cùi giả zirconia') || ph.toLowerCase().includes('cui gia zirconia')) return 'HON HỢP';
   if (ph.includes('Cùi')) return 'CÙI';
@@ -1003,6 +1009,7 @@ function filterOrders(f, q) {
     if (f === 'zirc' && phT !== 'zirc') return false;
     if (f === 'kl'   && phT !== 'kl')   return false;
     if (f === 'vnr'  && phT !== 'vnr')  return false;
+    if (f === 'tam'  && phT !== 'tam')  return false;
     if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
     return true;
   }).sort((a, b) => {

@@ -29,10 +29,14 @@ def parse_phuc_hinh_type(text):
 
     zirconia_keywords = ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va', 'full zirconia', 'argen']
     metal_keywords = ['kim loai', 'titanium', 'titan', 'chrome', 'cobalt']
+    temporary_keywords = ['rang tam', 'pmma', 'in resin']
 
     # Hỗn hợp (cùi giả zirconia)
     if 'cùi giả zirconia' in text_lower or 'cui gia zirconia' in text_ascii:
         return 'hon'
+
+    if any(kw in text_lower or kw in text_ascii for kw in temporary_keywords):
+        return 'tam'
 
     # Veneer phân nhóm theo vật liệu phía sau.
     if 'veneer' in text_lower:

@@ -188,6 +188,7 @@
     .ph-vnr  { color:#c94f6d; border-color:rgba(201,79,109,.3); background:rgba(201,79,109,.08); }
     .ph-hon  { color:#b5620a; border-color:rgba(181,98,10,.3); background:rgba(181,98,10,.08); }
     .ph-inmau{ color:#7c3aed; border-color:rgba(124,58,237,.3); background:rgba(124,58,237,.08); }
+    .ph-tam  { color:#0f766e; border-color:rgba(15,118,110,.3); background:rgba(15,118,110,.08); }
 
     /* ═══════════════════════════════
        CARD LIST
@@ -508,6 +509,7 @@
     <button class="fchip" data-f="zirc" onclick="setFilter(this,'zirc')">Zirconia</button>
     <button class="fchip" data-f="kl"   onclick="setFilter(this,'kl')">Kim loại</button>
     <button class="fchip" data-f="vnr"  onclick="setFilter(this,'vnr')">Mặt dán</button>
+    <button class="fchip" data-f="tam"  onclick="setFilter(this,'tam')">Răng tạm</button>
     <button class="fchip" data-f="inmau" onclick="setFilter(this,'inmau')">In mẫu</button>
   </div>
 
@@ -581,8 +583,11 @@
       const isMetalMaterial =
         n.includes('kim loai') || p.includes('titanium') || n.includes('titan') ||
         p.includes('chrome') || p.includes('cobalt');
+      const isTemporaryMaterial =
+        n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
 
       if (n.includes('in mau') || n.includes('mau ham')) return 'inmau';
+      if (isTemporaryMaterial) return 'tam';
       if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
       if (p.includes('veneer')) {
         if (isZirconiaMaterial) return 'zirc';
@@ -594,7 +599,7 @@
       return 'kl';
     }
     function phBreakdown(ph, totalQty) {
-      const qty = { zirc: 0, kl: 0, vnr: 0, hon: 0, inmau: 0 };
+      const qty = { zirc: 0, kl: 0, vnr: 0, hon: 0, inmau: 0, tam: 0 };
       const parts = splitPhParts(ph);
       let assigned = 0;
       parts.forEach(part => {
@@ -622,6 +627,7 @@
         vnr: 'Mặt dán',
         hon: 'Hỗn hợp',
         inmau: 'In mẫu',
+        tam: 'Răng tạm',
       }[filter] || 'Tổng';
     }
     function displayQty(o) {
@@ -638,6 +644,7 @@
       if (qty.vnr) return 'vnr';
       if (qty.zirc) return 'zirc';
       if (qty.kl) return 'kl';
+      if (qty.tam) return 'tam';
       if (qty.inmau) return 'inmau';
       return partType(ph);
     }
@@ -653,6 +660,7 @@
       if (ph.includes('Chrome')) return 'Cr-Co';
       if (ph.includes('Cùi')) return 'CÙI';
       if (ph.includes('La Va')) return 'LA VA';
+      if (phType(ph) === 'tam') return 'RĂNG TẠM';
       if (phType(ph) === 'inmau') return 'IN MẪU';
       return 'KL';
     }
