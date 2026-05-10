@@ -39,6 +39,9 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     } else if (dbCongDoan === 'SƯỜN') {
       loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') != 'Sửa'`;
     }
+    const completionFilter = dbCongDoan === 'MÀI'
+      ? ''
+      : `AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))`;
 
     const ph = active.ids.map(() => '?').join(',');
     const pendingOrders = db.prepare(`
@@ -47,7 +50,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE d.ma_dh IN (${ph})
         AND t.cong_doan = ?
-        AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))
+        ${completionFilter}
         ${loaiLenhFilter}
     `).all(...active.ids, dbCongDoan);
 

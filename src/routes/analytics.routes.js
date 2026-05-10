@@ -8,6 +8,15 @@ const { EXCEL_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
+function classifyPhucHinh(text) {
+  if (!text) return 'hon';
+  const t = text.toLowerCase();
+  if (t.includes('zirconia')) return 'zirc';
+  if (t.includes('kim loại') || t.includes('kim loai')) return 'kl';
+  if (t.includes('mặt dán') || t.includes('mat dan')) return 'vnr';
+  return 'hon';
+}
+
 // ── Simple analytics (legacy) ────────────────────────
 router.get('/api/analytics/ktv', requireAuth, (req, res) => {
   const db = getDB();
@@ -113,17 +122,21 @@ router.get('/api/analytics/history/top-ktv', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const { days = 30, limit = 10 } = req.query;
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 3650);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
     const rows = db.prepare(`
-      SELECT t.ten_ktv, COUNT(*) as total_done,
-             COUNT(DISTINCT t.cong_doan) as stages_worked,
-             GROUP_CONCAT(DISTINCT t.cong_doan) as stages
+      SELECT t.ten_ktv, COUNT(*) as total_stages,
+             COUNT(CASE WHEN t.xac_nhan='Có' THEN 1 END) as completed,
+             COUNT(DISTINCT t.ma_dh) as unique_orders
       FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh
-      WHERE t.xac_nhan = 'Có' AND t.ten_ktv != ''
-        AND SUBSTR(d.nhap_luc,1,10) >= date('now', ?)
-      GROUP BY t.ten_ktv ORDER BY total_done DESC LIMIT ?
-    `).all(`-${days} days`, parseInt(limit));
-    res.json({ ok: true, data: rows });
+      WHERE t.ten_ktv != '' AND SUBSTR(d.nhap_luc,1,10) >= date('now', ?)
+      GROUP BY t.ten_ktv ORDER BY total_stages DESC LIMIT ?
+    `).all(`-${days} days`, limit);
+    const result = rows.map(r => ({
+      ...r,
+      completion_rate: r.total_stages > 0 ? Math.round((r.completed / r.total_stages) * 100) : 0
+    }));
+    res.json({ ok: true, data: result });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
@@ -131,13 +144,12 @@ router.get('/api/analytics/history/stage-stats', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const { days = 30 } = req.query;
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 3650);
     const rows = db.prepare(`
-      SELECT t.cong_doan, COUNT(*) as total_done, COUNT(DISTINCT t.ten_ktv) as ktv_count,
-             COUNT(DISTINCT t.ma_dh) as order_count
+      SELECT t.cong_doan, COUNT(*) as total, COUNT(CASE WHEN t.xac_nhan='Có' THEN 1 END) as completed
       FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh
-      WHERE t.xac_nhan = 'Có' AND SUBSTR(d.nhap_luc,1,10) >= date('now', ?)
-      GROUP BY t.cong_doan ORDER BY total_done DESC
+      WHERE SUBSTR(d.nhap_luc,1,10) >= date('now', ?)
+      GROUP BY t.cong_doan ORDER BY total DESC
     `).all(`-${days} days`);
     res.json({ ok: true, data: rows });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
@@ -147,13 +159,21 @@ router.get('/api/analytics/history/phuc-hinh-distribution', requireAuth, (req, r
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const { days = 30 } = req.query;
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 3650);
     const rows = db.prepare(`
-      SELECT phuc_hinh, COUNT(*) as total, SUM(sl) as total_rang
+      SELECT phuc_hinh, COUNT(*) as cnt, SUM(sl) as total_rang
       FROM don_hang WHERE SUBSTR(nhap_luc,1,10) >= date('now', ?) AND phuc_hinh != ''
-      GROUP BY phuc_hinh ORDER BY total DESC LIMIT 20
+      GROUP BY phuc_hinh ORDER BY cnt DESC LIMIT 20
     `).all(`-${days} days`);
-    res.json({ ok: true, data: rows });
+    const grouped = new Map();
+    for (const row of rows) {
+      const type = classifyPhucHinh(row.phuc_hinh);
+      const existing = grouped.get(type) || { loai_phuc_hinh: type, orders: 0, total_rang: 0 };
+      existing.orders += row.cnt;
+      existing.total_rang += row.total_rang || 0;
+      grouped.set(type, existing);
+    }
+    res.json({ ok: true, data: Array.from(grouped.values()) });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
@@ -161,13 +181,13 @@ router.get('/api/analytics/history/top-customers', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const { days = 30, limit = 10 } = req.query;
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 3650);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
     const rows = db.prepare(`
-      SELECT khach_hang, COUNT(*) as total_orders, SUM(sl) as total_rang,
-             COUNT(DISTINCT benh_nhan) as unique_patients
+      SELECT khach_hang as ten_nha_khoa, COUNT(*) as total_orders, SUM(sl) as total_rang
       FROM don_hang WHERE SUBSTR(nhap_luc,1,10) >= date('now', ?) AND khach_hang != ''
       GROUP BY khach_hang ORDER BY total_orders DESC LIMIT ?
-    `).all(`-${days} days`, parseInt(limit));
+    `).all(`-${days} days`, limit);
     res.json({ ok: true, data: rows });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
@@ -176,13 +196,14 @@ router.get('/api/analytics/history/overview', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const { days = 30 } = req.query;
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 1), 3650);
     const since = `date('now', '-${days} days')`;
-    const total      = db.prepare(`SELECT COUNT(*) as n FROM don_hang WHERE SUBSTR(nhap_luc,1,10) >= ${since}`).get().n;
-    const total_rang = db.prepare(`SELECT COALESCE(SUM(sl),0) as n FROM don_hang WHERE SUBSTR(nhap_luc,1,10) >= ${since}`).get().n;
-    const completed  = db.prepare(`SELECT COUNT(*) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE t.cong_doan='MÀI' AND t.xac_nhan='Có' AND SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
-    const active_ktv = db.prepare(`SELECT COUNT(DISTINCT ten_ktv) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE t.xac_nhan='Có' AND t.ten_ktv != '' AND SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
-    res.json({ ok: true, data: { total_orders: total, total_rang, completed_orders: completed, active_ktv } });
+    const total_records  = db.prepare(`SELECT COUNT(*) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
+    const unique_orders  = db.prepare(`SELECT COUNT(DISTINCT t.ma_dh) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
+    const unique_ktv     = db.prepare(`SELECT COUNT(DISTINCT ten_ktv) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE t.ten_ktv != '' AND SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
+    const unique_customers = db.prepare(`SELECT COUNT(DISTINCT d.khach_hang) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE d.khach_hang != '' AND SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
+    const completed_stages = db.prepare(`SELECT COUNT(*) as n FROM tien_do t JOIN don_hang d ON t.ma_dh = d.ma_dh WHERE t.xac_nhan='Có' AND SUBSTR(d.nhap_luc,1,10) >= ${since}`).get().n;
+    res.json({ ok: true, data: { total_records, unique_orders, unique_ktv, unique_customers, completed_stages } });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 

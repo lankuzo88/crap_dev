@@ -213,6 +213,11 @@
     'đắp': 'stage-đắp', 'mài': 'stage-mài',
   };
 
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  }
+
   function stageClass(s) { return STAGE_CLASS[s] || 'stage-other'; }
 
   function fmtDate(s) {
@@ -286,17 +291,20 @@
       const sc = stageClass(r.cong_doan);
       const statusLabel = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', rejected: 'Từ chối' }[r.trang_thai] || r.trang_thai;
 
-      const imgUrl = r.hinh_anh
-        ? (r.hinh_anh.startsWith('http') ? r.hinh_anh : `/uploads/error-images/${r.hinh_anh}`)
-        : null;
+      let imgUrl = null;
+      if (r.hinh_anh) {
+        const img = esc(r.hinh_anh);
+        if (r.hinh_anh.startsWith('http') || r.hinh_anh.startsWith('/')) imgUrl = img;
+        else imgUrl = `/uploads/error-images/${img}`;
+      }
       const photoHtml = imgUrl
-        ? `<div class="card-photo"><img src="${imgUrl}" alt="Ảnh lỗi" onclick="openLightbox('${imgUrl}')"></div>`
+        ? `<div class="card-photo"><img src="${imgUrl}" alt="Ảnh lỗi" onclick="openLightbox('${imgUrl.replace(/'/g, '&#x27;')}')"></div>`
         : '';
 
       const reviewedHtml = (r.trang_thai === 'confirmed' || r.trang_thai === 'rejected')
         ? `<div class="reviewed-info">
-            ${r.trang_thai === 'confirmed' ? '✅' : '❌'} Duyệt bởi <strong>${r.reviewed_by || '?'}</strong> lúc ${fmtDate(r.reviewed_at)}
-            ${r.ghi_chu_admin ? `<br>Ghi chú: <em>${r.ghi_chu_admin}</em>` : ''}
+            ${r.trang_thai === 'confirmed' ? '✅' : '❌'} Duyệt bởi <strong>${esc(r.reviewed_by || '?')}</strong> lúc ${fmtDate(r.reviewed_at)}
+            ${r.ghi_chu_admin ? `<br>Ghi chú: <em>${esc(r.ghi_chu_admin)}</em>` : ''}
            </div>`
         : '';
 
@@ -310,19 +318,19 @@
       return `
         <div class="report-card status-${r.trang_thai}" id="card-${r.id}">
           <div class="card-top">
-            <span class="card-madh">${r.ma_dh || '—'}</span>
-            <span class="stage-badge ${sc}">${r.cong_doan || '?'}</span>
-            <span class="error-code">${r.ma_loi_text || '—'}</span>
+            <span class="card-madh">${esc(r.ma_dh || '—')}</span>
+            <span class="stage-badge ${sc}">${esc(r.cong_doan || '?')}</span>
+            <span class="error-code">${esc(r.ma_loi_text || '—')}</span>
             <span class="status-badge ${r.trang_thai}">${statusLabel}</span>
             <div class="meta">
-              <div>${r.submitted_by || '?'}</div>
+              <div>${esc(r.submitted_by || '?')}</div>
               <div>${fmtDate(r.submitted_at)}</div>
             </div>
           </div>
           <div class="card-mid">
             ${photoHtml}
             <div class="card-info">
-              ${r.mo_ta ? `<div class="card-mo_ta">${r.mo_ta}</div>` : ''}
+              ${r.mo_ta ? `<div class="card-mo_ta">${esc(r.mo_ta)}</div>` : ''}
               ${reviewedHtml}
             </div>
           </div>

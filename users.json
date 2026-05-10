@@ -12,7 +12,7 @@
       "passwordHash": "$2b$10$G5aQ/XG0nF/0FY6/boFHSOW7NbQY0J3RGZ.x6.Mvz69OSusjfdq.2",
       "role": "user",
       "cong_doan": "mài",
-      "can_view_stats": false
+      "can_view_stats": true
     },
     {
       "username": "vanhuyen",
@@ -26,7 +26,7 @@
       "passwordHash": "$2b$10$6.IDxvnFZ5uJvmg1n.KFbODDBeLXdv/JK/fpEx6Gros1vAdVUE0oK",
       "role": "qc",
       "cong_doan": "đắp",
-      "can_view_stats": false
+      "can_view_stats": true
     },
     {
       "username": "vanvan",
@@ -47,7 +47,7 @@
       "passwordHash": "$2b$10$ZIZ2Bj7KqOKcvtrurkZ5bunmnsv8Vy65Q3d2XJ9yA.kcB9.L7nLXu",
       "role": "user",
       "cong_doan": "sáp",
-      "can_view_stats": false
+      "can_view_stats": true
     },
     {
       "username": "thihanh",

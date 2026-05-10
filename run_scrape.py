@@ -69,6 +69,10 @@ def run(excel_path: str):
     log(f'[runner] Tổng {len(order_ids)} đơn hàng')
 
     # 2. Lấy credentials từ env
+    if not order_ids:
+        log('[runner] Khong co don hang de cao.')
+        sys.exit(1)
+
     accounts = get_accounts()
     if not accounts:
         log('[runner] ERROR: Thiếu credentials. Cần set LABO_USER1 và LABO_PASS1.')
@@ -76,14 +80,12 @@ def run(excel_path: str):
     n = len(accounts)
     log(f'[runner] {n} worker(s)')
 
-    # 3. Chia đơn theo số workers
-    size   = max(1, (len(order_ids) + n - 1) // n)
-    groups = [order_ids[i:i+size] for i in range(0, len(order_ids), size)]
-    groups = groups[:n]
-    active_workers = min(n, len(groups))
-    if active_workers == 0:
-        log('[runner] Khong co don hang de cao.')
-        sys.exit(1)
+    # 3. Queue mode: worker nao xong 1 don se lay don tiep theo.
+    order_q = queue.Queue()
+    for ma_dh in order_ids:
+        order_q.put(ma_dh)
+    active_workers = n
+    log(f'[runner] Queue mode: {len(order_ids)} don, {active_workers} worker active')
 
     # 4. Khởi động workers
     event_q    = queue.Queue()
@@ -91,7 +93,7 @@ def run(excel_path: str):
     finished   = [0]
     done_event = threading.Event()
 
-    for i, ((username, password), group) in enumerate(zip(accounts, groups), 1):
+    for i, (username, password) in enumerate(accounts, 1):
         scraper = LaboAsiaAPIClient(
             base_url=BASE_URL,
             username=username,
@@ -101,8 +103,8 @@ def run(excel_path: str):
             max_retry_per_order=2,
         )
         t = threading.Thread(
-            target=scraper.scrape_order_list,
-            args=(group, event_q, f'Worker-{i}'),
+            target=scraper.scrape_order_queue,
+            args=(order_q, event_q, f'Worker-{i}'),
             daemon=True,
         )
         t.start()

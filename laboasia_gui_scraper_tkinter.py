@@ -436,6 +436,50 @@ class LaboAsiaAPIClient:
 
         event_q.put(("worker_finished", worker_name, results, failed, self.username))
 
+    def scrape_order_queue(
+        self, order_q: queue.Queue, event_q: queue.Queue, worker_name: str
+    ) -> None:
+        """
+        Scrape orders from a shared queue.
+
+        Unlike scrape_order_list(), a worker that cannot log in does not own any
+        fixed slice of orders, so other logged-in workers can continue draining
+        the queue.
+        """
+        results: list[ProgressRow] = []
+        failed: list[str] = []
+        processed = 0
+
+        try:
+            self._token = self._playwright_login()
+            self._session = self._build_session(self._token)
+        except Exception as e:
+            event_q.put(("log", f"[{worker_name}] Login that bai: {e}"))
+            event_q.put(("worker_finished", worker_name, [], [], self.username))
+            return
+
+        event_q.put(("log", f"[{worker_name}] Dang nhap OK: {self.username}"))
+
+        while True:
+            try:
+                ma_dh = order_q.get_nowait()
+            except queue.Empty:
+                break
+
+            processed += 1
+            event_q.put(("log", f"[{worker_name}] Lay don #{processed}: {ma_dh}"))
+            try:
+                rows = self._scrape_one_order(ma_dh)
+                results.extend(rows)
+                event_q.put(("order_done", worker_name, ma_dh, len(rows), None))
+            except Exception as e:
+                failed.append(ma_dh)
+                event_q.put(("order_done", worker_name, ma_dh, 0, str(e)))
+            finally:
+                order_q.task_done()
+
+        event_q.put(("worker_finished", worker_name, results, failed, self.username))
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # EXCEL / MERGE

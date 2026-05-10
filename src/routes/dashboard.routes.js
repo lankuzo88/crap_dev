@@ -53,7 +53,10 @@ router.get('/mobile', requireAuth, (req, res) => {
   else res.redirect('/');
 });
 
-router.get('/analytics', requireAuth, requireAdmin, (req, res) => {
+router.get(['/analytics', '/analytics.html'], requireAuth, requireAdmin, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const analyticsFile = path.join(BASE_DIR, 'analytics.html');
   if (fs.existsSync(analyticsFile)) res.sendFile(analyticsFile);
   else res.status(404).send('<h2>Không tìm thấy analytics.html</h2>');

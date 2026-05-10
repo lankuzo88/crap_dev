@@ -132,11 +132,22 @@ router.get('/api/error-reports', requireAuth, (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const username = req.session.user;
+    const userInfo = USERS[username];
+    if (!userInfo) return res.status(403).json({ ok: false, error: 'User not found' });
+
     let sql = 'SELECT * FROM error_reports WHERE 1=1';
     const params = [];
-    if (req.query.trang_thai)   { sql += ' AND trang_thai=?';    params.push(req.query.trang_thai); }
-    if (req.query.cong_doan)    { sql += ' AND cong_doan=?';     params.push(req.query.cong_doan); }
-    if (req.query.submitted_by) { sql += ' AND submitted_by=?';  params.push(req.query.submitted_by); }
+
+    if (userInfo.role !== 'admin') {
+      sql += ' AND submitted_by=?';
+      params.push(username);
+    } else {
+      if (req.query.submitted_by) { sql += ' AND submitted_by=?';  params.push(req.query.submitted_by); }
+    }
+
+    if (req.query.trang_thai) { sql += ' AND trang_thai=?'; params.push(req.query.trang_thai); }
+    if (req.query.cong_doan)  { sql += ' AND cong_doan=?';  params.push(req.query.cong_doan); }
     sql += ' ORDER BY submitted_at DESC LIMIT 100';
     const rows = db.prepare(sql).all(...params);
     res.json({ ok: true, data: rows });

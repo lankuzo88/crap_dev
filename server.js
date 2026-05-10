@@ -7,7 +7,7 @@ const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const { loadUsers } = require('./src/repositories/users.repo');
 const { loadSessions } = require('./src/services/session.service');
-const { initErrorTables } = require('./src/db/migrations');
+const { initErrorTables, initMonthlyStatsTables } = require('./src/db/migrations');
 const { startImageCleanupSchedule } = require('./src/services/image.service');
 const { startWALCheckpoint } = require('./src/db/index');
 const { getData, findLatest } = require('./src/repositories/orders.repo');
@@ -18,6 +18,7 @@ const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${ms
 loadUsers();
 loadSessions();
 initErrorTables();
+initMonthlyStatsTables();
 startImageCleanupSchedule();
 
 app.listen(PORT, '127.0.0.1', () => {

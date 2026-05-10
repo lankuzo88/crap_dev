@@ -106,6 +106,96 @@
       display: block;
     }
 
+    .action-menu {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .menu-trigger {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      border: 1px solid var(--terracotta-light);
+      background: transparent;
+      color: var(--terracotta);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .menu-trigger:active {
+      opacity: 0.75;
+    }
+
+    .menu-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: min(240px, calc(100vw - 24px));
+      padding: 6px;
+      border-radius: 9px;
+      border: 1px solid var(--border-card);
+      background: rgba(255, 251, 248, 0.98);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+      display: none;
+      z-index: 260;
+    }
+
+    .action-menu.open .menu-panel {
+      display: block;
+    }
+
+    .menu-item {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .menu-item:active {
+      background: rgba(196, 131, 111, 0.12);
+    }
+
+    .menu-item.admin-only {
+      display: none;
+    }
+
+    .menu-item.admin-visible {
+      display: flex;
+    }
+
+    .menu-icon {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+      color: var(--terracotta);
+    }
+
+    .menu-item.danger {
+      color: var(--terracotta);
+    }
+
+    .menu-item:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+
     /* ═══════════════════════════════
        FILTER BAR
     ═══════════════════════════════ */
@@ -467,25 +557,6 @@
     .card-prosthesis { font-size: 11px; }
     .card-stage-label { font-size: 11px; }
     .empty-state p { font-size: 15px; }
-    #m-export-btn {
-      flex-shrink: 0;
-      font-size: 13px;
-      color: var(--terracotta);
-      padding: 4px 7px;
-      border-radius: 6px;
-      border: 1px solid var(--terracotta-light);
-      background: transparent;
-      cursor: pointer;
-      font-family: inherit;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      min-height: 32px;
-    }
-    #m-export-btn:active { opacity: 0.7; }
-    #m-export-btn.admin-visible { display: inline-flex; }
-
     /* ── STATS HEADER ─────────────────────────── */
   </style>
 </head>
@@ -496,11 +567,29 @@
     <span class="search-icon">🔍</span>
     <input id="searchInput" type="search" placeholder="Tìm mã đơn, bệnh nhân, nha khoa..." autocomplete="off">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
-    <a id="m-upload-btn" href="/upload" title="Upload Excel" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);display:none;">📤</a>
-    <button id="m-export-btn" onclick="triggerKeylabExport()" title="Xu&#7845;t Excel KeyLab">🔄</button>
-    <a id="m-munger-btn" href="/munger" title="Munger Dashboard" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);display:none;">⚖️</a>
-    <a id="m-baoloi-btn" href="/bao-loi" title="Báo lỗi" style="flex-shrink:0;font-size:13px;color:var(--terracotta);text-decoration:none;padding:4px 8px;border-radius:6px;border:1px solid var(--terracotta-light);font-weight:700;">⚠</a>
-    <a href="/logout" title="Đăng xuất" style="flex-shrink:0;font-size:13px;color:var(--text-muted);text-decoration:none;padding:4px 6px;border-radius:6px;border:1px solid var(--border-card);">↩</a>
+    <div class="action-menu" id="actionMenu">
+      <button class="menu-trigger" id="menuTrigger" onclick="toggleActionMenu(event)" aria-expanded="false" aria-controls="actionMenuPanel" title="Menu">☰</button>
+      <div class="menu-panel" id="actionMenuPanel">
+        <a id="m-admin-btn" class="menu-item admin-only" href="/admin">
+          <span class="menu-icon">⚙️</span><span>Admin Dashboard</span>
+        </a>
+        <a id="m-upload-btn" class="menu-item admin-only" href="/upload">
+          <span class="menu-icon">📤</span><span>Upload Excel</span>
+        </a>
+        <button id="m-export-btn" class="menu-item admin-only" onclick="triggerKeylabExport()" title="Xu&#7845;t Excel KeyLab">
+          <span class="menu-icon" id="m-export-icon">🔄</span><span id="m-export-label">Xuất Excel KeyLab</span>
+        </button>
+        <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
+          <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
+        </a>
+        <a id="m-baoloi-btn" class="menu-item danger" href="/bao-loi">
+          <span class="menu-icon">⚠</span><span>Báo lỗi</span>
+        </a>
+        <a class="menu-item" href="/logout">
+          <span class="menu-icon">↩</span><span>Đăng xuất</span>
+        </a>
+      </div>
+    </div>
   </div>
 
   <!-- Filter Bar -->
@@ -567,7 +656,7 @@
       return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     }
     function splitPhParts(ph) {
-      return String(ph || '').split(';').map(part => part.trim()).filter(Boolean);
+      return String(ph || '').split(/;|\r?\n/).map(part => part.trim()).filter(Boolean);
     }
     function partQty(part) {
       const m = String(part || '').match(/SL\s*:\s*(\d+)/i);
@@ -882,6 +971,30 @@
       renderCards();
     }
 
+    function toggleActionMenu(event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById('actionMenu');
+      const trigger = document.getElementById('menuTrigger');
+      if (!menu) return;
+      const isOpen = menu.classList.toggle('open');
+      if (trigger) trigger.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    function closeActionMenu() {
+      const menu = document.getElementById('actionMenu');
+      const trigger = document.getElementById('menuTrigger');
+      if (!menu) return;
+      menu.classList.remove('open');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function setMobileExportState(icon, disabled = false) {
+      const btn = document.getElementById('m-export-btn');
+      const iconEl = document.getElementById('m-export-icon');
+      if (iconEl) iconEl.textContent = icon;
+      if (btn) btn.disabled = disabled;
+    }
+
     function groupByCompletionTime(orders) {
       const grouped = new Map();
       orders.forEach(o => {
@@ -1069,12 +1182,19 @@
 
       // Card click → modal
       document.addEventListener('click', (e) => {
+        const actionMenu = document.getElementById('actionMenu');
+        if (actionMenu && !actionMenu.contains(e.target)) closeActionMenu();
+
         const card = e.target.closest('.card');
         if (card) {
           const maDh = card.getAttribute('data-ma-dh');
           const order = allOrders.find(o => o.ma_dh === maDh);
           if (order) showOrderDetail(order);
         }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeActionMenu();
       });
     });
 
@@ -1160,28 +1280,27 @@
         const u = await r.json();
         if (u.role === 'admin') {
           document.getElementById('m-export-btn').classList.add('admin-visible');
+          const adminBtn = document.getElementById('m-admin-btn');
+          if (adminBtn) adminBtn.classList.add('admin-visible');
           const upBtn = document.getElementById('m-upload-btn');
-          if (upBtn) upBtn.style.display = '';
+          if (upBtn) upBtn.classList.add('admin-visible');
           const mungerBtn = document.getElementById('m-munger-btn');
-          if (mungerBtn) mungerBtn.style.display = '';
+          if (mungerBtn) mungerBtn.classList.add('admin-visible');
         }
       } catch {}
     }
 
     async function triggerKeylabExport() {
-      const btn = document.getElementById('m-export-btn');
-      btn.disabled = true;
-      btn.textContent = '⏳';
+      setMobileExportState('⏳', true);
 
       try {
         const r = await fetch('/keylab-export-now', { method: 'POST' });
         const data = await r.json();
 
         if (!data.ok) {
-          btn.textContent = '⚠️';
+          setMobileExportState('⚠️', true);
           setTimeout(() => {
-            btn.textContent = '🔄';
-            btn.disabled = false;
+            setMobileExportState('🔄', false);
           }, 3500);
           return;
         }
@@ -1190,10 +1309,9 @@
         pollExportStatusMobile();
 
       } catch {
-        btn.textContent = '❌';
+        setMobileExportState('❌', true);
         setTimeout(() => {
-          btn.textContent = '🔄';
-          btn.disabled = false;
+          setMobileExportState('🔄', false);
         }, 3500);
       }
     }
@@ -1203,24 +1321,21 @@
     async function pollExportStatusMobile() {
       if (pollIntervalMobile) clearInterval(pollIntervalMobile);
 
-      const btn = document.getElementById('m-export-btn');
-
       pollIntervalMobile = setInterval(async () => {
         try {
           const exportRes = await fetch('/keylab-export-status');
           const exportData = await exportRes.json();
 
           if (exportData.running) {
-            btn.textContent = '⏳';
+            setMobileExportState('⏳', true);
             return;
           }
 
           if (exportData.exitCode !== 0) {
-            btn.textContent = '❌';
+            setMobileExportState('❌', true);
             clearInterval(pollIntervalMobile);
             setTimeout(() => {
-              btn.textContent = '🔄';
-              btn.disabled = false;
+              setMobileExportState('🔄', false);
             }, 3500);
             return;
           }
@@ -1229,20 +1344,19 @@
           const scrapeData = await scrapeRes.json();
 
           if (scrapeData.running) {
-            btn.textContent = '🔄';
+            setMobileExportState('🔄', true);
             return;
           }
 
           if (scrapeData.exitCode === 0) {
-            btn.textContent = '✅';
+            setMobileExportState('✅', true);
             clearInterval(pollIntervalMobile);
             setTimeout(() => location.reload(), 1000);
           } else {
-            btn.textContent = '⚠️';
+            setMobileExportState('⚠️', true);
             clearInterval(pollIntervalMobile);
             setTimeout(() => {
-              btn.textContent = '🔄';
-              btn.disabled = false;
+              setMobileExportState('🔄', false);
             }, 3500);
           }
 

@@ -9,6 +9,7 @@ ehthumbs.db
 
 # ============ Node.js ============
 node_modules/
+.npm_cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
