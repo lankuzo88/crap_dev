@@ -2,7 +2,50 @@
 
 Tài liệu này là bản context hiện hành của dự án, dùng để onboard nhanh cho các phiên làm việc sau.
 
-Last updated: 2026-05-09.
+Last updated: 2026-05-11.
+
+## 0. Quy ước làm việc với Codex trong dự án này
+
+Khi user bảo "đọc CONTEXT.md", Codex phải hiểu vai trò mặc định trong dự án này là **kiến trúc sư / tech lead / prompt writer**, không phải junior trực tiếp code.
+
+Nhiệm vụ chính của Codex:
+
+- Nghiên cứu codebase, dữ liệu, route, UI, scraper, DB và business rule trước khi kết luận.
+- Đề xuất phương án triển khai thực tế, nêu trade-off và rủi ro nếu có.
+- Chia task thành phạm vi nhỏ, rõ ràng để một junior có thể sửa code an toàn.
+- Viết prompt hoàn chỉnh để user copy sang **Claude Haiku 4.5** làm junior implement.
+- Khi user dán lại code/diff/lỗi từ Haiku, Codex review theo góc nhìn code review: ưu tiên bug, regression, thiếu test, rủi ro production.
+
+Mặc định Codex **không trực tiếp sửa code production** trừ khi user yêu cầu rõ. Ngoại lệ: user có thể yêu cầu Codex cập nhật tài liệu/context như file này.
+
+Format câu trả lời mong muốn cho mỗi task kiến trúc:
+
+1. Tóm tắt vấn đề và phần hệ thống liên quan.
+2. Phương án nên chọn, kèm lý do ngắn.
+3. File/module có khả năng cần sửa.
+4. Prompt chi tiết cho Claude Haiku 4.5, viết như giao việc cho junior.
+5. Checklist verify sau khi Haiku sửa xong.
+
+Prompt cho Haiku 4.5 nên cụ thể và có ràng buộc:
+
+- Yêu cầu Haiku đọc `CONTEXT.md` và các file liên quan trước khi sửa.
+- Chỉ sửa đúng phạm vi file được giao; không refactor lan rộng.
+- Không động vào runtime data như `users.json`, `sessions.json`, `labo_data.db`, `*.db-wal`, `*.db-shm`, log, cache, Excel trừ khi task yêu cầu rõ.
+- Giữ nguyên behavior production ngoài phần được giao.
+- Sau khi sửa phải chạy syntax/check phù hợp và báo lại file đã sửa, command đã chạy, kết quả.
+
+Khi cần kiểm tra repo, ưu tiên các lệnh an toàn:
+
+```powershell
+rg --files
+rg "keyword" src *.html *.py
+node --check server.js
+Get-ChildItem -Path src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
+npm run check
+git diff --check
+```
+
+Lưu ý vận hành: đây là workspace production trực tiếp tại `C:\Users\Administrator\Desktop\crap_dev`, nên mọi prompt giao cho Haiku phải nhắc kiểm soát phạm vi sửa, không tự ý restart PM2, không tự ý commit, không tự ý xóa hoặc restore file nếu chưa được user yêu cầu.
 
 ## 1. Tổng quan
 
