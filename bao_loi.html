@@ -140,7 +140,60 @@
 
     /* Stage badge in dropdown */
     .stage-label { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+
+    /* Barcode scanner */
+    .input-scan-wrap { display: flex; gap: 8px; align-items: stretch; }
+    .input-scan-wrap input { flex: 1; min-width: 0; }
+    .scan-btn {
+      flex-shrink: 0; display: flex; align-items: center; gap: 5px;
+      padding: 0 14px; background: var(--terracotta); color: #fff;
+      border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; line-height: 1;
+    }
+    .scan-btn:active { background: var(--rust-dark); }
+
+    .scanner-modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92);
+      z-index: 999; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .scanner-modal.open { display: flex; }
+    .scanner-box {
+      width: 100%; max-width: 440px; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .scanner-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }
+    .scanner-viewport {
+      width: 100%; aspect-ratio: 4/3; position: relative;
+      border-radius: 12px; overflow: hidden; background: #111;
+      box-shadow: 0 0 0 2px var(--terracotta);
+    }
+    .scanner-viewport video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .scanner-corners::before, .scanner-corners::after,
+    .scanner-corners span::before, .scanner-corners span::after {
+      content: ''; position: absolute; width: 22px; height: 22px;
+      border-color: var(--terracotta-light); border-style: solid;
+    }
+    .scanner-corners { position: absolute; inset: 12px; pointer-events: none; }
+    .scanner-corners::before  { top:0;    left:0;  border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+    .scanner-corners::after   { top:0;    right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+    .scanner-corners span::before { bottom:0; left:0;  border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+    .scanner-corners span::after  { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+    .scanner-line {
+      position: absolute; left: 8%; right: 8%; height: 2px;
+      background: var(--terracotta); opacity: .85;
+      animation: scanline 2s ease-in-out infinite;
+      box-shadow: 0 0 8px 2px rgba(168,90,79,.55);
+    }
+    @keyframes scanline { 0%,100% { top: 20%; } 50% { top: 78%; } }
+    .scanner-status { color: rgba(255,255,255,.7); font-size: 13px; text-align: center; min-height: 18px; }
+    .scanner-cancel {
+      padding: 12px 40px; background: rgba(255,255,255,.1); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3); border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .scanner-cancel:active { background: rgba(255,255,255,.2); }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js"></script>
 </head>
 <body>
 
@@ -161,7 +214,13 @@
 
       <div class="field">
         <label for="ma_dh">Mã đơn hàng <span style="color:var(--terracotta)">*</span></label>
-        <input type="text" id="ma_dh" autocomplete="off" placeholder="Nhập mã đơn hàng..." oninput="searchOrders(this.value)">
+        <div class="input-scan-wrap">
+          <input type="text" id="ma_dh" autocomplete="off" placeholder="Nhập mã đơn hàng..." oninput="searchOrders(this.value)">
+          <button type="button" class="scan-btn" onclick="openScanner()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="4" width="2" height="16"/><rect x="5" y="4" width="1" height="16"/><rect x="7" y="4" width="2" height="16"/><rect x="11" y="4" width="1" height="16"/><rect x="13" y="4" width="1" height="16"/><rect x="15" y="4" width="2" height="16"/><rect x="19" y="4" width="1" height="16"/><rect x="21" y="4" width="1" height="16"/></svg>
+            Quét
+          </button>
+        </div>
         <div class="suggestions" id="suggestions"></div>
         <div class="err-msg" id="err_ma_dh">Vui lòng nhập mã đơn hàng</div>
       </div>
@@ -214,6 +273,19 @@
     </div>
 
   </form>
+</div>
+
+<div id="scannerModal" class="scanner-modal" onclick="handleModalBackdrop(event)">
+  <div class="scanner-box">
+    <div class="scanner-title">Hướng camera vào barcode trên phiếu</div>
+    <div class="scanner-viewport">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div class="scanner-line"></div>
+      <div class="scanner-corners"><span></span></div>
+    </div>
+    <div id="scannerStatus" class="scanner-status">Đang khởi động camera...</div>
+    <button type="button" class="scanner-cancel" onclick="closeScanner()">Hủy</button>
+  </div>
 </div>
 
 <script>
@@ -366,6 +438,57 @@
     document.getElementById('imgPreview').src = '';
     document.getElementById('previewWrap').style.display = 'none';
     validateForm();
+  }
+
+  // ── Barcode Scanner ──────────────────────────────────
+  let zxingReader = null;
+  let scannerActive = false;
+
+  async function openScanner() {
+    const modal = document.getElementById('scannerModal');
+    const status = document.getElementById('scannerStatus');
+    modal.classList.add('open');
+    scannerActive = true;
+    status.textContent = 'Đang khởi động camera...';
+
+    try {
+      zxingReader = new ZXing.BrowserMultiFormatReader();
+      await zxingReader.decodeFromConstraints(
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        document.getElementById('scannerVideo'),
+        (result, err) => {
+          if (!scannerActive) return;
+          if (result) {
+            const value = result.getText().trim();
+            closeScanner();
+            document.getElementById('ma_dh').value = value;
+            searchOrders(value);
+            return;
+          }
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.warn('ZXing:', err);
+          }
+        }
+      );
+      if (scannerActive) status.textContent = 'Đang tìm barcode...';
+    } catch (e) {
+      if (scannerActive) {
+        const msg = e.name === 'NotAllowedError'
+          ? 'Cần cấp quyền camera — kiểm tra cài đặt trình duyệt'
+          : ('Không mở được camera: ' + (e.message || e));
+        status.textContent = msg;
+      }
+    }
+  }
+
+  function closeScanner() {
+    scannerActive = false;
+    if (zxingReader) { try { zxingReader.reset(); } catch (_) {} zxingReader = null; }
+    document.getElementById('scannerModal').classList.remove('open');
+  }
+
+  function handleModalBackdrop(e) {
+    if (e.target === document.getElementById('scannerModal')) closeScanner();
   }
 
   // Submit
