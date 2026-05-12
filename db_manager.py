@@ -14,7 +14,7 @@ CLI:
   python db_manager.py stats
 """
 
-import sys, os, re, json, sqlite3, zipfile
+import sys, os, re, json, sqlite3, zipfile, unicodedata
 from pathlib import Path
 from datetime import datetime, date
 
@@ -46,6 +46,29 @@ def norm_date(val) -> str:
     if hasattr(val, 'strftime'):
         return val.strftime('%d/%m/%Y %H:%M:%S')
     return s
+
+def normalize_ascii(value) -> str:
+    return unicodedata.normalize('NFD', str(value or '').lower()).encode('ascii', 'ignore').decode('ascii')
+
+def default_room_for(phuc_hinh) -> str:
+    t = str(phuc_hinh or '').lower()
+    n = normalize_ascii(phuc_hinh)
+    if 'cui gia' in n and 'zirconia' in n:
+        return 'both'
+    if 'veneer' in t or 'mat dan' in t or 'mat dan' in n:
+        return 'sap'
+    if 'in mau' in n or 'mau ham' in n:
+        return 'zirco'
+    if 'rang tam' in n or 'pmma' in t or 'in resin' in n:
+        return 'zirco'
+    for kw in ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va']:
+        if kw in t:
+            return 'zirco'
+    if 'argen' in n:
+        return 'zirco'
+    if 'kim loai' in n or 'titanium' in t or 'titan' in t or 'chrome' in t or 'cobalt' in t or 'cr-co' in t or 'cr co' in t:
+        return 'sap'
+    return 'sap'
 
 def log(msg: str):
     sys.stdout.buffer.write(f'[db_manager] {msg}\n'.encode('utf-8', errors='replace'))
@@ -82,6 +105,7 @@ def init_db():
         trang_thai    TEXT    DEFAULT '',
         tai_khoan_cao TEXT    DEFAULT '',
         barcode_labo  TEXT    DEFAULT '',
+        routed_to     TEXT    DEFAULT NULL,
 
         nguon_file    TEXT    DEFAULT '',
         created_at    TEXT    DEFAULT (datetime('now','localtime')),
@@ -125,7 +149,13 @@ def init_db():
     cols = {r[1] for r in conn.execute("PRAGMA table_info(don_hang)").fetchall()}
     if "barcode_labo" not in cols:
         conn.execute("ALTER TABLE don_hang ADD COLUMN barcode_labo TEXT DEFAULT ''")
+    if "routed_to" not in cols:
+        conn.execute("ALTER TABLE don_hang ADD COLUMN routed_to TEXT DEFAULT NULL")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_routed_to ON don_hang(routed_to)")
+    rows = conn.execute("SELECT ma_dh, phuc_hinh FROM don_hang WHERE routed_to IS NULL").fetchall()
+    for row in rows:
+        conn.execute("UPDATE don_hang SET routed_to=? WHERE ma_dh=?", (default_room_for(row["phuc_hinh"]), row["ma_dh"]))
     conn.commit()
     conn.close()
 
@@ -138,12 +168,12 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
             (ma_dh, ma_dh_goc, so_phu, la_don_phu,
              nhap_luc, yc_hoan_thanh, yc_giao,
              khach_hang, benh_nhan, phuc_hinh, sl,
-             loai_lenh, ghi_chu, trang_thai, tai_khoan_cao, barcode_labo, nguon_file, updated_at)
+             loai_lenh, ghi_chu, trang_thai, tai_khoan_cao, barcode_labo, routed_to, nguon_file, updated_at)
         VALUES
             (:ma_dh, :ma_dh_goc, :so_phu, :la_don_phu,
              :nhap_luc, :yc_hoan_thanh, :yc_giao,
              :khach_hang, :benh_nhan, :phuc_hinh, :sl,
-             :loai_lenh, :ghi_chu, :trang_thai, :tai_khoan_cao, :barcode_labo, :nguon_file,
+             :loai_lenh, :ghi_chu, :trang_thai, :tai_khoan_cao, :barcode_labo, :routed_to, :nguon_file,
              datetime('now','localtime'))
         ON CONFLICT(ma_dh) DO UPDATE SET
             nhap_luc      = CASE WHEN excluded.nhap_luc      != '' THEN excluded.nhap_luc      ELSE nhap_luc      END,
@@ -160,7 +190,14 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
             barcode_labo  = CASE WHEN excluded.barcode_labo  != '' THEN excluded.barcode_labo  ELSE barcode_labo  END,
             nguon_file    = excluded.nguon_file,
             updated_at    = datetime('now','localtime')
-    """, {**row, 'barcode_labo': str(row.get('barcode_labo', '')).strip(), 'ma_dh_goc': ma_goc, 'so_phu': so_phu, 'la_don_phu': 1 if so_phu is not None else 0})
+    """, {
+        **row,
+        'barcode_labo': str(row.get('barcode_labo', '')).strip(),
+        'routed_to': default_room_for(row.get('phuc_hinh', '')),
+        'ma_dh_goc': ma_goc,
+        'so_phu': so_phu,
+        'la_don_phu': 1 if so_phu is not None else 0,
+    })
 
 def upsert_tien_do(conn: sqlite3.Connection, row: dict):
     conn.execute("""
@@ -216,6 +253,7 @@ def import_json(filepath: str) -> dict:
                         'ghi_chu': '', 'trang_thai': '',
                         'tai_khoan_cao': str(row.get('tai_khoan_cao', row.get('tai_khoan', ''))),
                         'barcode_labo': str(row.get('barcode_labo', '')).strip(),
+                        'routed_to': '',
                         'nguon_file': fname,
                     })
                     seen_orders.add(ma)
@@ -312,6 +350,7 @@ def import_excel_final(filepath: str) -> dict:
                             'loai_lenh': '', 'ghi_chu': v('gc'),
                             'trang_thai': v('tt'), 'tai_khoan_cao': '',
                             'barcode_labo': '',
+                            'routed_to': '',
                             'nguon_file': fname,
                         })
                         n_orders += 1

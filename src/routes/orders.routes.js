@@ -3,6 +3,37 @@ const express = require('express');
 const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDB } = require('../db/index');
+const { classifyPhucHinh } = require('../utils/phucHinh');
+
+const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+
+function isConfirmed(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  const normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return raw === 'có'
+    || raw === 'cã³'
+    || raw === 'xã¡c nháº­n'
+    || normalized === 'co'
+    || normalized === 'xac nhan';
+}
+
+function isSapCadcamStage(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  const normalized = raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+  return normalized === 'sapcadcam';
+}
+
+function getSapCadcamConfirmedStage(db, maDh) {
+  return db.prepare(`
+    SELECT cong_doan, xac_nhan
+    FROM tien_do
+    WHERE ma_dh = ?
+    ORDER BY thu_tu
+  `).all(maDh).find(stage => isSapCadcamStage(stage.cong_doan) && isConfirmed(stage.xac_nhan)) || null;
+}
 
 router.get('/api/orders', requireAuth, (req, res) => {
   const db = getDB();
@@ -42,6 +73,71 @@ router.get('/api/orders/search', requireAuth, (req, res) => {
     `).all(searchPattern, searchPattern, searchPattern, searchPattern);
     res.json({ ok: true, data: rows });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/orders/by-barcode/:code', requireAuth, (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const code = String(req.params.code || '').trim();
+    if (!code) return res.status(400).json({ ok: false, error: 'Missing code' });
+
+    const row = db.prepare(`
+      SELECT d.ma_dh, d.phuc_hinh, d.loai_lenh, d.routed_to, d.barcode_labo
+      FROM don_hang d
+      WHERE d.barcode_labo = ? OR d.ma_dh = ?
+      LIMIT 1
+    `).get(code, code);
+    if (!row) return res.status(404).json({ ok: false, error: 'Không tìm thấy đơn' });
+    const confirmedStage = getSapCadcamConfirmedStage(db, row.ma_dh);
+    res.json({
+      ok: true,
+      order: {
+        ...row,
+        phuc_hinh_type: classifyPhucHinh(row.phuc_hinh),
+        has_confirmed: Boolean(confirmedStage),
+        confirmed_stage: confirmedStage ? confirmedStage.cong_doan : '',
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/api/orders/route', requireAuth, express.json(), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const { ma_dh, target_room } = req.body || {};
+    if (!ma_dh || !['sap', 'zirco', 'both'].includes(target_room)) {
+      return res.status(400).json({ ok: false, error: 'Invalid payload' });
+    }
+
+    const order = db.prepare(`
+      SELECT d.ma_dh, d.routed_to, d.phuc_hinh
+      FROM don_hang d
+      WHERE d.ma_dh = ?
+    `).get(ma_dh);
+    if (!order) return res.status(404).json({ ok: false, error: 'Đơn không tồn tại' });
+    const confirmedStage = getSapCadcamConfirmedStage(db, ma_dh);
+    if (confirmedStage) {
+      return res.status(409).json({
+        ok: false,
+        error: `Đơn đã có xác nhận ở công đoạn ${confirmedStage.cong_doan}, không thể chuyển`,
+      });
+    }
+
+    const prev = order.routed_to || 'sap';
+    if (prev === target_room) {
+      return res.json({ ok: true, order: { ma_dh, routed_to: target_room }, noop: true });
+    }
+
+    db.prepare('UPDATE don_hang SET routed_to = ? WHERE ma_dh = ?').run(target_room, ma_dh);
+    log(`[Route] ${req.session.user} chuyển ${ma_dh}: ${prev} -> ${target_room}`);
+    res.json({ ok: true, order: { ma_dh, routed_to: target_room, prev } });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 router.get('/api/orders/:ma_dh', requireAuth, (req, res) => {

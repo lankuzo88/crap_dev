@@ -540,6 +540,85 @@
       background: #f97316;
     }
 
+    .fab {
+      display: none;
+      position: fixed;
+      right: 14px;
+      bottom: 18px;
+      z-index: 210;
+      border: 0;
+      border-radius: 22px;
+      background: var(--rust-dark);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 12px 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.25);
+      cursor: pointer;
+    }
+    .fab.visible { display: block; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 76px;
+      transform: translateX(-50%) translateY(8px);
+      z-index: 1000;
+      max-width: calc(100vw - 28px);
+      padding: 10px 16px;
+      border-radius: 20px;
+      background: #1f5137;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.warn { background: var(--rust-dark); }
+
+    .scanner-modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.92);
+      z-index: 999; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .scanner-modal.open { display: flex; }
+    .scanner-box {
+      width: 100%; max-width: 440px; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .scanner-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }
+    .scanner-viewport {
+      width: 100%; aspect-ratio: 4/3; position: relative;
+      border-radius: 12px; overflow: hidden; background: #111;
+      box-shadow: 0 0 0 2px var(--terracotta);
+    }
+    .scanner-viewport video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .scanner-corners::before, .scanner-corners::after,
+    .scanner-corners span::before, .scanner-corners span::after {
+      content: ''; position: absolute; width: 22px; height: 22px;
+      border-color: var(--terracotta-light); border-style: solid;
+    }
+    .scanner-corners { position: absolute; inset: 12px; pointer-events: none; }
+    .scanner-corners::before  { top:0; left:0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+    .scanner-corners::after   { top:0; right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+    .scanner-corners span::before { bottom:0; left:0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+    .scanner-corners span::after  { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+    .scanner-line {
+      position: absolute; left: 8%; right: 8%; height: 2px;
+      background: var(--terracotta); opacity: .85;
+      animation: scanline 2s ease-in-out infinite;
+      box-shadow: 0 0 8px 2px rgba(168,90,79,.55);
+    }
+    @keyframes scanline { 0%,100% { top: 20%; } 50% { top: 78%; } }
+    .scanner-status { color: rgba(255,255,255,.7); font-size: 13px; text-align: center; min-height: 18px; }
+    .scanner-cancel {
+      padding: 12px 40px; background: rgba(255,255,255,.1); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3); border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+
     /* ── FONT SCALE +10% (~30% gốc - 15%) ─── */
     html { font-size: 15px; }
     .logo { font-size: 18px; }
@@ -559,6 +638,7 @@
     .empty-state p { font-size: 15px; }
     /* ── STATS HEADER ─────────────────────────── */
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js"></script>
 </head>
 <body>
   <!-- Header -->
@@ -606,6 +686,21 @@
 
   <!-- Card List -->
   <div id="cardList"></div>
+  <button id="btn-scan-transfer" class="fab" type="button" onclick="openTransferScanner()">Quét chuyển qua Zirco</button>
+  <div id="toast" class="toast"></div>
+
+  <div id="transferScannerModal" class="scanner-modal" onclick="handleTransferScannerBackdrop(event)">
+    <div class="scanner-box">
+      <div class="scanner-title" id="transferScannerTitle">Hướng camera vào barcode trên phiếu</div>
+      <div class="scanner-viewport">
+        <video id="transferScannerVideo" autoplay playsinline muted></video>
+        <div class="scanner-line"></div>
+        <div class="scanner-corners"><span></span></div>
+      </div>
+      <div id="transferScannerStatus" class="scanner-status">Đang khởi động camera...</div>
+      <button type="button" class="scanner-cancel" onclick="closeTransferScanner()">Hủy</button>
+    </div>
+  </div>
 
   <script>
     const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
@@ -647,6 +742,7 @@
         yc_giao:       o.yc_giao || '',
         nhan:          o.nhan || '',
         loai_lenh:     o.lk || '',
+        routed_to:     o.routed_to || 'sap',
         urgent,
         stagesData:    o.stages || [],
       };
@@ -759,6 +855,23 @@
     let filterPh = 'all';
     let currentUser = null;
     let userPendingOrders = [];
+    let myRoom = null;
+    let transferReader = null;
+    let transferScannerActive = false;
+    const roomLabel = { sap: 'SÁP', zirco: 'Zirco', both: 'SÁP + Zirco' };
+    function getTransferTargetRoom() {
+      if (myRoom === 'sap') return 'zirco';
+      if (myRoom === 'zirco') return 'sap';
+      return null;
+    }
+
+    function roomForUser(congDoan) {
+      const raw = String(congDoan || '').trim();
+      const normalized = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (normalized === 'sap') return 'sap';
+      if (raw.toUpperCase() === 'CAD/CAM') return 'zirco';
+      return null;
+    }
 
     function canViewFilterSummary() {
       return currentUser?.role === 'admin' || currentUser?.can_view_stats === true;
@@ -809,6 +922,7 @@
         if (!r.ok) return;
         const u = await r.json();
         currentUser = u;
+        myRoom = roomForUser(u.cong_doan);
         if (u.role === 'user' && u.cong_doan) {
           setupUserMobile();
         }
@@ -819,14 +933,24 @@
       const searchBar = document.querySelector('.search-bar');
       if (searchBar) {
         const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'flex:1; font-weight: 600; font-size: 14px; color: var(--text-primary);';
+        titleDiv.style.cssText = 'flex:1; font-weight: 600; font-size: 14px; color: var(--text-primary); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
         const _cd = currentUser.cong_doan;
         const _cdDisplay = { CBM: 'CBM', sáp: 'Sáp', 'CAD/CAM': 'CAD/CAM', sườn: 'Sườn', đắp: 'Đắp', mài: 'Mài' };
-        titleDiv.textContent = _cdDisplay[_cd] || _cd;
+        titleDiv.textContent = myRoom ? `Phòng ${roomLabel[myRoom]} - Đơn pending` : (_cdDisplay[_cd] || _cd);
         const existingTitle = searchBar.querySelector('[data-title]');
         if (existingTitle) existingTitle.remove();
         titleDiv.setAttribute('data-title', '1');
         searchBar.insertBefore(titleDiv, searchBar.firstChild);
+      }
+      const scanBtn = document.getElementById('btn-scan-transfer');
+      if (scanBtn) {
+        const target = getTransferTargetRoom();
+        if (target) {
+          scanBtn.textContent = `Quét chuyển qua ${roomLabel[target]}`;
+          scanBtn.classList.add('visible');
+        } else {
+          scanBtn.classList.remove('visible');
+        }
       }
     }
 
@@ -1055,7 +1179,6 @@
       // Loai lenh chip
       const lkColor = getLoaiLenhColor(o.loai_lenh);
       const lkChip = o.loai_lenh ? `<span style="position: absolute; bottom: 22px; right: 8px; font-size: 9px; padding: 2px 6px; border-radius: 3px; background: ${lkColor.bg}; color: ${lkColor.text}; font-weight: 500; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${o.loai_lenh}</span>` : '';
-
       // Get current KTV - find last stage with KTV (for completed orders) or current stage
       let currentKtv = '';
       if (o.current_stage === 'HOÀN TẤT') {
@@ -1153,6 +1276,105 @@
 
     function updateCounts() {
       // no-op: header replaced by search bar
+    }
+
+    function showToast(message, type = 'ok') {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = message;
+      el.className = 'toast show' + (type === 'warn' ? ' warn' : '');
+      setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    async function routeOrder(maDh, targetRoom) {
+      const r = await fetch('/api/orders/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ma_dh: maDh, target_room: targetRoom }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        showToast(data.error || 'Không chuyển được đơn', r.status === 409 ? 'warn' : 'error');
+        return false;
+      }
+      showToast(`Đã chuyển ${maDh} sang ${roomLabel[targetRoom]}`);
+      await loadUserPendingOrders();
+      return true;
+    }
+
+    async function handleScannedTransfer(code) {
+      const target = getTransferTargetRoom();
+      if (!target) return;
+      try {
+        const r = await fetch(`/api/orders/by-barcode/${encodeURIComponent(code)}`);
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok) {
+          showToast(data.error || 'Không tìm thấy đơn', 'warn');
+          return;
+        }
+        const order = data.order;
+        if (order.has_confirmed) {
+          const stage = order.confirmed_stage ? ` ${order.confirmed_stage}` : '';
+          showToast(`Đơn ${order.ma_dh} đã xác nhận${stage}, không thể chuyển`, 'warn');
+          return;
+        }
+        const ph = order.phuc_hinh ? ` (${phShort(order.phuc_hinh)})` : '';
+        if (!confirm(`Chuyển đơn ${order.ma_dh}${ph} sang phòng ${roomLabel[target]}?`)) return;
+        await routeOrder(order.ma_dh, target);
+      } catch {
+        showToast('Lỗi kết nối khi tra barcode', 'warn');
+      }
+    }
+
+    async function openTransferScanner() {
+      const target = getTransferTargetRoom();
+      if (!target) return;
+      const modal = document.getElementById('transferScannerModal');
+      const status = document.getElementById('transferScannerStatus');
+      const title = document.getElementById('transferScannerTitle');
+      if (!window.ZXing) {
+        showToast('Không tải được thư viện quét barcode', 'warn');
+        return;
+      }
+      if (title) title.textContent = `Quét barcode để chuyển qua ${roomLabel[target]}`;
+      modal.classList.add('open');
+      transferScannerActive = true;
+      status.textContent = 'Đang khởi động camera...';
+
+      try {
+        transferReader = new ZXing.BrowserMultiFormatReader();
+        await transferReader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+          document.getElementById('transferScannerVideo'),
+          async (result, err) => {
+            if (!transferScannerActive) return;
+            if (result) {
+              const value = result.getText().trim();
+              closeTransferScanner();
+              await handleScannedTransfer(value);
+              return;
+            }
+            if (err && !(err instanceof ZXing.NotFoundException)) console.warn('ZXing:', err);
+          }
+        );
+        if (transferScannerActive) status.textContent = 'Đang tìm barcode...';
+      } catch (err) {
+        if (transferScannerActive) {
+          status.textContent = err.name === 'NotAllowedError'
+            ? 'Cần cấp quyền camera'
+            : ('Không mở được camera: ' + (err.message || err));
+        }
+      }
+    }
+
+    function closeTransferScanner() {
+      transferScannerActive = false;
+      if (transferReader) { try { transferReader.reset(); } catch (_) {} transferReader = null; }
+      document.getElementById('transferScannerModal').classList.remove('open');
+    }
+
+    function handleTransferScannerBackdrop(e) {
+      if (e.target === document.getElementById('transferScannerModal')) closeTransferScanner();
     }
 
     // ═════════════════════════════════════════════════════════════

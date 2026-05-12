@@ -67,6 +67,28 @@ function initOrderBarcodeColumn() {
   db.exec('CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)');
 }
 
+function initRoutedToColumn() {
+  const db = getDB();
+  if (!db) { log('⚠ initRoutedToColumn: DB not available'); return; }
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='don_hang'").get()) {
+    log('⚠ initRoutedToColumn: don_hang table not found');
+    return;
+  }
+  if (!hasColumn(db, 'don_hang', 'routed_to')) {
+    db.exec("ALTER TABLE don_hang ADD COLUMN routed_to TEXT DEFAULT NULL");
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_don_hang_routed_to ON don_hang(routed_to)');
+
+  const { getDefaultRoom } = require('../utils/phucHinh');
+  const rows = db.prepare('SELECT ma_dh, phuc_hinh FROM don_hang WHERE routed_to IS NULL').all();
+  const upd = db.prepare('UPDATE don_hang SET routed_to = ? WHERE ma_dh = ?');
+  const tx = db.transaction(items => {
+    for (const row of items) upd.run(getDefaultRoom(row.phuc_hinh), row.ma_dh);
+  });
+  tx(rows);
+  log(`✅ routed_to initialized (${rows.length} backfilled)`);
+}
+
 function parseCompletionDate(value) {
   const raw = String(value || '').trim();
   if (!raw || raw === '-') return null;
@@ -480,4 +502,4 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
