@@ -10,14 +10,6 @@ const {
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
-function userRoom(value) {
-  const raw = String(value || '').trim();
-  const normalized = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (normalized === 'sap') return 'sap';
-  if (raw.toUpperCase() === 'CAD/CAM') return 'zirco';
-  return null;
-}
-
 router.get('/user', requireAuth, (req, res) => {
   const sess = req.session;
   const u = USERS[sess.user] || {};
@@ -38,19 +30,10 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
 
     const dbCongDoan = userCongDoanToDB(userCongDoan);
     let loaiLenhFilter = '';
-    let routingFilter = '';
     if (dbCongDoan === 'CBM' || dbCongDoan === STAGE_NAMES[1]) {
       loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') NOT IN ('Sửa', 'Làm tiếp')`;
     } else if (dbCongDoan === STAGE_NAMES[2]) {
       loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') != 'Sửa'`;
-    }
-    if (dbCongDoan === STAGE_NAMES[1]) {
-      const room = userRoom(userCongDoan);
-      if (room === 'sap') {
-        routingFilter = `AND COALESCE(d.routed_to, 'sap') IN ('sap', 'both')`;
-      } else if (room === 'zirco') {
-        routingFilter = `AND COALESCE(d.routed_to, 'sap') IN ('zirco', 'both')`;
-      }
     }
     const completionFilter = dbCongDoan === STAGE_NAMES[4]
       ? ''
@@ -65,7 +48,6 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
         AND t.cong_doan = ?
         ${completionFilter}
         ${loaiLenhFilter}
-        ${routingFilter}
     `).all(...active.ids, dbCongDoan);
 
     const userStageIndex = STAGE_NAMES.indexOf(dbCongDoan);

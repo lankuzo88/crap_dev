@@ -53,20 +53,35 @@ def normalize_ascii(value) -> str:
 def default_room_for(phuc_hinh) -> str:
     t = str(phuc_hinh or '').lower()
     n = normalize_ascii(phuc_hinh)
+
+    is_zirconia = (
+        any(kw in t for kw in ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va'])
+        or 'argen' in n
+    )
+    is_metal = (
+        'kim loai' in n or 'titanium' in t or 'titan' in t
+        or 'chrome' in t or 'cobalt' in t or 'cr-co' in t or 'cr co' in t
+    )
+
     if 'cui gia' in n and 'zirconia' in n:
         return 'both'
-    if 'veneer' in t or 'mat dan' in t or 'mat dan' in n:
-        return 'sap'
     if 'in mau' in n or 'mau ham' in n:
         return 'zirco'
     if 'rang tam' in n or 'pmma' in t or 'in resin' in n:
         return 'zirco'
-    for kw in ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va']:
-        if kw in t:
+
+    if 'veneer' in t:
+        if is_zirconia:
             return 'zirco'
-    if 'argen' in n:
+        if is_metal:
+            return 'sap'
+        return 'sap'
+    if 'mat dan' in t or 'mat dan' in n:
+        return 'sap'
+
+    if is_zirconia:
         return 'zirco'
-    if 'kim loai' in n or 'titanium' in t or 'titan' in t or 'chrome' in t or 'cobalt' in t or 'cr-co' in t or 'cr co' in t:
+    if is_metal:
         return 'sap'
     return 'sap'
 
