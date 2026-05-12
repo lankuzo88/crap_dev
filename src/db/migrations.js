@@ -39,6 +39,20 @@ function hasColumn(db, table, column) {
   return db.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === column);
 }
 
+function initOrderBarcodeColumn() {
+  const db = getDB();
+  if (!db) { log('⚠ initOrderBarcodeColumn: DB not available'); return; }
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='don_hang'").get()) {
+    log('⚠ initOrderBarcodeColumn: don_hang table not found');
+    return;
+  }
+  if (!hasColumn(db, 'don_hang', 'barcode_labo')) {
+    db.exec("ALTER TABLE don_hang ADD COLUMN barcode_labo TEXT DEFAULT ''");
+    log('✅ Added don_hang.barcode_labo');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)');
+}
+
 function parseCompletionDate(value) {
   const raw = String(value || '').trim();
   if (!raw || raw === '-') return null;
@@ -452,4 +466,4 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initOrderBarcodeColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

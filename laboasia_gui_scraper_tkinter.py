@@ -96,6 +96,7 @@ class ProgressRow:
     thoi_gian_hoan_thanh: str
     raw_row_text: str = ""
     tai_khoan_cao: str = ""
+    barcode_labo: str = ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -358,6 +359,7 @@ class LaboAsiaAPIClient:
     def _parse_rows(self, ma_dh: str, data: dict) -> list[ProgressRow]:
         """Chuyển SanXuatInfo[] trong JSON thành list[ProgressRow]."""
         rows: list[ProgressRow] = []
+        barcode_labo = normalize_text(data.get("barcode", ""))
         for item in data.get("SanXuatInfo", []):
             tg_ht = normalize_text(item.get("thoigianbatdau", ""))  # web hiển thị thời gian bắt đầu
             sanpham = normalize_text(item.get("sanpham", ""))
@@ -375,6 +377,7 @@ class LaboAsiaAPIClient:
                 thoi_gian_hoan_thanh=tg_ht,
                 raw_row_text=raw,
                 tai_khoan_cao=self.username,
+                barcode_labo=barcode_labo,
             ))
         return rows
 
@@ -520,7 +523,7 @@ def build_progress_df(progress_rows: list[ProgressRow]) -> pd.DataFrame:
     if not progress_rows:
         return pd.DataFrame(columns=[
             "ma_dh", "thu_tu", "cong_doan", "ten_ktv", "xac_nhan",
-            "thoi_gian_hoan_thanh", "raw_row_text", "tai_khoan_cao",
+            "thoi_gian_hoan_thanh", "raw_row_text", "tai_khoan_cao", "barcode_labo",
         ])
     return pd.DataFrame([asdict(r) for r in progress_rows])
 
@@ -618,7 +621,7 @@ def merge_back_to_workbook(
     ws_raw = wb.create_sheet("Cao_web_live")
     raw_headers = list(progress_df.columns) if not progress_df.empty else [
         "ma_dh", "thu_tu", "cong_doan", "ten_ktv", "xac_nhan",
-        "thoi_gian_hoan_thanh", "raw_row_text", "tai_khoan_cao",
+        "thoi_gian_hoan_thanh", "raw_row_text", "tai_khoan_cao", "barcode_labo",
     ]
     ws_raw.append(raw_headers)
     if not progress_df.empty:

@@ -383,7 +383,7 @@
   }
 
   // Order autocomplete
-  async function searchOrders(q) {
+  async function searchOrders(q, opts = {}) {
     const box = document.getElementById('suggestions');
     clearTimeout(searchTimeout);
     if (!q || q.length < 2) { box.classList.remove('show'); return; }
@@ -392,6 +392,14 @@
         const r = await fetch(`/api/orders/search?q=${encodeURIComponent(q)}`);
         const d = await r.json();
         if (!d.ok || !d.data.length) { box.classList.remove('show'); return; }
+        if (opts.autoSelectExact && d.data.length === 1) {
+          const found = d.data[0];
+          const scanned = String(q).trim();
+          if (String(found.barcode_labo || '').trim() === scanned || String(found.ma_dh || '').trim() === scanned) {
+            selectOrder(found.ma_dh, found.khach_hang || '');
+            return;
+          }
+        }
         box.innerHTML = d.data.map(o => `
           <div class="suggestion-item" onclick="selectOrder(${JSON.stringify(o.ma_dh)}, ${JSON.stringify(o.khach_hang||'')})">
             <div class="suggestion-madh">${o.ma_dh}</div>
@@ -462,7 +470,7 @@
             const value = result.getText().trim();
             closeScanner();
             document.getElementById('ma_dh').value = value;
-            searchOrders(value);
+            searchOrders(value, { autoSelectExact: true });
             return;
           }
           if (err && !(err instanceof ZXing.NotFoundException)) {

@@ -36,10 +36,10 @@ router.get('/api/orders/search', requireAuth, (req, res) => {
     if (!query || query.length < 2) return res.json({ ok: true, data: [] });
     const searchPattern = `%${query}%`;
     const rows = db.prepare(`
-      SELECT ma_dh, khach_hang, benh_nhan, loai_rang, trang_thai FROM don_hang
-      WHERE ma_dh LIKE ? OR khach_hang LIKE ? OR benh_nhan LIKE ?
+      SELECT ma_dh, khach_hang, benh_nhan, phuc_hinh AS loai_rang, trang_thai, barcode_labo FROM don_hang
+      WHERE ma_dh LIKE ? OR barcode_labo LIKE ? OR khach_hang LIKE ? OR benh_nhan LIKE ?
       ORDER BY ma_dh DESC LIMIT 20
-    `).all(searchPattern, searchPattern, searchPattern);
+    `).all(searchPattern, searchPattern, searchPattern, searchPattern);
     res.json({ ok: true, data: rows });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });

@@ -81,6 +81,7 @@ def init_db():
         ghi_chu       TEXT    DEFAULT '',
         trang_thai    TEXT    DEFAULT '',
         tai_khoan_cao TEXT    DEFAULT '',
+        barcode_labo  TEXT    DEFAULT '',
 
         nguon_file    TEXT    DEFAULT '',
         created_at    TEXT    DEFAULT (datetime('now','localtime')),
@@ -121,6 +122,10 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_tien_do_cd    ON tien_do(cong_doan);
     CREATE INDEX IF NOT EXISTS idx_tien_do_ktv   ON tien_do(ten_ktv);
     """)
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(don_hang)").fetchall()}
+    if "barcode_labo" not in cols:
+        conn.execute("ALTER TABLE don_hang ADD COLUMN barcode_labo TEXT DEFAULT ''")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)")
     conn.commit()
     conn.close()
 
@@ -133,12 +138,12 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
             (ma_dh, ma_dh_goc, so_phu, la_don_phu,
              nhap_luc, yc_hoan_thanh, yc_giao,
              khach_hang, benh_nhan, phuc_hinh, sl,
-             loai_lenh, ghi_chu, trang_thai, tai_khoan_cao, nguon_file, updated_at)
+             loai_lenh, ghi_chu, trang_thai, tai_khoan_cao, barcode_labo, nguon_file, updated_at)
         VALUES
             (:ma_dh, :ma_dh_goc, :so_phu, :la_don_phu,
              :nhap_luc, :yc_hoan_thanh, :yc_giao,
              :khach_hang, :benh_nhan, :phuc_hinh, :sl,
-             :loai_lenh, :ghi_chu, :trang_thai, :tai_khoan_cao, :nguon_file,
+             :loai_lenh, :ghi_chu, :trang_thai, :tai_khoan_cao, :barcode_labo, :nguon_file,
              datetime('now','localtime'))
         ON CONFLICT(ma_dh) DO UPDATE SET
             nhap_luc      = CASE WHEN excluded.nhap_luc      != '' THEN excluded.nhap_luc      ELSE nhap_luc      END,
@@ -152,9 +157,10 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
             ghi_chu       = CASE WHEN excluded.ghi_chu       != '' THEN excluded.ghi_chu       ELSE ghi_chu       END,
             trang_thai    = CASE WHEN excluded.trang_thai    != '' THEN excluded.trang_thai    ELSE trang_thai    END,
             tai_khoan_cao = CASE WHEN excluded.tai_khoan_cao != '' THEN excluded.tai_khoan_cao ELSE tai_khoan_cao END,
+            barcode_labo  = CASE WHEN excluded.barcode_labo  != '' THEN excluded.barcode_labo  ELSE barcode_labo  END,
             nguon_file    = excluded.nguon_file,
             updated_at    = datetime('now','localtime')
-    """, {**row, 'ma_dh_goc': ma_goc, 'so_phu': so_phu, 'la_don_phu': 1 if so_phu is not None else 0})
+    """, {**row, 'barcode_labo': str(row.get('barcode_labo', '')).strip(), 'ma_dh_goc': ma_goc, 'so_phu': so_phu, 'la_don_phu': 1 if so_phu is not None else 0})
 
 def upsert_tien_do(conn: sqlite3.Connection, row: dict):
     conn.execute("""
@@ -209,6 +215,7 @@ def import_json(filepath: str) -> dict:
                         'loai_lenh': str(row.get('loai_lenh', lk)),
                         'ghi_chu': '', 'trang_thai': '',
                         'tai_khoan_cao': str(row.get('tai_khoan_cao', row.get('tai_khoan', ''))),
+                        'barcode_labo': str(row.get('barcode_labo', '')).strip(),
                         'nguon_file': fname,
                     })
                     seen_orders.add(ma)
@@ -304,6 +311,7 @@ def import_excel_final(filepath: str) -> dict:
                             'phuc_hinh': v('ph'), 'sl': sl,
                             'loai_lenh': '', 'ghi_chu': v('gc'),
                             'trang_thai': v('tt'), 'tai_khoan_cao': '',
+                            'barcode_labo': '',
                             'nguon_file': fname,
                         })
                         n_orders += 1

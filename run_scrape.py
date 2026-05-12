@@ -6,6 +6,11 @@ Env vars: LABO_USER1, LABO_PASS1  (tối đa 4 tài khoản: LABO_USER1..4)
 import sys, os, queue, threading, subprocess, json
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
 
 sys.path.insert(0, str(Path(__file__).parent))
