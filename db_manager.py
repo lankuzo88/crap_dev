@@ -23,6 +23,7 @@ DB_PATH    = BASE_DIR / 'labo_data.db'
 EXCEL_DIR  = BASE_DIR / 'Excel'
 DATA_DIR   = BASE_DIR / 'Data'
 CLEAN_DIR  = BASE_DIR / 'File_sach'
+KEYLAB_NOTES_PATH = BASE_DIR / 'keylab_notes.json'
 
 STAGE_ORDER = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI']
 
@@ -50,9 +51,29 @@ def norm_date(val) -> str:
 def normalize_ascii(value) -> str:
     return unicodedata.normalize('NFD', str(value or '').lower()).encode('ascii', 'ignore').decode('ascii')
 
-def default_room_for(phuc_hinh) -> str:
-    t = str(phuc_hinh or '').lower()
-    n = normalize_ascii(phuc_hinh)
+def has_in_mau_ham(value) -> bool:
+    n = normalize_ascii(value)
+    return 'in mau ham' in n or ('in mau' in n and 'ham' in n)
+
+def split_phuc_hinh_parts(phuc_hinh):
+    return [p.strip() for p in re.split(r';|\r?\n', str(phuc_hinh or '')) if p.strip()]
+
+def part_rooms(part):
+    raw = str(part or '')
+    t = raw.lower()
+    n = normalize_ascii(raw)
+    rooms = set()
+
+    if 'veneer' in t or 'mat dan' in n:
+        return rooms
+
+    if 'rang tam' in n or 'pmma' in t or 'in resin' in n:
+        if 'pmma' in t:
+            rooms.add('zirco')
+        return rooms
+
+    if has_in_mau_ham(raw) or 'in mau' in n or 'mau ham' in n:
+        rooms.add('zirco')
 
     is_zirconia = (
         any(kw in t for kw in ['zircornia', 'zirconia', 'ziconia', 'zir-', 'zolid', 'cercon', 'la va'])
@@ -64,26 +85,32 @@ def default_room_for(phuc_hinh) -> str:
     )
 
     if 'cui gia' in n and 'zirconia' in n:
-        return 'both'
-    if 'in mau' in n or 'mau ham' in n:
-        return 'zirco'
-    if 'rang tam' in n or 'pmma' in t or 'in resin' in n:
-        return 'zirco'
-
-    if 'veneer' in t:
+        rooms.update(['sap', 'zirco'])
+    else:
         if is_zirconia:
-            return 'zirco'
+            rooms.add('zirco')
         if is_metal:
-            return 'sap'
-        return 'sap'
-    if 'mat dan' in t or 'mat dan' in n:
-        return 'sap'
+            rooms.add('sap')
 
-    if is_zirconia:
+    if not rooms and raw.strip():
+        rooms.add('sap')
+    return rooms
+
+def rooms_to_route(rooms) -> str:
+    if 'sap' in rooms and 'zirco' in rooms:
+        return 'both'
+    if 'zirco' in rooms:
         return 'zirco'
-    if is_metal:
+    if 'sap' in rooms:
         return 'sap'
-    return 'sap'
+    return 'none'
+
+def default_room_for(phuc_hinh) -> str:
+    rooms = set()
+    parts = split_phuc_hinh_parts(phuc_hinh)
+    for part in parts or [phuc_hinh]:
+        rooms.update(part_rooms(part))
+    return rooms_to_route(rooms)
 
 def log(msg: str):
     sys.stdout.buffer.write(f'[db_manager] {msg}\n'.encode('utf-8', errors='replace'))
@@ -117,6 +144,7 @@ def init_db():
         sl            INTEGER DEFAULT 0,
         loai_lenh     TEXT    DEFAULT '',
         ghi_chu       TEXT    DEFAULT '',
+        ghi_chu_sx    TEXT    DEFAULT '',
         trang_thai    TEXT    DEFAULT '',
         tai_khoan_cao TEXT    DEFAULT '',
         barcode_labo  TEXT    DEFAULT '',
@@ -166,13 +194,44 @@ def init_db():
         conn.execute("ALTER TABLE don_hang ADD COLUMN barcode_labo TEXT DEFAULT ''")
     if "routed_to" not in cols:
         conn.execute("ALTER TABLE don_hang ADD COLUMN routed_to TEXT DEFAULT NULL")
+    if "ghi_chu_sx" not in cols:
+        conn.execute("ALTER TABLE don_hang ADD COLUMN ghi_chu_sx TEXT DEFAULT ''")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_routed_to ON don_hang(routed_to)")
-    rows = conn.execute("SELECT ma_dh, phuc_hinh FROM don_hang WHERE routed_to IS NULL").fetchall()
+    rows = conn.execute("SELECT ma_dh, phuc_hinh, routed_to FROM don_hang").fetchall()
     for row in rows:
-        conn.execute("UPDATE don_hang SET routed_to=? WHERE ma_dh=?", (default_room_for(row["phuc_hinh"]), row["ma_dh"]))
+        target = default_room_for(row["phuc_hinh"])
+        if (row["routed_to"] or '') != target:
+            conn.execute("UPDATE don_hang SET routed_to=? WHERE ma_dh=?", (target, row["ma_dh"]))
+    sync_keylab_notes(conn)
     conn.commit()
     conn.close()
+
+def sync_keylab_notes(conn: sqlite3.Connection):
+    if not KEYLAB_NOTES_PATH.exists():
+        return
+    try:
+        payload = json.loads(KEYLAB_NOTES_PATH.read_text(encoding='utf-8'))
+    except Exception as exc:
+        log(f'keylab_notes.json read error: {exc}')
+        return
+    rows = payload.get('orders') if isinstance(payload, dict) else []
+    if not isinstance(rows, list):
+        return
+    for item in rows:
+        ma_dh = str(item.get('ma_dh', '')).strip() if isinstance(item, dict) else ''
+        if not ma_dh:
+            continue
+        note = str(item.get('ghi_chu_sx', '')).strip()
+        found = conn.execute("SELECT ma_dh, ghi_chu_sx FROM don_hang WHERE ma_dh=?", (ma_dh,)).fetchone()
+        if not found:
+            continue
+        if str(found["ghi_chu_sx"] or "").strip():
+            continue
+        if has_in_mau_ham(note):
+            conn.execute("UPDATE don_hang SET ghi_chu_sx=?, routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
+        else:
+            conn.execute("UPDATE don_hang SET ghi_chu_sx=?, updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
 
 # ── Upsert helpers ────────────────────────────────────────────────────────────
 

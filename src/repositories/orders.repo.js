@@ -267,7 +267,7 @@ function getDataFromDB() {
     rows = db.prepare(`
       SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.trang_thai, d.tai_khoan_cao,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.trang_thai, d.tai_khoan_cao, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -284,7 +284,7 @@ function getDataFromDB() {
     rows = db.prepare(`
       SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.trang_thai, d.tai_khoan_cao,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.trang_thai, d.tai_khoan_cao, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -332,7 +332,8 @@ function getDataFromDB() {
     orders.push({
       ma_dh: row.ma_dh, nhan: row.nhap_luc || '', yc_ht: row.yc_hoan_thanh || '',
       yc_giao: row.yc_giao || '', kh: row.khach_hang || '', bn: row.benh_nhan || '',
-      ph: row.phuc_hinh || '', sl: row.sl || 0, gc: row.ghi_chu || '', lk,
+      ph: row.phuc_hinh || '', sl: row.sl || 0, gc: row.ghi_chu || '', ghi_chu_sx: row.ghi_chu_sx || '', lk,
+      routed_to: row.routed_to || 'sap',
       tk: row.tai_khoan_cao || '', stages, done, total,
       pct: total > 0 ? Math.round(done / total * 100) : 0, curKtv, lastTg,
     });

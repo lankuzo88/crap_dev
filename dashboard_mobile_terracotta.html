@@ -351,7 +351,7 @@
     .card {
       background: var(--terracotta-light);
       border: 1px solid var(--terracotta-light);
-      border-left: 3px solid;
+      border-left: 4px solid;
       border-radius: 8px;
       padding: 7px;
       cursor: pointer;
@@ -721,6 +721,11 @@
       'HOÀN TẤT': '✓'
     };
 
+    const ROOM_COLORS = { sap: '#f59e0b', zirco: '#2563eb', both: '#0891b2', none: '#9ca3af' };
+    function roomColor(room) {
+      return ROOM_COLORS[room] || ROOM_COLORS.sap;
+    }
+
     function adaptOrder(o) {
       let current_stage = 'HOÀN TẤT';
       if (o.stages) {
@@ -742,6 +747,7 @@
         yc_giao:       o.yc_giao || '',
         nhan:          o.nhan || '',
         loai_lenh:     o.lk || '',
+        ghi_chu_sx:    o.ghi_chu_sx || '',
         routed_to:     o.routed_to || 'sap',
         urgent,
         stagesData:    o.stages || [],
@@ -1014,6 +1020,7 @@
         (o.khach_hang  || '').toLowerCase().includes(q) ||
         (o.phuc_hinh   || '').toLowerCase().includes(q) ||
         (o.ghi_chu     || '').toLowerCase().includes(q) ||
+        (o.ghi_chu_sx  || '').toLowerCase().includes(q) ||
         (o.current_stage || '').toLowerCase().includes(q) ||
         (o.loai_lenh   || '').toLowerCase().includes(q) ||
         (o.yc_giao     || '').toLowerCase().includes(q)
@@ -1202,7 +1209,7 @@
       }).join('');
 
       return `
-        <div class="card ${cat}" style="cursor: pointer; position: relative;" data-ma-dh="${o.ma_dh}">
+        <div class="card ${cat}" style="cursor: pointer; position: relative; border-left-color: ${roomColor(o.routed_to)};" data-ma-dh="${o.ma_dh}">
           <div class="card-row1">
             <div class="order-code">${o.ma_dh}</div>
             <div class="card-customer" style="flex: 1; text-align: center; margin: 0;">${o.khach_hang}</div>

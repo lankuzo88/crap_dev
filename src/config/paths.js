@@ -9,6 +9,7 @@ module.exports = {
   DATA_DIR:       path.join(BASE_DIR, 'Data'),
   EXCEL_DIR:      path.join(BASE_DIR, 'Excel'),
   DB_PATH:        path.join(BASE_DIR, 'labo_data.db'),
+  KEYLAB_NOTES_PATH: path.join(BASE_DIR, 'keylab_notes.json'),
   SESSIONS_PATH:  path.join(BASE_DIR, 'sessions.json'),
   USERS_JSON_PATH: path.join(BASE_DIR, 'users.json'),
 

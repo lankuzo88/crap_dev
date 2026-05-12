@@ -54,6 +54,19 @@ function findLatestExcel() {
   } catch { return null; }
 }
 
+function finishScraper(code) {
+  scrapeJob.running = false;
+  scrapeJob.exitCode = code;
+  _resetCache();
+  _closeDB();
+  log(`🏁 Scraper pipeline done: ${scrapeJob.file}, exit=${code}`);
+  if (scrapeQueue.length > 0) {
+    const next = scrapeQueue.shift();
+    log(`📋 Xử lý tiếp từ hàng chờ: ${pathMod.basename(next)} (còn lại: ${scrapeQueue.length})`);
+    setTimeout(() => spawnScraper(next), 1000);
+  }
+}
+
 function spawnScraper(filePath) {
   scrapeJob = {
     running: true,
@@ -72,6 +85,7 @@ function spawnScraper(filePath) {
       PYTHONIOENCODING: 'utf-8',
       PLAYWRIGHT_BROWSERS_PATH: 'C:\\Users\\Administrator\\AppData\\Local\\ms-playwright',
     },
+    windowsHide: true,
   });
 
   const pushLog = (chunk) => {
@@ -97,16 +111,8 @@ function spawnScraper(filePath) {
     log(`❌ Scraper spawn error: ${err.message}`);
   });
   proc.on('close', code => {
-    scrapeJob.running = false;
-    scrapeJob.exitCode = code;
-    _resetCache();
-    _closeDB();
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
-    if (scrapeQueue.length > 0) {
-      const next = scrapeQueue.shift();
-      log(`📋 Xử lý tiếp từ hàng chờ: ${pathMod.basename(next)} (còn lại: ${scrapeQueue.length})`);
-      setTimeout(() => spawnScraper(next), 1000);
-    }
+    finishScraper(code);
   });
 }
 

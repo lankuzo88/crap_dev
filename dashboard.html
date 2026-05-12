@@ -836,6 +836,11 @@ const DATA_URL = 'data.json';          // ← scraper ghi vào đây
 const REFRESH_MS = 5 * 60 * 1000;     // auto-refresh mỗi 5 phút
 
 /* ═══════ STATE ═══════ */
+const ROOM_COLORS = { sap: '#f59e0b', zirco: '#2563eb', both: '#0891b2', none: '#9ca3af' };
+function roomColor(room) {
+  return ROOM_COLORS[room] || ROOM_COLORS.sap;
+}
+
 let ORDERS = [];
 let mCF = 'all', mPS = 'all', dCF = 'all', dPS = 'all';
 let CURRENT_USER = null;
@@ -896,6 +901,8 @@ function parseExcelFormat(orders) {
       nhan:     o.nhan || '',
       yc_ht:    o.yc_ht || '',
       yc_giao:  o.yc_giao || '',
+      routed_to:o.routed_to || 'sap',
+      ghi_chu_sx:o.ghi_chu_sx || '',
       gc,
     };
   });
@@ -929,7 +936,7 @@ function parseScraperFormat(raw) {
       rang:parsed.map(p=>p.rang).filter(Boolean).join(' | '), lk,
       stages:stageList, pct:total>0?Math.round(done/total*100):0, done, total, curKtv, lastTg,
       allPh:parsed.map(p=>`${p.ph} SL:${p.sl} R:${p.rang}`).join('\n'),
-      bn:'', kh:'', nhan:'', yc_ht:'', yc_giao:'', gc:'' };
+      bn:'', kh:'', nhan:'', yc_ht:'', yc_giao:'', routed_to:'sap', ghi_chu_sx:'', gc:'' };
   });
 }
 
@@ -1149,7 +1156,7 @@ function filterOrders(f, q) {
     if (f === 'lai'      && !lkL.includes('lại')) return false;
     if (f === 'bh'       && !lkL.includes('bảo hành')) return false;
     if (!phMatches(o, f)) return false;
-    if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
+    if (q && !(o.id+(o.ma_dh||'')+o.ph+o.bn+o.kh+o.curKtv+o.lk+o.gc+(o.ghi_chu_sx||'')+o.allPh+o.nhan+o.yc_giao+o.yc_ht).toLowerCase().includes(q)) return false;
     return true;
   }).sort((a, b) => {
     const ua = isUrgent(a), ub = isUrgent(b);
@@ -1492,7 +1499,7 @@ function computeTimeGroups(list) {
 }
 
 function renderOrderCard(o) {
-  const accent = getNextActiveStageColor(o);
+  const accent = roomColor(o.routed_to);
   const dc = (o.stages || []).filter(s => s.x).length;
   const total = (o.stages || []).filter(s => !s.sk).length;
   const pips = (o.stages || []).map((s, i) => {
@@ -1756,7 +1763,7 @@ function dRender() {
     if ((o.lk||'').toLowerCase().includes('làm tiếp')) tags += `<span class="ph-chip lk-nb" style="margin-left:3px">Nướng bóng</span>`;
     const gcTm = gcTime(o.gc);
     if (gcTm) tags += `<span class="ph-chip lk-time" style="margin-left:3px">⏰ ${gcTm}</span>`;
-    const accent = getNextActiveStageColor(o);
+    const accent = roomColor(o.routed_to);
     const cardCls = isUrgent(o) ? 'd-order-card urgent' : 'd-order-card';
     const delivery = o.yc_giao ? `${fmtDate(o.yc_giao)} ${fmtTg(o.yc_giao)}` : '—';
     const complete = o.yc_ht ? `${fmtDate(o.yc_ht)} ${fmtTg(o.yc_ht)}` : '—';
@@ -2144,7 +2151,7 @@ function renderUserPendingOrders() {
   let html = '';
   USER_PENDING_ORDERS.forEach(o => {
     html += `<div class="d-order-card" onclick="openModal('${o.ma_dh}')">
-      <div class="d-card-accent" style="background:var(--amber)"></div>
+      <div class="d-card-accent" style="background:${roomColor(o.routed_to)}"></div>
       <div class="d-card-main">
         <div class="d-card-top">
           <span class="d-card-id">${o.ma_dh}</span>

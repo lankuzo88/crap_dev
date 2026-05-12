@@ -7,7 +7,7 @@ const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const { loadUsers } = require('./src/repositories/users.repo');
 const { loadSessions } = require('./src/services/session.service');
-const { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initMonthlyStatsTables } = require('./src/db/migrations');
+const { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables } = require('./src/db/migrations');
 const { startImageCleanupSchedule } = require('./src/services/image.service');
 const { startWALCheckpoint } = require('./src/db/index');
 const { getData, findLatest } = require('./src/repositories/orders.repo');
@@ -21,6 +21,7 @@ initErrorTables();
 initSessionsTable();
 initOrderBarcodeColumn();
 initRoutedToColumn();
+initKeylabNotesRouting();
 initMonthlyStatsTables();
 startImageCleanupSchedule();
 

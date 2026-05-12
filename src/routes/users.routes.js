@@ -10,6 +10,14 @@ const {
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
+function roomForUserCongDoan(congDoan) {
+  const raw = String(congDoan || '').trim();
+  const normalized = raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (normalized === 'sap') return 'sap';
+  if (raw.toUpperCase() === 'CAD/CAM') return 'zirco';
+  return null;
+}
+
 router.get('/user', requireAuth, (req, res) => {
   const sess = req.session;
   const u = USERS[sess.user] || {};
@@ -35,19 +43,26 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     } else if (dbCongDoan === STAGE_NAMES[2]) {
       loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') != 'Sửa'`;
     }
+    const room = roomForUserCongDoan(userCongDoan);
+    const roomFilter = room === 'sap'
+      ? `AND COALESCE(d.routed_to, 'sap') IN ('sap', 'both')`
+      : room === 'zirco'
+        ? `AND COALESCE(d.routed_to, 'sap') IN ('zirco', 'both')`
+        : '';
     const completionFilter = dbCongDoan === STAGE_NAMES[4]
       ? ''
       : `AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))`;
 
     const ph = active.ids.map(() => '?').join(',');
     const pendingOrders = db.prepare(`
-      SELECT DISTINCT d.ma_dh, d.loai_lenh, d.ghi_chu
+      SELECT DISTINCT d.ma_dh, d.loai_lenh, d.ghi_chu, d.routed_to
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE d.ma_dh IN (${ph})
         AND t.cong_doan = ?
         ${completionFilter}
         ${loaiLenhFilter}
+        ${roomFilter}
     `).all(...active.ids, dbCongDoan);
 
     const userStageIndex = STAGE_NAMES.indexOf(dbCongDoan);
@@ -65,7 +80,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     const rows = db.prepare(`
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.routed_to,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -107,7 +122,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
       orders.push({
         ma_dh: row.ma_dh, nhan: row.nhap_luc || '', yc_ht: row.yc_hoan_thanh || '',
         yc_giao: row.yc_giao || '', kh: row.khach_hang || '', bn: row.benh_nhan || '',
-        ph: row.phuc_hinh || '', sl: row.sl || 0, gc, lk, routed_to: row.routed_to || 'sap',
+        ph: row.phuc_hinh || '', sl: row.sl || 0, gc, ghi_chu_sx: row.ghi_chu_sx || '', lk, routed_to: row.routed_to || 'sap',
         stages, done, total, pct: total > 0 ? Math.round(done / total * 100) : 0, curKtv, lastTg,
       });
     }

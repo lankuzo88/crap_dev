@@ -10,6 +10,7 @@ const { closeDB, getDB } = require('../db/index');
 const { queueOrScrape } = require('../services/scraper.service');
 const { webUploadFiles } = require('../services/scraper.service');
 const { BASE_DIR, DASHBOARD, DASHBOARD_MOBILE, EXCEL_DIR, DB_PATH } = require('../config/paths');
+const { initKeylabNotesRouting } = require('../db/migrations');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -82,6 +83,7 @@ router.get('/reload', requireAuth, (req, res) => {
   resetCache();
   closeDB();
   try {
+    initKeylabNotesRouting();
     const data = getData(true);
     res.json({ ok: true, orders: data.orders.length, source: data.source });
   } catch (e) {

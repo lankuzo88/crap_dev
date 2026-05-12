@@ -1,5 +1,7 @@
 'use strict';
+const fs = require('fs');
 const { getDB } = require('./index');
+const { KEYLAB_NOTES_PATH } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -80,13 +82,77 @@ function initRoutedToColumn() {
   db.exec('CREATE INDEX IF NOT EXISTS idx_don_hang_routed_to ON don_hang(routed_to)');
 
   const { getDefaultRoom } = require('../utils/phucHinh');
-  const rows = db.prepare('SELECT ma_dh, phuc_hinh FROM don_hang WHERE routed_to IS NULL').all();
+  const rows = db.prepare('SELECT ma_dh, phuc_hinh, routed_to FROM don_hang').all();
   const upd = db.prepare('UPDATE don_hang SET routed_to = ? WHERE ma_dh = ?');
   const tx = db.transaction(items => {
-    for (const row of items) upd.run(getDefaultRoom(row.phuc_hinh), row.ma_dh);
+    for (const row of items) {
+      const target = getDefaultRoom(row.phuc_hinh);
+      if ((row.routed_to || '') !== target) upd.run(target, row.ma_dh);
+    }
   });
   tx(rows);
   log(`✅ routed_to initialized (${rows.length} backfilled)`);
+}
+
+function initKeylabNotesRouting() {
+  const db = getDB();
+  if (!db) { log('initKeylabNotesRouting: DB not available'); return; }
+  if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='don_hang'").get()) {
+    log('initKeylabNotesRouting: don_hang table not found');
+    return;
+  }
+
+  if (!hasColumn(db, 'don_hang', 'ghi_chu_sx')) {
+    db.exec("ALTER TABLE don_hang ADD COLUMN ghi_chu_sx TEXT DEFAULT ''");
+    log('Added don_hang.ghi_chu_sx');
+  }
+
+  if (!fs.existsSync(KEYLAB_NOTES_PATH)) return;
+
+  let payload;
+  try {
+    payload = JSON.parse(fs.readFileSync(KEYLAB_NOTES_PATH, 'utf8'));
+  } catch (err) {
+    log(`keylab_notes.json read error: ${err.message}`);
+    return;
+  }
+
+  const notes = Array.isArray(payload?.orders) ? payload.orders : [];
+  if (!notes.length) return;
+
+  const { getRoomWithProductionNote, hasInMauHam } = require('../utils/phucHinh');
+  const select = db.prepare('SELECT ma_dh, phuc_hinh, routed_to, ghi_chu_sx FROM don_hang WHERE ma_dh = ?');
+  const updateNote = db.prepare("UPDATE don_hang SET ghi_chu_sx = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?");
+  const updateNoteAndRoute = db.prepare("UPDATE don_hang SET ghi_chu_sx = ?, routed_to = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?");
+
+  let matched = 0;
+  let routed = 0;
+  const tx = db.transaction(items => {
+    for (const item of items) {
+      const maDh = String(item?.ma_dh || '').trim();
+      if (!maDh) continue;
+      const row = select.get(maDh);
+      if (!row) continue;
+      if (String(row.ghi_chu_sx || '').trim()) continue;
+
+      matched += 1;
+      const note = String(item?.ghi_chu_sx || '').trim();
+      const targetRoom = getRoomWithProductionNote(row.phuc_hinh, note);
+      const currentRoom = row.routed_to || '';
+      const oldNote = row.ghi_chu_sx || '';
+      const mustRouteZirco = hasInMauHam(row.phuc_hinh) || hasInMauHam(note);
+
+      if (!currentRoom || oldNote !== note || (mustRouteZirco && currentRoom !== targetRoom)) {
+        updateNoteAndRoute.run(note, targetRoom, maDh);
+        if (currentRoom !== targetRoom) routed += 1;
+      } else {
+        updateNote.run(note, maDh);
+      }
+    }
+  });
+  tx(notes);
+
+  log(`Keylab notes synced (${matched} matched, ${routed} routed)`);
 }
 
 function parseCompletionDate(value) {
@@ -502,4 +568,4 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

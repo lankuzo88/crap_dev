@@ -16,6 +16,7 @@ _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
 
 # ── Config ──────────────────────────────────────────────────────────────────
 INTERVAL_MINUTES = 10          # Kiểm tra mỗi 10 phút, chạy 24/7
+NOTES_TIMEOUT_SECONDS = 30 * 60
 
 
 BASE_DIR   = Path(__file__).parent
@@ -98,8 +99,43 @@ def update_last_run_file(file_path: Path):
         log.error(f"Failed to update config: {e}")
 
 
-def scrape_excel(file_path: Path) -> bool:
-    """Chạy run_scrape.py với file Excel."""
+def scrape_keylab_notes(file_path: Path) -> bool:
+    """Chạy keylab_notes_scraper.py sau khi run_scrape.py đã import DB."""
+    log.info(f"Starting Keylab notes scrape: {file_path.name}")
+    try:
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+        result = subprocess.run(
+            [sys.executable, "keylab_notes_scraper.py"],
+            cwd=BASE_DIR,
+            env=env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=NOTES_TIMEOUT_SECONDS,
+            creationflags=_NO_WINDOW,
+        )
+        stdout_tail = result.stdout[-1200:] if result.stdout else ""
+        stderr_tail = result.stderr[-1200:] if result.stderr else ""
+        if stdout_tail:
+            for line in stdout_tail.splitlines():
+                if line.strip():
+                    log.info(f"[notes] {line}")
+        if result.returncode == 0:
+            log.info(f"Keylab notes scrape successful: {file_path.name}")
+            return True
+        log.error(f"Keylab notes scrape failed (exit {result.returncode}): {stderr_tail or stdout_tail or 'No output'}")
+        return False
+    except subprocess.TimeoutExpired:
+        log.error(f"Keylab notes scrape timeout ({NOTES_TIMEOUT_SECONDS}s): {file_path.name}")
+        return False
+    except Exception as e:
+        log.error(f"Keylab notes scrape error: {e}")
+        return False
+
+
+def scrape_excel(file_path: Path, run_notes: bool = False) -> bool:
+    """Chạy run_scrape.py; chỉ chạy keylab_notes_scraper.py khi có Excel mới."""
     log.info(f"Starting scrape: {file_path.name}")
     try:
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
@@ -116,6 +152,10 @@ def scrape_excel(file_path: Path) -> bool:
         )
         if result.returncode == 0:
             log.info(f"Scrape successful: {file_path.name}")
+            if run_notes:
+                scrape_keylab_notes(file_path)
+            else:
+                log.info(f"Skip Keylab notes scrape for same file: {file_path.name}")
             update_last_run_file(file_path)
             return True
         else:
@@ -146,13 +186,13 @@ def main():
         last_run = get_last_run_file()
         log.info(f"Newest: {newest.name} | Last: {last_run.name if last_run else 'None'}")
 
-        if last_run is None or newest.resolve() != last_run.resolve():
-            log.info(f"New file detected → scraping...")
+        is_new_file = last_run is None or newest.resolve() != last_run.resolve()
+        if is_new_file:
+            log.info("New file detected → scraping progress + Keylab notes...")
         else:
-            log.info(f"Same file, re-scraping to capture updates...")
-        scrape_excel(newest)
+            log.info("Same file, re-scraping progress only...")
+        scrape_excel(newest, run_notes=is_new_file)
 
-        # Chờ INTERVAL_MINUTES trước lần kiểm tra tiếp
         log.info(f"Checking again in {INTERVAL_MINUTES} min...")
         time.sleep(INTERVAL_MINUTES * 60)
 

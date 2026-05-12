@@ -86,7 +86,8 @@
       "Bash(curl -s -b sid=b642e7f15e6bd65481dfa02062bb2d9ec53ad64f513e0763919c68bebf90c078 http://localhost:3000/api/error-reports)",
       "Bash(python3 -c \"import sys, json; d=json.load\\(sys.stdin\\); reports=d.get\\('data', []\\); submitted_by_set=set\\([r.get\\('submitted_by'\\) for r in reports]\\); print\\(f'Reports for minhtuan: {len\\(reports\\)}, Submitted by: {submitted_by_set}'\\)\")",
       "Bash(curl -s -b sid=b642e7f15e6bd65481dfa02062bb2d9ec53ad64f513e0763919c68bebf90c078 http://localhost:3000/analytics)",
-      "Bash(netstat -tulpn)"
+      "Bash(netstat -tulpn)",
+      "Bash(timeout 300 tail *)"
     ]
   }
 }
