@@ -7,7 +7,6 @@ const router   = express.Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { getData, resetCache, findLatest } = require('../repositories/orders.repo');
 const { closeDB, getDB } = require('../db/index');
-const { sessions, getSessionToken } = require('../services/session.service');
 const { queueOrScrape } = require('../services/scraper.service');
 const { webUploadFiles } = require('../services/scraper.service');
 const { BASE_DIR, DASHBOARD, DASHBOARD_MOBILE, EXCEL_DIR, DB_PATH } = require('../config/paths');
@@ -126,9 +125,7 @@ router.get('/upload', requireAuth, (req, res) => {
 });
 
 router.post('/upload', requireAuth, (req, res) => {
-  const token = getSessionToken(req);
-  const sess  = sessions.get(token);
-  if (sess.role !== 'admin') {
+  if (req.session.role !== 'admin') {
     return res.status(403).json({ ok: false, error: 'Chỉ admin có quyền upload file' });
   }
   upload.single('excel')(req, res, err => {

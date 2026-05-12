@@ -2,7 +2,6 @@
 const express  = require('express');
 const router   = express.Router();
 const { requireAuth } = require('../middleware/auth');
-const { sessions, getSessionToken } = require('../services/session.service');
 const { USERS } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
 const {
@@ -13,15 +12,13 @@ const { normalizeUserCongDoan } = require('../repositories/users.repo');
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
 router.get('/user', requireAuth, (req, res) => {
-  const token = getSessionToken(req);
-  const sess  = sessions.get(token);
+  const sess = req.session;
   const u = USERS[sess.user] || {};
   res.json({ username: sess.user, role: sess.role, cong_doan: u.cong_doan || '', can_view_stats: u.can_view_stats === true });
 });
 
 router.get('/api/user/pending-orders', requireAuth, (req, res) => {
-  const token = getSessionToken(req);
-  const sess  = sessions.get(token);
+  const sess = req.session;
   const userCongDoan = USERS[sess.user]?.cong_doan;
   if (!userCongDoan) return res.json({ ok: true, orders: [] });
 

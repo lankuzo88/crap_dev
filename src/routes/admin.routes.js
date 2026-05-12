@@ -3,7 +3,6 @@ const express = require('express');
 const path    = require('path');
 const router  = express.Router();
 const { requireAdmin } = require('../middleware/auth');
-const { sessions, getSessionToken } = require('../services/session.service');
 const { USERS, normalizeUserCongDoan, isValidUserCongDoan, hashPassword } = require('../repositories/users.repo');
 const { saveUsers } = require('../repositories/users.repo');
 const { BASE_DIR } = require('../config/paths');
@@ -57,9 +56,7 @@ router.patch('/admin/api/users/:username/cong-doan', requireAdmin, express.json(
 
 router.delete('/admin/api/users/:username', requireAdmin, (req, res) => {
   const { username } = req.params;
-  const token = getSessionToken(req);
-  const sess  = sessions.get(token);
-  if (username === sess.user) return res.status(400).json({ error: 'Cannot delete your own account' });
+  if (username === req.session.user) return res.status(400).json({ error: 'Cannot delete your own account' });
   if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
   delete USERS[username];
   saveUsers();

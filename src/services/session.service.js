@@ -1,13 +1,11 @@
 'use strict';
-const fs     = require('fs');
 const crypto = require('crypto');
-const { SESSIONS_PATH } = require('../config/paths');
+const { getDB } = require('../db/index');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
-const sessions   = new Map();
-const SESS_TTL        = 7 * 24 * 60 * 60 * 1000; // 7 ngày (ms)
-const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;         // 7 ngày (giây, Max-Age)
+const SESS_TTL        = 7 * 24 * 60 * 60 * 1000; // 7 days (ms)
+const SESS_COOKIE_AGE = 7 * 24 * 60 * 60;         // 7 days (seconds)
 
 function genToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -26,36 +24,77 @@ function getSessionToken(req) {
 }
 
 function loadSessions() {
-  try {
-    if (!fs.existsSync(SESSIONS_PATH)) return;
-    const raw = JSON.parse(fs.readFileSync(SESSIONS_PATH, 'utf8'));
-    const now = Date.now();
-    let loaded = 0;
-    for (const [token, sess] of Object.entries(raw)) {
-      if (sess.expires > now) { sessions.set(token, sess); loaded++; }
-    }
-    if (loaded) log(`🔑 Restored ${loaded} session(s)`);
-  } catch (e) {
-    log(`⚠ Could not load sessions: ${e.message}`);
-  }
+  // SQLite-backed sessions need no process-local warmup.
 }
 
 function saveSessions() {
+  // Kept as a no-op for compatibility with older callers.
+}
+
+function createSession(username, role) {
+  const db = getDB();
+  if (!db) throw new Error('Database not available');
+  const token = genToken();
+  const expires = Date.now() + SESS_TTL;
+  db.prepare(`
+    INSERT INTO sessions (token, username, role, expires)
+    VALUES (?, ?, ?, ?)
+  `).run(token, username, role, expires);
+  return token;
+}
+
+function getSession(token) {
+  if (!token) return null;
+  const db = getDB();
+  if (!db) return null;
+  const row = db.prepare(`
+    SELECT token, username, role, expires
+    FROM sessions
+    WHERE token = ?
+  `).get(token);
+  if (!row) return null;
+  if (row.expires < Date.now()) {
+    deleteSession(token);
+    return null;
+  }
+  return {
+    token: row.token,
+    user: row.username,
+    username: row.username,
+    role: row.role,
+    expires: row.expires,
+  };
+}
+
+function deleteSession(token) {
+  if (!token) return;
+  const db = getDB();
+  if (!db) return;
+  db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+}
+
+function cleanExpiredSessions() {
+  const db = getDB();
+  if (!db) return;
   try {
-    const obj = {};
-    for (const [token, sess] of sessions) obj[token] = sess;
-    fs.writeFileSync(SESSIONS_PATH, JSON.stringify(obj));
-  } catch (e) {
-    log(`⚠ Could not save sessions: ${e.message}`);
+    db.prepare('DELETE FROM sessions WHERE expires < ?').run(Date.now());
+  } catch (err) {
+    log(`Session cleanup error: ${err.message}`);
   }
 }
 
+const cleanupInterval = setInterval(cleanExpiredSessions, 60 * 60 * 1000);
+if (cleanupInterval.unref) cleanupInterval.unref();
+
 module.exports = {
-  sessions,
-  SESS_TTL,
-  SESS_COOKIE_AGE,
   genToken,
   getSessionToken,
   loadSessions,
   saveSessions,
+  createSession,
+  getSession,
+  deleteSession,
+  cleanExpiredSessions,
+  SESS_TTL,
+  SESS_COOKIE_AGE,
 };

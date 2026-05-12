@@ -2,7 +2,6 @@
 const express = require('express');
 const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
-const { sessions, getSessionToken } = require('../services/session.service');
 const { USERS } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
 const { getActiveMaDhList } = require('../repositories/orders.repo');
@@ -96,8 +95,7 @@ function getDayInfo(ycHoanThanh) {
 }
 
 router.get('/api/stats/daily', requireAuth, (req, res) => {
-  const token    = getSessionToken(req);
-  const sess     = sessions.get(token);
+  const sess     = req.session;
   const userInfo = USERS[sess.user];
   if (!userInfo || (userInfo.role !== 'admin' && !userInfo.can_view_stats)) {
     return res.status(403).json({ error: 'Không có quyền xem thống kê' });

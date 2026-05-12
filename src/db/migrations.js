@@ -39,6 +39,20 @@ function hasColumn(db, table, column) {
   return db.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === column);
 }
 
+function initSessionsTable() {
+  const db = getDB();
+  if (!db) { log('⚠ initSessionsTable: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      role TEXT NOT NULL,
+      expires INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
+  `);
+}
+
 function initOrderBarcodeColumn() {
   const db = getDB();
   if (!db) { log('⚠ initOrderBarcodeColumn: DB not available'); return; }
@@ -466,4 +480,4 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initOrderBarcodeColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

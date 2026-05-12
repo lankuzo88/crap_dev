@@ -13,6 +13,8 @@ function getDB() {
     if (!fs.existsSync(DB_PATH)) return null;
     try {
       _db = new Database(DB_PATH, { readonly: false });
+      _db.pragma('journal_mode = WAL');
+      _db.pragma('busy_timeout = 5000');
     } catch (e) {
       log(`⚠ SQLite open error: ${e.message}`);
       return null;

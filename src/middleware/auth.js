@@ -1,11 +1,11 @@
 'use strict';
-const { sessions, getSessionToken } = require('../services/session.service');
+const { getSession, getSessionToken, deleteSession } = require('../services/session.service');
 
 function requireAuth(req, res, next) {
   const token = getSessionToken(req);
-  const sess  = sessions.get(token);
-  if (!sess || sess.expires < Date.now()) {
-    sessions.delete(token);
+  const sess  = getSession(token);
+  if (!sess) {
+    deleteSession(token);
     return res.redirect('/login');
   }
   req.session = sess;
@@ -14,9 +14,9 @@ function requireAuth(req, res, next) {
 
 function requireAdmin(req, res, next) {
   const token = getSessionToken(req);
-  const sess  = sessions.get(token);
-  if (!sess || sess.expires < Date.now()) {
-    sessions.delete(token);
+  const sess  = getSession(token);
+  if (!sess) {
+    deleteSession(token);
     return res.redirect('/login');
   }
   if (sess.role !== 'admin') {
