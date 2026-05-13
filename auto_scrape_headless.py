@@ -22,6 +22,7 @@ NOTES_TIMEOUT_SECONDS = 30 * 60
 BASE_DIR   = Path(__file__).parent
 EXCEL_DIR  = BASE_DIR / "Excel"
 CONFIG_PATH = BASE_DIR / "labo_config.json"
+ERROR_FILE = BASE_DIR / "scraper_errors.json"
 
 
 def load_env_file(path: Path):
@@ -99,6 +100,20 @@ def update_last_run_file(file_path: Path):
         log.error(f"Failed to update config: {e}")
 
 
+def should_retry_failed_notes(file_path: Path) -> bool:
+    if not ERROR_FILE.exists():
+        return False
+    try:
+        payload = json.loads(ERROR_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    if payload.get("excel_active") != file_path.name:
+        return False
+    errors = payload.get("errors") or []
+    ok_count = payload.get("ok_count")
+    return bool(errors) and (ok_count is None or int(ok_count or 0) == 0)
+
+
 def scrape_keylab_notes(file_path: Path) -> bool:
     """Chạy keylab_notes_scraper.py sau khi run_scrape.py đã import DB."""
     log.info(f"Starting Keylab notes scrape: {file_path.name}")
@@ -152,12 +167,17 @@ def scrape_excel(file_path: Path, run_notes: bool = False) -> bool:
         )
         if result.returncode == 0:
             log.info(f"Scrape successful: {file_path.name}")
+            notes_ok = True
             if run_notes:
-                scrape_keylab_notes(file_path)
+                notes_ok = scrape_keylab_notes(file_path)
             else:
                 log.info(f"Skip Keylab notes scrape for same file: {file_path.name}")
+            # Luôn cập nhật last_run_file sau khi run_scrape.py thành công,
+            # kể cả khi Keylab fail — để retry_notes hoạt động đúng lần sau.
             update_last_run_file(file_path)
-            return True
+            if not notes_ok:
+                log.error(f"Keylab notes failed for {file_path.name} — will retry notes-only next cycle.")
+            return notes_ok
         else:
             stderr_tail = result.stderr[-500:] if result.stderr else "No output"
             log.error(f"Scrape failed (exit {result.returncode}): {stderr_tail}")
@@ -187,11 +207,14 @@ def main():
         log.info(f"Newest: {newest.name} | Last: {last_run.name if last_run else 'None'}")
 
         is_new_file = last_run is None or newest.resolve() != last_run.resolve()
+        retry_notes = (not is_new_file) and should_retry_failed_notes(newest)
         if is_new_file:
             log.info("New file detected → scraping progress + Keylab notes...")
+        elif retry_notes:
+            log.info("Same file but previous Keylab notes failed fully - retrying notes...")
         else:
             log.info("Same file, re-scraping progress only...")
-        scrape_excel(newest, run_notes=is_new_file)
+        scrape_excel(newest, run_notes=is_new_file or retry_notes)
 
         log.info(f"Checking again in {INTERVAL_MINUTES} min...")
         time.sleep(INTERVAL_MINUTES * 60)

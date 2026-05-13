@@ -12,6 +12,7 @@ Yeu cau: Keylab dang mo, da click "Tim kiem" de load danh sach don.
 
 import io
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -283,6 +284,54 @@ def cell_value(item):
             return ""
 
 
+def safe_descendants(ctrl, **kwargs):
+    try:
+        if hasattr(ctrl, "wrapper_object"):
+            ctrl = ctrl.wrapper_object()
+        return ctrl.descendants(**kwargs)
+    except Exception:
+        return []
+
+
+def is_ghi_chu_sx_cell(item) -> bool:
+    try:
+        name = item.element_info.name or ""
+        control_type = item.element_info.control_type or ""
+    except Exception:
+        return False
+    n = normalize_ascii(name)
+    is_note_col = "ghi chu sx" in n or "ghi chu san xuat" in n
+    return is_note_col and ("row" in n or normalize_ascii(control_type) == "dataitem")
+
+
+def collect_ghi_chu_sx_values(root):
+    values = []
+    found_cells = 0
+    for item in safe_descendants(root):
+        if not is_ghi_chu_sx_cell(item):
+            continue
+        found_cells += 1
+        value = cell_value(item).strip()
+        if value and value not in values:
+            values.append(value)
+    return values, found_cells
+
+
+def describe_controls(root, limit=60):
+    lines = []
+    for item in safe_descendants(root)[:limit]:
+        try:
+            info = item.element_info
+            ctype = info.control_type or ""
+            auto_id = info.automation_id or ""
+            name = (info.name or "").replace("\r", "\\r").replace("\n", "\\n")
+            if auto_id or name or ctype in ("Table", "DataItem", "Edit", "Pane", "Custom"):
+                lines.append(f"{ctype}|{auto_id}|{name[:80]}")
+        except Exception:
+            continue
+    return " ; ".join(lines[:limit]) or "no_descendants"
+
+
 def close_detail(spec):
     try:
         detail = spec.child_window(auto_id="FormTaoDonHang", control_type="Window")
@@ -293,20 +342,33 @@ def close_detail(spec):
 
 
 def read_ghi_chu_sx(detail):
-    values = []
+    errors = []
     try:
         panel9 = detail.child_window(auto_id="panelControl9", control_type="Pane")
         grid = panel9.child_window(auto_id="gridControlDonHang", control_type="Table")
         dp = grid.child_window(title="Data Panel", control_type="Custom")
+        found_cells = 0
+        values = []
         for row in dp.children():
             for item in row.children():
                 if item.element_info.name.startswith("Ghi ch\u00fa SX row"):
+                    found_cells += 1
                     value = cell_value(item).strip()
                     if value:
                         values.append(value)
+        if values or found_cells:
+            return values
     except Exception as exc:
-        values.append(f"[ERR:{exc}]")
-    return values
+        errors.append(str(exc))
+
+    values, found_cells = collect_ghi_chu_sx_values(detail)
+    if values or found_cells:
+        return values
+
+    summary = describe_controls(detail)
+    err = "; ".join(errors) if errors else "Ghi chu SX cell not found"
+    err = f"{err}; detail_controls={summary}"
+    return [f"[ERR:{err}]"]
 
 
 def wait_for_detail(spec, ma_dh, timeout=DETAIL_WAIT_SEC):
@@ -461,14 +523,28 @@ def main():
         payload = {
             "scraped_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "excel_active": excel_name,
+            "ok_count": ok_count,
+            "skip_count": len(errors),
+            "todo_count": len(todo),
             "errors": errors,
         }
         ERROR_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"Errors saved: {ERROR_FILE}")
+    elif ERROR_FILE.exists():
+        try:
+            old_payload = json.loads(ERROR_FILE.read_text(encoding="utf-8"))
+            if old_payload.get("excel_active") == excel_name:
+                ERROR_FILE.unlink()
+                print(f"Cleared old errors: {ERROR_FILE}")
+        except Exception:
+            pass
 
     elapsed = time.time() - t0
     per_order = elapsed / len(todo) if todo else 0
     print(f"\nOK: {ok_count} | Skip: {len(errors)} | {elapsed:.0f}s | {per_order:.1f}s/don")
+    sys.stdout.flush()
+    # Force-exit để tránh comtypes/pywinauto COM threads chặn process thoát
+    os._exit(2 if (errors and ok_count == 0) else 0)
 
 
 if __name__ == "__main__":
