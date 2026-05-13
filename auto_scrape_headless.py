@@ -9,6 +9,7 @@ import sys
 import json
 import time
 import subprocess
+import threading
 import logging
 from pathlib import Path
 
@@ -190,6 +191,73 @@ def scrape_excel(file_path: Path, run_notes: bool = False) -> bool:
         return False
 
 
+# ── Parallel new-file pipeline ───────────────────────────────────────────────
+
+def run_new_file(file_path: Path) -> tuple[bool, bool]:
+    """Chạy run_scrape.py và keylab_notes_scraper.py song song cho file mới.
+    Returns (run_ok, notes_ok).
+    """
+    log.info(f"Parallel pipeline start: {file_path.name}")
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    run_result   = {"ok": False, "output": ""}
+    notes_result = {"ok": False, "output": ""}
+
+    def _run_scrape():
+        try:
+            r = subprocess.run(
+                [sys.executable, "run_scrape.py", str(file_path)],
+                cwd=BASE_DIR, env=env,
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                timeout=300, creationflags=_NO_WINDOW,
+            )
+            run_result["output"] = (r.stdout + r.stderr)[-1200:]
+            run_result["ok"] = r.returncode == 0
+        except subprocess.TimeoutExpired:
+            run_result["output"] = "TIMEOUT (300s)"
+        except Exception as exc:
+            run_result["output"] = str(exc)
+
+    def _run_notes():
+        try:
+            r = subprocess.run(
+                [sys.executable, "keylab_notes_scraper.py", "--new-file"],
+                cwd=BASE_DIR, env=env,
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+                timeout=NOTES_TIMEOUT_SECONDS, creationflags=_NO_WINDOW,
+            )
+            notes_result["output"] = (r.stdout + r.stderr)[-1200:]
+            notes_result["ok"] = r.returncode == 0
+        except subprocess.TimeoutExpired:
+            notes_result["output"] = f"TIMEOUT ({NOTES_TIMEOUT_SECONDS}s)"
+        except Exception as exc:
+            notes_result["output"] = str(exc)
+
+    t_scrape = threading.Thread(target=_run_scrape, daemon=True)
+    t_notes  = threading.Thread(target=_run_notes,  daemon=True)
+    t_scrape.start()
+    t_notes.start()
+    t_scrape.join(timeout=310)
+    t_notes.join(timeout=NOTES_TIMEOUT_SECONDS + 10)
+
+    for line in run_result["output"].splitlines():
+        if line.strip():
+            log.info(f"[scrape] {line}")
+    if run_result["ok"]:
+        log.info(f"run_scrape OK: {file_path.name}")
+    else:
+        log.error(f"run_scrape FAILED: {run_result['output'][-200:]}")
+
+    for line in notes_result["output"].splitlines():
+        if line.strip():
+            log.info(f"[notes]  {line}")
+    if notes_result["ok"]:
+        log.info(f"Keylab notes OK: {file_path.name}")
+    else:
+        log.error(f"Keylab notes FAILED: {notes_result['output'][-200:]}")
+
+    return run_result["ok"], notes_result["ok"]
+
+
 # ── Main Loop ────────────────────────────────────────────────────────────────
 
 def main():
@@ -208,13 +276,22 @@ def main():
 
         is_new_file = last_run is None or newest.resolve() != last_run.resolve()
         retry_notes = (not is_new_file) and should_retry_failed_notes(newest)
+
         if is_new_file:
-            log.info("New file detected → scraping progress + Keylab notes...")
+            log.info("New file detected → parallel scrape + Keylab notes...")
+            run_ok, notes_ok = run_new_file(newest)
+            if run_ok:
+                update_last_run_file(newest)
+            if not run_ok:
+                log.error(f"run_scrape failed for {newest.name} — will retry next cycle.")
+            if not notes_ok:
+                log.error(f"Keylab notes failed for {newest.name} — will retry notes-only next cycle.")
         elif retry_notes:
-            log.info("Same file but previous Keylab notes failed fully - retrying notes...")
+            log.info("Same file, retrying Keylab notes only...")
+            scrape_keylab_notes(newest)
         else:
             log.info("Same file, re-scraping progress only...")
-        scrape_excel(newest, run_notes=is_new_file or retry_notes)
+            scrape_excel(newest, run_notes=False)
 
         log.info(f"Checking again in {INTERVAL_MINUTES} min...")
         time.sleep(INTERVAL_MINUTES * 60)

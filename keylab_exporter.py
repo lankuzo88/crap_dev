@@ -79,7 +79,8 @@ def find_keylab_window():
     desktop = Desktop(backend="uia")
     for w in desktop.windows():
         try:
-            if KEYLAB_TITLE_CONTAINS in w.window_text().lower():
+            title = w.window_text().lower()
+            if "keylab" in title and ("version" in title or "lab asia" in title):
                 return w
         except Exception:
             continue

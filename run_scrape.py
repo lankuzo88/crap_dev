@@ -183,14 +183,7 @@ def run(excel_path: str):
     else:
         log('[runner] Không tìm thấy labo_cleaner.py, bỏ qua bước làm sạch.')
 
-    # 8. Cập nhật labo_config.json
-    cfg_path = BASE_DIR / 'labo_config.json'
-    cfg_path.write_text(
-        json.dumps({'last_run_file': str(p)}, ensure_ascii=False, indent=2),
-        encoding='utf-8',
-    )
-
-    # 9. Import vào SQLite rồi xóa file tạm
+    # 8. Import vào SQLite rồi xóa file tạm
     try:
         from db_manager import init_db, import_json, import_excel_final
         init_db()
@@ -202,7 +195,7 @@ def run(excel_path: str):
     except Exception as e:
         log(f'[runner] DB import lỗi (không ảnh hưởng scrape): {e}')
 
-    # 10. Xóa file tạm — Data/ và File_sach/ không cần tích lũy nữa
+    # 9. Xóa file tạm — Data/ và File_sach/ không cần tích lũy nữa
     for tmp in [json_out, scraped_xlsx, clean_out]:
         try:
             Path(tmp).unlink(missing_ok=True)

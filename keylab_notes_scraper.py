@@ -38,6 +38,7 @@ FILTER_WAIT_SEC = 0.5
 DETAIL_WAIT_SEC = 0.8
 CLOSE_WAIT_SEC = 0.3
 CLEAR_WAIT_SEC = 0.3
+WAIT_FOR_DB_SEC = 420  # 7 phút — > timeout 5 phút của run_scrape.py
 
 
 def normalize_ascii(value) -> str:
@@ -62,6 +63,25 @@ def get_conn() -> sqlite3.Connection:
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA busy_timeout=30000")
     return con
+
+
+def wait_for_db_import(excel_filename: str, max_sec: int = WAIT_FOR_DB_SEC) -> bool:
+    """Poll import_log đến khi có entry cho file Excel. Dùng trong --new-file mode."""
+    stem = Path(excel_filename).stem
+    deadline = time.time() + max_sec
+    print(f"[--new-file] Cho DB import ({excel_filename}, toi da {max_sec}s)...", flush=True)
+    while time.time() < deadline:
+        with get_conn() as con:
+            row = con.execute(
+                "SELECT id FROM import_log WHERE ten_file LIKE ? AND trang_thai='ok' LIMIT 1",
+                (f"%{stem}%",),
+            ).fetchone()
+        if row:
+            print(f"[--new-file] DB da xac nhan: {excel_filename}", flush=True)
+            return True
+        time.sleep(10)
+    print(f"[--new-file] WARN: het gio cho DB ({max_sec}s) — luu truc tiep.", flush=True)
+    return False
 
 
 # Excel active ---------------------------------------------------------------
@@ -234,7 +254,7 @@ def save_to_db(results: dict[str, str]) -> int:
                     """
                     UPDATE don_hang
                     SET ghi_chu_sx = ?, routed_to = 'zirco', updated_at = datetime('now','localtime')
-                    WHERE ma_dh = ?
+                    WHERE ma_dh = ? AND (ghi_chu_sx IS NULL OR ghi_chu_sx = '')
                     """,
                     (note, ma_dh),
                 )
@@ -243,7 +263,7 @@ def save_to_db(results: dict[str, str]) -> int:
                     """
                     UPDATE don_hang
                     SET ghi_chu_sx = ?, updated_at = datetime('now','localtime')
-                    WHERE ma_dh = ?
+                    WHERE ma_dh = ? AND (ghi_chu_sx IS NULL OR ghi_chu_sx = '')
                     """,
                     (note, ma_dh),
                 )
@@ -256,7 +276,10 @@ def save_to_db(results: dict[str, str]) -> int:
 def find_keylab():
     for w in Desktop(backend="uia").windows():
         try:
-            if "keylab" in w.window_text().lower():
+            title = w.window_text().lower()
+            # Khớp chính xác Keylab2022: "LAB ASIA - KEYLAB VERSION 2022 ..."
+            # Loại trừ cửa sổ terminal/console có "keylab" trong tên tab
+            if "keylab" in title and ("version" in title or "lab asia" in title):
                 return w
         except Exception:
             pass
@@ -463,6 +486,7 @@ def clear_filter(main_grid):
 
 def main():
     dry_run = "--dry-run" in sys.argv
+    new_file_mode = "--new-file" in sys.argv
 
     ensure_db_schema()
 
@@ -470,8 +494,14 @@ def main():
     if not ma_dh_list:
         sys.exit(1)
 
-    if not check_excel_in_db(excel_name):
-        sys.exit(1)
+    if new_file_mode:
+        print("[--new-file] Mode song song: cao Keylab ngay, luu sau khi DB san sang.", flush=True)
+        # Chỉ bỏ qua gate check_excel_in_db; vẫn dùng get_todo_from_db để lọc
+        # đơn đã có ghi chú hoặc có "In mau" — đơn mới chưa có trong DB sẽ vào
+        # missing_db và được đưa vào todo bình thường.
+    else:
+        if not check_excel_in_db(excel_name):
+            sys.exit(1)
 
     todo = get_todo_from_db(ma_dh_list)
     if dry_run:
@@ -508,16 +538,22 @@ def main():
             errors.append({"ma_dh": ma_dh, "err": status})
             print(f"SKIP ({status})")
 
-        if len(pending_results) >= BATCH_SIZE:
+        # --new-file: gom tất cả vào memory trước, đợi DB rồi mới lưu một lần
+        if not new_file_mode and len(pending_results) >= BATCH_SIZE:
             saved = save_to_db(pending_results)
             print(f"Saved DB batch: {saved}")
             pending_results.clear()
+
+    # --new-file: đợi run_scrape.py import xong DB trước khi lưu
+    if new_file_mode and pending_results:
+        wait_for_db_import(excel_name)
 
     if pending_results:
         saved = save_to_db(pending_results)
         print(f"Saved DB batch: {saved}")
 
     clear_filter(main_grid)
+    win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
 
     if errors:
         payload = {
