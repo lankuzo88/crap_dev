@@ -44,11 +44,9 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
       loaiLenhFilter = `AND COALESCE(d.loai_lenh, '') != 'Sửa'`;
     }
     const room = roomForUserCongDoan(userCongDoan);
-    const roomFilter = room === 'sap'
-      ? `AND COALESCE(d.routed_to, 'sap') IN ('sap', 'both')`
-      : room === 'zirco'
-        ? `AND COALESCE(d.routed_to, 'sap') IN ('zirco', 'both')`
-        : '';
+    const roomFilter = room
+      ? `AND COALESCE(d.routed_to, 'sap') IN ('sap', 'zirco', 'both')`
+      : '';
     const completionFilter = dbCongDoan === STAGE_NAMES[4]
       ? ''
       : `AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))`;

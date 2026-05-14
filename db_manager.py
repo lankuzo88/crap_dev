@@ -64,9 +64,6 @@ def part_rooms(part):
     n = normalize_ascii(raw)
     rooms = set()
 
-    if 'veneer' in t or 'mat dan' in n:
-        return rooms
-
     if 'rang tam' in n or 'pmma' in t or 'in resin' in n:
         if 'pmma' in t:
             rooms.add('zirco')
