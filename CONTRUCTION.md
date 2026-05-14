@@ -2,43 +2,70 @@
 
 Last updated: 2026-05-14
 
-Tai lieu nay mo ta cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
+Tai lieu nay mo ta day du cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
 
 `C:\Users\Administrator\Desktop\crap_dev`
 
-Ten file duoc giu la `CONTRUCTION.md` theo dung yeu cau hien tai. Neu can chuan hoa ten tieng Anh, ten dung thong thuong se la `CONSTRUCTION.md`.
+Tai lieu duoc thiet ke de doc xong la hieu 100% du an, khong can mo code ra tra cuu nua.
+
+---
 
 ## 1. Tong quan du an
 
-ASIA LAB la he thong quan ly don hang va tien do san xuat cho labo nha khoa. He thong gom ba lop chinh:
+ASIA LAB la he thong quan ly don hang va tien do san xuat cho labo nha khoa. He thong gom ba lop chinh chay tren cung mot Windows server:
 
-1. Node.js Express server phuc vu dashboard, API, auth, admin, upload, bao loi va thong ke.
-2. SQLite `labo_data.db` lam nguon du lieu chinh cho dashboard va API.
-3. Python automation de xuat file tu Keylab2022, cao tien do tu LaboAsia, lam sach Excel va import vao SQLite.
+1. **Node.js Express server** phuc vu dashboard, API, auth, admin, upload, bao loi, thong ke.
+2. **SQLite `labo_data.db`** lam nguon du lieu chinh.
+3. **Python automation** export tu Keylab2022 (UI automation), cao tien do tu LaboAsia (HTTP API), lam sach Excel va import vao SQLite.
 
-Ung dung dang duoc van hanh truc tiep trong repo nay. Can xem day la workspace production, khong phai sandbox thu nghiem.
+Production workspace. Khong phai sandbox.
+
+### Stack chi tiet
+
+- Node 18+ voi `express` v5.2, `better-sqlite3` v12.9, `bcrypt` v6, `multer`, `sharp`, `xlsx`, `dotenv`, `@aws-sdk/client-s3`, `express-rate-limit`.
+- Python 3.x voi `pandas`, `openpyxl`, `xlrd`, `requests`, `playwright`, `pywinauto`, `pywin32`.
+- SQLite voi WAL mode.
+- Cloudflare R2 (S3-compatible) cho luu anh bao loi.
+- PM2 cluster mode 4 instance cho Node + 1 instance cho auto-scrape Python.
+- Caddy reverse proxy `asiakanban.com` ve `127.0.0.1:3000`.
+
+### Cac actor trong he thong
+
+- **Admin**: full quyen — quan ly user, upload Excel, trigger Keylab export, duyet bao loi, xem stats, route don.
+- **User (cong doan)**: nhin queue pending theo cong doan cua minh, scan barcode, route don, bao loi cong doan minh.
+- **QC**: bao loi va kiem loi theo flow rieng (chua admin).
+
+---
 
 ## 2. Runtime va process production
 
-Server Node:
+### Node server
 
-- Entry point: `server.js`
-- Express app: `src/app.js`
+- Entry point: `server.js` (~46 dong)
+- Express app factory: `src/app.js`
 - Host listen: `127.0.0.1`
-- Port mac dinh: `3000`
+- Port mac dinh: `3000` (env `PORT` override)
 - PM2 app name: `asia-lab-server`
 - PM2 mode: cluster, `instances: 4`
+- `max_memory_restart`: 500M
+- `min_uptime`: 10s, `max_restarts`: 10, `restart_delay`: 5000ms
+- Logs: `logs/pm2-out.log`, `logs/pm2-error.log`
 - Reverse proxy: Caddy domain `asiakanban.com` ve `127.0.0.1:3000`
+- `src/app.js` co `app.set('trust proxy', 1)` (implicit qua express 5) de xu ly XFF.
 
-Auto scrape:
+### Auto scrape
 
 - Script: `auto_scrape_headless.py`
 - PM2 app name: `auto-scrape`
-- Interpreter: `python`
-- Chu ky: moi 10 phut
-- Log chinh: `auto_scrape.log`, `logs/auto-scrape-out.log`, `logs/auto-scrape-error.log`
+- Interpreter: `python` (cwd = project root)
+- Chu ky: moi `INTERVAL_MINUTES = 10` phut
+- `max_memory_restart`: 300M, `min_uptime`: 30s, `max_restarts`: 5, `restart_delay`: 10000ms
+- Env bo sung trong ecosystem.config.js:
+  - `PYTHONIOENCODING=utf-8`
+  - `PLAYWRIGHT_BROWSERS_PATH=C:\Users\Administrator\AppData\Local\ms-playwright`
+- Log chinh: `auto_scrape.log` (logger Python), `logs/auto-scrape-out.log`, `logs/auto-scrape-error.log` (PM2).
 
-Caddy:
+### Caddyfile
 
 ```caddy
 asiakanban.com {
@@ -46,121 +73,430 @@ asiakanban.com {
 }
 ```
 
-`src/app.js` co `app.set('trust proxy', 1)` de Express xu ly dung khi chay sau reverse proxy.
+TLS tu dong qua Caddy auto-renew. Khoi dong: `caddy run --config Caddyfile` hoac `caddy start --config Caddyfile`.
+
+### PM2 ecosystem.config.js (rut gon)
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'asia-lab-server',
+      script: 'server.js',
+      instances: 4,
+      exec_mode: 'cluster',
+      autorestart: true,
+      max_memory_restart: '500M',
+      env: { NODE_ENV: 'production', PORT: 3000 },
+      error_file: 'logs/pm2-error.log',
+      out_file: 'logs/pm2-out.log',
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss',
+    },
+    {
+      name: 'auto-scrape',
+      script: 'auto_scrape_headless.py',
+      interpreter: 'python',
+      instances: 1,
+      autorestart: true,
+      max_memory_restart: '300M',
+      env: {
+        PYTHONIOENCODING: 'utf-8',
+        PLAYWRIGHT_BROWSERS_PATH: 'C:\\Users\\Administrator\\AppData\\Local\\ms-playwright',
+      },
+      error_file: 'logs/auto-scrape-error.log',
+      out_file: 'logs/auto-scrape-out.log',
+      merge_logs: true,
+    },
+  ],
+};
+```
+
+---
 
 ## 3. Thu muc va file quan trong
 
-Code Node:
+### Node source (`src/`)
 
-- `server.js`: bootstrap production, load user/session, init migration, start cleanup, listen server.
-- `src/app.js`: tao Express app, gan route, middleware, static protected image, 404 va error handler.
-- `src/config/env.js`: doc `.env`, normalize PORT, image config va Cloudflare R2 config.
-- `src/config/paths.js`: khai bao duong dan dung chung.
-- `src/db/index.js`: ket noi SQLite bang `better-sqlite3`, bat WAL va busy timeout.
-- `src/db/migrations.js`: tao/migrate bang runtime, sync ghi chu Keylab, tinh stats thang/ngay.
-- `src/repositories/orders.repo.js`: doc du lieu don hang, cache 60 giay, filter active Excel, stage skip rules.
-- `src/repositories/users.repo.js`: load/save `users.json`, bcrypt hash, normalize cong doan user.
-- `src/services/session.service.js`: session cookie `sid`, luu session trong SQLite.
-- `src/services/scraper.service.js`: job state, spawn Python scraper, spawn Keylab export.
-- `src/services/image.service.js`: upload anh loi qua R2, nen anh bang `sharp`, cleanup anh cu.
-- `src/services/r2.service.js`: S3-compatible client cho Cloudflare R2.
-- `src/utils/phucHinh.js`: phan loai phuc hinh va route sap/zirco.
+#### Entry
+- `server.js` — bootstrap production: load env, load users, load sessions, init DB tables theo thu tu, start image cleanup, start WAL checkpoint, listen, preload `getData()`.
+- `src/app.js` — Express app factory, mount 11 router theo thu tu, gan blockDirectHtml middleware, static `/uploads/error-images` co auth, 404 + error handler.
 
-Code Python:
+#### Config (`src/config/`)
+- `env.js` (~21 dong) — doc `.env`, normalize toan bo env (PORT, NODE_ENV, IMAGE_*, R2_*).
+- `paths.js` (~20 dong) — path constants (BASE_DIR, FILE_SACH_DIR, DATA_DIR, EXCEL_DIR, DB_PATH, KEYLAB_NOTES_PATH, SESSIONS_PATH, USERS_JSON_PATH, DASHBOARD, DASHBOARD_MOBILE, ERROR_IMAGE_DIR).
 
-- `auto_scrape_headless.py`: vong lap background, tim Excel moi nhat, chay scrape tien do va Keylab notes.
-- `run_scrape.py`: runner cho mot file Excel, chay worker cao LaboAsia, tao JSON/XLSX trung gian, import DB.
-- `laboasia_gui_scraper_tkinter.py`: scraper engine, hien da co client dung HTTP JSON API sau khi login lay token.
-- `labo_cleaner.py`: lam sach workbook, tao file final co sheet don hang, tien do va tong hop.
-- `db_manager.py`: tao schema, import JSON/Excel vao SQLite, sync Keylab notes, CLI stats/import.
-- `keylab_exporter.py`: automation Keylab2022 de xuat Excel vao `Excel/`.
-- `keylab_notes_scraper.py`: automation Keylab2022 de doc `Ghi chu SX`, ghi thang vao DB.
+#### Database (`src/db/`)
+- `index.js` (~67 dong) — singleton `getDB()`, WAL + 5s busy_timeout, `closeDB()`, `dbHasData()`, `startWALCheckpoint()` (30 phut interval), `stopWALCheckpoint()`.
+- `migrations.js` (~572 dong) — init tat ca bang, backfill cot moi them, refresh monthly stats, helper billing period 26-25.
 
-Frontend HTML:
+#### Middleware (`src/middleware/`)
+- `auth.js` (~30 dong) — `requireAuth`, `requireAdmin`.
+- `security.js` (~45 dong) — `loginLimiter` (5 attempt / 15 min, 429), `blockDirectHtml`, `serveErrorImages`.
 
-- `login.html`: UI dang nhap.
-- `dashboard.html`: dashboard desktop/admin chinh.
-- `dashboard_mobile_terracotta.html`: dashboard mobile chinh tai `/mobile`.
-- `admin.html`: quan ly user, ma loi, bao loi, stats san xuat, stats thang.
-- `upload.html`: upload Excel.
-- `analytics.html`: analytics admin.
-- `munger.html`: dashboard metrics quan tri.
-- `bao_loi.html`: UI user/QC bao loi.
-- `error_reports.html`: UI admin duyet bao loi.
+#### Repositories (`src/repositories/`)
+- `users.repo.js` (~101 dong) — `USERS` in-memory dict + load/save `users.json`, bcrypt hash, normalize cong_doan.
+- `orders.repo.js` (~414 dong) — doc Excel/JSON, build orders, cache 60s (SQLite path priority), stage skip rules, `getData(forceReload?)`, `resetCache()`.
 
-Data/runtime:
+#### Services (`src/services/`)
+- `session.service.js` (~101 dong) — `genToken()` (crypto 32 bytes hex), `createSession/getSession/deleteSession`, TTL 7 ngay, cleanup moi 1h.
+- `scraper.service.js` (~277 dong) — spawn `run_scrape.py`, queue management, file watcher debounce 3s, spawn `keylab_exporter.py --once` va `--check`, callback `setResetCallback`/`setCloseDBCallback`.
+- `image.service.js` (~149 dong) — multer R2Storage custom, `sharp` compress (rotate, resize fit-inside 1600x1600, webp 75%), `uploadImage`, `deleteErrorImage` (R2 truoc, fallback local), `cleanupExpiredErrorImages` (90 ngay), schedule 24h.
+- `r2.service.js` (~15 dong) — S3Client factory (region 'auto'), export `PutObjectCommand`, `DeleteObjectCommand`.
 
-- `labo_data.db`: SQLite chinh.
-- `Excel/`: file Excel export/upload goc.
-- `Data/`: file scraped trung gian.
-- `File_sach/`: file Excel final sau clean.
-- `Data_thang/`: archive theo thang.
-- `uploads/error-images/`: anh loi local cu hoac fallback.
-- `logs/`: PM2 logs.
-- `.env`: credentials/config runtime, khong dua vao tai lieu hoac commit.
-- `users.json`: user runtime.
-- `sessions.json`: legacy/runtime session file, hien session chinh nam trong SQLite.
-- `labo_config.json`, `keylab_state.json`, `scraper_errors.json`: state automation.
+#### Routes (`src/routes/`)
+- `auth.routes.js` (~49 dong) — login/logout.
+- `dashboard.routes.js` (~145 dong) — `/`, `/mobile`, `/analytics`, `/data.json`, `/reload`, `/status`, `/files`, `/upload` (GET+POST).
+- `orders.routes.js` (~156 dong) — `/api/orders*`.
+- `admin.routes.js` (~394 dong) — admin panel + user CRUD + production stats + monthly stats.
+- `scraper.routes.js` (~79 dong) — scrape-status, auto-scrape, keylab-*.
+- `analytics.routes.js` (~211 dong) — KTV stats, daily, db stats, trend, customers, history endpoints.
+- `errorReports.routes.js` (~193 dong) — bao loi flow.
+- `feedback.routes.js` (~90 dong) — feedback types va feedbacks CRUD.
+- `users.routes.js` (~135 dong) — `/user`, `/api/user/pending-orders`.
+- `stats.routes.js` (~155 dong) — `/api/stats/daily` (chip mobile).
+- `munger.routes.js` (~159 dong) — `/munger`, `/api/munger/metrics`.
+
+#### Utilities (`src/utils/`)
+- `phucHinh.js` (~108 dong) — classify zirc/kl/vnr/hon/inmau/tam, room routing, `hasInMauHam`, `getRoomWithProductionNote`.
+
+### Python script (root)
+- `auto_scrape_headless.py` — daemon 24/7 quet Excel moi, spawn parallel scrape + notes.
+- `run_scrape.py` — runner cho 1 file Excel, 1-4 worker scrape song song.
+- `laboasia_gui_scraper_tkinter.py` — core scraper, login Playwright lay JWT, goi JSON API.
+- `labo_cleaner.py` — clean Excel raw thanh workbook 3-sheet co styling.
+- `db_manager.py` — schema init, import JSON/Excel, stats, sync keylab notes.
+- `keylab_exporter.py` — pywinauto UIA automation Keylab2022 de Xuat Excel.
+- `keylab_notes_scraper.py` — pywinauto cao "Ghi chu SX" tu Keylab2022 vao DB.
+- `import_history_data.py` (neu co) — bulk import lich su vao `tien_do_history`.
+
+### Frontend HTML (root)
+- `login.html`, `dashboard.html`, `dashboard_mobile_terracotta.html`, `admin.html`, `upload.html`, `analytics.html`, `munger.html`, `bao_loi.html`, `error_reports.html`.
+
+### Data va runtime
+- `labo_data.db` — SQLite chinh + `labo_data.db-wal` + `labo_data.db-shm`.
+- `Excel/` — Excel goc tu Keylab/upload (file pattern `DDMMYYYY_N.xls(x)`).
+- `Data/` — file scraped trung gian (`*_scraped.json`, `*_scraped.xlsx`, temp `.xlsx` khi convert .xls).
+- `File_sach/` — Excel final sau `labo_cleaner.py` (`*_final.xlsx`).
+- `Data_thang/` — archive theo thang.
+- `uploads/error-images/` — anh loi local cu (legacy hoac fallback khi khong co R2).
+- `logs/` — PM2 logs.
+- `.env` — credentials runtime (R2, LABO_USER*, IMAGE_*).
+- `users.json` — user accounts (passwordHash bcrypt, role, cong_doan, can_view_stats).
+- `sessions.json` — legacy file, session chinh hien nam trong SQLite bang `sessions`.
+- `labo_config.json` — `{last_run_file: "..."}`.
+- `keylab_state.json` — `{date: "DD/MM/YYYY", export_count: N}` cho file naming Keylab export.
+- `scraper_errors.json` — luu loi keylab_notes_scraper de retry notes-only.
+- `keylab_notes.json` (optional) — cache notes goc, sync vao `don_hang.ghi_chu_sx`.
+
+### Config files
+- `package.json` — dependencies, scripts.
+- `requirements.txt` — Python deps.
+- `ecosystem.config.js` — PM2 process config.
+- `Caddyfile` — reverse proxy config.
+
+---
 
 ## 4. Luong du lieu chinh
 
-Luong tu Keylab den dashboard:
+### Luong tu Keylab den dashboard (file moi)
 
-1. Admin bam export trong dashboard hoac process tu dong tao file Excel trong `Excel/`.
-2. `keylab_exporter.py --once` thao tac Keylab2022, luu file dang `ddMMyyyy_N.xls/xlsx`.
-3. `auto_scrape_headless.py` phat hien file moi nhat trong `Excel/`.
-4. Voi file moi, `auto_scrape_headless.py` chay song song:
-   - `run_scrape.py <excel_path>` de cao tien do tu LaboAsia va import DB.
-   - `keylab_notes_scraper.py --new-file` de cao `Ghi chu SX` tu Keylab.
-5. `run_scrape.py` lay danh sach ma don tu Excel, chia queue cho cac account `LABO_USER1..4`.
-6. `laboasia_gui_scraper_tkinter.py` login LaboAsia, lay JWT, goi JSON API cho tung don.
-7. Runner tao `Data/*_scraped.json`, `Data/*_scraped.xlsx`, chay `labo_cleaner.py`.
-8. `db_manager.py` import JSON va Excel final vao `labo_data.db`.
-9. Node API doc `labo_data.db` va frontend render dashboard.
+1. Admin bam "Xuat Excel KeyLab" trong dashboard hoac auto-process tao file Excel trong `Excel/`.
+2. `keylab_exporter.py --once`:
+   - `find_keylab_window()` quet UIA tim window co title chua "keylab" + ("version" or "lab asia").
+   - Click `btnTimKiem` (auto_id) → wait 3s.
+   - Click `btnXuatExcel` → wait 2s.
+   - Poll Save As dialog (0.3s interval, 5s timeout).
+   - Ctrl+A + type filename `DDMMYYYY_N` (state tu `keylab_state.json`).
+   - Click Save button (auto_id="1").
+   - Dismiss "Open with" dialog (Escape).
+   - Retry toi da 2 lan (3 attempt total), delay 2s.
+   - Print `SAVED:<filepath>` va exit.
+3. `auto_scrape_headless.py` (daemon 10 phut/lan):
+   - `find_newest_excel()` quet `Excel/` bo `_scraped`, `_final`, `_cleaned`.
+   - So sanh voi `labo_config.json.last_run_file`.
+   - **File moi** → `run_new_file()` chay 2 thread song song:
+     - Thread 1: `run_scrape.py <excel_path>` (timeout 300s).
+     - Thread 2: `keylab_notes_scraper.py --new-file` (timeout 1800s).
+   - **File cu + co loi notes truoc** → chi chay `keylab_notes_scraper.py` (retry notes-only).
+   - **File cu OK** → chay `run_scrape.py` (progress-only, khong chay notes).
+4. `run_scrape.py <excel_path>`:
+   - `detect_sheet_col()` — auto-detect sheet (`Đơn hàng`/`Don hang`/`Sheet1`) va column ma_dh (fuzzy match `ma_dh`, `mã ĐH`, `Mã đơn`...).
+   - Load 1-4 account tu env `LABO_USER1..4` + `LABO_PASS1..4`.
+   - Tao `queue.Queue` cua tat ca ma_dh.
+   - Spawn N thread `LaboAsiaAPIClient.scrape_order_queue()`:
+     - Each worker: login Playwright headless → lay JWT cookie `auth_token`.
+     - POST `https://laboasia.com.vn/empconnect/api_handler/` voi `Authorization: Bearer <jwt>`.
+     - Parse response → `ProgressRow(ma_dh, thu_tu, cong_doan, ten_ktv, xac_nhan, thoi_gian_hoan_thanh, raw_row_text, tai_khoan_cao, barcode_labo)`.
+     - Post event vao event queue: `("order_done", ...)`.
+   - Main thread tieu thu event, gom result.
+   - `build_progress_df()` → JSON + Excel merged → `Data/*_scraped.{json,xlsx}`.
+   - Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
+   - `subprocess.run(labo_cleaner.py)` → `File_sach/*_final.xlsx`.
+   - `db_manager.py init_db()` + `import_json()` + `import_excel_final()` vao SQLite.
+   - Cleanup file trung gian `Data/*` va `File_sach/*` sau import.
+   - Exit 0 neu co result, 1 neu khong.
+5. `keylab_notes_scraper.py --new-file`:
+   - Quet Excel active, load list ma_dh.
+   - `wait_for_db_import()` poll `import_log` toi 7 phut (lau hon run_scrape 5 phut).
+   - Sau khi DB co data, filter:
+     - Skip neu `ghi_chu_sx IS NOT NULL AND != ''` (da co notes).
+     - Skip neu `phuc_hinh` co "in mau" (`has_in_mau()`).
+   - Cho moi ma_dh todo:
+     - Filter Row → input ma_dh → Enter (wait 0.5s).
+     - Double-click row → mo detail form (wait 0.8s).
+     - Doc cell "Ghi chu SX row N" tu `gridControlDonHang`.
+     - Click `btnDongLai` close detail (wait 0.3s).
+     - Clear filter (wait 0.3s).
+   - Batch save moi 10 don: `UPDATE don_hang SET ghi_chu_sx = ?` (chi neu ghi_chu_sx hien tai rong).
+   - Neu note co "in mau ham" → `UPDATE routed_to = 'zirco'`.
+   - Ghi loi vao `scraper_errors.json` neu fail. Xoa file neu success va co loi truoc.
+   - **`os._exit(0 or 2)`** de tranh COM thread hang.
+6. Node API doc SQLite, frontend render dashboard.
 
-Luong khi cung file:
+### Luong khi cung file (re-poll)
+- `auto_scrape_headless.py` chay lai `run_scrape.py` cho progress moi.
+- Notes chi retry khi `scraper_errors.json` bao co loi.
 
-- `auto_scrape_headless.py` van scrape lai tien do moi 10 phut.
-- Keylab notes chi retry rieng khi file loi `scraper_errors.json` cho biet notes failed.
-- `labo_config.json` luu `last_run_file`.
+### Luong upload web
+1. Admin upload Excel qua form `POST /upload` (multer single('excel'), max 20MB, mime `.xlsx/.xls/.xlsm`).
+2. File luu vao `Excel/`.
+3. `scraper.service.js` queue file hoac spawn `run_scrape.py` ngay.
+4. Khi scraper xong: `resetCache()` cho orders + `closeDB()` de connection moi.
+5. Front-end poll `/scrape-status` moi ~1.5 phut.
 
-Luong upload web:
+---
 
-1. Admin upload Excel qua `POST /upload`.
-2. File duoc luu vao `Excel/`.
-3. `src/services/scraper.service.js` dua file vao queue hoac spawn `run_scrape.py`.
-4. Khi scraper xong, cache orders bi reset va DB connection duoc dong lai de doc lai du lieu moi.
+## 5. Database — schema chi tiet
 
-## 5. Database
+DB: `labo_data.db` SQLite.
 
-SQLite chinh: `labo_data.db`
+PRAGMA settings:
 
-Connection Node:
+| PRAGMA | Node | Python |
+|---|---|---|
+| journal_mode | WAL | WAL |
+| busy_timeout | 5000 ms | 30000 ms |
+| foreign_keys | (not set) | ON |
 
-- Thu vien: `better-sqlite3`
-- PRAGMA: `journal_mode = WAL`, `busy_timeout = 5000`
-- WAL checkpoint moi 30 phut trong `src/db/index.js`
+WAL checkpoint: `PRAGMA wal_checkpoint(TRUNCATE)` moi 30 phut tu `src/db/index.js`.
 
-Connection Python:
+### Bang `don_hang` — master order
 
-- Thu vien: `sqlite3`
-- PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=30000`
+Mot dong per `ma_dh`. Writer: `db_manager.py.upsert_don_hang()`, `keylab_notes_scraper.py`. Reader: Node `orders.routes.js`, frontend `data.json`.
 
-Bang chinh:
+| Cot | Kieu | Default | Y nghia |
+|---|---|---|---|
+| id | INTEGER | AUTOINCREMENT | PK |
+| ma_dh | TEXT UNIQUE NOT NULL | — | Ma don hang duy nhat |
+| ma_dh_goc | TEXT | — | Ma goc (truoc dau `-N`) |
+| so_phu | INTEGER | NULL | So phu (N trong `ma_dh-N`) |
+| la_don_phu | INTEGER | 0 | 1 neu la don phu |
+| nhap_luc | TEXT | '' | DD/MM/YYYY HH:MM:SS |
+| yc_hoan_thanh | TEXT | '' | Deadline KTV |
+| yc_giao | TEXT | '' | Deadline giao hang |
+| khach_hang | TEXT | '' | Ten nha khoa |
+| benh_nhan | TEXT | '' | Ten benh nhan |
+| phuc_hinh | TEXT | '' | Mo ta phuc hinh (semicolon separated) |
+| sl | INTEGER | 0 | Tong so rang (parse SL:X) |
+| loai_lenh | TEXT | '' | Lam moi/Lam lai/Sua/Bao hanh/Lam tiep/Lam them |
+| ghi_chu | TEXT | '' | Ghi chu dieu phoi |
+| ghi_chu_sx | TEXT | '' | Ghi chu SX (tu Keylab) |
+| trang_thai | TEXT | '' | Trang thai don |
+| tai_khoan_cao | TEXT | '' | Account code (hyct, kythuat, sonnt, lanhn) |
+| barcode_labo | TEXT | '' | Barcode dan tren don |
+| routed_to | TEXT | NULL | 'sap' / 'zirco' / 'both' / 'none' |
+| nguon_file | TEXT | '' | File nguon import |
+| created_at | TEXT | datetime('now','localtime') | |
+| updated_at | TEXT | datetime('now','localtime') | |
 
-- `don_hang`: master order, mot dong moi `ma_dh`.
-- `tien_do`: tien do cong doan hien tai, unique theo `(ma_dh, thu_tu)`.
-- `tien_do_history`: lich su tien do phuc vu stats KTV.
-- `import_log`: audit file import.
-- `sessions`: session login runtime.
-- `error_codes`: danh muc ma loi.
-- `error_reports`: bao loi cong doan.
-- `feedback_types`, `feedbacks`: feedback chung.
-- `analytics_daily`, `ktv_performance`: analytics cu.
-- `ktv_monthly_stats`, `ktv_monthly_type_stats`: stats KTV theo ky 26-25.
-- `ktv_daily_stats`, `ktv_daily_type_stats`: stats KTV theo ngay hoan thanh.
+Indexes: `idx_don_hang_goc(ma_dh_goc)`, `idx_don_hang_giao(yc_giao)`, `idx_don_hang_barcode_labo(barcode_labo)`, `idx_don_hang_routed_to(routed_to)`.
 
-Snapshot dem tai luc doc repo:
+### Bang `tien_do` — current progress
+
+5 dong per `ma_dh` (1 per cong doan). UNIQUE(ma_dh, thu_tu). FK `ma_dh REFERENCES don_hang(ma_dh) ON DELETE CASCADE`.
+
+| Cot | Kieu | Default | Y nghia |
+|---|---|---|---|
+| id | INTEGER | AUTOINCREMENT | PK |
+| ma_dh | TEXT NOT NULL | — | FK |
+| thu_tu | INTEGER NOT NULL | — | 1-5 |
+| cong_doan | TEXT NOT NULL | — | CBM, SÁP/Cadcam, SƯỜN, ĐẮP, MÀI |
+| ten_ktv | TEXT | '' | KTV xu ly |
+| xac_nhan | TEXT | 'Chưa' | 'Có' / 'Chưa' |
+| thoi_gian_hoan_thanh | TEXT | '' | DD/MM/YYYY HH:MM:SS |
+| raw_row_text | TEXT | '' | Audit trail |
+| nguon_file | TEXT | '' | |
+| created_at | TEXT | datetime('now','localtime') | |
+| updated_at | TEXT | datetime('now','localtime') | |
+
+Indexes: `idx_tien_do_ma(ma_dh)`, `idx_tien_do_cd(cong_doan)`, `idx_tien_do_ktv(ten_ktv)`.
+
+### Bang `tien_do_history` — historical snapshot
+
+Immutable, append-only. Source for monthly/daily stats. Co them context don hang (so_luong, loai_lenh, nha khoa).
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| ma_dh | TEXT | |
+| thu_tu | INTEGER | |
+| cong_doan | TEXT | |
+| ten_ktv | TEXT | |
+| xac_nhan | TEXT | |
+| thoi_gian_hoan_thanh | TEXT | |
+| ngay_nhan | TEXT | |
+| ma_kh | TEXT | |
+| ten_nha_khoa | TEXT | |
+| bac_si | TEXT | |
+| benh_nhan | TEXT | |
+| phuc_hinh | TEXT | |
+| so_luong | INTEGER | |
+| loai_lenh | TEXT | |
+| loai_phuc_hinh | TEXT | zirc/kl/vnr/hon... |
+| tai_khoan_cao | TEXT | |
+| raw_row_text | TEXT | |
+| billing_month | TEXT | YYYY-MM |
+| billing_start | TEXT | YYYY-MM-26 |
+| billing_end | TEXT | YYYY-MM-25 |
+| completion_date | TEXT | YYYY-MM-DD |
+| imported_at | DATETIME | CURRENT_TIMESTAMP |
+
+UNIQUE(ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh). Index `idx_tdh_billing_month(billing_month)`.
+
+### Bang `sessions` — auth
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| token | TEXT PK | crypto.randomBytes(32).hex |
+| username | TEXT NOT NULL | |
+| role | TEXT NOT NULL | admin/user/qc |
+| expires | INTEGER NOT NULL | Unix ms |
+
+Index `idx_sessions_expires(expires)`. Cleanup moi 1h.
+
+### Bang `import_log` — audit
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| ten_file | TEXT | |
+| loai_file | TEXT | 'json' / 'excel' |
+| ngay_import | TEXT | |
+| so_don_hang | INTEGER | |
+| so_cong_doan | INTEGER | |
+| trang_thai | TEXT | 'ok' / 'error' |
+| chi_tiet | TEXT | error message |
+
+### Bang `error_codes` — reference
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| ma_loi | TEXT NOT NULL | Code (CB001, SA002...) |
+| ten_loi | TEXT NOT NULL | |
+| cong_doan | TEXT NOT NULL | |
+| mo_ta | TEXT | |
+| active | INTEGER DEFAULT 1 | |
+| created_at | TEXT | |
+
+### Bang `error_reports` — QA
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| ma_dh | TEXT | |
+| error_code_id | INTEGER | FK error_codes.id |
+| ma_loi_text | TEXT | Free text fallback |
+| cong_doan | TEXT | |
+| hinh_anh | TEXT | R2 URL hoac local path |
+| mo_ta | TEXT | |
+| trang_thai | TEXT DEFAULT 'pending' | pending/confirmed/rejected |
+| submitted_by | TEXT | |
+| submitted_at | TEXT | datetime('now','localtime') |
+| reviewed_by | TEXT | |
+| reviewed_at | TEXT | |
+| ghi_chu_admin | TEXT | |
+
+### Bang `feedback_types` va `feedbacks`
+
+Generic feedback system, hien khong co UI rieng. Cau truc:
+- `feedback_types(id, name, category, description, active, created_at)`.
+- `feedbacks(id, ma_dh, feedback_type_id, description, severity, status, assigned_to, created_at, updated_at, resolved_at)`.
+
+### Bang `ktv_monthly_stats` — aggregate billing 26-25
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| billing_month | TEXT NOT NULL | YYYY-MM |
+| billing_start | TEXT NOT NULL | YYYY-MM-26 (thang truoc) |
+| billing_end | TEXT NOT NULL | YYYY-MM-25 (thang hien tai) |
+| cong_doan | TEXT NOT NULL | |
+| ten_ktv | TEXT NOT NULL | |
+| orders_completed | INTEGER DEFAULT 0 | unique ma_dh count |
+| total_sl | INTEGER DEFAULT 0 | tong so rang |
+| source_rows | INTEGER DEFAULT 0 | row count |
+| type_breakdown | TEXT DEFAULT '{}' | JSON {loai_lenh: {qty, orders, rows}} |
+| updated_at | TEXT | |
+
+UNIQUE(billing_month, cong_doan, ten_ktv). Indexes tren billing_month, ten_ktv, cong_doan.
+
+### Bang `ktv_monthly_type_stats`
+
+Tuong tu `ktv_monthly_stats` + cot `loai_lenh`. UNIQUE(billing_month, cong_doan, ten_ktv, loai_lenh).
+
+### Bang `ktv_daily_stats` va `ktv_daily_type_stats`
+
+Tuong tu monthly nhung dung `completion_date` (YYYY-MM-DD) thay vi billing month. Phuc vu daily tracking khong dung billing cycle.
+
+### Billing period (chu ky 26-25)
+
+`billingPeriodForCompletion(date)` trong `src/db/migrations.js`:
+
+```javascript
+function billingPeriodForCompletion(value) {
+  const parsed = parseCompletionDate(value);  // DD/MM/YYYY
+  const billing = parsed.day >= 26
+    ? addMonths(parsed.year, parsed.month, 1)
+    : { year: parsed.year, month: parsed.month };
+  const prev = addMonths(billing.year, billing.month, -1);
+  return {
+    completionDate: parsed.iso,
+    billingMonth: `${billing.year}-${billing.month}`,
+    billingStart: `${prev.year}-${prev.month}-26`,
+    billingEnd: `${billing.year}-${billing.month}-25`,
+  };
+}
+```
+
+Cong viec hoan thanh ngay 26 tro len → vao billing thang sau.
+
+### `refreshMonthlyStats()` chi tiet
+
+1. SELECT tu `tien_do_history` (fallback `tien_do` JOIN `don_hang` neu chua co history).
+2. Filter `ten_ktv NOT IN ('', '-') AND thoi_gian_hoan_thanh NOT IN ('', '-')`.
+3. Dedup by (ma_dh, thu_tu, cong_doan) — giu row co `imported_at` moi nhat.
+4. Loop rows:
+   - Tinh `billingPeriodForCompletion(thoi_gian_hoan_thanh)`.
+   - Bucket monthly: `[billing_month, cong_doan, ten_ktv]`.
+   - Bucket daily: `[completion_date, cong_doan, ten_ktv]`.
+   - Tich luy `total_sl`, `orders` (Set unique ma_dh), `source_rows`.
+   - `addTypeBreakdown()` tach JSON theo `loai_lenh` (normalize qua `normalizeOrderType()`).
+5. DELETE 4 bang stats (rebuild toan bo).
+6. INSERT batch vao 4 bang.
+
+JSON `type_breakdown` shape:
+```json
+{
+  "Lam moi": { "qty": 15, "orders": 3, "rows": 5 },
+  "Sua":     { "qty":  8, "orders": 2, "rows": 2 }
+}
+```
+
+`normalizeOrderType()` map loai_lenh → canonical set: `Làm mới`, `Làm thêm`, `Làm lại`, `Bảo hành`, `Sửa`, `Làm tiếp`, `Khác`.
+
+### Volume snapshot
 
 - `don_hang`: 2723
 - `tien_do`: 13207
@@ -174,406 +510,739 @@ Snapshot dem tai luc doc repo:
 - `ktv_monthly_stats`: 96
 - `ktv_daily_stats`: 1593
 
-Cot quan trong trong `don_hang`:
-
-- `ma_dh`, `ma_dh_goc`, `so_phu`, `la_don_phu`
-- `nhap_luc`, `yc_hoan_thanh`, `yc_giao`
-- `khach_hang`, `benh_nhan`, `phuc_hinh`, `sl`
-- `loai_lenh`, `ghi_chu`, `ghi_chu_sx`
-- `trang_thai`, `tai_khoan_cao`, `barcode_labo`
-- `routed_to`: `sap`, `zirco`, `both`, `none`
-- `nguon_file`, `created_at`, `updated_at`
-
-Cot quan trong trong `tien_do`:
-
-- `ma_dh`
-- `thu_tu`
-- `cong_doan`
-- `ten_ktv`
-- `xac_nhan`
-- `thoi_gian_hoan_thanh`
-- `raw_row_text`
-- `nguon_file`
+---
 
 ## 6. Auth, user va permission
 
-User luu trong `users.json`.
+### users.json structure
 
-Password:
+```json
+{
+  "admin": {
+    "passwordHash": "$2b$10$...",
+    "role": "admin",
+    "cong_doan": "",
+    "can_view_stats": true
+  },
+  "ktv_dap_1": {
+    "passwordHash": "$2b$10$...",
+    "role": "user",
+    "cong_doan": "đắp",
+    "can_view_stats": false
+  }
+}
+```
 
-- Luu bang bcrypt hash trong field `passwordHash`.
-- `users.repo.js` van co fallback `u.passwordHash || u.password` cho data cu.
+22 user dang co trong production: 1 admin + 21 user/qc.
 
-Session:
+### Password
+- Luu bcrypt `passwordHash` (saltRounds=10).
+- Fallback doc `u.password` cho legacy data trong `users.repo.js`.
+- `hashPassword(pwd)`, `verifyPassword(pwd, hash)` helper.
 
+### Session
 - Cookie: `sid`
-- HttpOnly
-- SameSite Strict
-- TTL: 7 ngay
-- Luu trong bang SQLite `sessions`
+- HttpOnly, SameSite=Strict
+- TTL: 7 ngay (`SESS_TTL = 7 * 24 * 3600 * 1000`)
+- Cookie age: 604800 sec
+- Token: `crypto.randomBytes(32).toString('hex')`
+- Storage: SQLite bang `sessions`
+- Cleanup: setInterval moi 1h chay `cleanExpiredSessions()`.
+- Cookie `Secure` flag KHONG set vi server listen local sau Caddy. Neu doi topology, danh gia lai.
 
-Roles:
+### Roles
+- `admin`: full quyen — dashboard, upload, export, user management, stats, duyet bao loi.
+- `user`: theo cong doan, thay queue pending.
+- `qc`: bao loi/kiem loi theo flow rieng, khong phai admin.
 
-- `admin`: toan quyen admin, dashboard, upload/export, user management, stats, review bao loi.
-- `user`: user cong doan, thay queue pending theo cong doan.
-- `qc`: quyen bao loi/kiem loi theo flow rieng, khong phai admin.
+### Cong doan user (canonical)
 
-Cong doan user chuan:
-
-- rong
+`USER_CONG_DOAN_VALUES` trong `users.repo.js`:
+- `''` (rong)
 - `CBM`
-- `sap`
+- `sáp`
 - `CAD/CAM`
-- `suon`
-- `dap`
-- `mai`
+- `sườn`
+- `đắp`
+- `mài`
 
-Luu y ve dau tieng Viet: source hien thi trong PowerShell co the bi mojibake, nhung y nghia la `sáp`, `sườn`, `đắp`, `mài`.
+`USER_CONG_DOAN_LEGACY_MAP` chuyen legacy names → canonical (vi du `sap` → `sáp`, `suon` → `sườn`).
 
-Mapping user sang DB:
+### Mapping user cong_doan → DB cong_doan
 
-- `CBM` -> `CBM`
-- `sap` -> `SAP/Cadcam`
-- `CAD/CAM` -> `SAP/Cadcam`
-- `suon` -> `SUON`
-- `dap` -> `DAP`
-- `mai` -> `MAI`
+Trong `users.routes.js` va `orders.repo.js`:
+- `CBM` → `CBM`
+- `sáp` → `SÁP/Cadcam`
+- `CAD/CAM` → `SÁP/Cadcam`
+- `sườn` → `SƯỜN`
+- `đắp` → `ĐẮP`
+- `mài` → `MÀI`
 
-Trong code that co dau, cac gia tri DB la `SÁP/Cadcam`, `SƯỜN`, `ĐẮP`, `MÀI`.
+Mapping user cong_doan → room (`users.routes.js`):
+- `sáp` → `sap`
+- `CAD/CAM` → `zirco`
+- (khac) → null (khong filter room)
 
-Permission `can_view_stats`:
+### Permission `can_view_stats`
 
 - Luu trong `users.json`.
-- Admin luon thay thong ke chip mobile.
-- User chi thay summary neu `can_view_stats = true`.
-- User van dung filter chip duoc du khong co quyen xem summary.
+- Admin luon thay summary stats chip mobile (bypass).
+- User chi thay summary `/api/stats/daily` neu `can_view_stats = true`.
+- User van dung filter chip ngay ca khi khong co quyen xem summary.
+- Toggle via `PATCH /api/admin/users/:username/stats-permission`.
+
+### Middleware
+
+- `requireAuth(req, res, next)` — doc cookie `sid` qua `getSessionToken()`, `getSession(token)` check expiry, attach `req.session = {username, role, cong_doan}` hoac redirect `/login` (browser) hoac 401 JSON (API).
+- `requireAdmin(req, res, next)` — `requireAuth` + check `role === 'admin'`, else 403 JSON.
+- `loginLimiter` — `express-rate-limit`, 5 attempt / 15 phut, return 429 sau khi vuot quota.
+- `blockDirectHtml` — chan request `.html` (tru `login.html`) chua auth.
+- `serveErrorImages` — static `/uploads/error-images` co auth check.
+
+---
 
 ## 7. Cong doan va business rules
 
-Thu tu cong doan chuan:
-
+### Thu tu cong doan chuan
 1. `CBM`
 2. `SÁP/Cadcam`
 3. `SƯỜN`
 4. `ĐẮP`
 5. `MÀI`
 
-Stage skip rules trong `orders.repo.js`:
+`STAGE_NAMES` constant trong `orders.repo.js`.
+
+### Stage colors (frontend)
+```javascript
+STAGE_COLORS = {
+  'CBM':          '#3b82f6',  // xanh duong
+  'SÁP/Cadcam':   '#a855f7',  // tim
+  'SƯỜN':         '#f59e0b',  // vang
+  'ĐẮP':          '#f97316',  // cam
+  'MÀI':          '#10b981',  // xanh la
+}
+```
+
+### Stage skip rules
+
+Logic trong `getSkipStages(loai_lenh, ghi_chu)` (`orders.repo.js`) — ap dung ca cho dashboard stage progress va `/api/user/pending-orders`:
 
 - `Sửa`: bo `CBM`, `SÁP/Cadcam`, `SƯỜN`; bat dau tu `ĐẮP`, sau do `MÀI`.
-- `Làm tiếp`: bo `CBM`, `SÁP/Cadcam`; bat dau tu `SƯỜN`, sau do `ĐẮP`, `MÀI`.
-- Thu suon: neu `ghi_chu` co `TS` hoac `thử sườn`, bo `ĐẮP`, `MÀI`.
-- Cac loai `Làm mới`, `Làm lại`, `Bảo hành`, `Làm thêm` mac dinh di du 5 cong doan, tru khi ghi chu co rule dac biet.
+- `Làm tiếp`: bo `CBM`, `SÁP/Cadcam`; bat dau tu `SƯỜN` → `ĐẮP` → `MÀI`.
+- **Thu suon** (ghi_chu chua `TS` hoac `thử sườn`): bo `ĐẮP`, `MÀI` (dung lai sau SƯỜN).
+- `Làm mới`, `Làm lại`, `Bảo hành`, `Làm thêm`: mac dinh di du 5 cong doan tru khi ghi_chu co rule khac.
 
-Quan trong:
+### Quan trong / luu y
 
-- Thu suon dang bat `TS` kha rong. Cac chuoi nhu `LTTS`, `LLTS`, `BHTS` cung co the bi xem la thu suon.
-- Thu tho chua co logic chinh thuc. Neu them, nen match token `TT` ro rang de tranh bat nham.
-- Logic skip dung ca cho dashboard stage progress va `/api/user/pending-orders`.
+- Pattern `TS` dang bat kha rong. Chuoi nhu `LTTS`, `LLTS`, `BHTS` co the bi xem la "thu suon" (false positive). Khi sua, can match token `TS` ro rang hon (vi du `\bTS\b`).
+- "Thu tho" chua co logic chinh thuc. Neu them, nen match token `TT` ro rang de tranh bat nham (`LTTT`, `LLTT`).
+- Logic skip dung **ca cho stage progress hien thi** va **`/api/user/pending-orders`**. Sua phai dong bo ca 2 cho.
+
+### Loai lenh (loai_lenh enum)
+
+`normalizeOrderType()` map ve:
+- `Làm mới` (fresh)
+- `Làm thêm` (add)
+- `Làm lại` (rework)
+- `Bảo hành` (warranty)
+- `Sửa` (repair)
+- `Làm tiếp` (continue)
+- `Khác` (others)
+
+---
 
 ## 8. Routing sap/zirco
 
-`src/utils/phucHinh.js` va `db_manager.py` cung co logic route phong:
+Logic chinh trong `src/utils/phucHinh.js` va `db_manager.py.default_room_for()` — phai dong bo Python va JS.
 
-- Zirconia, zolid, cercon, la va, argen -> `zirco`
-- Kim loai, titanium, chrome, cobalt -> `sap`
-- Cui gia zirconia -> `both`
-- In mau ham -> `zirco`
-- PMMA/rang tam co xu ly rieng
-- Khong classify duoc nhung co phuc hinh -> mac dinh `sap`
+### classifyPhucHinh(text) → loai
 
-`don_hang.routed_to` duoc backfill khi migrate/init DB.
+Returns one of: `'zirc'`, `'kl'`, `'vnr'`, `'hon'`, `'inmau'`, `'tam'`, `'unknown'`.
 
-Route API:
+Match keywords (normalize NFD lowercase remove diacritics):
+- **zirc** (zirconia): `zirconia`, `zolid`, `cercon`, `la va` (lava), `argen` → room `zirco`
+- **kl** (kim loai): `kim loai`, `titanium`, `chrome`, `cobalt` → room `sap`
+- **vnr** (veneer/mat dan): `veneer`, `mat dan` → room ?
+- **hon** (cui gia): `cui gia` zirconia → room `both`
+- **inmau** (in mau): `in mau ham` → room `zirco`
+- **tam** (rang tam): `rang tam`, `pmma` → xu ly rieng
 
-- `GET /api/orders/by-barcode/:code`: tim order theo barcode hoac ma don, tra ve classify va confirmed stage.
-- `POST /api/orders/route`: chuyen `routed_to` sang `sap`, `zirco`, `both`.
-- Khong cho route neu `SÁP/Cadcam` da confirm.
+### Routing rules
+- Zirconia, zolid, cercon, lava, argen → `zirco`
+- Kim loai, titanium, chrome, cobalt → `sap`
+- Cui gia zirconia → `both`
+- In mau ham → `zirco`
+- PMMA / rang tam → xu ly rieng (khong route mac dinh)
+- Khong classify duoc nhung co phuc_hinh → mac dinh `sap`
 
-Mobile dung `routed_to` de hien mau stripe va ho tro scan/chuyen phong cho user sap/CAD-CAM.
+`don_hang.routed_to` duoc backfill khi:
+- Migrate `initRoutedToColumn()` (run boot).
+- Import don hang moi (`db_manager.upsert_don_hang()` → `default_room_for(phuc_hinh)`).
+- Sync notes Keylab: neu note co "in mau ham" → override `routed_to = 'zirco'`.
 
-## 9. API routes
+### `hasInMauHam(text)`
 
-Auth:
+Check `'in mau ham'` hoac (`'in mau'` + `'ham'`) trong `phuc_hinh` OR `ghi_chu_sx`. Neu match → override room sang `zirco`.
 
-- `GET /login`, `GET /login.html`
-- `POST /login`
-- `GET /logout`
-- `GET /user`
+### Route API
 
-Dashboard/data:
+- `GET /api/orders/by-barcode/:code`: tim order theo `barcode_labo` truoc, fallback `ma_dh`. Tra ve `{order, classify, sap_cadcam_confirmed}`.
+- `POST /api/orders/route`: body `{ma_dh, target_room}` (target ∈ `sap`/`zirco`/`both`).
+  - Validate target.
+  - Khong cho route neu `SÁP/Cadcam` da `xac_nhan = 'Có'` (don da qua stage 2).
+  - Update `routed_to` trong DB.
+  - Reset cache.
 
-- `GET /`: dashboard desktop hoac mobile tuy user agent.
-- `GET /mobile`
-- `GET /data.json`
-- `GET /reload`
-- `GET /status`
-- `GET /files`
-- `GET /upload`
-- `POST /upload`
+Mobile dung `routed_to` de hien mau stripe:
+```javascript
+ROOM_COLORS = {
+  sap:   '#f59e0b',  // cam (vang nau)
+  zirco: '#2563eb',  // xanh duong
+  both:  '#0891b2',  // teal
+  none:  '#9ca3af',  // xam
+}
+```
 
-Orders:
+User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 
-- `GET /api/orders`
-- `GET /api/orders/search`
-- `GET /api/orders/by-barcode/:code`
-- `POST /api/orders/route`
-- `GET /api/orders/:ma_dh`
-- `GET /api/user/pending-orders`
+---
 
-Admin/users:
+## 9. API routes — day du request/response
 
-- `GET /admin`
-- `GET /admin/api/users`
-- `POST /admin/api/users`
-- `PATCH /admin/api/users/:username/cong-doan`
-- `DELETE /admin/api/users/:username`
-- `POST /admin/api/users/:username/reset-password`
-- `PATCH /api/admin/users/:username/stats-permission`
-- `GET /admin/api/production-stats`
-- `GET /admin/api/monthly-stats`
+### Auth
 
-Scraper/Keylab:
+| Method | Path | Auth | Body / Query | Response |
+|---|---|---|---|---|
+| GET | `/login`, `/login.html` | none | — | Serve `login.html` (redirect `/` neu da login) |
+| POST | `/login` | loginLimiter | `username`, `password` | Redirect `/` (success) hoac `/login?error=...` (fail), 429 neu rate-limited |
+| GET | `/logout` | session | — | Delete session, clear cookie, redirect `/login` |
 
-- `GET /scrape-status`
-- `GET /api/auto-scrape/status`
-- `POST /api/auto-scrape/run`
-- `GET /keylab-status`
-- `GET /keylab-health`
-- `POST /keylab-export-now`
-- `GET /keylab-export-status`
+### Dashboard & core data
 
-Analytics:
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/` | requireAuth | Serve `dashboard.html` hoac `dashboard_mobile_terracotta.html` (UA-based) |
+| GET | `/mobile` | requireAuth | Serve mobile dashboard |
+| GET | `/analytics` (& `.html`) | requireAdmin | Serve `analytics.html` |
+| GET | `/data.json` | requireAuth | `{source: {db, active}, orders: [...]}` cached 60s |
+| GET | `/reload` | requireAuth | `resetCache()` + `closeDB()` + `initKeylabNotesRouting()` + return fresh data |
+| GET | `/status` | requireAuth | `{status, time, excel_dir, latest_export, db: {don_hang, tien_do}}` |
+| GET | `/files` | requireAuth | `[{name, size, mtime}]` cua `Excel/` |
+| GET | `/upload` | requireAuth | Serve `upload.html` |
+| POST | `/upload` | requireAdmin | Multer `excel` field (max 20MB). Response `{ok, filename, size}`. Queue scraper. |
 
-- `GET /analytics`
-- `GET /api/analytics/ktv`
-- `GET /api/analytics/daily`
-- `GET /api/db/stats`
-- `GET /api/analytics/trend`
-- `GET /api/analytics/customers`
-- `POST /api/analytics/refresh`
-- `GET /api/analytics/history/ktv-performance`
-- `GET /api/analytics/history/top-ktv`
-- `GET /api/analytics/history/stage-stats`
-- `GET /api/analytics/history/phuc-hinh-distribution`
-- `GET /api/analytics/history/top-customers`
-- `GET /api/analytics/history/overview`
+### Orders
 
-Feedback:
+| Method | Path | Auth | Query/Body | Response |
+|---|---|---|---|---|
+| GET | `/api/orders` | requireAuth | `ma_dh_goc?, loai_lenh?, tai_khoan?, limit?, offset?` | `{ok, count, orders: []}` |
+| GET | `/api/orders/search` | requireAuth | `q` (>=2 chars) | `{ok, results: []}` (max 20) — LIKE `ma_dh`, `barcode_labo`, `khach_hang`, `benh_nhan` |
+| GET | `/api/orders/by-barcode/:code` | requireAuth | — | `{order, classify, sap_cadcam_confirmed}` (tim barcode → fallback ma_dh) |
+| POST | `/api/orders/route` | requireAuth | `{ma_dh, target_room}` (target ∈ sap/zirco/both) | `{ok}` hoac `{error}` neu sap_cadcam da confirm |
+| GET | `/api/orders/:ma_dh` | requireAuth | — | `{order, stages: [], variants: []}` (variants la cac don phu cua ma_dh_goc) |
 
-- `GET /api/feedback/types`
-- `POST /api/feedback/types`
-- `DELETE /api/feedback/types/:id`
-- `GET /api/feedbacks`
-- `POST /api/feedbacks`
-- `PATCH /api/feedbacks/:id`
+### User profile
 
-Bao loi:
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/user` | requireAuth | `{username, role, cong_doan, can_view_stats}` |
+| GET | `/api/user/pending-orders` | requireAuth | `{ok, orders: []}` — orders cua cong_doan user, ap skip rules |
 
-- `GET /bao-loi`
-- `GET /error-reports`
-- `GET /api/error-reports/allowed-stages`
-- `GET /api/error-codes`
-- `POST /api/error-codes`
-- `PATCH /api/error-codes/:id`
-- `DELETE /api/error-codes/:id`
-- `POST /api/error-reports`
-- `GET /api/error-reports`
-- `GET /api/error-reports/stats`
-- `PATCH /api/error-reports/:id/confirm`
-- `PATCH /api/error-reports/:id/reject`
+### Admin
 
-Munger:
+| Method | Path | Auth | Body/Query | Response |
+|---|---|---|---|---|
+| GET | `/admin` | requireAdmin | — | Serve `admin.html` |
+| GET | `/admin/api/users` | requireAdmin | — | `{users: [{username, role, cong_doan, can_view_stats}]}` |
+| POST | `/admin/api/users` | requireAdmin | `{username, password, role, cong_doan}` | `{ok}` |
+| PATCH | `/admin/api/users/:username/cong-doan` | requireAdmin | `{cong_doan}` | `{ok}` |
+| DELETE | `/admin/api/users/:username` | requireAdmin | — | `{ok}` (chan xoa chinh minh) |
+| POST | `/admin/api/users/:username/reset-password` | requireAdmin | `{newPassword}` | `{ok}` |
+| PATCH | `/api/admin/users/:username/stats-permission` | requireAdmin | `{can_view_stats}` | `{ok}` |
+| GET | `/admin/api/production-stats` | requireAdmin | — | `{days, totals: {qty, orders, employees}, stages: [{stage, employees: [{ktv, totalQty, byDay}]}]}` (3 ngay completion gan nhat) |
+| GET | `/admin/api/monthly-stats` | requireAdmin | `?month=YYYY-MM` | `{month, months, period, data: [{cong_doan, ten_ktv, orders_completed, total_sl, type_breakdown, entries}]}` |
 
-- `GET /munger`
-- `GET /api/munger/metrics`
+### Scraper
 
-## 10. Frontend behavior
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/scrape-status` | requireAuth | `{job, queue: [filenames]}` |
+| GET | `/api/auto-scrape/status` | requireAuth | `{enabled, running, currentFile, nextRun, mode, queue}` |
+| POST | `/api/auto-scrape/run` | requireAdmin | Spawn latest Excel. Error 409 neu running. |
+| GET | `/keylab-status` | requireAuth | `{running, startedAt, exitCode, savedFile, log: []}` |
+| GET | `/keylab-health` | requireAuth | `{ok, message}` (spawn `keylab_exporter.py --check`) |
+| POST | `/keylab-export-now` | requireAdmin | Pre-flight health check. Spawn `keylab_exporter.py --once`. Return `{ok, message}` |
+| GET | `/keylab-export-status` | requireAuth | (alias `/keylab-status`) |
 
-Desktop dashboard `dashboard.html`:
+### Analytics
 
+Simple (legacy `analytics.html`):
+
+| Method | Path | Auth | Query | Response |
+|---|---|---|---|---|
+| GET | `/api/analytics/ktv` | requireAuth | — | `[{ten_ktv, cong_doan, tong, da_xong}]` |
+| GET | `/api/analytics/daily` | requireAuth | — | `[{ngay, cong_doan, so_cong_doan}]` |
+| GET | `/api/db/stats` | requireAuth | — | `{don_hang, don_phu, tien_do, files_imported, last_import}` |
+| GET | `/api/analytics/trend` | requireAuth | `?days=7` | Daily trend tu `analytics_daily` |
+| GET | `/api/analytics/customers` | requireAuth | `?limit=10` | Top customers |
+| POST | `/api/analytics/refresh` | requireAuth | — | Stub (chua implement) |
+
+Historical (cho `analytics.html`):
+
+| Path | Query | Response |
+|---|---|---|
+| `/api/analytics/history/ktv-performance` | `?days=30&cong_doan=` | `[{ten_ktv, cong_doan, total_done, avg_hours}]` |
+| `/api/analytics/history/top-ktv` | `?days=30&limit=10` | `[{ten_ktv, total_stages, completed, completion_rate}]` |
+| `/api/analytics/history/stage-stats` | `?days=30` | `[{cong_doan, total, completed}]` |
+| `/api/analytics/history/phuc-hinh-distribution` | `?days=30` | Group by type (zirc/kl/vnr/hon) |
+| `/api/analytics/history/top-customers` | `?days=30&limit=10` | `[{ten_nha_khoa, total_orders, total_rang}]` |
+| `/api/analytics/history/overview` | `?days=30` | `{total_records, unique_orders, unique_ktv, unique_customers, completed_stages}` |
+
+### Daily stats (chip mobile)
+
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/api/stats/daily` | requireAuth + `can_view_stats` | `{ok, data: [{ngay, ngay_sort, mat_dan, kim_loai, zirconia, cui_gia, in_mau_ham, rang_tam, tong}]}` group theo `yc_hoan_thanh` |
+
+### Feedback
+
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/api/feedback/types` | requireAuth | List active types |
+| POST | `/api/feedback/types` | requireAdmin | Create type |
+| DELETE | `/api/feedback/types/:id` | requireAdmin | Soft delete (active=0) |
+| GET | `/api/feedbacks` | requireAuth | `?ma_dh=&status=` (max 100) |
+| POST | `/api/feedbacks` | requireAuth | `{ma_dh, feedback_type_id, description, severity}` |
+| PATCH | `/api/feedbacks/:id` | requireAuth | `{status, assigned_to}` (set resolved_at neu closed/resolved) |
+
+### Bao loi
+
+| Method | Path | Auth | Body/Query | Response |
+|---|---|---|---|---|
+| GET | `/bao-loi` | requireAuth | — | Serve `bao_loi.html` |
+| GET | `/error-reports` | requireAdmin | — | Serve `error_reports.html` |
+| GET | `/api/error-reports/allowed-stages` | requireAuth | — | `[stage]` allowed cho role/cong_doan |
+| GET | `/api/error-codes` | requireAuth | `?cong_doan=` | List active codes |
+| POST | `/api/error-codes` | requireAdmin | `{ma_loi, ten_loi, cong_doan, mo_ta}` | `{ok}` |
+| PATCH | `/api/error-codes/:id` | requireAdmin | partial update | `{ok}` |
+| DELETE | `/api/error-codes/:id` | requireAdmin | — | `{ok}` (active=0) |
+| POST | `/api/error-reports` | requireAuth | FormData `ma_dh, error_code_id, mo_ta, hinh_anh` | `{ok}` (uploads anh sang R2) |
+| GET | `/api/error-reports` | requireAuth | `?trang_thai=&cong_doan=` | List reports (non-admin auto filter `submitted_by`) |
+| GET | `/api/error-reports/stats` | requireAuth | — | Aggregate by trang_thai/cong_doan/submitted_by/ma_loi_text |
+| PATCH | `/api/error-reports/:id/confirm` | requireAdmin | — | `{ok}` |
+| PATCH | `/api/error-reports/:id/reject` | requireAdmin | `{ghi_chu_admin}` | `{ok}` |
+
+### Munger (KPI dashboard)
+
+| Method | Path | Auth | Response |
+|---|---|---|---|
+| GET | `/munger` | requireAdmin | Serve `munger.html` |
+| GET | `/api/munger/metrics` | requireAdmin | `?days=7\|30\|60` (default 30 = kỳ 26-25). Response: `{ok, billing_period, data: {bus_factor, wip_ratio, first_pass_yield, on_time_rate, customer_concentration, demand_trend, scale_countdown}}` |
+
+KPI shapes:
+- `bus_factor`: `{stages, worst_stage, worst_pct, status}` (top KTV % per stage)
+- `wip_ratio`: `{head, tail, ratio, by_stage, status}` (head = CBM+SÁP vs tail = ĐẮP+MÀI)
+- `first_pass_yield`: `{value, total, rework, target: 90, status}`
+- `on_time_rate`: `{value, on_time, total, target: 90, status}`
+- `customer_concentration`: `{top5_pct, total_rang, top5_rang, top5: [], status}`
+- `demand_trend`: `{curr_rang, prev_rang, change_pct, daily_avg, sparkline, status}`
+- `scale_countdown`: `{target: 10000, current_rate, pct_of_target, days_until, status}`
+
+---
+
+## 10. Frontend behavior chi tiet
+
+### login.html
+- Form POST `/login` voi `username`, `password`.
+- Hien error neu URL co `?error`.
+- Dark theme terracotta. Logo 🦷.
+- Responsive breakpoint 420px.
+
+### dashboard.html (desktop)
 - Doc `/data.json`.
-- Admin thay nut Admin, Upload, Analytics, Munger va Keylab export.
-- User thuong co the chuyen sang view pending order theo cong doan.
-- Co auto refresh va poll status khi export/scrape.
-- Render order card, stage pips, filter phuc hinh, pipeline, summary.
+- Auto refresh moi **5 phut**.
+- Admin thay button: "Admin Dashboard", "Upload Excel", "Xuat Excel KeyLab" (POST `/keylab-export-now` + poll), "Munger Dashboard".
+- User thuong: chuyen sang view pending order theo cong doan.
+- Render: order card, stage pips ngang (5 cong doan), filter phuc hinh (`zirc/kl/vnr/tam/inmau/hon/all`), pipeline view (group by `yc_giao` time window: sang 08-11, trua 11-14, chieu 14-18, toi 18-23), summary stats.
+- Stage pips: `.done` = filled glow, `.current` = 50% fill, `.skip` = pattern xach.
 
-Mobile dashboard `dashboard_mobile_terracotta.html`:
+### dashboard_mobile_terracotta.html
+- Auto detect cong_doan:
+  - Admin hoac user khong cong_doan: doc `/data.json`.
+  - User co cong_doan: doc `/api/user/pending-orders`.
+- Filter chips horizontal scroll: tat ca, zirconia, kim loai, mat dan, cui gia, in mau, rang tam.
+- Summary chip pills theo `yc_ht` chi hien neu admin OR `can_view_stats`.
+- Modal stage progress: hien thu tu CBM/SÁP/SƯỜN/ĐẮP/MÀI + thoi gian hoan thanh + KTV.
+- Route color stripe trai card: ROOM_COLORS theo `routed_to`.
+- Auto refresh: **30 phut** neu user, **60 phut** neu admin.
+- Keylab export polling: moi **2 phut** poll `/keylab-export-status` + `/scrape-status` khi co job.
+- Barcode scanner: ZXing UMD CDN `@zxing/library@0.19.2`, `facingMode: 'environment'`, scan → `searchOrders(value, {autoSelectExact: true})`.
+- FAB button "Quet chuyen qua [room khac]" cho user co cong_doan (sap/CAD-CAM): scan barcode → POST `/api/orders/route` target = `getTransferTargetRoom(myRoom)`.
 
-- Admin hoac user khong co cong doan: doc `/data.json`.
-- User co cong doan: doc `/api/user/pending-orders`.
-- Filter chips: tat ca, zirconia, kim loai, mat dan.
-- Summary theo `yc_ht` chi hien neu admin hoac `can_view_stats`.
-- Modal hien stage progress va thoi gian hoan thanh tung cong doan.
-- Co logic route color `sap`, `zirco`, `both`, `none`.
+### admin.html
+- Tab Users:
+  - Liet ke + create + delete + set cong_doan + reset password + toggle `can_view_stats`.
+- Tab Error Codes:
+  - Grouped by stage, mau theo `STAGE_COLORS`.
+  - CRUD: mã lỗi, tên lỗi, công đoạn, mô tả.
+- Tab Error Reports:
+  - Filter: all / pending / confirmed / rejected.
+  - Card: ma_dh + stage badge + error code + status badge + meta + photo thumbnail + mo ta + reviewed info.
+  - Approve: PATCH `/confirm`. Reject: modal note → PATCH `/reject`.
+  - Lightbox: click photo → fullscreen, click outside → close.
+- Tab Production Stats (3 ngay):
+  - Bang dates (rows) × stages (cols), cell `{qty, orders}`.
+  - Click cell → drill-down KTV list.
+- Tab Monthly Stats:
+  - Period selector "Ky 26-25 (DD/MM - DD/MM)".
+  - Aggregate by stage + KTV.
 
-Admin `admin.html`:
+### upload.html
+- Drag-drop hoac file input `.xlsx/.xls/.xlsm`, max 20MB.
+- POST `/upload` FormData voi XHR progress tracking.
+- Sau upload: `loadFileList()` + `pollScrapeStatus()` moi 1.5 phut.
+- Log box highlight ERROR (do), OK (xanh), DONE (cam).
 
-- Quan ly user, role, cong doan, `can_view_stats`.
-- Quan ly ma loi.
-- Duyet/tuchoi bao loi.
-- Xem stats san xuat 3 ngay gan nhat.
-- Xem stats thang theo ky tinh luong 26 den 25.
+### analytics.html
+- Charts: Chart.js v4.4.0 CDN.
+- Doughnut: phuc_hinh distribution (kl/zirc/vnr/hon).
+- Bar: stage stats (completed vs total).
+- Table top 10 KTV + top 10 customers.
 
-Bao loi:
+### munger.html
+- 7 metric cards trong 2 row (4 + 3).
+- Auto refresh moi 5 phut.
+- Status bar: green dot (loaded), orange (loading), red (error).
+- Default range: 30 ngay (billing 26-25). Options: 7, 30, 60.
 
-- `bao_loi.html` cho user/QC tao bao loi, co upload anh.
-- `error_reports.html` cho admin xem, confirm, reject.
-- Anh moi upload qua R2 neu `.env` co config day du.
+### bao_loi.html
+- Field: ma_dh (autocomplete + barcode scan), cong_doan (dropdown allowed stages), error_code (dropdown filtered by cong_doan), hinh_anh (file input + preview), ghi_chu.
+- Order autocomplete: input >=2 chars → debounce 200ms → `GET /api/orders/search` → dropdown.
+- Submit FormData → POST `/api/error-reports`. Success → toast, reset form.
+
+### error_reports.html
+- Stats cards: Total / Pending / Confirmed / Rejected.
+- Stage breakdown chips.
+- Filter buttons: All / Pending / Confirmed / Rejected.
+- Cards: photo thumbnail 100×80px, lightbox.
+- Approve / Reject buttons (chi hien khi pending).
+
+### Shared technical patterns
+
+| Aspect | Pattern |
+|---|---|
+| Auth check | `/user` endpoint, redirect `/login` neu 401 |
+| Polling | `setInterval` 30-60s, hoac event-driven |
+| Forms | FormData + XHR (upload) hoac Fetch (data) |
+| Search | Debounce + `/api/.../search?q=` |
+| Barcode | ZXing UMD CDN + environment camera |
+| Mobile | CSS `@media (max-width:768px)` + `100dvh` + tap-highlight disabled |
+| Charts | Chart.js CDN |
+| Images | Lightbox overlay click-to-close |
+| State | Global JS variables + re-render on update |
+| Modals | `display:none` ↔ `classList.toggle('show'/'open')` |
+
+Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
+
+---
 
 ## 11. Scraper va automation chi tiet
 
-`auto_scrape_headless.py`:
+### auto_scrape_headless.py
 
-- Load `.env` de co credentials LaboAsia.
-- Tim file Excel moi nhat trong `Excel/`, bo qua `_scraped`, `_final`, `_cleaned`.
-- Neu file moi khac `last_run_file`, chay parallel:
-  - `run_scrape.py <file>`
-  - `keylab_notes_scraper.py --new-file`
-- Neu cung file, scrape lai progress only.
-- Neu `scraper_errors.json` bao notes loi, retry notes only.
-- Timeout `run_scrape.py`: 300 giay.
-- Timeout Keylab notes: 30 phut.
+- Entry: `main()` vong lap vo tan, khong CLI flag.
+- Config: `INTERVAL_MINUTES = 10`, `NOTES_TIMEOUT_SECONDS = 30*60 = 1800s`, `run_scrape timeout = 300s`.
+- Function chinh:
+  - `find_newest_excel()` — quet `Excel/`, bo file `_scraped/_final/_cleaned`.
+  - `get_last_run_file()` — doc `labo_config.json.last_run_file`.
+  - `should_retry_failed_notes()` — kiem tra `scraper_errors.json`.
+  - `scrape_excel(file, run_notes)` — subprocess `run_scrape.py`.
+  - `scrape_keylab_notes(file)` — subprocess `keylab_notes_scraper.py`.
+  - `run_new_file(file)` — `threading` chay song song 2 thread (run_scrape + keylab_notes_scraper).
+- Flow:
+  1. Lap moi 10 phut.
+  2. Tim Excel moi nhat.
+  3. Compare voi `last_run_file`:
+     - File moi → `run_new_file()` (parallel).
+     - File cu + notes loi → notes-only retry.
+     - File cu OK → progress-only.
+  4. Cap nhat `last_run_file` neu run_scrape thanh cong.
+  5. Log vao `auto_scrape.log` + stdout.
+- Error handling: subprocess timeout → log error, tiep tuc cycle. Thread join: 310s run_scrape, 1800s+ notes.
 
-`run_scrape.py`:
+### run_scrape.py
 
-- Detect sheet/cot ma don hang.
-- Lay account tu `LABO_USER1..4`, `LABO_PASS1..4`.
-- Chia queue cho worker.
-- Luu JSON/XLSX trung gian vao `Data/`.
-- Convert `.xls` sang `.xlsx` tam neu can.
-- Chay `labo_cleaner.py`.
-- Import JSON va Excel final vao SQLite.
-- Xoa file tam trong `Data/` va `File_sach/` sau import.
+- Entry: `python run_scrape.py <excel_path>`.
+- Env: `LABO_USER1..4`, `LABO_PASS1..4` (toi da 4 worker).
+- Config: BASE_URL `https://laboasia.com.vn/scan`, `page_timeout_ms=30_000`, `max_retry_per_order=2`.
+- Flow:
+  1. `detect_sheet_col()` — auto detect sheet + column ma_dh (normalize lowercase, remove diacritics, fuzzy match "ma" + "dh"/"don"/"order").
+  2. Validate env (it nhat USER1+PASS1).
+  3. Tao `queue.Queue` cua ma_dh list.
+  4. Spawn N thread `LaboAsiaAPIClient.scrape_order_queue(queue, event_queue, worker_name)`.
+  5. Event types qua event_queue:
+     - `("log", msg)`
+     - `("order_done", worker_name, ma_dh, rows_count, error)`
+     - `("worker_finished", worker_name, results, failed, ...)`
+  6. `build_progress_df()` → DataFrame.
+  7. Output: `Data/<stem>_scraped.json` + `Data/<stem>_scraped.xlsx`.
+  8. Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
+  9. `subprocess.run(labo_cleaner.py <scraped.xlsx>)` → `File_sach/<stem>_final.xlsx`.
+  10. `db_manager.init_db()` + `import_json()` + `import_excel_final()`.
+  11. Cleanup: xoa `json_out`, `scraped_xlsx`, `clean_out`, temp xlsx.
+  12. Exit 0 neu co result, 1 neu khong.
 
-`laboasia_gui_scraper_tkinter.py`:
+### laboasia_gui_scraper_tkinter.py
 
-- Ten file con giu `tkinter`, nhung core hien co `LaboAsiaAPIClient`.
-- Flow: login bang Playwright de lay JWT cookie, sau do dung `requests.Session` goi `https://laboasia.com.vn/empconnect/api_handler/`.
-- Co retry/re-login khi token het han.
-- Data model `ProgressRow` gom ma don, cong doan, KTV, xac nhan, thoi gian, tai khoan cao, barcode.
+- Ten file legacy (con tu thoi tkinter), nhung core hien la `LaboAsiaAPIClient`.
+- Data model `ProgressRow`:
+  ```python
+  @dataclass
+  class ProgressRow:
+      ma_dh: str
+      thu_tu: int           # 1-5
+      cong_doan: str        # CBM, SÁP/Cadcam, SƯỜN, ĐẮP, MÀI
+      ten_ktv: str
+      xac_nhan: str         # "Có" / "Chưa"
+      thoi_gian_hoan_thanh: str  # DD/MM/YYYY HH:MM:SS
+      raw_row_text: str = ""
+      tai_khoan_cao: str = ""
+      barcode_labo: str = ""
+  ```
+- API endpoint: `POST https://laboasia.com.vn/empconnect/api_handler/` voi `Authorization: Bearer <jwt>`.
+- Flow login:
+  1. Playwright launch Chromium headless.
+  2. Navigate BASE_URL.
+  3. Fill username + password (multi-selector fallback).
+  4. Click login.
+  5. Wait networkidle.
+  6. Extract cookie `auth_token` → JWT string.
+  7. Close browser.
+  8. Tao `requests.Session()` + header `Authorization: Bearer <token>`.
+- HTTP 401 → re-login (auto).
+- Timeout `page_timeout_ms = 12000` (12s), `max_retry_per_order = 3`.
+- `scrape_order_queue()`: pull tu queue → POST API → parse → post event → loop.
 
-`keylab_exporter.py`:
+### labo_cleaner.py
 
-- Tim window Keylab2022 theo title co `keylab`.
-- Click `Tìm kiếm`, `Xuất Excel`, xu ly Save dialog.
-- Ten file theo ngay va counter trong `keylab_state.json`.
-- `--check` dung cho health check.
-- `--once` dung khi admin trigger export.
+- Entry: `python labo_cleaner.py <input.xls(x)> [output.xlsx]`. Default output `<stem>_cleaned.xlsx`.
+- Input: 2 sheet (Don hang + Tien do).
+- Output: 3 sheet:
+  - **Sheet 1 "Đơn hàng"** (10 cot): Ma DH, Nhan luc, Y/c hoan thanh, Y/c giao, Khach hang, Benh nhan, Phuc hinh, SL, Ghi chu DP, Trang thai. Styling: header blue #1F4E79, alt row #F2F7FC, SL>=5 do tren vang, TONG row cuoi.
+  - **Sheet 2 "Tiến độ công đoạn"** (10 cot): Ma DH, TT, Cong doan, KTV, Xac nhan, Thoi gian HT, Phuc hinh, SL, Loai lenh, Tai khoan. Xac nhan "Có" green #C6EFCE, "Chưa" yellow #FFEB9C. Loai lenh color map. Alt row toggle per ma_dh.
+  - **Sheet 3 "Tổng hợp"** (3 sections):
+    1. Tien do cong doan: Da XN / Chua XN / % / Tong SL per stage.
+    2. Khoi luong KTV: Top KTV → So lan XN, Tong SL, Cong doan chinh.
+    3. Tong SL theo loai phuc hinh sorted desc.
+- Constants:
+  - `ACCOUNTS = ["hyct", "kythuat", "sonnt", "lanhn"]`
+  - `LOAI_LENH = ["Làm mới", "Làm lại", "Bảo hành", "Làm tiếp", "Làm thêm", "Sửa"]`
+  - `CONG_DOAN = ["CBM", "SÁP/Cadcam", "SƯỜN", "ĐẮP", "MÀI"]`
+- Helper: `extract_sl(text)` regex `SL:(\d+)`, `extract_account()`, `extract_loai_lenh()`, `clean_noise()`, `fill_sl_from_orders()`.
 
-`keylab_notes_scraper.py`:
+### db_manager.py
 
-- Doc file Excel active.
-- Check DB schema va import_log, tru mode `--new-file` co the doi DB import.
-- Bo qua don da co `ghi_chu_sx`.
-- Bo qua don co `In mau` trong `phuc_hinh`.
-- Thao tac Keylab grid: filter theo ma don, double click detail, doc `Ghi chu SX`.
-- Luu batch vao `don_hang.ghi_chu_sx`.
-- Neu note co `In mau ham`, update `routed_to = 'zirco'`.
-- Ghi loi vao `scraper_errors.json`.
-- Force exit de tranh COM thread giu process.
+- CLI:
+  - `python db_manager.py init` — create/migrate schema, recalc routed_to, sync keylab_notes.
+  - `python db_manager.py stats` — print stats dashboard.
+  - `python db_manager.py import-json <file.json>` — import 1 JSON.
+  - `python db_manager.py import-excel <file_final.xlsx>` — import 1 Excel.
+  - `python db_manager.py import-all` — scan `File_sach/*_final.xlsx` + `Data/*_scraped.json`, skip da import (check `import_log`).
+- Helper:
+  - `parse_ma_dh(ma_dh)` → `(ma_dh_goc, so_phu)` tuple.
+  - `default_room_for(phuc_hinh)` → `"sap"|"zirco"|"both"|"none"`.
+  - `normalize_ascii(value)` → NFD lowercase remove diacritics.
+  - `has_in_mau_ham(value)` → check keyword.
+  - `norm_date(val)` → `DD/MM/YYYY HH:MM:SS`.
+  - `upsert_don_hang(conn, row)` — INSERT ON CONFLICT DO UPDATE (prefer non-empty fields).
+  - `upsert_tien_do(conn, row)` — INSERT ON CONFLICT DO UPDATE.
+  - `sync_keylab_notes(conn)` — read `keylab_notes.json` → UPDATE `don_hang.ghi_chu_sx`.
+- PRAGMA: WAL, foreign_keys=ON, busy_timeout=30000.
+
+### keylab_exporter.py
+
+- CLI flags:
+  - `--debug` — print control tree (find auto_id).
+  - `--debug-save` — debug Save As dialog detection.
+  - `--check` — health check (exit 0 neu Keylab running).
+  - `--once` — export 1 lan.
+- Config: `MAX_EXPORT_RETRIES=2` (3 attempt total), `SAVE_DIALOG_TIMEOUT=5s`, `RETRY_DELAY=2s`.
+- State file: `keylab_state.json` `{date: "DD/MM/YYYY", export_count: N}`. Reset count per day.
+- Window detection: UIA backend, title chua "keylab" + ("version" or "lab asia"), exclude terminal.
+- Flow:
+  1. Find window → restore + focus.
+  2. Click `btnTimKiem` (auto_id) → wait 3s.
+  3. Click `btnXuatExcel` → wait 2s.
+  4. Poll Save As dialog (0.3s interval, 5s).
+  5. UIA: Edit auto_id="1001" → Ctrl+A + type filename `DDMMYYYY_N`.
+  6. Click button auto_id="1" (Save) → wait 1.5s.
+  7. Dismiss "Open with" dialog (Escape).
+- Output: `Excel/DDMMYYYY_N.xlsx`. Print `SAVED:<path>` cho stdout.
+- Logs: `keylab_export.log`.
+
+### keylab_notes_scraper.py
+
+- CLI flags:
+  - (no flag) — normal mode, require DB co data.
+  - `--dry-run` — test filter, khong click.
+  - `--new-file` — parallel voi run_scrape, wait DB import.
+- Config: `BATCH_SIZE=10`, `FILTER_WAIT_SEC=0.5`, `DETAIL_WAIT_SEC=0.8`, `CLOSE_WAIT_SEC=0.3`, `CLEAR_WAIT_SEC=0.3`, `WAIT_FOR_DB_SEC=420` (7 phut).
+- Filter logic `get_todo_from_db()`:
+  1. Load tat ca ma_dh tu Excel active.
+  2. Query DB `ghi_chu_sx`, `phuc_hinh` cho moi ma_dh.
+  3. Skip neu `ghi_chu_sx IS NOT NULL AND != ''`.
+  4. Skip neu `has_in_mau(phuc_hinh)`.
+  5. Don khong trong DB → van them vao todo (scrape va save sau khi DB co data).
+  6. Stats: Tong / Da co / Co InMau / Chua DB / Can cao.
+- Flow per ma_dh:
+  1. Filter Row → input ma_dh → Enter (wait 0.5s).
+  2. Find visible row in Data Panel.
+  3. Double-click → mo detail `FormTaoDonHang` (wait 0.8s).
+  4. Doc cell `Ghi chú SX row N` tu `gridControlDonHang` (multi-method fallback).
+  5. Click `btnDongLai` (wait 0.3s).
+  6. Clear filter (wait 0.3s).
+- Batch save moi 10 don: `UPDATE don_hang SET ghi_chu_sx = ?` (chi neu ghi_chu_sx hien tai rong).
+- Neu `has_in_mau_ham(note)` → `UPDATE routed_to = 'zirco'`.
+- Error → ghi `scraper_errors.json`. Success + had errors → delete file.
+- **`os._exit(0 or 2)`** — tranh COM thread giu process hang.
+
+---
 
 ## 12. Bao loi, image va R2
 
-Bao loi dung cac bang:
+### Bao loi schema
+- `error_codes`: danh muc (id, ma_loi, ten_loi, cong_doan, mo_ta, active).
+- `error_reports`: bao loi (ma_dh, error_code_id, cong_doan, hinh_anh, mo_ta, trang_thai, submitted_by/at, reviewed_by/at, ghi_chu_admin).
 
-- `error_codes`
-- `error_reports`
+### Role logic (`getAllowedStages(username, role, cong_doan)`)
+- Admin + QC: thay tat ca cong_doan.
+- User `CBM`: chi bao CBM.
+- User `dap`/`mai`: thay cong doan truoc do + dap/mai theo flow chuoi kim loai/zirconia.
+- User `sap`/`CAD/CAM`/`suon`: thay cong doan truoc do theo flow kim loai/zirconia.
 
-Role logic:
+### Image upload
+- Form field: `hinh_anh`.
+- Multer single file, gioi han **10 MB**.
+- Mime check: chi chap nhan `image/*`.
+- `sharp` xu ly:
+  - Auto rotate (EXIF).
+  - Resize fit-inside `IMAGE_MAX_WIDTH` × `IMAGE_MAX_HEIGHT` (default 1600×1600).
+  - WebP encode `IMAGE_WEBP_QUALITY` (default 75).
+- Upload R2 via `R2_*` env config.
+- R2 URL pattern: `${R2_PUBLIC_URL}/<filename>.webp`.
 
-- Admin va QC duoc thay nhieu cong doan.
-- User CBM chi bao loi CBM.
-- User dap/mai duoc bao loi cac cong doan truoc do va dap/mai theo flow.
-- User sap/CAD-CAM/suon duoc bao loi cac cong doan truoc do theo flow kim loai/zirconia.
+### R2 client (`src/services/r2.service.js`)
+- AWS SDK v3 `S3Client` voi `region: 'auto'`.
+- Endpoint: `R2_ENDPOINT`.
+- Credentials: `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY`.
+- Operations: `PutObjectCommand` (custom multer storage stream), `DeleteObjectCommand`.
 
-Image upload:
+### Image cleanup
+- `startImageCleanupSchedule()` chay luc startup + setInterval 24h.
+- `cleanupExpiredErrorImages()` query `error_reports` voi `submitted_at < now - IMAGE_RETENTION_DAYS`.
+- Default retention 90 ngay.
+- Delete: try R2 truoc, fallback `fs.unlink` local.
+- Clear `hinh_anh` field trong DB.
 
-- Field upload: `hinh_anh`.
-- Gioi han: 10 MB.
-- Chi chap nhan mimetype image.
-- Nen bang `sharp`, resize trong gioi han env:
-  - `IMAGE_MAX_WIDTH`
-  - `IMAGE_MAX_HEIGHT`
-  - `IMAGE_WEBP_QUALITY`
-- Upload len Cloudflare R2 bang config:
-  - `R2_ENDPOINT`
-  - `R2_ACCESS_KEY_ID`
-  - `R2_SECRET_ACCESS_KEY`
-  - `R2_BUCKET_NAME`
-  - `R2_PUBLIC_URL`
+### ENV vars R2
+- `R2_ENDPOINT` (vd `https://<account>.r2.cloudflarestorage.com`)
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET_NAME` (vd `labo-error-images`)
+- `R2_PUBLIC_URL` (vd `https://pub-<id>.r2.dev`)
+- `IMAGE_RETENTION_DAYS` (default 90)
+- `IMAGE_MAX_WIDTH` (default 1600)
+- `IMAGE_MAX_HEIGHT` (default 1600)
+- `IMAGE_WEBP_QUALITY` (default 75)
 
-Cleanup:
-
-- `startImageCleanupSchedule()` chay luc startup va moi 24h.
-- Mac dinh xoa/clear anh cu hon `IMAGE_RETENTION_DAYS`, fallback 90 ngay.
+---
 
 ## 13. Thong ke
 
-Daily mobile chip stats:
-
+### Daily mobile chip stats
 - API: `GET /api/stats/daily`
-- Chi admin hoac user `can_view_stats`.
-- Doc active Excel ma_dh list, group theo `yc_hoan_thanh`.
-- Phan loai phuc hinh: mat dan, kim loai, zirconia, cui gia, in mau ham, rang tam.
+- Auth: requireAuth + (admin OR `can_view_stats`).
+- Source: read active Excel `ma_dh` list, group theo `yc_hoan_thanh`.
+- Phan loai phuc hinh: `mat_dan`, `kim_loai`, `zirconia`, `cui_gia`, `in_mau_ham`, `rang_tam` (qua `classifyPhucHinhPart()`).
+- Response: `{ok, data: [{ngay, ngay_sort, mat_dan, kim_loai, ..., tong}]}`.
 
-Production stats:
-
+### Production stats (3 ngay)
 - API: `GET /admin/api/production-stats`
-- Nguon: `tien_do` join `don_hang`
-- Lay 3 ngay co completion gan nhat.
-- Group theo cong doan, KTV, loai lenh, don, so luong.
+- Nguon: `tien_do JOIN don_hang`.
+- Lay 3 ngay co `thoi_gian_hoan_thanh` gan nhat (xac_nhan='Có').
+- Group theo cong_doan + KTV + loai_lenh.
+- Response: `{days, totals: {qty, orders, employees}, stages: [{stage, employees: [{ktv, totalQty, byDay}]}]}`.
 
-Monthly stats:
+### Monthly stats (kỳ 26-25)
+- API: `GET /admin/api/monthly-stats?month=YYYY-MM`.
+- Auto chay `refreshMonthlyStats()` truoc khi query.
+- Source: `tien_do_history` (fallback `tien_do`+`don_hang`).
+- Group: billing_month + cong_doan + ten_ktv.
+- Response: `{month, months, period, data: [{cong_doan, ten_ktv, orders_completed, total_sl, type_breakdown, entries}]}`.
 
-- Init trong `initMonthlyStatsTables()`.
-- Ky billing: ngay 26 thang truoc den ngay 25 thang hien tai.
-- `billingPeriodForCompletion()` dua ngay hoan thanh vao `billing_month`.
-- `refreshMonthlyStats()` dong bo `tien_do` vao `tien_do_history`, sau do tinh aggregate.
-
-Munger metrics:
-
-- API: `GET /api/munger/metrics`
+### Munger metrics
+- API: `GET /api/munger/metrics?days=30`.
 - Admin only.
-- Metrics gom bus factor, WIP ratio, first pass yield, on time rate, customer concentration, demand trend, scale countdown.
+- 7 KPI: bus_factor, wip_ratio, first_pass_yield, on_time_rate, customer_concentration, demand_trend, scale_countdown.
+- Default 30 ngay = 1 ky billing 26-25.
+
+### Historical analytics
+- 6 endpoint `/api/analytics/history/*`:
+  - `ktv-performance`, `top-ktv`, `stage-stats`, `phuc-hinh-distribution`, `top-customers`, `overview`.
+- Source: `tien_do_history`.
+- Tat ca filter `?days=` (default 30).
+
+---
 
 ## 14. Cach chay va verify
 
-Install Node dependencies:
-
+### Install Node deps
 ```powershell
 npm install
 ```
 
-Install Python dependencies:
-
+### Install Python deps
 ```powershell
 pip install -r requirements.txt
-playwright install chromium
+python -m playwright install chromium
 ```
 
-Start server local:
-
+### Start server local (dev)
 ```powershell
 npm start
+# = node server.js
 ```
 
-Syntax check Node:
+### Start production (PM2)
+```powershell
+pm2 start ecosystem.config.js
+pm2 startup
+pm2 save
+pm2 monit
+```
 
+### Start Caddy reverse proxy
+```powershell
+caddy run --config Caddyfile
+# hoac
+caddy start --config Caddyfile
+```
+
+### Syntax check Node
 ```powershell
 npm run check
-node --check server.js
+# = node --check server.js (chi check server.js)
+
+# Check toan bo src/ thu cong:
 Get-ChildItem -Path src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
 ```
 
-Syntax check Python:
-
+### Syntax check Python
 ```powershell
 python -m py_compile auto_scrape_headless.py run_scrape.py keylab_notes_scraper.py keylab_exporter.py db_manager.py labo_cleaner.py laboasia_gui_scraper_tkinter.py
 ```
 
-DB commands:
-
+### DB commands
 ```powershell
 python db_manager.py stats
 python db_manager.py init
@@ -582,36 +1251,78 @@ python db_manager.py import-json Data\some_scraped.json
 python db_manager.py import-excel File_sach\some_final.xlsx
 ```
 
-Scrape commands:
-
+### Scrape commands
 ```powershell
 python run_scrape.py Excel\some_file.xls
 python auto_scrape_headless.py
 python keylab_exporter.py --check
 python keylab_exporter.py --once
 python keylab_notes_scraper.py --dry-run
+python keylab_notes_scraper.py --new-file
 ```
 
-PM2 commands:
-
+### PM2 commands
 ```powershell
 pm2 status
 pm2 describe asia-lab-server
 pm2 describe auto-scrape
 pm2 logs asia-lab-server --lines 80 --nostream
 pm2 logs auto-scrape --lines 80 --nostream
-```
-
-Restart khi can:
-
-```powershell
 pm2 restart asia-lab-server
 pm2 restart auto-scrape
 ```
 
-Chi restart production khi user yeu cau hoac khi thay doi server-side can ap dung ngay.
+Chi restart production khi user yeu cau hoac khi can ap dung thay doi server-side ngay.
 
-## 15. File khong nen sua tuy tien
+### Health check endpoints
+- `http://localhost:3000/status` — server status snapshot.
+- `http://localhost:3000/reload` — force refresh cache.
+- `http://localhost:3000/keylab-health` — kiem tra Keylab2022 dang chay.
+
+### Log files
+- `logs/pm2-out.log`, `logs/pm2-error.log` — Node server.
+- `logs/auto-scrape-out.log`, `logs/auto-scrape-error.log` — Python auto-scrape.
+- `auto_scrape.log` — Python logger trong code.
+- `keylab_export.log` — Keylab exporter.
+
+---
+
+## 15. ENV setup checklist
+
+Truoc deploy, setup `.env`:
+
+```bash
+# Cloudflare R2 (BAT BUOC neu dung bao loi)
+R2_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=labo-error-images
+R2_PUBLIC_URL=https://pub-<id>.r2.dev
+
+# Image settings (co default)
+IMAGE_RETENTION_DAYS=90
+IMAGE_MAX_WIDTH=1600
+IMAGE_MAX_HEIGHT=1600
+IMAGE_WEBP_QUALITY=75
+
+# Scraper credentials (BAT BUOC it nhat USER1+PASS1)
+LABO_USER1=lanhn
+LABO_PASS1=...
+LABO_USER2=kythuat
+LABO_PASS2=...
+LABO_USER3=...   # optional
+LABO_PASS3=...
+LABO_USER4=...   # optional
+LABO_PASS4=...
+
+# Node (co default trong ecosystem.config.js)
+PORT=3000
+NODE_ENV=production
+```
+
+---
+
+## 16. File khong nen sua tuy tien
 
 Khong tu y sua, xoa, reset hoac commit cac file runtime sau neu task khong yeu cau ro:
 
@@ -635,121 +1346,154 @@ Khong tu y sua, xoa, reset hoac commit cac file runtime sau neu task khong yeu c
 - `node_modules/*`
 - `__pycache__/*`
 
-Khi can commit code/doc, chi add dung file lien quan. Repo co the dirty do runtime hoac user thao tac production.
+Khi can commit code/doc, chi add file lien quan. Repo co the dirty do runtime hoac user thao tac production.
 
-## 16. Rủi ro ky thuat can chu y
+---
 
-Encoding:
+## 17. Rui ro ky thuat can chu y
 
-- PowerShell output dang co mojibake voi tieng Viet co dau.
-- Khong ket luan file hong chi vi terminal hien sai dau.
-- Khi sua logic so sanh chuoi tieng Viet, nen normalize unicode hoac dung helper co san.
+### Encoding
+- PowerShell output co the mojibake voi tieng Viet co dau.
+- KHONG ket luan file hong chi vi terminal hien sai dau.
+- Khi sua so sanh chuoi tieng Viet → normalize unicode (NFD remove diacritics) hoac dung helper `normalize_ascii()` co san.
+- Cong doan canonical co dau: `SÁP/Cadcam`, `SƯỜN`, `ĐẮP`, `MÀI`.
 
-SQLite concurrency:
-
+### SQLite concurrency
 - Node va Python cung doc/ghi `labo_data.db`.
-- DB dung WAL, nhung van can dong connection sau scrape de Node doc data moi.
-- `scraper.service.js` co `_closeDB()` callback sau khi scraper xong.
+- DB WAL nhung Node van can `closeDB()` sau scrape de doc data moi.
+- `scraper.service.js` co callback `_closeDB()` sau khi scraper xong.
+- Python `busy_timeout=30000ms` lau hon Node `5000ms` vi import nang.
+- Python `foreign_keys=ON` enforce CASCADE; Node khong (nhung code khong delete).
 
-Cache:
-
+### Cache
 - `orders.repo.js` cache `/data.json` 60 giay.
-- Sau import/scrape phai reset cache neu can thay ngay.
+- Sau import/scrape phai goi `resetCache()` neu can data moi (scraper.service.js da goi qua callback).
 
-Business rules duplicate:
+### Business rules duplicate
+Logic phan loai phuc hinh + stage skip nam o:
+- `src/repositories/orders.repo.js` (skip rules)
+- `src/routes/users.routes.js` (pending orders filter)
+- `src/routes/stats.routes.js` (chip stats classify)
+- `src/utils/phucHinh.js` (room routing)
+- `db_manager.py` (Python equivalent route + classify)
+- `dashboard.html` (frontend filter chip)
+- `dashboard_mobile_terracotta.html` (frontend filter chip + phBreakdown)
 
-- Mot so logic phan loai phuc hinh va stage skip co mat o ca backend, frontend va Python.
-- Khi sua rule nghiep vu, can tim va dong bo cac noi lien quan:
-  - `src/repositories/orders.repo.js`
-  - `src/routes/users.routes.js`
-  - `src/routes/stats.routes.js`
-  - `src/utils/phucHinh.js`
-  - `db_manager.py`
-  - `dashboard.html`
-  - `dashboard_mobile_terracotta.html`
+**Sua rule nghiep vu phai dong bo tat ca cho tren.**
 
-Automation Windows:
+### Automation Windows
+- `keylab_exporter.py` va `keylab_notes_scraper.py` phu thuoc Keylab2022 dang mo + UI control id co dinh.
+- Focus / window state co the lam automation fail.
+- `keylab_notes_scraper.py` dung `os._exit()` de tranh COM thread giu process hang.
+- Save dialog + detail form co retry / timing rieng, KHONG nen toi uu sleep neu chua test that.
 
-- `keylab_exporter.py` va `keylab_notes_scraper.py` phu thuoc Keylab2022 dang mo va UI dung control id.
-- Focus/window state co the lam automation fail.
-- Save dialog va detail form co retry/timing rieng, khong nen toi uu sleep qua manh neu chua test that.
+### Security
+- KHONG log password, session token, R2 secret.
+- Auth cookie chua set `Secure` (vi listen local sau Caddy). Neu chuyen topology → danh gia lai.
+- Direct HTML access bi chan boi `blockDirectHtml` middleware (tru `login.html`).
+- Route HTML deu co `requireAuth` / `requireAdmin`.
+- `loginLimiter` 5 attempt / 15 phut chong brute force.
 
-Security:
+### File output cleanup
+- `run_scrape.py` xoa `Data/*` va `File_sach/*` sau khi import thanh cong.
+- Neu can dieu tra → DUNG xoa thu cong cho den khi check import_log.
 
-- Khong log password, session token, R2 secret.
-- Auth cookie hien chua set `Secure`, vi server listen local sau Caddy. Neu chuyen topology, can danh gia lai.
-- Direct HTML bi guard sau route, nhung route dang `sendFile` tung trang co `requireAuth`.
+---
 
-## 17. Checklist khi sua tinh nang
+## 18. Checklist khi sua tinh nang
 
-Truoc khi sua:
-
-- Doc file lien quan va `CONTEXT.md`, `DISPLAY_FILTER_RULES.md`.
+### Truoc khi sua
+- Doc file lien quan + `CONTEXT.md` (neu co) + `DISPLAY_FILTER_RULES.md` (neu co).
 - Xac dinh thay doi co dung vao runtime data khong.
-- Xac dinh API/frontend/Python nao cung can dong bo rule.
+- Xac dinh API/frontend/Python nao cung can dong bo rule (xem section 17 "Business rules duplicate").
 
-Sau khi sua Node:
+### Sau khi sua Node
+- `npm run check` (chi check server.js).
+- `node --check` thu cong cho file da sua.
+- Test endpoint qua curl / browser neu co.
 
-- Chay `npm run check`.
-- Chay `node --check` cho file JS da sua.
-- Neu sua route/API, test endpoint lien quan khi co the.
+### Sau khi sua Python
+- `python -m py_compile <file>` cho file da sua.
+- Scraper → uu tien `--dry-run` truoc khi thao tac Keylab.
+- DB import → chay tren file mau nho neu co the.
 
-Sau khi sua Python:
-
-- Chay `python -m py_compile` cho file da sua.
-- Neu sua scraper, uu tien `--dry-run` truoc khi thao tac Keylab.
-- Neu sua DB import, chay tren file mau nho neu co the.
-
-Sau khi sua frontend:
-
+### Sau khi sua frontend
 - Kiem tra fetch endpoint dung role.
-- Kiem tra mobile va desktop neu file la dashboard chung.
-- Dam bao khong hardcode secret hoac token.
+- Mobile va desktop neu file la dashboard chung.
+- Khong hardcode secret hoac token.
 
-Truoc khi restart:
+### Truoc khi restart
+- Xac nhan can restart production khong.
+- HTML static only → browser refresh du.
+- Server-side Node → `pm2 restart asia-lab-server`.
+- Auto scraper Python → `pm2 restart auto-scrape`.
 
-- Xac nhan co can restart production khong.
-- Neu chi sua HTML static, browser refresh co the du.
-- Neu sua server-side Node, restart `asia-lab-server`.
-- Neu sua auto scraper, restart `auto-scrape`.
+---
 
-## 18. Quick map cho nguoi moi
+## 19. Quick map cho nguoi moi
 
-Muon hieu dashboard hien don:
+### Hieu dashboard hien don
+1. `src/routes/dashboard.routes.js`
+2. `src/repositories/orders.repo.js`
+3. `dashboard.html` hoac `dashboard_mobile_terracotta.html`
 
-1. Doc `src/routes/dashboard.routes.js`.
-2. Doc `src/repositories/orders.repo.js`.
-3. Doc `dashboard.html` hoac `dashboard_mobile_terracotta.html`.
+### Hieu user pending
+1. `src/routes/users.routes.js`
+2. `src/repositories/users.repo.js`
+3. `src/repositories/orders.repo.js` (skip rules)
 
-Muon hieu user pending:
+### Hieu import DB
+1. `run_scrape.py`
+2. `labo_cleaner.py`
+3. `db_manager.py`
 
-1. Doc `src/routes/users.routes.js`.
-2. Doc `src/repositories/users.repo.js`.
-3. Doc `src/repositories/orders.repo.js`.
+### Hieu Keylab
+1. `keylab_exporter.py` (export Excel)
+2. `keylab_notes_scraper.py` (cao ghi chu SX)
+3. `auto_scrape_headless.py` (orchestration)
 
-Muon hieu import DB:
+### Hieu bao loi
+1. `src/routes/errorReports.routes.js`
+2. `src/services/image.service.js`
+3. `src/services/r2.service.js`
+4. `bao_loi.html`
+5. `error_reports.html`
 
-1. Doc `run_scrape.py`.
-2. Doc `labo_cleaner.py`.
-3. Doc `db_manager.py`.
+### Hieu stats
+1. `src/db/migrations.js` (refreshMonthlyStats, billing 26-25)
+2. `src/routes/admin.routes.js` (production-stats, monthly-stats)
+3. `src/routes/stats.routes.js` (chip daily)
+4. `src/routes/analytics.routes.js` (history endpoints)
+5. `admin.html`, `analytics.html`, `munger.html`
 
-Muon hieu Keylab:
+### Hieu auth
+1. `src/middleware/auth.js`
+2. `src/middleware/security.js`
+3. `src/services/session.service.js`
+4. `src/repositories/users.repo.js`
+5. `src/routes/auth.routes.js`
 
-1. Doc `keylab_exporter.py`.
-2. Doc `keylab_notes_scraper.py`.
-3. Doc `auto_scrape_headless.py`.
+### Hieu routing sap/zirco
+1. `src/utils/phucHinh.js` (JS canonical)
+2. `db_manager.py` (Python equivalent, must sync)
+3. `src/routes/orders.routes.js` (by-barcode, route POST)
+4. `dashboard_mobile_terracotta.html` (room color + transfer scanner)
 
-Muon hieu bao loi:
+---
 
-1. Doc `src/routes/errorReports.routes.js`.
-2. Doc `src/services/image.service.js`.
-3. Doc `bao_loi.html`.
-4. Doc `error_reports.html`.
+## 20. Troubleshooting nhanh
 
-Muon hieu stats:
-
-1. Doc `src/db/migrations.js`.
-2. Doc `src/routes/admin.routes.js`.
-3. Doc `src/routes/stats.routes.js`.
-4. Doc `admin.html`.
+| Trieu chung | Kiem tra |
+|---|---|
+| Server khong start | `npm run check`, port 3000 free, `.env` ton tai, `node server.js` thu manual |
+| Auto-scrape fail | `pm2 logs auto-scrape`, `LABO_USER1/PASS1` trong `.env`, `PLAYWRIGHT_BROWSERS_PATH` |
+| Image upload fail | R2 credentials trong `.env`, network tu server → R2 endpoint |
+| Caddy TLS fail | `caddy validate --config Caddyfile`, DNS `asiakanban.com` → server IP |
+| PM2 crash loop | `pm2 logs`, `max_memory_restart` (500M / 300M) |
+| Database lock | `pm2 restart asia-lab-server`, kiem tra Python scraper co dang ghi |
+| Keylab export hang | `python keylab_exporter.py --check`, ensure Keylab2022 window not minimized |
+| Notes scraper hang | Khong co — `os._exit()` luc finish; neu hang → kiem tra COM thread |
+| Dashboard data cu | `/reload` endpoint, hoac wait 60s cache expire |
+| Mobile filter sai | Check `routed_to` trong DB, sync logic Python vs JS (`phucHinh.js` vs `db_manager.py`) |
+| Stats sai | `refreshMonthlyStats()` auto chay khi goi `/admin/api/monthly-stats`; kiem tra `tien_do_history` co data |
 
