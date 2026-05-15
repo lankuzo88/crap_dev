@@ -243,7 +243,10 @@ def _try_export_once(win, filename: str, attempt: int) -> bool:
         # 5. Đóng dialog "Open with" nếu xuất hiện
         _dismiss_open_with_dialog()
 
-        # 6. Minimize về taskbar
+        # 6. Đóng cửa sổ Excel auto-mở (khi Excel là app mặc định cho .xlsx)
+        _dismiss_excel_window(filename)
+
+        # 7. Minimize về taskbar
         win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)
         return True
 
@@ -324,6 +327,50 @@ def _wait_for_save_dialog(keylab_handle: int, timeout: int = 5) -> int | None:
 
     log.warning(f"    No Save dialog found after {timeout}s ({checked_count} checks)")
     return None
+
+
+def _dismiss_excel_window(filename: str, timeout: int = 8):
+    """Dong cua so spreadsheet (Excel/LibreOffice Calc) vua auto-mo file vua xuat.
+
+    Match theo filename trong title + keyword app ('calc', 'libreoffice', 'excel')
+    de tranh dong nham cua so khac. Hoat dong voi:
+      - MS Excel (class XLMAIN)
+      - LibreOffice Calc (class SALFRAME)
+      - WPS Spreadsheets
+    LibreOffice/Excel co the mat 2-5s de launch nen poll lau hon.
+    """
+    import win32gui, win32con
+
+    name_lower = filename.lower()
+    app_keywords = ("calc", "libreoffice", "excel", "openoffice", "wps")
+    deadline = time.time() + timeout
+
+    while time.time() < deadline:
+        targets = []
+
+        def _cb(hwnd, _):
+            try:
+                if not win32gui.IsWindowVisible(hwnd):
+                    return
+                title = win32gui.GetWindowText(hwnd).lower()
+                if not title or name_lower not in title:
+                    return
+                if any(k in title for k in app_keywords):
+                    targets.append((hwnd, title))
+            except Exception:
+                pass
+
+        win32gui.EnumWindows(_cb, None)
+
+        if targets:
+            for h, t in targets:
+                win32gui.PostMessage(h, win32con.WM_CLOSE, 0, 0)
+                log.info(f"Closed auto-opened spreadsheet window: [{t}]")
+            return
+
+        time.sleep(0.3)
+
+    log.info(f"No auto-opened spreadsheet window detected for {filename}")
 
 
 def _dismiss_open_with_dialog():
