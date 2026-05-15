@@ -2,7 +2,7 @@
 const express = require('express');
 const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
-const { USERS } = require('../repositories/users.repo');
+const { USERS, hasPermission } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
 const { getActiveMaDhList } = require('../repositories/orders.repo');
 
@@ -97,7 +97,7 @@ function getDayInfo(ycHoanThanh) {
 router.get('/api/stats/daily', requireAuth, (req, res) => {
   const sess     = req.session;
   const userInfo = USERS[sess.user];
-  if (!userInfo || (userInfo.role !== 'admin' && !userInfo.can_view_stats)) {
+  if (!userInfo || !hasPermission(sess.user, 'stats.view_daily')) {
     return res.status(403).json({ error: 'Không có quyền xem thống kê' });
   }
   try {

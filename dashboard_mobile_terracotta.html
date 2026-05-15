@@ -176,7 +176,15 @@
       display: none;
     }
 
+    .menu-item.delay-only {
+      display: none;
+    }
+
     .menu-item.admin-visible {
+      display: flex;
+    }
+
+    .menu-item.delay-visible {
       display: flex;
     }
 
@@ -240,6 +248,19 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
     }
     .filter-summary::-webkit-scrollbar { display: none; }
+    .delay-banner {
+      display: none;
+      margin: 8px 10px 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(185, 28, 28, 0.24);
+      background: #fff1f0;
+      color: #8a231d;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .delay-banner.show { display: block; }
     .summary-pill {
       flex: 0 0 auto;
       min-width: 92px;
@@ -364,6 +385,25 @@
     .card.afternoon { border-left-color: var(--terracotta); }
     .card.evening { border-left-color: var(--rust-dark); }
     .card.urgent { border-left-color: var(--urgent); }
+    .card.delay-reported {
+      position: relative;
+      border-left-color: #b91c1c !important;
+    }
+    .card.delay-reported::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: -1px;
+      bottom: -1px;
+      width: 5px;
+      border-radius: 8px 0 0 8px;
+      background: #b91c1c;
+      animation: delayBlink 0.9s ease-in-out infinite;
+    }
+    @keyframes delayBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
 
     .card:active {
       transform: scale(0.98);
@@ -662,8 +702,14 @@
         <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
           <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
         </a>
-        <a id="m-baoloi-btn" class="menu-item danger" href="/bao-loi">
+        <a id="m-delayreports-btn" class="menu-item danger admin-only" href="/delay-reports">
+          <span class="menu-icon">⏱</span><span>Báo trễ tiến độ</span>
+        </a>
+        <a id="m-baoloi-btn" class="menu-item danger delay-only" href="/bao-loi">
           <span class="menu-icon">⚠</span><span>Báo lỗi</span>
+        </a>
+        <a id="m-baotre-btn" class="menu-item danger delay-only" href="/bao-tre">
+          <span class="menu-icon">⏱</span><span>Báo trễ tiến độ</span>
         </a>
         <a class="menu-item" href="/logout">
           <span class="menu-icon">↩</span><span>Đăng xuất</span>
@@ -683,6 +729,7 @@
   </div>
 
   <div class="filter-summary" id="filterSummary"></div>
+  <a class="delay-banner" id="delayBanner" href="/delay-reports"></a>
 
   <!-- Card List -->
   <div id="cardList"></div>
@@ -864,6 +911,7 @@
     let myRoom = null;
     let transferReader = null;
     let transferScannerActive = false;
+    let activeDelayReports = new Map();
     const roomLabel = { sap: 'SÁP', zirco: 'Zirco', both: 'SÁP + Zirco' };
     function getTransferTargetRoom() {
       if (myRoom === 'sap') return 'zirco';
@@ -880,7 +928,40 @@
     }
 
     function canViewFilterSummary() {
-      return currentUser?.role === 'admin' || currentUser?.can_view_stats === true;
+      return hasPerm('stats.view_daily') || currentUser?.can_view_stats === true;
+    }
+
+    function hasPerm(permission) {
+      const permissions = currentUser?.permissions || [];
+      return permissions.includes('*') || permissions.includes(permission);
+    }
+
+    async function loadActiveDelayReports() {
+      try {
+        const r = await fetch('/api/delay-reports/active');
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!d.ok) return;
+        activeDelayReports = new Map((d.data || []).map(rep => [rep.ma_dh, rep]));
+      } catch {}
+    }
+
+    function applyDelayReports() {
+      allOrders.forEach(o => {
+        o.delay_report = activeDelayReports.get(o.ma_dh) || null;
+      });
+    }
+
+    function renderDelayBanner() {
+      const el = document.getElementById('delayBanner');
+      if (!el) return;
+      if (currentUser?.role !== 'admin' || activeDelayReports.size === 0) {
+        el.classList.remove('show');
+        el.textContent = '';
+        return;
+      }
+      el.textContent = `${activeDelayReports.size} đơn đang được báo trễ tiến độ`;
+      el.classList.add('show');
     }
 
     function setFilter(el, f) {
@@ -892,13 +973,16 @@
 
     async function loadData() {
       try {
-        if (currentUser?.role === 'user' && currentUser?.cong_doan) {
+        if (hasPerm('orders.view_pending') && currentUser?.cong_doan) {
           await loadUserPendingOrders();
         } else {
           const res = await fetch('/data.json');
           const json = await res.json();
           allOrders = (json.orders || []).map(adaptOrder);
+          await loadActiveDelayReports();
+          applyDelayReports();
           updateCounts();
+          renderDelayBanner();
           renderCards();
         }
       } catch (e) {
@@ -914,7 +998,10 @@
         if (data.ok) {
           userPendingOrders = data.orders;
           allOrders = userPendingOrders.map(adaptOrder);
+          await loadActiveDelayReports();
+          applyDelayReports();
           updateCounts();
+          renderDelayBanner();
           renderCards();
         }
       } catch (e) {
@@ -929,8 +1016,16 @@
         const u = await r.json();
         currentUser = u;
         myRoom = roomForUser(u.cong_doan);
-        if (u.role === 'user' && u.cong_doan) {
+        if (hasPerm('orders.view_pending') && u.cong_doan) {
           setupUserMobile();
+        }
+        if (hasPerm('delay_reports.submit')) {
+          const btn = document.getElementById('m-baotre-btn');
+          if (btn) btn.classList.add('delay-visible');
+        }
+        if (hasPerm('error_reports.submit')) {
+          const btn = document.getElementById('m-baoloi-btn');
+          if (btn) btn.classList.add('delay-visible');
         }
       } catch {}
     }
@@ -1178,6 +1273,7 @@
       const short = STAGE_SHORT[o.current_stage] || o.current_stage;
       const cat = getCompletionTimeGroup(o.yc_ht);
       const urgentBadge = o.urgent ? '<span class="badge badge-urgent">⚡ GẤP</span>' : '';
+      const delayBadge = o.delay_report ? '<span class="badge badge-urgent">TRỄ</span>' : '';
       const phT = phType(o.phuc_hinh);
       const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '—';
@@ -1209,11 +1305,11 @@
       }).join('');
 
       return `
-        <div class="card ${cat}" style="cursor: pointer; position: relative; border-left-color: ${roomColor(o.routed_to)};" data-ma-dh="${o.ma_dh}">
+        <div class="card ${cat}${o.delay_report ? ' delay-reported' : ''}" style="cursor: pointer; position: relative; border-left-color: ${roomColor(o.routed_to)};" data-ma-dh="${o.ma_dh}">
           <div class="card-row1">
             <div class="order-code">${o.ma_dh}</div>
             <div class="card-customer" style="flex: 1; text-align: center; margin: 0;">${o.khach_hang}</div>
-            <div class="card-badges">${phBadge}${urgentBadge}</div>
+            <div class="card-badges">${phBadge}${urgentBadge}${delayBadge}</div>
           </div>
           <div class="card-row2">
             <div class="card-patient">${patient}</div>
@@ -1401,7 +1497,7 @@
       (async () => {
         await initUserContext();
         loadData();
-        const interval = currentUser?.role === 'user' ? 30_000 : 60_000;
+        const interval = hasPerm('orders.view_pending') ? 30_000 : 60_000;
         setInterval(async () => {
           await initUserContext();
           loadData();
@@ -1507,14 +1603,32 @@
         const r = await fetch('/user');
         if (!r.ok) return;
         const u = await r.json();
-        if (u.role === 'admin') {
+        if (hasPerm('admin.keylab_export')) {
           document.getElementById('m-export-btn').classList.add('admin-visible');
+        }
+        if (hasPerm('admin.users.manage')) {
           const adminBtn = document.getElementById('m-admin-btn');
           if (adminBtn) adminBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('admin.upload_excel')) {
           const upBtn = document.getElementById('m-upload-btn');
           if (upBtn) upBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('munger.view')) {
           const mungerBtn = document.getElementById('m-munger-btn');
           if (mungerBtn) mungerBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('delay_reports.review')) {
+          const delayReportsBtn = document.getElementById('m-delayreports-btn');
+          if (delayReportsBtn) delayReportsBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('delay_reports.submit')) {
+          const delayBtn = document.getElementById('m-baotre-btn');
+          if (delayBtn) delayBtn.classList.add('delay-visible');
+        }
+        if (hasPerm('error_reports.submit')) {
+          const errorBtn = document.getElementById('m-baoloi-btn');
+          if (errorBtn) errorBtn.classList.add('delay-visible');
         }
       } catch {}
     }

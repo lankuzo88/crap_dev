@@ -354,6 +354,7 @@
   <button class="tab-btn" onclick="switchTab('errorcodes', this)">🏷️ Mã lỗi</button>
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
+  <button class="tab-btn" onclick="location.href='/delay-reports'">⏱ Báo trễ tiến độ <span class="badge" id="delayPendingBadge" style="display:none">0</span></button>
 </div>
 
 <!-- Alert (global) -->
@@ -384,6 +385,7 @@
           <select id="role">
             <option value="user">User (Nhân viên)</option>
             <option value="qc">QC (Kiểm tra)</option>
+            <option value="delay_qc">Báo trễ tiến độ</option>
             <option value="admin">Admin (Quản lý)</option>
           </select>
         </div>
@@ -625,7 +627,35 @@
     ['mài', 'Mài'],
   ];
   const USER_CONG_DOAN_LABELS = Object.fromEntries(USER_CONG_DOAN_OPTS);
-  const ROLE_LABELS = { admin: 'Admin', user: 'User', qc: 'QC' };
+  const ROLE_LABELS = { admin: 'Admin', user: 'User', qc: 'QC', delay_qc: 'Báo trễ tiến độ' };
+  const ROLE_OPTS = [
+    ['user', 'User'],
+    ['qc', 'QC'],
+    ['delay_qc', 'Báo trễ tiến độ'],
+    ['admin', 'Admin'],
+  ];
+  const PERMISSION_LABELS = [
+    ['*', 'Tất cả quyền'],
+    ['orders.view_pending', 'Xem đơn công đoạn'],
+    ['orders.view_all', 'Xem toàn bộ đơn'],
+    ['orders.route', 'Chuyển phòng'],
+    ['stats.view_daily', 'Xem thống kê ngày'],
+    ['stats.view_production', 'Xem thống kê sản xuất'],
+    ['stats.view_monthly', 'Xem thống kê tháng'],
+    ['error_reports.submit', 'Gửi báo lỗi'],
+    ['error_reports.view_own', 'Xem báo lỗi của mình'],
+    ['error_reports.review', 'Duyệt báo lỗi'],
+    ['error_codes.manage', 'Quản lý mã lỗi'],
+    ['delay_reports.submit', 'Gửi báo trễ'],
+    ['delay_reports.view_active', 'Xem đơn báo trễ'],
+    ['delay_reports.review', 'Duyệt báo trễ'],
+    ['admin.users.manage', 'Quản lý user'],
+    ['admin.upload_excel', 'Upload Excel'],
+    ['admin.keylab_export', 'Xuất KeyLab'],
+    ['analytics.view', 'Analytics'],
+    ['munger.view', 'Munger'],
+  ];
+  let userPermissions = {};
 
   // ── TABS ──────────────────────────────────────
   function switchTab(name, btn) {
@@ -639,13 +669,18 @@
   }
 
   // ── INIT ──────────────────────────────────────
+  function hasPerm(user, permission) {
+    const permissions = user?.permissions || [];
+    return permissions.includes('*') || permissions.includes(permission);
+  }
+
   async function init() {
     try {
       const r = await fetch('/user');
       const u = await r.json();
-      if (u.role !== 'admin') { location.href = '/'; return; }
+      if (!hasPerm(u, 'admin.users.manage')) { location.href = '/'; return; }
       currentUser = u.username;
-      document.getElementById('currentUser').textContent = `${u.username} (admin)`;
+      document.getElementById('currentUser').textContent = `${u.username} (${u.role})`;
     } catch(e) { location.href = '/login'; return; }
 
     loadUsers();
@@ -663,6 +698,17 @@
       const badge = document.getElementById('pendingBadge');
       badge.textContent = n;
       badge.style.display = n > 0 ? '' : 'none';
+      const delayRes = await fetch('/api/delay-reports/stats');
+      const delayData = await delayRes.json();
+      if (delayData.ok) {
+        const delayPending = delayData.byStatus.find(x => x.trang_thai === 'pending');
+        const delayN = delayPending?.n || 0;
+        const delayBadge = document.getElementById('delayPendingBadge');
+        if (delayBadge) {
+          delayBadge.textContent = delayN;
+          delayBadge.style.display = delayN > 0 ? '' : 'none';
+        }
+      }
     } catch(e) {}
   }
 
@@ -677,22 +723,47 @@
 
       let html = `<table class="data-table">
         <thead><tr>
-          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>TK chips</th><th>Hành động</th>
+          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Quyền</th><th>TK chips</th><th>Hành động</th>
         </tr></thead><tbody>`;
 
       for (const u of users) {
         const isMe = u.username === currentUser;
+        const roleOpts = ROLE_OPTS.map(([v, label]) =>
+          `<option value="${v}" ${u.role === v ? 'selected':''}>${label}</option>`
+        ).join('');
         const cdOpts = USER_CONG_DOAN_OPTS.map(([v, label]) =>
           `<option value="${v}" ${u.cong_doan === v ? 'selected':''}>${label}</option>`
         ).join('');
+        userPermissions[u.username] = Array.isArray(u.permissions) ? u.permissions : [];
+        const permCount = userPermissions[u.username].includes('*') ? 'Tất cả' : `${userPermissions[u.username].length} quyền`;
+        const permHtml = PERMISSION_LABELS.map(([perm, label]) => {
+          const checked = userPermissions[u.username].includes('*') || userPermissions[u.username].includes(perm) ? 'checked' : '';
+          const disabled = perm !== '*' && userPermissions[u.username].includes('*') ? 'disabled' : '';
+          return `<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px;">
+            <input type="checkbox" ${checked} ${disabled} onchange="setPermission('${u.username}', '${perm}', this.checked)" style="width:15px;height:15px;">
+            <span>${label}</span>
+          </label>`;
+        }).join('');
         const statsChecked = u.can_view_stats ? 'checked' : '';
         html += `<tr>
           <td><strong>${u.username}</strong>${isMe ? ' <span style="color:#aaa;font-size:11px">(bạn)</span>' : ''}</td>
-          <td><span class="role-badge role-${u.role}">${ROLE_LABELS[u.role] || u.role}</span></td>
+          <td>
+            <select onchange="setRole('${u.username}', this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+              ${roleOpts}
+            </select>
+          </td>
           <td>
             <select onchange="setCongDoan('${u.username}', this.value)" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
               ${cdOpts}
             </select>
+          </td>
+          <td>
+            <details>
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#555;">${permCount}</summary>
+              <div style="margin-top:6px;min-width:190px;max-height:220px;overflow:auto;padding:6px;border:1px solid #eee;border-radius:6px;background:#fafafa;">
+                ${permHtml}
+              </div>
+            </details>
           </td>
           <td>
             <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
@@ -741,6 +812,43 @@
       if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); return; }
       showAlert(`✅ Gán "${USER_CONG_DOAN_LABELS[cong_doan] || cong_doan || 'Không gán'}" cho ${username}`, 'success');
     } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
+  }
+
+  async function setRole(username, role) {
+    try {
+      const res = await fetch(`/admin/api/users/${username}/role`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ role }),
+      });
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật vai trò', 'error'); loadUsers(); return; }
+      showAlert(`✅ Gán vai trò "${ROLE_LABELS[role] || role}" cho ${username}`, 'success');
+      loadUsers();
+    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); loadUsers(); }
+  }
+
+  async function setPermission(username, permission, checked) {
+    const current = new Set(userPermissions[username] || []);
+    if (permission === '*') {
+      current.clear();
+      if (checked) current.add('*');
+    } else {
+      current.delete('*');
+      if (checked) current.add(permission);
+      else current.delete(permission);
+    }
+    const permissions = Array.from(current);
+    try {
+      const res = await fetch(`/admin/api/users/${username}/permissions`, {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ permissions }),
+      });
+      const d = await res.json();
+      if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật quyền', 'error'); loadUsers(); return; }
+      userPermissions[username] = d.permissions || permissions;
+      showAlert(`✅ Đã cập nhật quyền cho ${username}`, 'success');
+      loadUsers();
+    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); loadUsers(); }
   }
 
   async function setStatsPerm(username, can_view_stats) {

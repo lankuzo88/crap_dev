@@ -3,7 +3,7 @@ const express = require('express');
 const path    = require('path');
 const router  = express.Router();
 const { spawn } = require('child_process');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const {
   getScrapeJob, getKeylabJob, getScrapeQueue,
   spawnScraper, findLatestExcel, checkKeylabHealth, spawnKeylabExport, PYTHON,
@@ -29,7 +29,7 @@ router.get('/api/auto-scrape/status', requireAuth, (req, res) => {
   });
 });
 
-router.post('/api/auto-scrape/run', requireAuth, requireAdmin, (req, res) => {
+router.post('/api/auto-scrape/run', requirePermission('admin.upload_excel'), (req, res) => {
   const job = getScrapeJob();
   if (job.running) return res.json({ ok: false, error: 'Scraper đang chạy: ' + job.file });
   const latest = findLatestExcel();
@@ -52,7 +52,7 @@ router.get('/keylab-health', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/keylab-export-now', requireAuth, requireAdmin, async (req, res) => {
+router.post('/keylab-export-now', requirePermission('admin.keylab_export'), async (req, res) => {
   const job = getKeylabJob();
   if (job.running) return res.status(409).json({ ok: false, message: 'Đang chạy rồi, vui lòng đợi...' });
 

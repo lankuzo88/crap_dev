@@ -1459,6 +1459,13 @@ Logic phan loai phuc hinh + stage skip nam o:
 4. `bao_loi.html`
 5. `error_reports.html`
 
+### Hieu bao tre tien do
+1. `src/routes/delayReports.routes.js`
+2. `bao_tre.html` — user co quyen quet barcode, nhap nguyen nhan, upload hinh.
+3. `delay_reports.html` — man hinh duyet/tuy choi bao tre.
+4. `src/services/image.service.js` — anh bao tre luu local WebP da nen.
+5. `dashboard.html`, `dashboard_mobile_terracotta.html` — banner admin va card nhap nhay.
+
 ### Hieu stats
 1. `src/db/migrations.js` (refreshMonthlyStats, billing 26-25)
 2. `src/routes/admin.routes.js` (production-stats, monthly-stats)
@@ -1488,6 +1495,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 | Server khong start | `npm run check`, port 3000 free, `.env` ton tai, `node server.js` thu manual |
 | Auto-scrape fail | `pm2 logs auto-scrape`, `LABO_USER1/PASS1` trong `.env`, `PLAYWRIGHT_BROWSERS_PATH` |
 | Image upload fail | R2 credentials trong `.env`, network tu server → R2 endpoint |
+| Bao tre upload fail | Kiem tra `uploads/error-images/`, quyen ghi local, `sharp`, va size anh <= 10MB |
 | Caddy TLS fail | `caddy validate --config Caddyfile`, DNS `asiakanban.com` → server IP |
 | PM2 crash loop | `pm2 logs`, `max_memory_restart` (500M / 300M) |
 | Database lock | `pm2 restart asia-lab-server`, kiem tra Python scraper co dang ghi |
@@ -1497,3 +1505,240 @@ Logic phan loai phuc hinh + stage skip nam o:
 | Mobile filter sai | Check `routed_to` trong DB, sync logic Python vs JS (`phucHinh.js` vs `db_manager.py`) |
 | Stats sai | `refreshMonthlyStats()` auto chay khi goi `/admin/api/monthly-stats`; kiem tra `tien_do_history` co data |
 
+---
+
+## 21. Cap nhat phien 2026-05-15 — permission linh dong va bao tre tien do
+
+### Muc tieu
+
+Phien nay them flow **Bao tre tien do** va refactor phan quyen tu role cung sang permission linh dong theo user.
+
+Nguyen tac moi:
+- `role` van ton tai de lam template/mau nhanh: `admin`, `user`, `qc`, `delay_qc`.
+- Quyen that su dung de check API nam trong `permissions` cua tung user.
+- Admin co `permissions: ["*"]`.
+- User co the co mot hoac nhieu quyen doc lap; vi du vua xem thong ke, vua bao tre, vua bao loi.
+
+### Permission model
+
+File chinh: `src/repositories/users.repo.js`.
+
+Danh sach quyen hien co:
+
+| Permission | Y nghia |
+|---|---|
+| `*` | Toan quyen |
+| `orders.view_pending` | Xem don pending theo cong doan |
+| `orders.view_all` | Du phong cho xem toan bo don |
+| `orders.route` | Du phong cho chuyen phong |
+| `stats.view_daily` | Xem chip thong ke ngay |
+| `stats.view_production` | Xem thong ke san luong production |
+| `stats.view_monthly` | Xem thong ke thang |
+| `error_reports.submit` | Gui bao loi |
+| `error_reports.view_own` | Xem bao loi cua minh |
+| `error_reports.review` | Duyet/tuy choi bao loi |
+| `error_codes.manage` | CRUD ma loi |
+| `delay_reports.submit` | Gui bao tre tien do |
+| `delay_reports.view_active` | Thay don dang bi bao tre active tren dashboard |
+| `delay_reports.review` | Duyet/tuy choi bao tre |
+| `admin.users.manage` | Quan ly user/role/permissions |
+| `admin.upload_excel` | Upload Excel va chay auto-scrape manual |
+| `admin.keylab_export` | Xuat Excel KeyLab |
+| `analytics.view` | Xem analytics endpoints/page |
+| `munger.view` | Xem Munger dashboard |
+
+Role default permissions:
+- `admin`: `["*"]`.
+- `user`: `orders.view_pending`, `error_reports.submit`, `error_reports.view_own`, `delay_reports.view_active`.
+- `qc`: `orders.view_pending`, `error_reports.submit`, `error_reports.view_own`, `delay_reports.view_active`.
+- `delay_qc`: `orders.view_pending`, `delay_reports.submit`, `delay_reports.view_active`.
+
+Helper moi:
+- `normalizePermissions(value, role, canViewStats)` — normalize/backfill permissions.
+- `hasPermission(userOrUsername, permission)` — check `*` hoac permission cu the.
+- `requirePermission(permission)` trong `src/middleware/auth.js` — middleware route-level.
+
+Luu y session:
+- `requireAuth`/`requirePermission` doc role hien tai tu `users.json` thong qua `USERS`, nen doi role/quyen trong admin co hieu luc ngay khi frontend goi lai `/user`.
+- `sessions.role` van giu de tuong thich, nhung khong con la nguon quyen chinh.
+
+### Admin UI permission
+
+File: `admin.html`.
+
+Tab Users co them:
+- Dropdown role: dung nhu template nhanh.
+- Details/checkbox list `permissions`: tick nhieu quyen cho moi user.
+- Endpoint moi:
+  - `PATCH /admin/api/users/:username/permissions` body `{permissions: []}`.
+  - `PATCH /admin/api/users/:username/role` khi doi role se reset permissions ve default cua role.
+
+`can_view_stats` van duoc giu de tuong thich, nhung khi bat/tat se dong bo voi permission `stats.view_daily`.
+
+### Bao tre tien do — schema
+
+Migration trong `src/db/migrations.js`, init bang qua `initDelayReportTables()` trong `server.js`.
+
+Bang `delay_reports`:
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER PK | |
+| ma_dh | TEXT NOT NULL | Ma don bi bao tre |
+| yc_hoan_thanh | TEXT | Snapshot deadline tai luc bao |
+| cong_doan_bao_tre | TEXT | Cong doan/user dang bao |
+| nguyen_nhan | TEXT | Nguyen nhan user nhap |
+| hinh_anh | TEXT | Ten file local `.webp` |
+| trang_thai | TEXT DEFAULT `pending` | `pending` / `confirmed` / `rejected` |
+| submitted_by | TEXT | User gui |
+| submitted_at | TEXT | datetime local |
+| reviewed_by | TEXT | Admin/nguoi duyet |
+| reviewed_at | TEXT | datetime local |
+| ghi_chu_admin | TEXT | Ghi chu luc confirm/reject |
+
+Indexes:
+- `idx_delay_reports_ma_dh(ma_dh)`
+- `idx_delay_reports_status(trang_thai)`
+
+Duplicate rule:
+- Khong cho tao bao tre moi neu cung `ma_dh` da co `pending` hoac `confirmed`.
+- Neu admin `reject`, don do co the duoc bao lai.
+
+### Bao tre tien do — API
+
+File: `src/routes/delayReports.routes.js`.
+
+| Method | Path | Permission | Ghi chu |
+|---|---|---|---|
+| GET | `/bao-tre` | `delay_reports.submit` | Serve `bao_tre.html` |
+| POST | `/api/delay-reports` | `delay_reports.submit` | FormData `ma_dh`, `nguyen_nhan`, `hinh_anh`; lookup barcode/ma_dh |
+| GET | `/api/delay-reports/active` | `delay_reports.view_active` hoac `delay_reports.review` | User thuong chi nhan `{ma_dh, trang_thai}`; reviewer nhan full data |
+| GET | `/delay-reports` | `delay_reports.review` | Serve `delay_reports.html` |
+| GET | `/api/delay-reports` | `delay_reports.review` | List full, filter `?trang_thai=` |
+| GET | `/api/delay-reports/stats` | `delay_reports.review` | Aggregate + active recent |
+| PATCH | `/api/delay-reports/:id/confirm` | `delay_reports.review` | Confirm |
+| PATCH | `/api/delay-reports/:id/reject` | `delay_reports.review` | Reject + `ghi_chu_admin` |
+
+### Bao tre tien do — frontend
+
+File `bao_tre.html`:
+- Trang gui bao tre cho user co `delay_reports.submit`.
+- Co quet barcode bang ZXing.
+- Sau khi scan/manual input, goi `/api/orders/by-barcode/:code`.
+- Hien ma don, khach hang, benh nhan, phuc hinh, `yc_hoan_thanh`.
+- Bat buoc nhap `nguyen_nhan` va upload hinh.
+- Submit FormData len `/api/delay-reports`.
+
+File `delay_reports.html`:
+- Trang reviewer cho user co `delay_reports.review`.
+- Stats: total/pending/confirmed/rejected.
+- Filter theo trang thai.
+- Card hien anh, nguyen nhan, submitter, deadline snapshot.
+- Action: confirm/reject.
+
+Dashboard:
+- `dashboard.html` va `dashboard_mobile_terracotta.html` goi `/api/delay-reports/active`.
+- User co `delay_reports.view_active` thay card don bi bao tre active bang thanh doc do nhap nhay.
+- User co `delay_reports.review` thay banner so don dang bi bao tre; click vao `/delay-reports`.
+- User co `delay_reports.submit` thay menu/link gui bao tre `/bao-tre`.
+
+### Anh bao tre
+
+Bao loi cu van upload R2 qua `uploadImage`.
+
+Bao tre moi dung local upload:
+- `uploadLocalImage` dung memoryStorage.
+- `saveCompressedLocalImage(file, maDh, 'delay')` nen bang `sharp`.
+- Anh duoc rotate theo EXIF, resize theo `.env` `IMAGE_MAX_WIDTH/HEIGHT`, convert WebP voi `IMAGE_WEBP_QUALITY`.
+- Luu tai `uploads/error-images/`.
+- DB luu ten file, vi du `delay_260504013_1778807535708.webp`.
+
+Static serve:
+- `/uploads/error-images/:file` van duoc protect bang `requireAuth` trong `src/middleware/security.js`.
+
+Cleanup:
+- `cleanupExpiredErrorImages()` quet ca `error_reports` va `delay_reports`, xoa ref sau `IMAGE_RETENTION_DAYS`.
+
+### Route permission changes
+
+Da chuyen nhieu route tu role hardcode sang permission:
+- `admin.routes.js`
+  - user management: `admin.users.manage`
+  - production stats: `stats.view_production`
+  - monthly stats: `stats.view_monthly`
+- `dashboard.routes.js`
+  - analytics page: `analytics.view`
+  - upload page/post: `admin.upload_excel`
+- `scraper.routes.js`
+  - manual scrape: `admin.upload_excel`
+  - KeyLab export: `admin.keylab_export`
+- `analytics.routes.js`
+  - all analytics APIs: `analytics.view`
+- `munger.routes.js`
+  - page/API: `munger.view`
+- `stats.routes.js`
+  - daily chip: `stats.view_daily`
+- `errorReports.routes.js`
+  - submit: `error_reports.submit`
+  - review/stats/confirm/reject: `error_reports.review`
+  - own list: `error_reports.view_own`
+  - error code CRUD: `error_codes.manage`
+- `delayReports.routes.js`
+  - submit/view/review as listed above.
+
+### Orders barcode API update
+
+`GET /api/orders/by-barcode/:code` tra them context de dung cho bao tre:
+- `nhap_luc`
+- `yc_hoan_thanh`
+- `yc_giao`
+- `khach_hang`
+- `benh_nhan`
+- `sl`
+- `ghi_chu`
+
+### Files them/sua trong phien
+
+Them moi:
+- `bao_tre.html`
+- `delay_reports.html`
+- `src/routes/delayReports.routes.js`
+
+Sua chinh:
+- `server.js`
+- `src/app.js`
+- `src/db/migrations.js`
+- `src/middleware/auth.js`
+- `src/repositories/users.repo.js`
+- `src/routes/admin.routes.js`
+- `src/routes/analytics.routes.js`
+- `src/routes/dashboard.routes.js`
+- `src/routes/errorReports.routes.js`
+- `src/routes/munger.routes.js`
+- `src/routes/orders.routes.js`
+- `src/routes/scraper.routes.js`
+- `src/routes/stats.routes.js`
+- `src/routes/users.routes.js`
+- `src/services/image.service.js`
+- `admin.html`
+- `dashboard.html`
+- `dashboard_mobile_terracotta.html`
+- `users.json` (role thuc te hien co: `hongtham`, `thihanh` dang la `delay_qc`)
+
+### Verify da chay
+
+Commands da verify:
+- `Get-ChildItem src -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }`
+- `node -e "require('./src/app'); console.log('app require ok')"`
+- Check permission load:
+  - admin co `*`.
+  - `hongtham`, `thihanh` co `delay_reports.submit`.
+  - user thuong co `delay_reports.view_active` nhung khong co `delay_reports.submit`.
+- `pm2 restart asia-lab-server`
+
+### Luu y van hanh
+
+- Neu admin doi permissions, frontend can refresh hoac cho lan poll `/user` tiep theo.
+- Neu user khong thay menu, kiem tra `/user` co tra `permissions` dung khong.
+- Neu card khong nhap nhay, kiem tra `/api/delay-reports/active` co tra `ma_dh` active va don do co nam trong danh sach hien tai khong.
+- Khi debug banner/card, can co it nhat mot record `delay_reports.trang_thai IN ('pending','confirmed')`.

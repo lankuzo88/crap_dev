@@ -21,7 +21,13 @@ function roomForUserCongDoan(congDoan) {
 router.get('/user', requireAuth, (req, res) => {
   const sess = req.session;
   const u = USERS[sess.user] || {};
-  res.json({ username: sess.user, role: sess.role, cong_doan: u.cong_doan || '', can_view_stats: u.can_view_stats === true });
+  res.json({
+    username: sess.user,
+    role: u.role || sess.role,
+    cong_doan: u.cong_doan || '',
+    can_view_stats: u.can_view_stats === true,
+    permissions: u.permissions || [],
+  });
 });
 
 router.get('/api/user/pending-orders', requireAuth, (req, res) => {

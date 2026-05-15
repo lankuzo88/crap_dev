@@ -37,6 +37,30 @@ function initErrorTables() {
   log('✅ Error tables initialized');
 }
 
+function initDelayReportTables() {
+  const db = getDB();
+  if (!db) { log('⚠ initDelayReportTables: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS delay_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh TEXT NOT NULL,
+      yc_hoan_thanh TEXT,
+      cong_doan_bao_tre TEXT,
+      nguyen_nhan TEXT,
+      hinh_anh TEXT,
+      trang_thai TEXT DEFAULT 'pending',
+      submitted_by TEXT,
+      submitted_at TEXT DEFAULT (datetime('now','localtime')),
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      ghi_chu_admin TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_delay_reports_ma_dh ON delay_reports(ma_dh);
+    CREATE INDEX IF NOT EXISTS idx_delay_reports_status ON delay_reports(trang_thai);
+  `);
+  log('✅ Delay report tables initialized');
+}
+
 function hasColumn(db, table, column) {
   return db.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === column);
 }
@@ -568,4 +592,4 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

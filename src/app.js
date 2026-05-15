@@ -26,6 +26,7 @@ app.use('/', require('./routes/analytics.routes'));
 app.use('/', require('./routes/scraper.routes'));
 app.use('/', require('./routes/feedback.routes'));
 app.use('/', require('./routes/errorReports.routes'));
+app.use('/', require('./routes/delayReports.routes'));
 app.use('/', require('./routes/munger.routes'));
 app.use('/', require('./routes/stats.routes'));
 

@@ -2,9 +2,9 @@
 const express = require('express');
 const path    = require('path');
 const router  = express.Router();
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
-const { USERS, normalizeUserCongDoan } = require('../repositories/users.repo');
+const { USERS, normalizeUserCongDoan, hasPermission } = require('../repositories/users.repo');
 const { uploadImage } = require('../services/image.service');
 const { BASE_DIR } = require('../config/paths');
 
@@ -36,15 +36,15 @@ function getAllowedStages(username, userRole, userCongDoan) {
   return Array.from(allowed);
 }
 
-router.get('/bao-loi', requireAuth, (req, res) => {
+router.get('/bao-loi', requirePermission('error_reports.submit'), (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'bao_loi.html'));
 });
 
-router.get('/error-reports', requireAdmin, (req, res) => {
+router.get('/error-reports', requirePermission('error_reports.review'), (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'error_reports.html'));
 });
 
-router.get('/api/error-reports/allowed-stages', requireAuth, (req, res) => {
+router.get('/api/error-reports/allowed-stages', requirePermission('error_reports.submit'), (req, res) => {
   try {
     const username = req.session.user;
     const userInfo = USERS[username];
@@ -67,7 +67,7 @@ router.get('/api/error-codes', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.post('/api/error-codes', requireAdmin, express.json(), (req, res) => {
+router.post('/api/error-codes', requirePermission('error_codes.manage'), express.json(), (req, res) => {
   const { ma_loi, ten_loi, cong_doan, mo_ta } = req.body;
   if (!ma_loi || !ten_loi || !cong_doan) return res.status(400).json({ ok: false, error: 'ma_loi, ten_loi, cong_doan là bắt buộc' });
   const VALID_CD = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
@@ -81,7 +81,7 @@ router.post('/api/error-codes', requireAdmin, express.json(), (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.patch('/api/error-codes/:id', requireAdmin, express.json(), (req, res) => {
+router.patch('/api/error-codes/:id', requirePermission('error_codes.manage'), express.json(), (req, res) => {
   const { id } = req.params;
   const { ma_loi, ten_loi, cong_doan, mo_ta } = req.body;
   try {
@@ -93,7 +93,7 @@ router.patch('/api/error-codes/:id', requireAdmin, express.json(), (req, res) =>
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.delete('/api/error-codes/:id', requireAdmin, (req, res) => {
+router.delete('/api/error-codes/:id', requirePermission('error_codes.manage'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -102,7 +102,7 @@ router.delete('/api/error-codes/:id', requireAdmin, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.post('/api/error-reports', requireAuth, (req, res) => {
+router.post('/api/error-reports', requirePermission('error_reports.submit'), (req, res) => {
   uploadImage.single('hinh_anh')(req, res, (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     const { ma_dh, error_code_id, mo_ta } = req.body;
@@ -139,7 +139,8 @@ router.get('/api/error-reports', requireAuth, (req, res) => {
     let sql = 'SELECT * FROM error_reports WHERE 1=1';
     const params = [];
 
-    if (userInfo.role !== 'admin') {
+    if (!hasPermission(username, 'error_reports.review')) {
+      if (!hasPermission(username, 'error_reports.view_own')) return res.status(403).json({ ok: false, error: 'Không có quyền xem báo lỗi' });
       sql += ' AND submitted_by=?';
       params.push(username);
     } else {
@@ -154,7 +155,7 @@ router.get('/api/error-reports', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/error-reports/stats', requireAdmin, (req, res) => {
+router.get('/api/error-reports/stats', requirePermission('error_reports.review'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -166,7 +167,7 @@ router.get('/api/error-reports/stats', requireAdmin, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.patch('/api/error-reports/:id/confirm', requireAdmin, express.json(), (req, res) => {
+router.patch('/api/error-reports/:id/confirm', requirePermission('error_reports.review'), express.json(), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -177,7 +178,7 @@ router.patch('/api/error-reports/:id/confirm', requireAdmin, express.json(), (re
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.patch('/api/error-reports/:id/reject', requireAdmin, express.json(), (req, res) => {
+router.patch('/api/error-reports/:id/reject', requirePermission('error_reports.review'), express.json(), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });

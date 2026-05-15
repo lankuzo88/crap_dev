@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo trễ tiến độ</title>
+  <style>
+    :root {
+      --bg:#f7f1ed; --panel:#fffaf7; --text:#2f211c; --muted:#7b6259;
+      --line:#ead8cf; --accent:#a85a4f; --accent-dark:#7e3f37; --danger:#b91c1c;
+      --ok:#166534;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .top { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--panel); border-bottom:1px solid var(--line); }
+    .back { border:1px solid var(--line); background:#fff; color:var(--text); border-radius:6px; padding:8px 10px; text-decoration:none; font-weight:700; }
+    .title { font-weight:800; font-size:18px; }
+    .wrap { max-width:720px; margin:0 auto; padding:14px; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:12px; }
+    label { display:block; font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; margin:0 0 6px; }
+    input, textarea { width:100%; border:1px solid var(--line); border-radius:7px; padding:11px; font-size:16px; background:#fff; color:var(--text); }
+    textarea { min-height:105px; resize:vertical; }
+    .scan-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
+    button { border:0; border-radius:7px; padding:11px 13px; font-size:14px; font-weight:800; cursor:pointer; }
+    .btn { background:var(--accent); color:#fff; }
+    .btn.secondary { background:#fff; color:var(--text); border:1px solid var(--line); }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .order-box { display:none; border-left:4px solid var(--accent); padding:10px 12px; background:#fff; border-radius:6px; }
+    .order-box.show { display:block; }
+    .order-id { font-size:18px; font-weight:900; margin-bottom:4px; }
+    .meta { color:var(--muted); font-size:13px; line-height:1.5; }
+    .preview { margin-top:8px; max-width:100%; max-height:220px; border-radius:7px; display:none; border:1px solid var(--line); }
+    .err { display:none; color:var(--danger); font-size:13px; margin-top:6px; }
+    .err.show { display:block; }
+    .toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px); opacity:0; transition:.2s; background:var(--ok); color:#fff; padding:12px 16px; border-radius:8px; font-weight:800; z-index:30; max-width:90%; text-align:center; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .toast.warn { background:var(--danger); }
+    .scanner { display:none; position:fixed; inset:0; background:rgba(0,0,0,.86); z-index:20; align-items:center; justify-content:center; padding:18px; }
+    .scanner.show { display:flex; }
+    .scanner-box { width:min(460px,100%); background:#17110f; border:1px solid #4b332d; border-radius:8px; padding:14px; color:#fff; }
+    video { width:100%; aspect-ratio:4/3; object-fit:cover; background:#000; border-radius:6px; }
+    .scanner-status { min-height:20px; margin:10px 0; color:#f0d8cf; font-size:13px; text-align:center; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js"></script>
+</head>
+<body>
+  <div class="top">
+    <a class="back" href="/">←</a>
+    <div class="title">Báo trễ tiến độ</div>
+  </div>
+
+  <div class="wrap">
+    <form id="delayForm" class="panel">
+      <label for="ma_dh">Mã đơn hoặc barcode</label>
+      <div class="scan-row">
+        <input id="ma_dh" name="ma_dh" autocomplete="off" placeholder="Quét hoặc nhập mã đơn">
+        <button class="btn secondary" type="button" onclick="openScanner()">Quét</button>
+      </div>
+      <div class="err" id="errOrder"></div>
+
+      <div class="order-box" id="orderBox">
+        <div class="order-id" id="orderId"></div>
+        <div class="meta" id="orderMeta"></div>
+      </div>
+
+      <div style="height:12px"></div>
+      <label for="nguyen_nhan">Nguyên nhân trễ</label>
+      <textarea id="nguyen_nhan" name="nguyen_nhan" placeholder="Nhập nguyên nhân cần admin xác nhận"></textarea>
+      <div class="err" id="errReason">Vui lòng nhập nguyên nhân.</div>
+
+      <div style="height:12px"></div>
+      <label for="hinh_anh">Hình ảnh bắt buộc</label>
+      <input id="hinh_anh" name="hinh_anh" type="file" accept="image/*" capture="environment">
+      <img id="preview" class="preview" alt="">
+      <div class="err" id="errImage">Vui lòng upload hình.</div>
+
+      <div style="height:14px"></div>
+      <button id="submitBtn" class="btn" type="submit" disabled>Gửi báo trễ tiến độ</button>
+    </form>
+  </div>
+
+  <div id="scanner" class="scanner" onclick="if(event.target===this) closeScanner()">
+    <div class="scanner-box">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div id="scannerStatus" class="scanner-status">Đang khởi động camera...</div>
+      <button class="btn secondary" type="button" onclick="closeScanner()" style="width:100%">Hủy</button>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let selectedOrder = null;
+    let reader = null;
+    let scannerActive = false;
+
+    const $ = id => document.getElementById(id);
+    const esc = value => String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function showToast(message, warn=false) {
+      const t = $('toast');
+      t.textContent = message;
+      t.className = 'toast show' + (warn ? ' warn' : '');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function validate() {
+      const ok = selectedOrder && $('nguyen_nhan').value.trim() && $('hinh_anh').files.length > 0;
+      $('submitBtn').disabled = !ok;
+      return ok;
+    }
+
+    async function lookupOrder() {
+      const code = $('ma_dh').value.trim();
+      selectedOrder = null;
+      $('orderBox').classList.remove('show');
+      $('errOrder').classList.remove('show');
+      validate();
+      if (!code) return;
+      try {
+        const r = await fetch('/api/orders/by-barcode/' + encodeURIComponent(code));
+        const d = await r.json();
+        if (!r.ok || !d.ok) throw new Error(d.error || 'Không tìm thấy đơn');
+        selectedOrder = d.order;
+        $('ma_dh').value = selectedOrder.ma_dh;
+        $('orderId').textContent = selectedOrder.ma_dh;
+        $('orderMeta').innerHTML = `
+          ${esc(selectedOrder.khach_hang || '—')} · ${esc(selectedOrder.benh_nhan || '—')}<br>
+          HT: <strong>${esc(selectedOrder.yc_hoan_thanh || '—')}</strong><br>
+          ${esc(selectedOrder.phuc_hinh || '—')}
+        `;
+        $('orderBox').classList.add('show');
+      } catch (e) {
+        $('errOrder').textContent = e.message;
+        $('errOrder').classList.add('show');
+      }
+      validate();
+    }
+
+    $('ma_dh').addEventListener('change', lookupOrder);
+    $('ma_dh').addEventListener('blur', lookupOrder);
+    $('nguyen_nhan').addEventListener('input', validate);
+    $('hinh_anh').addEventListener('change', () => {
+      const file = $('hinh_anh').files[0];
+      if (file) {
+        $('preview').src = URL.createObjectURL(file);
+        $('preview').style.display = 'block';
+      }
+      validate();
+    });
+
+    $('delayForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('errReason').classList.toggle('show', !$('nguyen_nhan').value.trim());
+      $('errImage').classList.toggle('show', $('hinh_anh').files.length === 0);
+      if (!validate()) return;
+      const fd = new FormData();
+      fd.append('ma_dh', selectedOrder.ma_dh);
+      fd.append('nguyen_nhan', $('nguyen_nhan').value.trim());
+      fd.append('hinh_anh', $('hinh_anh').files[0]);
+      $('submitBtn').disabled = true;
+      $('submitBtn').textContent = 'Đang gửi...';
+      try {
+        const r = await fetch('/api/delay-reports', { method:'POST', body:fd });
+        const d = await r.json();
+        if (!r.ok || !d.ok) throw new Error(d.error || 'Gửi thất bại');
+        showToast('Đã gửi báo trễ tiến độ');
+        selectedOrder = null;
+        e.target.reset();
+        $('orderBox').classList.remove('show');
+        $('preview').style.display = 'none';
+      } catch (err) {
+        showToast(err.message, true);
+      } finally {
+        $('submitBtn').textContent = 'Gửi báo trễ tiến độ';
+        validate();
+      }
+    });
+
+    async function openScanner() {
+      if (!window.ZXing) { showToast('Không tải được thư viện quét barcode', true); return; }
+      $('scanner').classList.add('show');
+      $('scannerStatus').textContent = 'Đang khởi động camera...';
+      scannerActive = true;
+      reader = reader || new ZXing.BrowserMultiFormatReader();
+      try {
+        await reader.decodeFromVideoDevice(null, 'scannerVideo', async (result, err) => {
+          if (!scannerActive || !result) return;
+          const code = result.getText();
+          closeScanner();
+          $('ma_dh').value = code;
+          await lookupOrder();
+        });
+        if (scannerActive) $('scannerStatus').textContent = 'Đang tìm barcode...';
+      } catch (e) {
+        $('scannerStatus').textContent = e.name === 'NotAllowedError' ? 'Camera bị chặn quyền truy cập' : 'Không mở được camera';
+      }
+    }
+
+    function closeScanner() {
+      scannerActive = false;
+      if (reader) reader.reset();
+      $('scanner').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

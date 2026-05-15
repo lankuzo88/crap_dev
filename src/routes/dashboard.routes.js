@@ -4,7 +4,7 @@ const fs       = require('fs');
 const path     = require('path');
 const multer   = require('multer');
 const router   = express.Router();
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requirePermission } = require('../middleware/auth');
 const { getData, resetCache, findLatest } = require('../repositories/orders.repo');
 const { closeDB, getDB } = require('../db/index');
 const { queueOrScrape } = require('../services/scraper.service');
@@ -39,6 +39,9 @@ const upload = multer({
 });
 
 router.get('/', requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const file = isMobile(req) ? DASHBOARD_MOBILE : DASHBOARD;
   if (fs.existsSync(file)) return res.sendFile(file);
   if (fs.existsSync(DASHBOARD)) return res.sendFile(DASHBOARD);
@@ -53,7 +56,7 @@ router.get('/mobile', requireAuth, (req, res) => {
   else res.redirect('/');
 });
 
-router.get(['/analytics', '/analytics.html'], requireAuth, requireAdmin, (req, res) => {
+router.get(['/analytics', '/analytics.html'], requirePermission('analytics.view'), (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -122,14 +125,11 @@ router.get('/files', requireAuth, (req, res) => {
   } catch { res.json([]); }
 });
 
-router.get('/upload', requireAuth, (req, res) => {
+router.get('/upload', requirePermission('admin.upload_excel'), (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'upload.html'));
 });
 
-router.post('/upload', requireAuth, (req, res) => {
-  if (req.session.role !== 'admin') {
-    return res.status(403).json({ ok: false, error: 'Chỉ admin có quyền upload file' });
-  }
+router.post('/upload', requirePermission('admin.upload_excel'), (req, res) => {
   upload.single('excel')(req, res, err => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     if (!req.file) return res.status(400).json({ ok: false, error: 'Không có file nào được gửi lên' });

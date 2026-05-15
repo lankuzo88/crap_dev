@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const { findLatest } = require('../repositories/orders.repo');
 const { EXCEL_DIR } = require('../config/paths');
@@ -18,7 +18,7 @@ function classifyPhucHinh(text) {
 }
 
 // ── Simple analytics (legacy) ────────────────────────
-router.get('/api/analytics/ktv', requireAuth, (req, res) => {
+router.get('/api/analytics/ktv', requirePermission('analytics.view'), (req, res) => {
   const db = getDB();
   if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
   try {
@@ -32,7 +32,7 @@ router.get('/api/analytics/ktv', requireAuth, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get('/api/analytics/daily', requireAuth, (req, res) => {
+router.get('/api/analytics/daily', requirePermission('analytics.view'), (req, res) => {
   const db = getDB();
   if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
   try {
@@ -46,7 +46,7 @@ router.get('/api/analytics/daily', requireAuth, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get('/api/db/stats', requireAuth, (req, res) => {
+router.get('/api/db/stats', requirePermission('analytics.view'), (req, res) => {
   const db = getDB();
   if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo' });
   try {
@@ -60,7 +60,7 @@ router.get('/api/db/stats', requireAuth, (req, res) => {
 });
 
 // ── Advanced analytics (analytics.html) ─────────────
-router.get('/api/analytics/trend', requireAuth, (req, res) => {
+router.get('/api/analytics/trend', requirePermission('analytics.view'), (req, res) => {
   const days = parseInt(req.query.days) || 7;
   try {
     const db = getDB();
@@ -73,7 +73,7 @@ router.get('/api/analytics/trend', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/customers', requireAuth, (req, res) => {
+router.get('/api/analytics/customers', requirePermission('analytics.view'), (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   try {
     const db = getDB();
@@ -89,13 +89,13 @@ router.get('/api/analytics/customers', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.post('/api/analytics/refresh', requireAuth, requireAdmin, (req, res) => {
+router.post('/api/analytics/refresh', requirePermission('analytics.view'), (req, res) => {
   log('[Analytics] Refresh requested (not implemented yet)');
   res.json({ ok: true, message: 'Analytics refresh queued (not implemented yet)' });
 });
 
 // ── Historical analytics ─────────────────────────────
-router.get('/api/analytics/history/ktv-performance', requireAuth, (req, res) => {
+router.get('/api/analytics/history/ktv-performance', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -118,7 +118,7 @@ router.get('/api/analytics/history/ktv-performance', requireAuth, (req, res) => 
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/history/top-ktv', requireAuth, (req, res) => {
+router.get('/api/analytics/history/top-ktv', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -140,7 +140,7 @@ router.get('/api/analytics/history/top-ktv', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/history/stage-stats', requireAuth, (req, res) => {
+router.get('/api/analytics/history/stage-stats', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -155,7 +155,7 @@ router.get('/api/analytics/history/stage-stats', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/history/phuc-hinh-distribution', requireAuth, (req, res) => {
+router.get('/api/analytics/history/phuc-hinh-distribution', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -177,7 +177,7 @@ router.get('/api/analytics/history/phuc-hinh-distribution', requireAuth, (req, r
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/history/top-customers', requireAuth, (req, res) => {
+router.get('/api/analytics/history/top-customers', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -192,7 +192,7 @@ router.get('/api/analytics/history/top-customers', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/analytics/history/overview', requireAuth, (req, res) => {
+router.get('/api/analytics/history/overview', requirePermission('analytics.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });

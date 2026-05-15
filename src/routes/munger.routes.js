@@ -2,7 +2,7 @@
 const express = require('express');
 const path    = require('path');
 const router  = express.Router();
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const { BASE_DIR } = require('../config/paths');
 
@@ -29,11 +29,11 @@ function getBillingPeriods() {
   };
 }
 
-router.get('/munger', requireAuth, requireAdmin, (req, res) => {
+router.get('/munger', requirePermission('munger.view'), (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'munger.html'));
 });
 
-router.get('/api/munger/metrics', requireAuth, requireAdmin, (req, res) => {
+router.get('/api/munger/metrics', requirePermission('munger.view'), (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });

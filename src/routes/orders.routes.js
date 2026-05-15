@@ -83,7 +83,9 @@ router.get('/api/orders/by-barcode/:code', requireAuth, (req, res) => {
     if (!code) return res.status(400).json({ ok: false, error: 'Missing code' });
 
     const row = db.prepare(`
-      SELECT d.ma_dh, d.phuc_hinh, d.loai_lenh, d.ghi_chu_sx, d.routed_to, d.barcode_labo
+      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
+             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.routed_to, d.barcode_labo
       FROM don_hang d
       WHERE d.barcode_labo = ? OR d.ma_dh = ?
       LIMIT 1

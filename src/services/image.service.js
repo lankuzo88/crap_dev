@@ -6,7 +6,7 @@ const multer = require('multer');
 const { r2Client, PutObjectCommand, DeleteObjectCommand } = require('./r2.service');
 const { getDB } = require('../db/index');
 const env   = require('../config/env');
-const { BASE_DIR } = require('../config/paths');
+const { BASE_DIR, ERROR_IMAGE_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -64,6 +64,29 @@ const uploadImage = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+const uploadLocalImage = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => { cb(null, file.mimetype.startsWith('image/')); },
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+async function saveCompressedLocalImage(file, maDh, prefix = 'delay') {
+  if (!file?.buffer) throw new Error('Image file is empty');
+  const safeMaDh = String(maDh || 'unknown').replace(/[^a-zA-Z0-9\-]/g, '_');
+  fs.mkdirSync(ERROR_IMAGE_DIR, { recursive: true });
+  const fileName = `${prefix}_${safeMaDh}_${Date.now()}.webp`;
+  const filePath = path.join(ERROR_IMAGE_DIR, fileName);
+  const body = await compressErrorImage(file.buffer);
+  fs.writeFileSync(filePath, body);
+  log(`[LocalImage] Image compressed ${file.buffer.length} -> ${body.length} bytes (${fileName})`);
+  return {
+    fileName,
+    path: filePath,
+    size: body.length,
+    originalSize: file.buffer.length,
+  };
+}
+
 function getR2KeyFromImageRef(imageRef) {
   if (!imageRef || !imageRef.startsWith('http')) return '';
   try {
@@ -106,20 +129,26 @@ async function cleanupExpiredErrorImages() {
   if (!db) return;
 
   const rows = db.prepare(`
-    SELECT id, hinh_anh FROM error_reports
+    SELECT 'error_reports' AS source_table, id, hinh_anh FROM error_reports
     WHERE hinh_anh IS NOT NULL AND hinh_anh <> ''
       AND submitted_at < datetime('now','localtime', ?)
-  `).all(`-${retentionDays} days`);
+    UNION ALL
+    SELECT 'delay_reports' AS source_table, id, hinh_anh FROM delay_reports
+    WHERE hinh_anh IS NOT NULL AND hinh_anh <> ''
+      AND submitted_at < datetime('now','localtime', ?)
+  `).all(`-${retentionDays} days`, `-${retentionDays} days`);
 
   if (!rows.length) { log(`[ImageCleanup] No images older than ${retentionDays} days`); return; }
 
   let deleted = 0, cleared = 0, failed = 0;
-  const clearRef = db.prepare('UPDATE error_reports SET hinh_anh=NULL WHERE id=?');
+  const clearErrorRef = db.prepare('UPDATE error_reports SET hinh_anh=NULL WHERE id=?');
+  const clearDelayRef = db.prepare('UPDATE delay_reports SET hinh_anh=NULL WHERE id=?');
 
   for (const row of rows) {
     try {
       const removed = await deleteErrorImage(row.hinh_anh);
-      clearRef.run(row.id);
+      if (row.source_table === 'delay_reports') clearDelayRef.run(row.id);
+      else clearErrorRef.run(row.id);
       if (removed) deleted++;
       cleared++;
     } catch (err) {
@@ -140,6 +169,8 @@ function startImageCleanupSchedule() {
 module.exports = {
   compressErrorImage,
   uploadImage,
+  uploadLocalImage,
+  saveCompressedLocalImage,
   getR2KeyFromImageRef,
   getLocalErrorImagePath,
   deleteErrorImage,

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo trễ tiến độ</title>
+  <style>
+    :root { --bg:#f5f2ef; --panel:#fff; --text:#221b17; --muted:#6b5b53; --line:#e2d4cc; --accent:#a85a4f; --yellow:#b45309; --green:#15803d; --red:#b91c1c; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+    .title { font-size:20px; font-weight:900; }
+    .back { color:var(--text); text-decoration:none; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-weight:700; }
+    .wrap { max-width:1060px; margin:0 auto; padding:14px; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+    .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+    .stat-label { font-size:12px; color:var(--muted); text-transform:uppercase; font-weight:800; }
+    .stat-value { font-size:28px; font-weight:900; margin-top:4px; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    button { border:0; border-radius:6px; padding:8px 12px; font-weight:800; cursor:pointer; }
+    .filter { background:#fff; color:var(--text); border:1px solid var(--line); }
+    .filter.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--yellow); border-radius:8px; padding:12px; }
+    .card.confirmed { border-left-color:var(--green); }
+    .card.rejected { border-left-color:var(--red); }
+    .row { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .ma { font-size:18px; font-weight:900; cursor:pointer; }
+    .badge { border-radius:999px; padding:3px 8px; font-size:11px; font-weight:900; text-transform:uppercase; }
+    .pending { background:#fff7ed; color:var(--yellow); border:1px solid #fed7aa; }
+    .confirmed { background:#ecfdf5; color:var(--green); border:1px solid #bbf7d0; }
+    .rejected { background:#fef2f2; color:var(--red); border:1px solid #fecaca; }
+    .meta { color:var(--muted); font-size:13px; line-height:1.45; }
+    .mid { display:flex; gap:12px; margin-top:10px; }
+    .photo { width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid var(--line); cursor:pointer; flex-shrink:0; }
+    .reason { white-space:pre-wrap; font-size:14px; line-height:1.45; }
+    .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+    .ok { background:var(--green); color:#fff; }
+    .danger { background:var(--red); color:#fff; }
+    .empty { text-align:center; color:var(--muted); padding:36px; background:var(--panel); border:1px solid var(--line); border-radius:8px; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:20; align-items:center; justify-content:center; padding:18px; }
+    .modal.show { display:flex; }
+    .modal-box { width:min(520px,100%); background:#fff; border-radius:8px; padding:16px; }
+    textarea { width:100%; min-height:90px; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:14px; }
+    .lightbox img { max-width:92vw; max-height:88vh; border-radius:8px; }
+    @media (max-width:720px) { .stats { grid-template-columns:repeat(2,1fr); } .mid { flex-direction:column; } .photo { width:100%; height:210px; } }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="title">Báo trễ tiến độ</div>
+    <a class="back" href="/">Dashboard</a>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Tổng</div><div class="stat-value" id="sTotal">—</div></div>
+      <div class="stat"><div class="stat-label">Chờ duyệt</div><div class="stat-value" id="sPending">—</div></div>
+      <div class="stat"><div class="stat-label">Đã xác nhận</div><div class="stat-value" id="sConfirmed">—</div></div>
+      <div class="stat"><div class="stat-label">Từ chối</div><div class="stat-value" id="sRejected">—</div></div>
+    </div>
+    <div class="filters">
+      <button class="filter active" onclick="setFilter('', this)">Tất cả</button>
+      <button class="filter" onclick="setFilter('pending', this)">Chờ duyệt</button>
+      <button class="filter" onclick="setFilter('confirmed', this)">Đã xác nhận</button>
+      <button class="filter" onclick="setFilter('rejected', this)">Từ chối</button>
+      <button class="filter" onclick="loadReports()">Làm mới</button>
+    </div>
+    <div class="list" id="list"><div class="empty">Đang tải...</div></div>
+  </div>
+
+  <div class="modal" id="rejectModal">
+    <div class="modal-box">
+      <h3>Từ chối báo trễ</h3>
+      <p class="meta">Ghi chú lý do từ chối.</p>
+      <textarea id="rejectNote"></textarea>
+      <div class="actions">
+        <button class="filter" onclick="closeReject()">Hủy</button>
+        <button class="danger" onclick="confirmReject()">Xác nhận từ chối</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <script>
+    let filter = '';
+    let pendingRejectId = null;
+    const esc = value => String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmt = value => value ? String(value).replace('T', ' ') : '—';
+
+    function imageUrl(ref) {
+      if (!ref) return '';
+      if (ref.startsWith('http') || ref.startsWith('/')) return ref;
+      return '/uploads/error-images/' + encodeURIComponent(ref);
+    }
+
+    async function loadStats() {
+      const r = await fetch('/api/delay-reports/stats');
+      const d = await r.json();
+      if (!d.ok) return;
+      const by = {};
+      d.byStatus.forEach(x => by[x.trang_thai] = x.n);
+      const total = d.byStatus.reduce((s, x) => s + x.n, 0);
+      document.getElementById('sTotal').textContent = total;
+      document.getElementById('sPending').textContent = by.pending || 0;
+      document.getElementById('sConfirmed').textContent = by.confirmed || 0;
+      document.getElementById('sRejected').textContent = by.rejected || 0;
+    }
+
+    async function loadReports() {
+      await loadStats();
+      const el = document.getElementById('list');
+      el.innerHTML = '<div class="empty">Đang tải...</div>';
+      const url = filter ? '/api/delay-reports?trang_thai=' + encodeURIComponent(filter) : '/api/delay-reports';
+      const r = await fetch(url);
+      const d = await r.json();
+      if (!d.ok) { el.innerHTML = '<div class="empty">Không tải được dữ liệu</div>'; return; }
+      if (!d.data.length) { el.innerHTML = '<div class="empty">Không có báo trễ nào</div>'; return; }
+
+      const labels = { pending:'Chờ duyệt', confirmed:'Đã xác nhận', rejected:'Từ chối' };
+      el.innerHTML = d.data.map(rep => {
+        const img = imageUrl(rep.hinh_anh);
+        const actions = rep.trang_thai === 'pending'
+          ? `<div class="actions"><button class="ok" onclick="confirmReport(${rep.id})">Xác nhận</button><button class="danger" onclick="openReject(${rep.id})">Từ chối</button></div>`
+          : '';
+        return `<div class="card ${rep.trang_thai}">
+          <div class="row">
+            <div>
+              <div class="ma" onclick="location.href='/api/orders/${encodeURIComponent(rep.ma_dh)}'">${esc(rep.ma_dh)}</div>
+              <div class="meta">${esc(rep.khach_hang || '—')} · ${esc(rep.benh_nhan || '—')} · HT: <strong>${esc(rep.yc_hoan_thanh || '—')}</strong></div>
+            </div>
+            <div>
+              <span class="badge ${rep.trang_thai}">${labels[rep.trang_thai] || rep.trang_thai}</span>
+              <div class="meta" style="text-align:right">${esc(rep.submitted_by || '?')}<br>${fmt(rep.submitted_at)}</div>
+            </div>
+          </div>
+          <div class="mid">
+            ${img ? `<img class="photo" src="${esc(img)}" onclick="openLightbox('${esc(img)}')" alt="">` : ''}
+            <div>
+              <div class="meta">${esc(rep.cong_doan_bao_tre || 'Không gán công đoạn')}</div>
+              <div class="reason">${esc(rep.nguyen_nhan || '')}</div>
+              ${rep.reviewed_by ? `<div class="meta" style="margin-top:8px">Duyệt bởi ${esc(rep.reviewed_by)} · ${fmt(rep.reviewed_at)}${rep.ghi_chu_admin ? '<br>Ghi chú: ' + esc(rep.ghi_chu_admin) : ''}</div>` : ''}
+            </div>
+          </div>
+          ${actions}
+        </div>`;
+      }).join('');
+    }
+
+    function setFilter(next, btn) {
+      filter = next;
+      document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadReports();
+    }
+
+    async function confirmReport(id) {
+      const r = await fetch(`/api/delay-reports/${id}/confirm`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:'{}' });
+      const d = await r.json();
+      if (d.ok) loadReports();
+    }
+
+    function openReject(id) {
+      pendingRejectId = id;
+      document.getElementById('rejectNote').value = '';
+      document.getElementById('rejectModal').classList.add('show');
+    }
+    function closeReject() {
+      pendingRejectId = null;
+      document.getElementById('rejectModal').classList.remove('show');
+    }
+    async function confirmReject() {
+      if (!pendingRejectId) return;
+      const r = await fetch(`/api/delay-reports/${pendingRejectId}/reject`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ ghi_chu_admin: document.getElementById('rejectNote').value.trim() }),
+      });
+      const d = await r.json();
+      if (d.ok) { closeReject(); loadReports(); }
+    }
+    function openLightbox(src) {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightbox').classList.add('show');
+    }
+    function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+    loadReports();
+    setInterval(loadStats, 30000);
+  </script>
+</body>
+</html>
