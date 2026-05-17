@@ -186,6 +186,9 @@
     .rc-mid { display: flex; gap: 14px; align-items: flex-start; }
     .rc-photo img { width: 110px; height: 88px; object-fit: cover; border-radius: 7px; border: 1px solid #e0e0e0; cursor: pointer; transition: opacity .15s; }
     .rc-photo img:hover { opacity: .85; }
+    .rc-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; width: min(340px, 100%); flex-shrink: 0; }
+    .rc-photo-grid img { width: 100%; height: 88px; object-fit: cover; border-radius: 7px; border: 1px solid #e0e0e0; cursor: pointer; transition: opacity .15s; }
+    .rc-photo-grid img:hover { opacity: .85; }
     .rc-info { flex: 1; min-width: 0; }
     .rc-mo_ta { font-size: 13px; color: #777; margin-bottom: 8px; }
     .reviewed-box { font-size: 12px; color: #888; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; line-height: 1.6; }
@@ -280,6 +283,13 @@
     .monthly-stage { font-weight: 850; color: #111827; }
     .monthly-employee { font-weight: 700; }
     .monthly-total-row td { background: #fcfcfd; font-weight: 850; color: #111827; }
+    .report-monthly-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .report-monthly-list { border: 1px solid #eceff3; border-radius: 10px; background: #fff; padding: 12px; min-width: 0; }
+    .report-monthly-title { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: .35px; font-weight: 850; margin-bottom: 7px; }
+    .report-monthly-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+    .report-monthly-row:last-child { border-bottom: none; }
+    .report-monthly-row span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .report-monthly-row strong { color: #111827; }
 
     @keyframes mSlide { from { transform: translateY(100%) } to { transform: translateY(0) } }
 
@@ -292,6 +302,7 @@
       .prod-header { flex-direction: column; }
       .prod-days { grid-template-columns: 1fr; }
       .monthly-summary { grid-template-columns: 1fr; }
+      .report-monthly-cols { grid-template-columns: 1fr; }
       .stats-kpis, .type-grid { grid-template-columns: 1fr; }
 
       /* ── Modal đơn giản → bottom sheet ── */
@@ -350,7 +361,7 @@
 
 <!-- Tab Navigation -->
 <div class="tabs-bar">
-  <button class="tab-btn active" onclick="switchTab('reports', this)" id="tabReports">📋 Báo cáo lỗi <span class="badge" id="pendingBadge" style="display:none">0</span></button>
+  <button class="tab-btn active" onclick="switchTab('reports', this)" id="tabReports">📋 Báo lỗi kỹ thuật <span class="badge" id="pendingBadge" style="display:none">0</span></button>
   <button class="tab-btn" onclick="switchTab('errorcodes', this)">🏷️ Mã lỗi</button>
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
@@ -473,6 +484,22 @@
 
   <!-- Stage breakdown -->
   <div class="stage-chips" id="stageChips"></div>
+
+  <div class="prod-panel">
+    <div class="prod-header">
+      <div>
+        <div class="prod-title">Thống kê báo lỗi kỹ thuật theo kỳ tháng</div>
+        <div class="prod-subtitle" id="reportMonthlyPeriod">Kỳ tháng được tính từ ngày 26 của tháng trước đến ngày 25 của tháng hiển thị.</div>
+      </div>
+      <div class="monthly-toolbar">
+        <select id="reportMonthlySelect" class="monthly-select" onchange="loadReportMonthlyStats(this.value)"></select>
+        <button class="btn btn-outline prod-refresh" onclick="loadReportMonthlyStats(reportMonthlySelectedMonth)">↻ Làm mới tháng</button>
+      </div>
+    </div>
+    <div id="reportMonthlyBody">
+      <div class="empty-state">Đang tải thống kê tháng...</div>
+    </div>
+  </div>
 
   <!-- Filter bar -->
   <div class="filter-bar">
@@ -611,6 +638,7 @@
   let pendingRejectId = null;
   let reportFilter = '';
   let reportsLoaded = false;
+  let reportMonthlySelectedMonth = '';
   let productionStats = null;
   let prodSelectedDate = '';
   let prodSelectedEmployee = null;
@@ -642,9 +670,9 @@
     ['stats.view_daily', 'Xem thống kê ngày'],
     ['stats.view_production', 'Xem thống kê sản xuất'],
     ['stats.view_monthly', 'Xem thống kê tháng'],
-    ['error_reports.submit', 'Gửi báo lỗi'],
-    ['error_reports.view_own', 'Xem báo lỗi của mình'],
-    ['error_reports.review', 'Duyệt báo lỗi'],
+    ['error_reports.submit', 'Gửi báo lỗi kỹ thuật'],
+    ['error_reports.view_own', 'Xem báo lỗi kỹ thuật của mình'],
+    ['error_reports.review', 'Duyệt báo lỗi kỹ thuật'],
     ['error_codes.manage', 'Quản lý mã lỗi'],
     ['delay_reports.submit', 'Gửi báo trễ'],
     ['delay_reports.view_active', 'Xem đơn báo trễ'],
@@ -663,7 +691,7 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     btn.classList.add('active');
-    if (name === 'reports' && !reportsLoaded) { reportsLoaded = true; loadReportStats(); loadReports(); }
+    if (name === 'reports' && !reportsLoaded) { reportsLoaded = true; loadReportStats(); loadReportMonthlyStats(); loadReports(); }
     if (name === 'errorcodes') loadErrorCodes();
     if (name === 'system') refreshAllStats();
   }
@@ -685,6 +713,10 @@
 
     loadUsers();
     loadPendingCount();
+    reportsLoaded = true;
+    loadReportStats();
+    loadReportMonthlyStats();
+    loadReports();
     setInterval(loadPendingCount, 30000);
   }
 
@@ -953,6 +985,25 @@
     }[ch]));
   }
 
+  function imageRefs(report) {
+    if (Array.isArray(report.hinh_anh_list)) return report.hinh_anh_list;
+    if (!report.hinh_anh) return [];
+    const raw = String(report.hinh_anh);
+    if (raw.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+      } catch(e) {}
+    }
+    return [raw];
+  }
+
+  function imageUrl(ref) {
+    if (!ref) return '';
+    if (ref.startsWith('http') || ref.startsWith('/')) return ref;
+    return `/uploads/error-images/${encodeURIComponent(ref)}`;
+  }
+
   function fmtNumber(value) {
     return new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
   }
@@ -997,10 +1048,60 @@
     } catch(e) {}
   }
 
+  function renderReportMonthlyRows(rows) {
+    if (!rows?.length) return '<div class="report-monthly-row"><span>Không có dữ liệu</span><strong>0</strong></div>';
+    return rows.map(row => `<div class="report-monthly-row"><span title="${esc(row.name)}">${esc(row.name)}</span><strong>${fmtNumber(row.n)}</strong></div>`).join('');
+  }
+
+  async function loadReportMonthlyStats(month = '') {
+    const body = document.getElementById('reportMonthlyBody');
+    const select = document.getElementById('reportMonthlySelect');
+    const periodEl = document.getElementById('reportMonthlyPeriod');
+    if (!body || !select || !periodEl) return;
+    body.innerHTML = '<div class="empty-state">Đang tải thống kê tháng...</div>';
+    try {
+      const qs = month ? `?month=${encodeURIComponent(month)}` : '';
+      const res = await fetch(`/api/error-reports/monthly-stats${qs}`);
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        body.innerHTML = `<div class="empty-state">Không tải được thống kê tháng${d.error ? ': ' + esc(d.error) : ''}</div>`;
+        return;
+      }
+      reportMonthlySelectedMonth = d.month || '';
+      select.innerHTML = (d.months || []).map(item => {
+        const p = item.period || {};
+        return `<option value="${esc(item.billing_month)}"${item.billing_month === reportMonthlySelectedMonth ? ' selected' : ''}>
+          ${esc(p.label || fmtMonth(item.billing_month))} (${esc(p.range || '')})
+        </option>`;
+      }).join('');
+
+      const p = d.period || {};
+      const prev = d.previous_period || {};
+      const s = d.summary || {};
+      periodEl.textContent = `${p.label || reportMonthlySelectedMonth}: ${p.billing_start || ''} - ${p.billing_end || ''} · so với ${prev.label || 'kỳ trước'}`;
+      body.innerHTML = `
+        <div class="monthly-summary">
+          <div class="monthly-kpi"><div class="monthly-kpi-label">Tổng báo lỗi</div><div class="monthly-kpi-value">${fmtNumber(s.total)}</div></div>
+          <div class="monthly-kpi"><div class="monthly-kpi-label">Đã xác nhận</div><div class="monthly-kpi-value">${fmtNumber(s.confirmed)} (${s.confirmed_rate || 0}%)</div></div>
+          <div class="monthly-kpi"><div class="monthly-kpi-label">So với kỳ trước</div><div class="monthly-kpi-value">${(s.change_pct || 0) > 0 ? '+' : ''}${s.change_pct || 0}%</div></div>
+          <div class="monthly-kpi"><div class="monthly-kpi-label">Giờ duyệt TB</div><div class="monthly-kpi-value">${s.avg_review_hours ?? '—'}</div></div>
+        </div>
+        <div class="report-monthly-cols">
+          <div class="report-monthly-list"><div class="report-monthly-title">Theo công đoạn</div>${renderReportMonthlyRows(d.by_stage)}</div>
+          <div class="report-monthly-list"><div class="report-monthly-title">Top mã lỗi</div>${renderReportMonthlyRows(d.top_errors)}</div>
+          <div class="report-monthly-list"><div class="report-monthly-title">Theo người báo</div>${renderReportMonthlyRows(d.by_user)}</div>
+        </div>
+      `;
+    } catch(e) {
+      body.innerHTML = `<div class="empty-state">Lỗi kết nối: ${esc(e.message)}</div>`;
+    }
+  }
+
   async function loadReports() {
     const el = document.getElementById('reportsList');
     el.innerHTML = '<div class="empty-state">Đang tải...</div>';
     loadReportStats();
+    loadReportMonthlyStats(reportMonthlySelectedMonth);
     try {
       const url = reportFilter ? `/api/error-reports?trang_thai=${reportFilter}` : '/api/error-reports';
       const r = await fetch(url);
@@ -1012,6 +1113,10 @@
         const sc = stageClass(rep.cong_doan);
         const statusLabel = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', rejected: 'Từ chối' }[rep.trang_thai] || rep.trang_thai;
 
+        const photos = imageRefs(rep).map(imageUrl).filter(Boolean);
+        const photoHtmlMulti = photos.length
+          ? `<div class="rc-photo-grid">${photos.map(imgUrl => `<img src="${esc(imgUrl)}" alt="" onclick="openLightbox('${esc(imgUrl)}')">`).join('')}</div>`
+          : '';
         let imgUrl = null;
         if (rep.hinh_anh) {
           const img = esc(rep.hinh_anh);
@@ -1045,7 +1150,7 @@
             <div class="rc-meta"><div>${esc(rep.submitted_by || '?')}</div><div>${fmtDate(rep.submitted_at)}</div></div>
           </div>
           <div class="rc-mid">
-            ${photoHtml}
+            ${photoHtmlMulti}
             <div class="rc-info">
               ${rep.mo_ta ? `<div class="rc-mo_ta">${esc(rep.mo_ta)}</div>` : ''}
               ${reviewedHtml}

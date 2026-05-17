@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Báo lỗi — ASIA LAB</title>
+  <title>Báo lỗi kỹ thuật - ASIA LAB</title>
   <style>
     :root {
       --bg-primary: #7a9b8a;
@@ -86,8 +86,9 @@
     .photo-btn:active { background: #f5e6e3; }
     #hinh_anh { display: none; }
 
-    .preview-wrap { margin-top: 10px; display: none; position: relative; }
-    .preview-wrap img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; border: 1.5px solid var(--border-card); }
+    .preview-wrap { margin-top: 10px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .preview-wrap img { width: 100%; height: 92px; object-fit: cover; border-radius: 8px; border: 1.5px solid var(--border-card); }
+    .preview-item { position: relative; }
     .preview-remove {
       position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55);
       color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px;
@@ -199,7 +200,7 @@
 
 <div class="header">
   <a class="header-back" href="/mobile">← Danh sách</a>
-  <span class="header-title">⚠ Báo lỗi</span>
+  <span class="header-title">⚠ Báo lỗi kỹ thuật</span>
   <span id="userBadge" style="font-size:11px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;"></span>
 </div>
 
@@ -248,12 +249,9 @@
       <label class="photo-btn" for="hinh_anh">
         📷 Chụp ảnh / Chọn ảnh
       </label>
-      <input type="file" id="hinh_anh" accept="image/*" capture="environment">
+      <input type="file" id="hinh_anh" accept="image/*" capture="environment" multiple>
 
-      <div class="preview-wrap" id="previewWrap">
-        <img id="imgPreview" src="" alt="Ảnh đã chọn">
-        <button type="button" class="preview-remove" onclick="removeImage()">✕</button>
-      </div>
+      <div class="preview-wrap" id="previewWrap"></div>
     </div>
 
     <div class="card">
@@ -268,7 +266,7 @@
         <span class="vh-item vh-bad" id="vh_code">✗ Mã lỗi</span>
         <span class="vh-item vh-bad" id="vh_img">✗ Hình ảnh</span>
       </div>
-      <button type="submit" class="btn-submit" id="submitBtn" disabled>Xác nhận & Gửi báo lỗi</button>
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>Xác nhận & Gửi báo lỗi kỹ thuật</button>
       <div class="err-msg" id="err_submit" style="text-align:center;margin-top:8px;"></div>
     </div>
 
@@ -290,13 +288,18 @@
 
 <script>
   let searchTimeout = null;
+  let selectedImageFiles = [];
+  const MAX_REPORT_IMAGES = 6;
+  document.title = 'Báo lỗi kỹ thuật - ASIA LAB';
+  document.querySelector('.header-title').textContent = 'Báo lỗi kỹ thuật';
+  document.getElementById('submitBtn').textContent = 'Xác nhận & Gửi báo lỗi kỹ thuật';
 
   // ── Live validation ──────────────────────────────────
   function validateForm() {
     const ma_dh        = document.getElementById('ma_dh').value.trim();
     const target_stage = document.getElementById('target_stage').value;
     const error_code   = document.getElementById('error_code_id').value;
-    const has_img      = !!document.getElementById('hinh_anh').files[0];
+    const has_img      = selectedImageFiles.length > 0;
 
     const setItem = (id, ok, label) => {
       const el = document.getElementById(id);
@@ -430,21 +433,34 @@
 
   // Image preview + validation
   document.getElementById('hinh_anh').addEventListener('change', function() {
-    const file = this.files[0];
-    if (!file) { validateForm(); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('imgPreview').src = e.target.result;
-      document.getElementById('previewWrap').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    const nextFiles = Array.from(this.files);
+    selectedImageFiles = selectedImageFiles.concat(nextFiles).slice(0, MAX_REPORT_IMAGES);
+    this.value = '';
+    renderImagePreviews();
     validateForm();
   });
 
-  function removeImage() {
+  function renderImagePreviews() {
+    const previewWrap = document.getElementById('previewWrap');
+    previewWrap.innerHTML = '';
+    selectedImageFiles.forEach((file, index) => {
+      const url = URL.createObjectURL(file);
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+      item.innerHTML = `
+        <img src="${url}" alt="">
+        <button type="button" class="preview-remove" onclick="removeImage(${index})">✕</button>
+      `;
+      previewWrap.appendChild(item);
+    });
+    previewWrap.style.display = selectedImageFiles.length ? 'grid' : 'none';
+  }
+
+  function removeImage(index = null) {
+    if (index === null) selectedImageFiles = [];
+    else selectedImageFiles.splice(index, 1);
     document.getElementById('hinh_anh').value = '';
-    document.getElementById('imgPreview').src = '';
-    document.getElementById('previewWrap').style.display = 'none';
+    renderImagePreviews();
     validateForm();
   }
 
@@ -525,14 +541,15 @@
       fd.append('ma_dh', ma_dh);
       fd.append('error_code_id', error_code_id);
       fd.append('mo_ta', document.getElementById('mo_ta').value.trim());
-      const imgFile = document.getElementById('hinh_anh').files[0];
-      if (imgFile) fd.append('hinh_anh', imgFile);
+      selectedImageFiles.forEach(file => {
+        fd.append('hinh_anh', file);
+      });
 
       const r = await fetch('/api/error-reports', { method: 'POST', body: fd });
       const d = await r.json();
 
       if (d.ok) {
-        showToast('✅ Đã báo lỗi thành công!');
+        showToast('✅ Đã báo lỗi kỹ thuật thành công!');
         document.getElementById('reportForm').reset();
         removeImage();
         document.getElementById('target_stage').value = '';
@@ -549,7 +566,7 @@
       errEl.classList.add('show');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Xác nhận & Gửi báo lỗi';
+      btn.textContent = 'Xác nhận & Gửi báo lỗi kỹ thuật';
     }
   }
 </script>

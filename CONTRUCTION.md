@@ -1,6 +1,6 @@
 # ASIA LAB Construction Notes
 
-Last updated: 2026-05-14
+Last updated: 2026-05-17
 
 Tai lieu nay mo ta day du cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
 
@@ -25,7 +25,7 @@ Production workspace. Khong phai sandbox.
 - Node 18+ voi `express` v5.2, `better-sqlite3` v12.9, `bcrypt` v6, `multer`, `sharp`, `xlsx`, `dotenv`, `@aws-sdk/client-s3`, `express-rate-limit`.
 - Python 3.x voi `pandas`, `openpyxl`, `xlrd`, `requests`, `playwright`, `pywinauto`, `pywin32`.
 - SQLite voi WAL mode.
-- Cloudflare R2 (S3-compatible) cho luu anh bao loi.
+- Cloudflare R2 (S3-compatible) cho luu anh bao loi ky thuat va bao tre tien do.
 - PM2 cluster mode 4 instance cho Node + 1 instance cho auto-scrape Python.
 - Caddy reverse proxy `asiakanban.com` ve `127.0.0.1:3000`.
 
@@ -141,7 +141,7 @@ module.exports = {
 #### Services (`src/services/`)
 - `session.service.js` (~101 dong) — `genToken()` (crypto 32 bytes hex), `createSession/getSession/deleteSession`, TTL 7 ngay, cleanup moi 1h.
 - `scraper.service.js` (~277 dong) — spawn `run_scrape.py`, queue management, file watcher debounce 3s, spawn `keylab_exporter.py --once` va `--check`, callback `setResetCallback`/`setCloseDBCallback`.
-- `image.service.js` (~149 dong) — multer R2Storage custom, `sharp` compress (rotate, resize fit-inside 1600x1600, webp 75%), `uploadImage`, `deleteErrorImage` (R2 truoc, fallback local), `cleanupExpiredErrorImages` (90 ngay), schedule 24h.
+- `image.service.js` (~189 dong) — multer R2Storage custom, `sharp` compress (rotate, resize fit-inside 1600x1600, webp 75%), upload nhieu anh toi da `REPORT_IMAGE_LIMIT`, helper JSON image refs, `uploadImage`, `deleteErrorImage` (R2 truoc, fallback local), `cleanupExpiredErrorImages` (90 ngay), schedule 24h.
 - `r2.service.js` (~15 dong) — S3Client factory (region 'auto'), export `PutObjectCommand`, `DeleteObjectCommand`.
 
 #### Routes (`src/routes/`)
@@ -151,7 +151,7 @@ module.exports = {
 - `admin.routes.js` (~394 dong) — admin panel + user CRUD + production stats + monthly stats.
 - `scraper.routes.js` (~79 dong) — scrape-status, auto-scrape, keylab-*.
 - `analytics.routes.js` (~211 dong) — KTV stats, daily, db stats, trend, customers, history endpoints.
-- `errorReports.routes.js` (~193 dong) — bao loi flow.
+- `errorReports.routes.js` — bao loi ky thuat, multi-image upload, monthly stats.
 - `feedback.routes.js` (~90 dong) — feedback types va feedbacks CRUD.
 - `users.routes.js` (~135 dong) — `/user`, `/api/user/pending-orders`.
 - `stats.routes.js` (~155 dong) — `/api/stats/daily` (chip mobile).
@@ -159,6 +159,7 @@ module.exports = {
 
 #### Utilities (`src/utils/`)
 - `phucHinh.js` (~108 dong) — classify zirc/kl/vnr/hon/inmau/tam, room routing, `hasInMauHam`, `getRoomWithProductionNote`.
+- `reportStats.js` — build thong ke thang cho bao loi ky thuat va bao tre, dung ky 26 thang truoc den 25 thang hien thi.
 
 ### Python script (root)
 - `auto_scrape_headless.py` — daemon 24/7 quet Excel moi, spawn parallel scrape + notes.
@@ -171,7 +172,7 @@ module.exports = {
 - `import_history_data.py` (neu co) — bulk import lich su vao `tien_do_history`.
 
 ### Frontend HTML (root)
-- `login.html`, `dashboard.html`, `dashboard_mobile_terracotta.html`, `admin.html`, `upload.html`, `analytics.html`, `munger.html`, `bao_loi.html`, `error_reports.html`.
+- `login.html`, `dashboard.html`, `dashboard_mobile_terracotta.html`, `admin.html`, `upload.html`, `analytics.html`, `munger.html`, `bao_loi.html`, `error_reports.html`, `bao_tre.html`, `delay_reports.html`.
 
 ### Data va runtime
 - `labo_data.db` — SQLite chinh + `labo_data.db-wal` + `labo_data.db-shm`.
@@ -179,7 +180,7 @@ module.exports = {
 - `Data/` — file scraped trung gian (`*_scraped.json`, `*_scraped.xlsx`, temp `.xlsx` khi convert .xls).
 - `File_sach/` — Excel final sau `labo_cleaner.py` (`*_final.xlsx`).
 - `Data_thang/` — archive theo thang.
-- `uploads/error-images/` — anh loi local cu (legacy hoac fallback khi khong co R2).
+- `uploads/error-images/` — anh loi local cu/fallback va file legacy; anh moi cua bao loi ky thuat/bao tre uu tien R2.
 - `logs/` — PM2 logs.
 - `.env` — credentials runtime (R2, LABO_USER*, IMAGE_*).
 - `users.json` — user accounts (passwordHash bcrypt, role, cong_doan, can_view_stats).
@@ -409,7 +410,7 @@ Index `idx_sessions_expires(expires)`. Cleanup moi 1h.
 | error_code_id | INTEGER | FK error_codes.id |
 | ma_loi_text | TEXT | Free text fallback |
 | cong_doan | TEXT | |
-| hinh_anh | TEXT | R2 URL hoac local path |
+| hinh_anh | TEXT | JSON array image refs; legacy single URL/path van duoc parse |
 | mo_ta | TEXT | |
 | trang_thai | TEXT DEFAULT 'pending' | pending/confirmed/rejected |
 | submitted_by | TEXT | |
@@ -417,6 +418,11 @@ Index `idx_sessions_expires(expires)`. Cleanup moi 1h.
 | reviewed_by | TEXT | |
 | reviewed_at | TEXT | |
 | ghi_chu_admin | TEXT | |
+
+Image refs:
+- Backend moi ghi `hinh_anh` bang JSON array de ho tro nhieu anh.
+- Frontend va API van parse duoc du lieu cu dang single URL/path.
+- Anh moi upload qua R2 bang `uploadImage`; neu validation sau upload fail thi server xoa cac anh vua upload.
 
 ### Bang `feedback_types` va `feedbacks`
 
@@ -829,6 +835,7 @@ Historical (cho `analytics.html`):
 | POST | `/api/error-reports` | requireAuth | FormData `ma_dh, error_code_id, mo_ta, hinh_anh` | `{ok}` (uploads anh sang R2) |
 | GET | `/api/error-reports` | requireAuth | `?trang_thai=&cong_doan=` | List reports (non-admin auto filter `submitted_by`) |
 | GET | `/api/error-reports/stats` | requireAuth | — | Aggregate by trang_thai/cong_doan/submitted_by/ma_loi_text |
+| GET | `/api/error-reports/monthly-stats` | `error_reports.review` | `?month=YYYY-MM` | Ky 26-25, summary/by_stage/top_errors/by_user |
 | PATCH | `/api/error-reports/:id/confirm` | requireAdmin | — | `{ok}` |
 | PATCH | `/api/error-reports/:id/reject` | requireAdmin | `{ghi_chu_admin}` | `{ok}` |
 
@@ -879,6 +886,10 @@ KPI shapes:
 - Barcode scanner: ZXing UMD CDN `@zxing/library@0.19.2`, `facingMode: 'environment'`, scan → `searchOrders(value, {autoSelectExact: true})`.
 - FAB button "Quet chuyen qua [room khac]" cho user co cong_doan (sap/CAD-CAM): scan barcode → POST `/api/orders/route` target = `getTransferTargetRoom(myRoom)`.
 
+Mobile WIP:
+- Menu admin co tab/button `WIP cong doan`: mo panel full-screen rieng tren mobile, dung `allOrders` hien co.
+- WIP mobile bam theo desktop pipeline: `Tat ca WIP` = don con bat ky cong doan chua xong; tung cong doan = don co stage do chua `x` va khong skip. Card WIP click mo modal chi tiet don.
+
 ### admin.html
 - Tab Users:
   - Liet ke + create + delete + set cong_doan + reset password + toggle `can_view_stats`.
@@ -887,7 +898,8 @@ KPI shapes:
   - CRUD: mã lỗi, tên lỗi, công đoạn, mô tả.
 - Tab Error Reports:
   - Filter: all / pending / confirmed / rejected.
-  - Card: ma_dh + stage badge + error code + status badge + meta + photo thumbnail + mo ta + reviewed info.
+  - Thong ke thang bao loi ky thuat theo ky 26-25: tong, confirmed rate, so voi ky truoc, gio duyet TB, by_stage/top_errors/by_user.
+  - Card: ma_dh + stage badge + error code + status badge + meta + multi-photo thumbnails + mo ta + reviewed info.
   - Approve: PATCH `/confirm`. Reject: modal note → PATCH `/reject`.
   - Lightbox: click photo → fullscreen, click outside → close.
 - Tab Production Stats (3 ngay):
@@ -916,15 +928,17 @@ KPI shapes:
 - Default range: 30 ngay (billing 26-25). Options: 7, 30, 60.
 
 ### bao_loi.html
-- Field: ma_dh (autocomplete + barcode scan), cong_doan (dropdown allowed stages), error_code (dropdown filtered by cong_doan), hinh_anh (file input + preview), ghi_chu.
+- Tieu de/hien thi la "Bao loi ky thuat".
+- Field: ma_dh (autocomplete + barcode scan), cong_doan (dropdown allowed stages), error_code (dropdown filtered by cong_doan), hinh_anh (file input multiple + thumbnail preview), ghi_chu.
 - Order autocomplete: input >=2 chars → debounce 200ms → `GET /api/orders/search` → dropdown.
 - Submit FormData → POST `/api/error-reports`. Success → toast, reset form.
 
 ### error_reports.html
 - Stats cards: Total / Pending / Confirmed / Rejected.
+- Monthly stats theo ky 26-25.
 - Stage breakdown chips.
 - Filter buttons: All / Pending / Confirmed / Rejected.
-- Cards: photo thumbnail 100×80px, lightbox.
+- Cards: grid thumbnail tat ca anh, lightbox.
 - Approve / Reject buttons (chi hien khi pending).
 
 ### Shared technical patterns
@@ -1108,11 +1122,12 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 
 ---
 
-## 12. Bao loi, image va R2
+## 12. Bao loi ky thuat, bao tre, image va R2
 
-### Bao loi schema
+### Bao loi ky thuat schema
 - `error_codes`: danh muc (id, ma_loi, ten_loi, cong_doan, mo_ta, active).
-- `error_reports`: bao loi (ma_dh, error_code_id, cong_doan, hinh_anh, mo_ta, trang_thai, submitted_by/at, reviewed_by/at, ghi_chu_admin).
+- `error_reports`: bao loi ky thuat (ma_dh, error_code_id, cong_doan, hinh_anh, mo_ta, trang_thai, submitted_by/at, reviewed_by/at, ghi_chu_admin).
+- `hinh_anh` moi la JSON array image refs; code van doc duoc legacy single URL/path.
 
 ### Role logic (`getAllowedStages(username, role, cong_doan)`)
 - Admin + QC: thay tat ca cong_doan.
@@ -1120,9 +1135,15 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 - User `dap`/`mai`: thay cong doan truoc do + dap/mai theo flow chuoi kim loai/zirconia.
 - User `sap`/`CAD/CAM`/`suon`: thay cong doan truoc do theo flow kim loai/zirconia.
 
+### Bao tre cong doan
+- `delay_reports.cong_doan_bao_tre` la cong doan user muon bao tre, khong nhat thiet bang cong doan dang lam.
+- API `/api/delay-reports/allowed-stages` tra danh sach cong doan duoc bao theo user.
+- Rule: user chi bao cong doan truoc hoac song song voi cong doan cua minh. `sap` song song `CAD/CAM`; `dap` song song `mai`.
+- Anh bao tre cung dung R2 va JSON array refs nhu bao loi ky thuat.
+
 ### Image upload
 - Form field: `hinh_anh`.
-- Multer single file, gioi han **10 MB**.
+- Multer array, gioi han **10 MB/file**, toi da `REPORT_IMAGE_LIMIT` anh/report.
 - Mime check: chi chap nhan `image/*`.
 - `sharp` xu ly:
   - Auto rotate (EXIF).
@@ -1130,6 +1151,7 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   - WebP encode `IMAGE_WEBP_QUALITY` (default 75).
 - Upload R2 via `R2_*` env config.
 - R2 URL pattern: `${R2_PUBLIC_URL}/<filename>.webp`.
+- Route cleanup se xoa anh da upload neu validation sau upload bi fail.
 
 ### R2 client (`src/services/r2.service.js`)
 - AWS SDK v3 `S3Client` voi `region: 'auto'`.
@@ -1139,7 +1161,7 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 
 ### Image cleanup
 - `startImageCleanupSchedule()` chay luc startup + setInterval 24h.
-- `cleanupExpiredErrorImages()` query `error_reports` voi `submitted_at < now - IMAGE_RETENTION_DAYS`.
+- `cleanupExpiredErrorImages()` query ca `error_reports` va `delay_reports` voi `submitted_at < now - IMAGE_RETENTION_DAYS`.
 - Default retention 90 ngay.
 - Delete: try R2 truoc, fallback `fs.unlink` local.
 - Clear `hinh_anh` field trong DB.
@@ -1179,6 +1201,15 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 - Source: `tien_do_history` (fallback `tien_do`+`don_hang`).
 - Group: billing_month + cong_doan + ten_ktv.
 - Response: `{month, months, period, data: [{cong_doan, ten_ktv, orders_completed, total_sl, type_breakdown, entries}]}`.
+
+### Report monthly stats (ky 26-25)
+- Utility: `src/utils/reportStats.js`.
+- Technical errors: `GET /api/error-reports/monthly-stats?month=YYYY-MM`, permission `error_reports.review`.
+- Delay reports: `GET /api/delay-reports/monthly-stats?month=YYYY-MM`, permission `delay_reports.review`.
+- Billing month label `YYYY-MM` la thang ket thuc ky; vi du `2026-05` = tu `2026-04-26` den `2026-05-25`.
+- Bao loi ky thuat response gom `summary`, `by_stage`, `top_errors`, `by_user`, `months`, `period`, `previous_period`.
+- Bao tre response gom `summary`, `by_stage`, `top_reasons`, `by_user`, `months`, `period`, `previous_period`.
+- UI hien o `error_reports.html`, `delay_reports.html`, va tab Bao loi ky thuat trong `admin.html`.
 
 ### Munger metrics
 - API: `GET /api/munger/metrics?days=30`.
@@ -1586,9 +1617,9 @@ Bang `delay_reports`:
 | id | INTEGER PK | |
 | ma_dh | TEXT NOT NULL | Ma don bi bao tre |
 | yc_hoan_thanh | TEXT | Snapshot deadline tai luc bao |
-| cong_doan_bao_tre | TEXT | Cong doan/user dang bao |
+| cong_doan_bao_tre | TEXT | Cong doan muon bao tre |
 | nguyen_nhan | TEXT | Nguyen nhan user nhap |
-| hinh_anh | TEXT | Ten file local `.webp` |
+| hinh_anh | TEXT | JSON array image refs R2; legacy local file van parse duoc |
 | trang_thai | TEXT DEFAULT `pending` | `pending` / `confirmed` / `rejected` |
 | submitted_by | TEXT | User gui |
 | submitted_at | TEXT | datetime local |
@@ -1599,6 +1630,8 @@ Bang `delay_reports`:
 Indexes:
 - `idx_delay_reports_ma_dh(ma_dh)`
 - `idx_delay_reports_status(trang_thai)`
+- `idx_delay_reports_submitted_at(submitted_at)`
+- `idx_delay_reports_stage(cong_doan_bao_tre)`
 
 Duplicate rule:
 - Khong cho tao bao tre moi neu cung `ma_dh` da co `pending` hoac `confirmed`.
@@ -1611,11 +1644,13 @@ File: `src/routes/delayReports.routes.js`.
 | Method | Path | Permission | Ghi chu |
 |---|---|---|---|
 | GET | `/bao-tre` | `delay_reports.submit` | Serve `bao_tre.html` |
-| POST | `/api/delay-reports` | `delay_reports.submit` | FormData `ma_dh`, `nguyen_nhan`, `hinh_anh`; lookup barcode/ma_dh |
+| GET | `/api/delay-reports/allowed-stages` | `delay_reports.submit` | Tra danh sach cong doan user duoc bao |
+| POST | `/api/delay-reports` | `delay_reports.submit` | FormData `ma_dh`, `cong_doan_bao_tre`, `nguyen_nhan`, `hinh_anh[]`; lookup barcode/ma_dh |
 | GET | `/api/delay-reports/active` | `delay_reports.view_active` hoac `delay_reports.review` | User thuong chi nhan `{ma_dh, trang_thai}`; reviewer nhan full data |
 | GET | `/delay-reports` | `delay_reports.review` | Serve `delay_reports.html` |
 | GET | `/api/delay-reports` | `delay_reports.review` | List full, filter `?trang_thai=` |
 | GET | `/api/delay-reports/stats` | `delay_reports.review` | Aggregate + active recent |
+| GET | `/api/delay-reports/monthly-stats` | `delay_reports.review` | Ky 26-25, summary/by_stage/top_reasons/by_user |
 | PATCH | `/api/delay-reports/:id/confirm` | `delay_reports.review` | Confirm |
 | PATCH | `/api/delay-reports/:id/reject` | `delay_reports.review` | Reject + `ghi_chu_admin` |
 
@@ -1626,14 +1661,18 @@ File `bao_tre.html`:
 - Co quet barcode bang ZXing.
 - Sau khi scan/manual input, goi `/api/orders/by-barcode/:code`.
 - Hien ma don, khach hang, benh nhan, phuc hinh, `yc_hoan_thanh`.
-- Bat buoc nhap `nguyen_nhan` va upload hinh.
+- Hien them dropdown `cong_doan_bao_tre`.
+- Dieu kien cong doan: user chi bao duoc cong doan truoc hoac song song voi cong doan cua minh; rieng cap song song `sáp`/`CAD/CAM` va `đắp`/`mài` duoc chon qua lai.
+- Bat buoc nhap `nguyen_nhan` va upload hinh; ho tro nhieu anh, hien thumbnail truoc khi gui.
 - Submit FormData len `/api/delay-reports`.
 
 File `delay_reports.html`:
 - Trang reviewer cho user co `delay_reports.review`.
 - Stats: total/pending/confirmed/rejected.
+- Thong ke thang theo ky 26-25: tong bao tre, active, so voi ky truoc, top cong doan, top ly do, top nguoi bao.
 - Filter theo trang thai.
 - Card hien anh, nguyen nhan, submitter, deadline snapshot.
+- Hien tat ca thumbnail anh da upload, click de xem lightbox.
 - Action: confirm/reject.
 
 Dashboard:
@@ -1642,19 +1681,18 @@ Dashboard:
 - User co `delay_reports.review` thay banner so don dang bi bao tre; click vao `/delay-reports`.
 - User co `delay_reports.submit` thay menu/link gui bao tre `/bao-tre`.
 
-### Anh bao tre
+### Anh bao loi ky thuat va bao tre
 
-Bao loi cu van upload R2 qua `uploadImage`.
-
-Bao tre moi dung local upload:
-- `uploadLocalImage` dung memoryStorage.
-- `saveCompressedLocalImage(file, maDh, 'delay')` nen bang `sharp`.
+Hai flow bao loi ky thuat va bao tre deu dung chung pipeline `uploadImage`:
+- `multer` memoryStorage + custom R2 storage.
 - Anh duoc rotate theo EXIF, resize theo `.env` `IMAGE_MAX_WIDTH/HEIGHT`, convert WebP voi `IMAGE_WEBP_QUALITY`.
-- Luu tai `uploads/error-images/`.
-- DB luu ten file, vi du `delay_260504013_1778807535708.webp`.
+- Upload len Cloudflare R2, DB luu JSON array refs trong `hinh_anh`.
+- `REPORT_IMAGE_LIMIT` gioi han so anh moi report; UI hien thumbnail cua tat ca anh da chon/da upload.
+- Neu validate fail sau khi da upload, route goi `deleteErrorImage()` de don R2 objects vua tao.
+- Du lieu cu dang single URL/path hoac local filename van duoc parse de hien thi.
 
 Static serve:
-- `/uploads/error-images/:file` van duoc protect bang `requireAuth` trong `src/middleware/security.js`.
+- `/uploads/error-images/:file` van duoc protect bang `requireAuth` trong `src/middleware/security.js` cho file legacy/fallback.
 
 Cleanup:
 - `cleanupExpiredErrorImages()` quet ca `error_reports` va `delay_reports`, xoa ref sau `IMAGE_RETENTION_DAYS`.
@@ -1698,6 +1736,15 @@ Da chuyen nhieu route tu role hardcode sang permission:
 - `ghi_chu`
 
 ### Files them/sua trong phien
+
+Cap nhat 2026-05-17:
+- `src/utils/reportStats.js` them moi: shared monthly stats cho bao loi ky thuat/bao tre theo ky 26-25.
+- `src/routes/errorReports.routes.js`: multi-image R2 upload, JSON image refs, monthly-stats endpoint.
+- `src/routes/delayReports.routes.js`: multi-image R2 upload, dropdown cong doan muon bao, allowed-stages endpoint, monthly-stats endpoint.
+- `src/services/image.service.js`: parse/stringify image refs, `REPORT_IMAGE_LIMIT`, cleanup refs nhieu anh.
+- `src/db/migrations.js`: index phuc vu thong ke thang cho `error_reports` va `delay_reports`.
+- `bao_loi.html`, `bao_tre.html`, `error_reports.html`, `delay_reports.html`, `admin.html`: nhan "bao loi ky thuat", multi-image thumbnails, monthly stats UI.
+- `dashboard_mobile_terracotta.html`: menu admin `WIP cong doan` va panel WIP mobile.
 
 Them moi:
 - `bao_tre.html`

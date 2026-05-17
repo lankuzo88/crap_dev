@@ -1,6 +1,7 @@
 'use strict';
 const fs    = require('fs');
 const path  = require('path');
+const crypto = require('crypto');
 const sharp = require('sharp');
 const multer = require('multer');
 const { r2Client, PutObjectCommand, DeleteObjectCommand } = require('./r2.service');
@@ -9,6 +10,7 @@ const env   = require('../config/env');
 const { BASE_DIR, ERROR_IMAGE_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+const REPORT_IMAGE_LIMIT = 6;
 
 async function compressErrorImage(inputBuffer) {
   return sharp(inputBuffer, { failOn: 'none' })
@@ -26,7 +28,8 @@ async function compressErrorImage(inputBuffer) {
 class R2Storage {
   _handleFile(req, file, cb) {
     const ma_dh = (req.body?.ma_dh || 'unknown').replace(/[^a-zA-Z0-9\-]/g, '_');
-    const key   = `error-images/${ma_dh}_${Date.now()}.webp`;
+    const suffix = crypto.randomBytes(4).toString('hex');
+    const key   = `error-images/${ma_dh}_${Date.now()}_${suffix}.webp`;
     const chunks = [];
 
     file.stream.on('data', chunk => chunks.push(chunk));
@@ -61,14 +64,34 @@ class R2Storage {
 const uploadImage = multer({
   storage: new R2Storage(),
   fileFilter: (req, file, cb) => { cb(null, file.mimetype.startsWith('image/')); },
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024, files: REPORT_IMAGE_LIMIT },
 });
 
 const uploadLocalImage = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => { cb(null, file.mimetype.startsWith('image/')); },
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024, files: REPORT_IMAGE_LIMIT },
 });
+
+function parseImageRefs(imageRef) {
+  if (!imageRef) return [];
+  if (Array.isArray(imageRef)) return imageRef.filter(Boolean).map(String);
+  const raw = String(imageRef).trim();
+  if (!raw) return [];
+  if (raw.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean).map(String);
+    } catch {}
+  }
+  return [raw];
+}
+
+function stringifyImageRefs(imageRefs) {
+  const refs = parseImageRefs(imageRefs);
+  if (!refs.length) return null;
+  return JSON.stringify(refs);
+}
 
 async function saveCompressedLocalImage(file, maDh, prefix = 'delay') {
   if (!file?.buffer) throw new Error('Image file is empty');
@@ -146,10 +169,14 @@ async function cleanupExpiredErrorImages() {
 
   for (const row of rows) {
     try {
-      const removed = await deleteErrorImage(row.hinh_anh);
+      const refs = parseImageRefs(row.hinh_anh);
+      let rowDeleted = 0;
+      for (const ref of refs) {
+        if (await deleteErrorImage(ref)) rowDeleted++;
+      }
       if (row.source_table === 'delay_reports') clearDelayRef.run(row.id);
       else clearErrorRef.run(row.id);
-      if (removed) deleted++;
+      deleted += rowDeleted;
       cleared++;
     } catch (err) {
       failed++;
@@ -171,6 +198,9 @@ module.exports = {
   uploadImage,
   uploadLocalImage,
   saveCompressedLocalImage,
+  parseImageRefs,
+  stringifyImageRefs,
+  REPORT_IMAGE_LIMIT,
   getR2KeyFromImageRef,
   getLocalErrorImagePath,
   deleteErrorImage,

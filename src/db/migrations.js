@@ -33,6 +33,10 @@ function initErrorTables() {
       reviewed_at TEXT,
       ghi_chu_admin TEXT
     );
+    CREATE INDEX IF NOT EXISTS idx_error_reports_submitted_at ON error_reports(submitted_at);
+    CREATE INDEX IF NOT EXISTS idx_error_reports_status ON error_reports(trang_thai);
+    CREATE INDEX IF NOT EXISTS idx_error_reports_stage ON error_reports(cong_doan);
+    CREATE INDEX IF NOT EXISTS idx_error_reports_code ON error_reports(error_code_id);
   `);
   log('✅ Error tables initialized');
 }
@@ -57,6 +61,8 @@ function initDelayReportTables() {
     );
     CREATE INDEX IF NOT EXISTS idx_delay_reports_ma_dh ON delay_reports(ma_dh);
     CREATE INDEX IF NOT EXISTS idx_delay_reports_status ON delay_reports(trang_thai);
+    CREATE INDEX IF NOT EXISTS idx_delay_reports_submitted_at ON delay_reports(submitted_at);
+    CREATE INDEX IF NOT EXISTS idx_delay_reports_stage ON delay_reports(cong_doan_bao_tre);
   `);
   log('✅ Delay report tables initialized');
 }

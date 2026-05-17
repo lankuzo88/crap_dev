@@ -18,7 +18,7 @@
     .wrap { max-width:720px; margin:0 auto; padding:14px; }
     .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:12px; }
     label { display:block; font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; margin:0 0 6px; }
-    input, textarea { width:100%; border:1px solid var(--line); border-radius:7px; padding:11px; font-size:16px; background:#fff; color:var(--text); }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:7px; padding:11px; font-size:16px; background:#fff; color:var(--text); }
     textarea { min-height:105px; resize:vertical; }
     .scan-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
     button { border:0; border-radius:7px; padding:11px 13px; font-size:14px; font-weight:800; cursor:pointer; }
@@ -30,6 +30,10 @@
     .order-id { font-size:18px; font-weight:900; margin-bottom:4px; }
     .meta { color:var(--muted); font-size:13px; line-height:1.5; }
     .preview { margin-top:8px; max-width:100%; max-height:220px; border-radius:7px; display:none; border:1px solid var(--line); }
+    .preview-grid { display:none; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px; }
+    .preview-grid img { width:100%; height:92px; object-fit:cover; border-radius:7px; border:1px solid var(--line); }
+    .preview-item { position:relative; }
+    .preview-remove { position:absolute; top:5px; right:5px; width:26px; height:26px; border-radius:999px; padding:0; background:rgba(0,0,0,.58); color:#fff; font-size:13px; }
     .err { display:none; color:var(--danger); font-size:13px; margin-top:6px; }
     .err.show { display:block; }
     .toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px); opacity:0; transition:.2s; background:var(--ok); color:#fff; padding:12px 16px; border-radius:8px; font-weight:800; z-index:30; max-width:90%; text-align:center; }
@@ -58,6 +62,13 @@
       </div>
       <div class="err" id="errOrder"></div>
 
+      <div style="height:12px"></div>
+      <label for="cong_doan_bao_tre">Công đoạn muốn báo</label>
+      <select id="cong_doan_bao_tre" name="cong_doan_bao_tre">
+        <option value="">Đang tải công đoạn...</option>
+      </select>
+      <div class="err" id="errStage">Vui lòng chọn công đoạn muốn báo.</div>
+
       <div class="order-box" id="orderBox">
         <div class="order-id" id="orderId"></div>
         <div class="meta" id="orderMeta"></div>
@@ -70,8 +81,9 @@
 
       <div style="height:12px"></div>
       <label for="hinh_anh">Hình ảnh bắt buộc</label>
-      <input id="hinh_anh" name="hinh_anh" type="file" accept="image/*" capture="environment">
+      <input id="hinh_anh" name="hinh_anh" type="file" accept="image/*" capture="environment" multiple>
       <img id="preview" class="preview" alt="">
+      <div id="previewGrid" class="preview-grid"></div>
       <div class="err" id="errImage">Vui lòng upload hình.</div>
 
       <div style="height:14px"></div>
@@ -90,6 +102,8 @@
 
   <script>
     let selectedOrder = null;
+    let selectedDelayFiles = [];
+    const MAX_DELAY_IMAGES = 6;
     let reader = null;
     let scannerActive = false;
 
@@ -104,9 +118,27 @@
     }
 
     function validate() {
-      const ok = selectedOrder && $('nguyen_nhan').value.trim() && $('hinh_anh').files.length > 0;
+      const ok = selectedOrder && $('cong_doan_bao_tre').value && $('nguyen_nhan').value.trim() && selectedDelayFiles.length > 0;
       $('submitBtn').disabled = !ok;
       return ok;
+    }
+
+    async function loadAllowedStages() {
+      const select = $('cong_doan_bao_tre');
+      try {
+        const r = await fetch('/api/delay-reports/allowed-stages');
+        const d = await r.json();
+        if (!r.ok || !d.ok || !Array.isArray(d.stages) || d.stages.length === 0) {
+          select.innerHTML = '<option value="">Không có công đoạn được phép báo</option>';
+          validate();
+          return;
+        }
+        select.innerHTML = '<option value="">Chọn công đoạn muốn báo</option>' +
+          d.stages.map(stage => `<option value="${esc(stage)}">${esc(stage)}</option>`).join('');
+      } catch (e) {
+        select.innerHTML = '<option value="">Lỗi tải công đoạn</option>';
+      }
+      validate();
     }
 
     async function lookupOrder() {
@@ -138,25 +170,55 @@
 
     $('ma_dh').addEventListener('change', lookupOrder);
     $('ma_dh').addEventListener('blur', lookupOrder);
+    $('cong_doan_bao_tre').addEventListener('change', validate);
     $('nguyen_nhan').addEventListener('input', validate);
     $('hinh_anh').addEventListener('change', () => {
-      const file = $('hinh_anh').files[0];
-      if (file) {
-        $('preview').src = URL.createObjectURL(file);
-        $('preview').style.display = 'block';
-      }
+      selectedDelayFiles = selectedDelayFiles.concat(Array.from($('hinh_anh').files)).slice(0, MAX_DELAY_IMAGES);
+      $('hinh_anh').value = '';
+      renderDelayPreviews();
       validate();
     });
 
+    function renderDelayPreviews() {
+      const grid = $('previewGrid');
+      grid.innerHTML = '';
+      selectedDelayFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preview-remove';
+        btn.textContent = '✕';
+        btn.onclick = () => removeDelayImage(index);
+        item.appendChild(img);
+        item.appendChild(btn);
+        grid.appendChild(item);
+      });
+      grid.style.display = selectedDelayFiles.length ? 'grid' : 'none';
+      $('preview').style.display = 'none';
+    }
+
+    function removeDelayImage(index = null) {
+      if (index === null) selectedDelayFiles = [];
+      else selectedDelayFiles.splice(index, 1);
+      $('hinh_anh').value = '';
+      renderDelayPreviews();
+      validate();
+    }
+
     $('delayForm').addEventListener('submit', async e => {
       e.preventDefault();
+      $('errStage').classList.toggle('show', !$('cong_doan_bao_tre').value);
       $('errReason').classList.toggle('show', !$('nguyen_nhan').value.trim());
-      $('errImage').classList.toggle('show', $('hinh_anh').files.length === 0);
+      $('errImage').classList.toggle('show', selectedDelayFiles.length === 0);
       if (!validate()) return;
       const fd = new FormData();
       fd.append('ma_dh', selectedOrder.ma_dh);
+      fd.append('cong_doan_bao_tre', $('cong_doan_bao_tre').value);
       fd.append('nguyen_nhan', $('nguyen_nhan').value.trim());
-      fd.append('hinh_anh', $('hinh_anh').files[0]);
+      selectedDelayFiles.forEach(file => fd.append('hinh_anh', file));
       $('submitBtn').disabled = true;
       $('submitBtn').textContent = 'Đang gửi...';
       try {
@@ -165,9 +227,12 @@
         if (!r.ok || !d.ok) throw new Error(d.error || 'Gửi thất bại');
         showToast('Đã gửi báo trễ tiến độ');
         selectedOrder = null;
+        selectedDelayFiles = [];
         e.target.reset();
+        await loadAllowedStages();
         $('orderBox').classList.remove('show');
         $('preview').style.display = 'none';
+        renderDelayPreviews();
       } catch (err) {
         showToast(err.message, true);
       } finally {
@@ -201,6 +266,8 @@
       if (reader) reader.reset();
       $('scanner').classList.remove('show');
     }
+
+    loadAllowedStages();
   </script>
 </body>
 </html>

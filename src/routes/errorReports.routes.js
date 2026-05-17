@@ -5,10 +5,22 @@ const router  = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const { USERS, normalizeUserCongDoan, hasPermission } = require('../repositories/users.repo');
-const { uploadImage } = require('../services/image.service');
+const { uploadImage, parseImageRefs, stringifyImageRefs, deleteErrorImage, REPORT_IMAGE_LIMIT } = require('../services/image.service');
 const { BASE_DIR } = require('../config/paths');
+const { buildTechnicalErrorMonthlyStats } = require('../utils/reportStats');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+
+function mapErrorReport(row) {
+  return {
+    ...row,
+    hinh_anh_list: parseImageRefs(row.hinh_anh),
+  };
+}
+
+async function cleanupUploadedFiles(files) {
+  await Promise.allSettled((files || []).map(file => deleteErrorImage(file.location)));
+}
 
 const STAGE_ORDER = {
   'kim_loai': ['CBM', 'sáp', 'sườn', 'đắp', 'mài'],
@@ -103,28 +115,35 @@ router.delete('/api/error-codes/:id', requirePermission('error_codes.manage'), (
 });
 
 router.post('/api/error-reports', requirePermission('error_reports.submit'), (req, res) => {
-  uploadImage.single('hinh_anh')(req, res, (err) => {
+  uploadImage.array('hinh_anh', REPORT_IMAGE_LIMIT)(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
+    const fail = async (status, error) => {
+      await cleanupUploadedFiles(req.files);
+      return res.status(status).json({ ok: false, error });
+    };
     const { ma_dh, error_code_id, mo_ta } = req.body;
-    if (!ma_dh || !error_code_id) return res.status(400).json({ ok: false, error: 'ma_dh và error_code_id là bắt buộc' });
+    if (!ma_dh || !error_code_id) return fail(400, 'ma_dh và error_code_id là bắt buộc');
     try {
       const db = getDB();
-      if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+      if (!db) return fail(500, 'Database not available');
       const code = db.prepare('SELECT * FROM error_codes WHERE id=? AND active=1').get(error_code_id);
-      if (!code) return res.status(400).json({ ok: false, error: 'Mã lỗi không hợp lệ' });
+      if (!code) return fail(400, 'Mã lỗi không hợp lệ');
       const username = req.session.user;
       const userInfo = USERS[username];
-      if (!userInfo) return res.status(403).json({ ok: false, error: 'User not found' });
+      if (!userInfo) return fail(403, 'User not found');
       const allowedStages = getAllowedStages(username, userInfo.role, userInfo.cong_doan);
       if (!allowedStages.includes(code.cong_doan))
-        return res.status(403).json({ ok: false, error: `Bạn không có quyền báo lỗi công đoạn ${code.cong_doan}` });
-      const hinh_anh = req.file ? req.file.location : null;
+        return fail(403, `Bạn không có quyền báo lỗi công đoạn ${code.cong_doan}`);
+      const hinh_anh = stringifyImageRefs((req.files || []).map(file => file.location));
       const submitted_by = req.session ? req.session.user : 'unknown';
       const result = db.prepare(`INSERT INTO error_reports (ma_dh, error_code_id, ma_loi_text, cong_doan, hinh_anh, mo_ta, submitted_by) VALUES (?, ?, ?, ?, ?, ?, ?)`)
         .run(ma_dh, error_code_id, code.ma_loi + ' - ' + code.ten_loi, code.cong_doan, hinh_anh, mo_ta || '', submitted_by);
       log(`[ErrorReport] Submitted: ${ma_dh} lỗi=${code.ma_loi} by ${submitted_by}`);
       res.json({ ok: true, id: result.lastInsertRowid });
-    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+    } catch (e) {
+      await cleanupUploadedFiles(req.files);
+      res.status(500).json({ ok: false, error: e.message });
+    }
   });
 });
 
@@ -151,7 +170,7 @@ router.get('/api/error-reports', requireAuth, (req, res) => {
     if (req.query.cong_doan)  { sql += ' AND cong_doan=?';  params.push(req.query.cong_doan); }
     sql += ' ORDER BY submitted_at DESC LIMIT 100';
     const rows = db.prepare(sql).all(...params);
-    res.json({ ok: true, data: rows });
+    res.json({ ok: true, data: rows.map(mapErrorReport) });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
@@ -164,6 +183,14 @@ router.get('/api/error-reports/stats', requirePermission('error_reports.review')
     const byUser    = db.prepare("SELECT submitted_by, COUNT(*) as n FROM error_reports GROUP BY submitted_by ORDER BY n DESC").all();
     const topErrors = db.prepare("SELECT ma_loi_text, COUNT(*) as n FROM error_reports GROUP BY ma_loi_text ORDER BY n DESC LIMIT 10").all();
     res.json({ ok: true, byStatus, byStage, byUser, topErrors });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/error-reports/monthly-stats', requirePermission('error_reports.review'), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    res.json({ ok: true, ...buildTechnicalErrorMonthlyStats(db, req.query.month) });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 

@@ -16,6 +16,19 @@
     .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
     .stat-label { font-size:12px; color:var(--muted); text-transform:uppercase; font-weight:800; }
     .stat-value { font-size:28px; font-weight:900; margin-top:4px; }
+    .monthly { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+    .monthly-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .monthly-title { font-weight:900; font-size:16px; }
+    .monthly-sub { color:var(--muted); font-size:12px; margin-top:3px; }
+    .monthly select { border:1px solid var(--line); border-radius:6px; padding:8px 10px; background:#fff; color:var(--text); font-weight:700; }
+    .monthly-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:10px; }
+    .monthly-card { border:1px solid var(--line); border-radius:7px; padding:10px; background:#fffaf7; }
+    .monthly-label { color:var(--muted); font-size:11px; text-transform:uppercase; font-weight:900; }
+    .monthly-value { font-size:23px; font-weight:900; margin-top:4px; }
+    .monthly-cols { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .monthly-list-title { color:var(--muted); font-size:12px; text-transform:uppercase; font-weight:900; margin-bottom:6px; }
+    .monthly-row { display:flex; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); font-size:12px; }
+    .monthly-row span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
     button { border:0; border-radius:6px; padding:8px 12px; font-weight:800; cursor:pointer; }
     .filter { background:#fff; color:var(--text); border:1px solid var(--line); }
@@ -33,6 +46,8 @@
     .meta { color:var(--muted); font-size:13px; line-height:1.45; }
     .mid { display:flex; gap:12px; margin-top:10px; }
     .photo { width:120px; height:90px; object-fit:cover; border-radius:6px; border:1px solid var(--line); cursor:pointer; flex-shrink:0; }
+    .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:8px; width:min(360px,100%); flex-shrink:0; }
+    .photo-grid img { width:100%; height:90px; object-fit:cover; border-radius:6px; border:1px solid var(--line); cursor:pointer; }
     .reason { white-space:pre-wrap; font-size:14px; line-height:1.45; }
     .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
     .ok { background:var(--green); color:#fff; }
@@ -43,7 +58,7 @@
     .modal-box { width:min(520px,100%); background:#fff; border-radius:8px; padding:16px; }
     textarea { width:100%; min-height:90px; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:14px; }
     .lightbox img { max-width:92vw; max-height:88vh; border-radius:8px; }
-    @media (max-width:720px) { .stats { grid-template-columns:repeat(2,1fr); } .mid { flex-direction:column; } .photo { width:100%; height:210px; } }
+    @media (max-width:720px) { .stats,.monthly-grid,.monthly-cols { grid-template-columns:repeat(2,1fr); } .monthly-cols { grid-template-columns:1fr; } .mid { flex-direction:column; } .photo { width:100%; height:210px; } }
   </style>
 </head>
 <body>
@@ -57,6 +72,21 @@
       <div class="stat"><div class="stat-label">Chờ duyệt</div><div class="stat-value" id="sPending">—</div></div>
       <div class="stat"><div class="stat-label">Đã xác nhận</div><div class="stat-value" id="sConfirmed">—</div></div>
       <div class="stat"><div class="stat-label">Từ chối</div><div class="stat-value" id="sRejected">—</div></div>
+    </div>
+    <div class="monthly">
+      <div class="monthly-top">
+        <div>
+          <div class="monthly-title">Thống kê kỳ tháng 26-25</div>
+          <div class="monthly-sub" id="monthlyPeriod">Đang tải...</div>
+        </div>
+        <select id="monthlySelect" onchange="loadMonthlyStats(this.value)"></select>
+      </div>
+      <div class="monthly-grid" id="monthlyGrid"></div>
+      <div class="monthly-cols">
+        <div><div class="monthly-list-title">Theo công đoạn</div><div id="monthlyStages"></div></div>
+        <div><div class="monthly-list-title">Top nguyên nhân</div><div id="monthlyReasons"></div></div>
+        <div><div class="monthly-list-title">Theo người báo</div><div id="monthlyUsers"></div></div>
+      </div>
     </div>
     <div class="filters">
       <button class="filter active" onclick="setFilter('', this)">Tất cả</button>
@@ -96,6 +126,19 @@
       return '/uploads/error-images/' + encodeURIComponent(ref);
     }
 
+    function imageRefs(rep) {
+      if (Array.isArray(rep.hinh_anh_list)) return rep.hinh_anh_list;
+      if (!rep.hinh_anh) return [];
+      const raw = String(rep.hinh_anh);
+      if (raw.trim().startsWith('[')) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        } catch (e) {}
+      }
+      return [raw];
+    }
+
     async function loadStats() {
       const r = await fetch('/api/delay-reports/stats');
       const d = await r.json();
@@ -109,8 +152,46 @@
       document.getElementById('sRejected').textContent = by.rejected || 0;
     }
 
+    function fmtNumber(value) {
+      return new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+    }
+
+    function renderMonthlyRows(rows) {
+      if (!rows?.length) return '<div class="monthly-row"><span>Không có dữ liệu</span><strong>0</strong></div>';
+      return rows.map(row => `<div class="monthly-row"><span title="${esc(row.name)}">${esc(row.name)}</span><strong>${fmtNumber(row.n)}</strong></div>`).join('');
+    }
+
+    async function loadMonthlyStats(month = '') {
+      try {
+        const qs = month ? '?month=' + encodeURIComponent(month) : '';
+        const r = await fetch('/api/delay-reports/monthly-stats' + qs);
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'Không tải được thống kê tháng');
+        document.getElementById('monthlySelect').innerHTML = (d.months || []).map(item => {
+          const p = item.period || {};
+          return `<option value="${esc(item.billing_month)}"${item.billing_month === d.month ? ' selected' : ''}>${esc(p.label || item.billing_month)} (${esc(p.range || '')})</option>`;
+        }).join('');
+        const p = d.period || {};
+        const prev = d.previous_period || {};
+        document.getElementById('monthlyPeriod').textContent = `${p.label || d.month}: ${p.billing_start || ''} đến ${p.billing_end || ''} · so với ${prev.label || 'kỳ trước'}`;
+        const s = d.summary || {};
+        document.getElementById('monthlyGrid').innerHTML = `
+          <div class="monthly-card"><div class="monthly-label">Tổng báo trễ</div><div class="monthly-value">${fmtNumber(s.total)}</div></div>
+          <div class="monthly-card"><div class="monthly-label">Đã xác nhận</div><div class="monthly-value">${fmtNumber(s.confirmed)} (${s.confirmed_rate || 0}%)</div></div>
+          <div class="monthly-card"><div class="monthly-label">So với kỳ trước</div><div class="monthly-value">${(s.change_pct || 0) > 0 ? '+' : ''}${s.change_pct || 0}%</div></div>
+          <div class="monthly-card"><div class="monthly-label">Giờ duyệt TB</div><div class="monthly-value">${s.avg_review_hours ?? '—'}</div></div>
+        `;
+        document.getElementById('monthlyStages').innerHTML = renderMonthlyRows(d.by_stage);
+        document.getElementById('monthlyReasons').innerHTML = renderMonthlyRows(d.top_reasons);
+        document.getElementById('monthlyUsers').innerHTML = renderMonthlyRows(d.by_user);
+      } catch (e) {
+        document.getElementById('monthlyPeriod').textContent = 'Lỗi tải thống kê tháng: ' + e.message;
+      }
+    }
+
     async function loadReports() {
       await loadStats();
+      await loadMonthlyStats();
       const el = document.getElementById('list');
       el.innerHTML = '<div class="empty">Đang tải...</div>';
       const url = filter ? '/api/delay-reports?trang_thai=' + encodeURIComponent(filter) : '/api/delay-reports';
@@ -121,7 +202,10 @@
 
       const labels = { pending:'Chờ duyệt', confirmed:'Đã xác nhận', rejected:'Từ chối' };
       el.innerHTML = d.data.map(rep => {
-        const img = imageUrl(rep.hinh_anh);
+        const photos = imageRefs(rep).map(imageUrl).filter(Boolean);
+        const photoHtml = photos.length
+          ? `<div class="photo-grid">${photos.map(img => `<img src="${esc(img)}" onclick="openLightbox('${esc(img)}')" alt="">`).join('')}</div>`
+          : '';
         const actions = rep.trang_thai === 'pending'
           ? `<div class="actions"><button class="ok" onclick="confirmReport(${rep.id})">Xác nhận</button><button class="danger" onclick="openReject(${rep.id})">Từ chối</button></div>`
           : '';
@@ -137,7 +221,7 @@
             </div>
           </div>
           <div class="mid">
-            ${img ? `<img class="photo" src="${esc(img)}" onclick="openLightbox('${esc(img)}')" alt="">` : ''}
+            ${photoHtml}
             <div>
               <div class="meta">${esc(rep.cong_doan_bao_tre || 'Không gán công đoạn')}</div>
               <div class="reason">${esc(rep.nguyen_nhan || '')}</div>

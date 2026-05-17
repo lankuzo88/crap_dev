@@ -4,11 +4,43 @@ const path    = require('path');
 const router  = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
-const { USERS, hasPermission } = require('../repositories/users.repo');
-const { uploadLocalImage, saveCompressedLocalImage } = require('../services/image.service');
+const { USERS, normalizeUserCongDoan, hasPermission } = require('../repositories/users.repo');
+const { uploadImage, parseImageRefs, stringifyImageRefs, deleteErrorImage, REPORT_IMAGE_LIMIT } = require('../services/image.service');
 const { BASE_DIR } = require('../config/paths');
+const { buildDelayMonthlyStats } = require('../utils/reportStats');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+
+const STAGE_ORDER = {
+  kim_loai: ['CBM', 'sáp', 'sườn', 'đắp', 'mài'],
+  zirconia: ['CBM', 'CAD/CAM', 'sườn', 'đắp', 'mài'],
+};
+const ALL_STAGES = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+
+function getAllowedDelayStages(userInfo = {}) {
+  if (userInfo.role === 'admin' || userInfo.role === 'qc') return ALL_STAGES;
+  const userStage = normalizeUserCongDoan(userInfo.cong_doan);
+  if (!userStage) return [];
+
+  const allowed = new Set();
+  for (const flow of Object.values(STAGE_ORDER)) {
+    const idx = flow.indexOf(userStage);
+    if (idx >= 0) {
+      for (let i = 0; i <= idx; i++) allowed.add(flow[i]);
+    }
+  }
+
+  if (userStage === 'sáp' || userStage === 'CAD/CAM') {
+    allowed.add('sáp');
+    allowed.add('CAD/CAM');
+  }
+  if (userStage === 'đắp' || userStage === 'mài') {
+    allowed.add('đắp');
+    allowed.add('mài');
+  }
+
+  return ALL_STAGES.filter(stage => allowed.has(stage));
+}
 
 function canSubmitDelayReport(req) {
   return hasPermission(req.session?.user, 'delay_reports.submit');
@@ -29,6 +61,7 @@ function mapDelayReport(row) {
     cong_doan_bao_tre: row.cong_doan_bao_tre || '',
     nguyen_nhan: row.nguyen_nhan || '',
     hinh_anh: row.hinh_anh || '',
+    hinh_anh_list: parseImageRefs(row.hinh_anh),
     trang_thai: row.trang_thai || 'pending',
     submitted_by: row.submitted_by || '',
     submitted_at: row.submitted_at || '',
@@ -42,6 +75,10 @@ function mapDelayReport(row) {
   };
 }
 
+async function cleanupUploadedFiles(files) {
+  await Promise.allSettled((files || []).map(file => deleteErrorImage(file.location)));
+}
+
 router.get('/bao-tre', requireAuth, requireDelayReporter, (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'bao_tre.html'));
 });
@@ -50,17 +87,33 @@ router.get('/delay-reports', requirePermission('delay_reports.review'), (req, re
   res.sendFile(path.join(BASE_DIR, 'delay_reports.html'));
 });
 
+router.get('/api/delay-reports/allowed-stages', requireAuth, requireDelayReporter, (req, res) => {
+  try {
+    const username = req.session.user;
+    const userInfo = USERS[username];
+    if (!userInfo) return res.status(403).json({ ok: false, error: 'User not found' });
+    res.json({ ok: true, stages: getAllowedDelayStages(userInfo) });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 router.post('/api/delay-reports', requireAuth, requireDelayReporter, (req, res) => {
-  uploadLocalImage.single('hinh_anh')(req, res, async (err) => {
+  uploadImage.array('hinh_anh', REPORT_IMAGE_LIMIT)(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
+    const fail = async (status, error) => {
+      await cleanupUploadedFiles(req.files);
+      return res.status(status).json({ ok: false, error });
+    };
+    req.file = req.files?.[0] || null;
     const maDh = String(req.body?.ma_dh || '').trim();
     const reason = String(req.body?.nguyen_nhan || '').trim();
-    if (!maDh || !reason) return res.status(400).json({ ok: false, error: 'ma_dh và nguyên nhân là bắt buộc' });
-    if (!req.file) return res.status(400).json({ ok: false, error: 'Cần upload hình để báo trễ tiến độ' });
+    if (!maDh || !reason) return fail(400, 'ma_dh và nguyên nhân là bắt buộc');
+    if (!req.file) return fail(400, 'Cần upload hình để báo trễ tiến độ');
 
     try {
       const db = getDB();
-      if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+      if (!db) return fail(500, 'Database not available');
 
       const order = db.prepare(`
         SELECT ma_dh, yc_hoan_thanh
@@ -68,7 +121,7 @@ router.post('/api/delay-reports', requireAuth, requireDelayReporter, (req, res) 
         WHERE ma_dh = ? OR barcode_labo = ?
         LIMIT 1
       `).get(maDh, maDh);
-      if (!order) return res.status(404).json({ ok: false, error: 'Không tìm thấy đơn hàng' });
+      if (!order) return fail(404, 'Không tìm thấy đơn hàng');
 
       const existing = db.prepare(`
         SELECT id, trang_thai
@@ -78,14 +131,16 @@ router.post('/api/delay-reports', requireAuth, requireDelayReporter, (req, res) 
         LIMIT 1
       `).get(order.ma_dh);
       if (existing) {
-        return res.status(409).json({ ok: false, error: `Đơn ${order.ma_dh} đã có báo trễ đang xử lý` });
+        return fail(409, `Đơn ${order.ma_dh} đã có báo trễ đang xử lý`);
       }
 
       const username = req.session.user;
       const userInfo = USERS[username] || {};
-      const congDoan = String(req.body?.cong_doan_bao_tre || userInfo.cong_doan || '').trim();
-      const savedImage = await saveCompressedLocalImage(req.file, order.ma_dh, 'delay');
-      const hinhAnh = savedImage.fileName;
+      const allowedStages = getAllowedDelayStages(userInfo);
+      const congDoan = normalizeUserCongDoan(String(req.body?.cong_doan_bao_tre || '').trim());
+      if (!congDoan) return fail(400, 'Vui lòng chọn công đoạn muốn báo');
+      if (!allowedStages.includes(congDoan)) return fail(403, `Bạn không có quyền báo công đoạn ${congDoan}`);
+      const hinhAnh = stringifyImageRefs(req.files.map(file => file.location));
       const result = db.prepare(`
         INSERT INTO delay_reports
           (ma_dh, yc_hoan_thanh, cong_doan_bao_tre, nguyen_nhan, hinh_anh, submitted_by)
@@ -95,6 +150,7 @@ router.post('/api/delay-reports', requireAuth, requireDelayReporter, (req, res) 
       log(`[DelayReport] Submitted: ${order.ma_dh} by ${username}`);
       res.json({ ok: true, id: result.lastInsertRowid, ma_dh: order.ma_dh });
     } catch (e) {
+      await cleanupUploadedFiles(req.files);
       res.status(500).json({ ok: false, error: e.message });
     }
   });
@@ -158,6 +214,16 @@ router.get('/api/delay-reports/stats', requirePermission('delay_reports.review')
       LIMIT 20
     `).all();
     res.json({ ok: true, byStatus, byStage, active: recent.map(mapDelayReport) });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.get('/api/delay-reports/monthly-stats', requirePermission('delay_reports.review'), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    res.json({ ok: true, ...buildDelayMonthlyStats(db, req.query.month) });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }

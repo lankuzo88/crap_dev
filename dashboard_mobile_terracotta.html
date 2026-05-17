@@ -204,6 +204,206 @@
       cursor: default;
     }
 
+    .wip-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 230;
+      display: none;
+      flex-direction: column;
+      background: var(--bg-primary);
+      overflow: hidden;
+    }
+
+    .wip-panel.open {
+      display: flex;
+    }
+
+    .wip-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-card);
+      background: rgba(255, 251, 248, 0.98);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .wip-back,
+    .wip-refresh {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--terracotta-light);
+      border-radius: 7px;
+      background: var(--bg-card);
+      color: var(--terracotta);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .wip-title {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .wip-title-main {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .wip-title-sub {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wip-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      padding-bottom: 28px;
+    }
+
+    .wip-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .wip-stage-card {
+      border: 1px solid var(--border-card);
+      border-left: 4px solid var(--terracotta);
+      border-radius: 8px;
+      background: var(--bg-card);
+      padding: 9px;
+      text-align: left;
+      font: inherit;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .wip-stage-card.active {
+      background: rgba(196, 131, 111, 0.13);
+      border-color: var(--terracotta-light);
+      box-shadow: inset 0 0 0 1px rgba(196, 131, 111, 0.2);
+    }
+
+    .wip-stage-name {
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .wip-stage-count {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--terracotta);
+      line-height: 1;
+    }
+
+    .wip-stage-meta {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+
+    .wip-list-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .wip-list-meta {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .wip-order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .wip-order-card {
+      border: 1px solid var(--border-card);
+      border-left: 4px solid var(--terracotta);
+      border-radius: 8px;
+      background: var(--bg-card);
+      padding: 9px;
+      cursor: pointer;
+    }
+
+    .wip-order-top,
+    .wip-order-mid,
+    .wip-order-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wip-order-code {
+      color: var(--terracotta);
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .wip-order-customer {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wip-order-patient {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wip-order-qty,
+    .wip-order-stage,
+    .wip-order-deadline {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .wip-order-ph {
+      margin-top: 5px;
+      color: var(--terracotta);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
     /* ═══════════════════════════════
        FILTER BAR
     ═══════════════════════════════ */
@@ -702,11 +902,14 @@
         <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
           <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
         </a>
+        <button id="m-wip-btn" class="menu-item admin-only" type="button" onclick="openWipPanel()">
+          <span class="menu-icon">WIP</span><span>WIP công đoạn</span>
+        </button>
         <a id="m-delayreports-btn" class="menu-item danger admin-only" href="/delay-reports">
           <span class="menu-icon">⏱</span><span>Báo trễ tiến độ</span>
         </a>
         <a id="m-baoloi-btn" class="menu-item danger delay-only" href="/bao-loi">
-          <span class="menu-icon">⚠</span><span>Báo lỗi</span>
+          <span class="menu-icon">⚠</span><span>Báo lỗi kỹ thuật</span>
         </a>
         <a id="m-baotre-btn" class="menu-item danger delay-only" href="/bao-tre">
           <span class="menu-icon">⏱</span><span>Báo trễ tiến độ</span>
@@ -735,6 +938,18 @@
   <div id="cardList"></div>
   <button id="btn-scan-transfer" class="fab" type="button" onclick="openTransferScanner()">Quét chuyển qua Zirco</button>
   <div id="toast" class="toast"></div>
+
+  <div id="wipPanel" class="wip-panel" aria-hidden="true">
+    <div class="wip-header">
+      <button class="wip-back" type="button" onclick="closeWipPanel()">‹</button>
+      <div class="wip-title">
+        <div class="wip-title-main">WIP công đoạn</div>
+        <div class="wip-title-sub" id="wipSubtitle">Đơn chưa hoàn tất theo từng công đoạn</div>
+      </div>
+      <button class="wip-refresh" type="button" onclick="renderWipPanel()">↻</button>
+    </div>
+    <div id="wipContent" class="wip-content"></div>
+  </div>
 
   <div id="transferScannerModal" class="scanner-modal" onclick="handleTransferScannerBackdrop(event)">
     <div class="scanner-box">
@@ -912,6 +1127,7 @@
     let transferReader = null;
     let transferScannerActive = false;
     let activeDelayReports = new Map();
+    let wipSelectedStage = 'all';
     const roomLabel = { sap: 'SÁP', zirco: 'Zirco', both: 'SÁP + Zirco' };
     function getTransferTargetRoom() {
       if (myRoom === 'sap') return 'zirco';
@@ -984,6 +1200,7 @@
           updateCounts();
           renderDelayBanner();
           renderCards();
+          refreshWipIfOpen();
         }
       } catch (e) {
         console.error('Lỗi fetch data:', e);
@@ -1003,6 +1220,7 @@
           updateCounts();
           renderDelayBanner();
           renderCards();
+          refreshWipIfOpen();
         }
       } catch (e) {
         console.error('Lỗi fetch pending orders:', e);
@@ -1212,6 +1430,145 @@
       if (!menu) return;
       menu.classList.remove('open');
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function canViewWipPanel() {
+      return currentUser?.role === 'admin'
+        || hasPerm('stats.view_daily')
+        || hasPerm('stats.view_production')
+        || hasPerm('admin.users.manage');
+    }
+
+    function htmlSafe(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[ch]));
+    }
+
+    function openWipPanel() {
+      if (!canViewWipPanel()) return;
+      closeActionMenu();
+      const panel = document.getElementById('wipPanel');
+      if (!panel) return;
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
+      renderWipPanel();
+    }
+
+    function closeWipPanel() {
+      const panel = document.getElementById('wipPanel');
+      if (!panel) return;
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+
+    function refreshWipIfOpen() {
+      const panel = document.getElementById('wipPanel');
+      if (panel && panel.classList.contains('open')) renderWipPanel(wipSelectedStage);
+    }
+
+    function isWipOrder(o) {
+      return (o.stagesData || []).some(s => !s.sk && !s.x);
+    }
+
+    function getWipOrdersForStage(stage) {
+      if (stage === 'all') return allOrders.filter(isWipOrder);
+      return allOrders.filter(o => {
+        const s = (o.stagesData || []).find(st => st.n === stage);
+        return s && !s.sk && !s.x;
+      });
+    }
+
+    function wipProgress(o) {
+      const stages = (o.stagesData || []).filter(s => !s.sk);
+      if (!stages.length) return 0;
+      const done = stages.filter(s => s.x).length;
+      return Math.round(done / stages.length * 100);
+    }
+
+    function calcWipStageStats() {
+      const totalOrders = getWipOrdersForStage('all');
+      const stats = [{
+        stage: 'all',
+        name: 'Tất cả WIP',
+        count: totalOrders.length,
+        qty: totalOrders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
+        color: 'var(--terracotta)',
+      }];
+
+      STAGE_NAMES.forEach(stage => {
+        const orders = getWipOrdersForStage(stage);
+        stats.push({
+          stage,
+          name: STAGE_SHORT[stage] || stage,
+          count: orders.length,
+          qty: orders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
+          color: STAGE_COLORS[stage] || 'var(--terracotta)',
+        });
+      });
+
+      return stats;
+    }
+
+    function renderWipOrder(o) {
+      const stageColor = STAGE_COLORS[o.current_stage] || 'var(--terracotta)';
+      const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '---';
+      const progress = wipProgress(o);
+      return `
+        <div class="wip-order-card" data-ma-dh="${htmlSafe(o.ma_dh)}" style="border-left-color:${stageColor}">
+          <div class="wip-order-top">
+            <div class="wip-order-code">${htmlSafe(o.ma_dh || '---')}</div>
+            <div class="wip-order-customer">${htmlSafe(o.khach_hang || '---')}</div>
+          </div>
+          <div class="wip-order-mid" style="margin-top:5px">
+            <div class="wip-order-patient">${htmlSafe(patient)}</div>
+            <div class="wip-order-qty">SL: ${Number(o.sl) || 0}</div>
+          </div>
+          <div class="wip-order-ph">${htmlSafe(o.phuc_hinh || '---')}</div>
+          <div class="wip-order-foot" style="margin-top:6px">
+            <div class="wip-order-stage">Đang ở: ${htmlSafe(STAGE_SHORT[o.current_stage] || o.current_stage || '---')} · ${progress}%</div>
+            <div class="wip-order-deadline">${htmlSafe(formatDate(o.yc_ht))} ${htmlSafe(formatTime(o.yc_ht))}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWipPanel(stage = wipSelectedStage) {
+      wipSelectedStage = stage || 'all';
+      const content = document.getElementById('wipContent');
+      const subtitle = document.getElementById('wipSubtitle');
+      if (!content) return;
+
+      const stats = calcWipStageStats();
+      const selected = stats.find(s => s.stage === wipSelectedStage) || stats[0];
+      const orders = sortOrdersByDeadline(getWipOrdersForStage(selected.stage));
+      const qty = orders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0);
+      if (subtitle) subtitle.textContent = `${selected.name}: ${orders.length} đơn · ${qty} răng`;
+
+      const summaryHtml = stats.map(s => `
+        <button class="wip-stage-card ${s.stage === selected.stage ? 'active' : ''}" type="button" onclick="renderWipPanel('${htmlSafe(s.stage)}')" style="border-left-color:${s.color}">
+          <div class="wip-stage-name">${htmlSafe(s.name)}</div>
+          <div class="wip-stage-count">${s.count}</div>
+          <div class="wip-stage-meta">${s.qty} răng chờ</div>
+        </button>
+      `).join('');
+
+      const listHtml = orders.length
+        ? `<div class="wip-order-list">${orders.map(renderWipOrder).join('')}</div>`
+        : '<div class="empty-state"><div class="icon">○</div><p>Không có đơn WIP</p></div>';
+
+      content.innerHTML = `
+        <div class="wip-summary">${summaryHtml}</div>
+        <div class="wip-list-title">
+          <span>${htmlSafe(selected.name)}</span>
+          <span class="wip-list-meta">${orders.length} đơn · ${qty} răng</span>
+        </div>
+        ${listHtml}
+      `;
     }
 
     function setMobileExportState(icon, disabled = false) {
@@ -1510,6 +1867,14 @@
         const actionMenu = document.getElementById('actionMenu');
         if (actionMenu && !actionMenu.contains(e.target)) closeActionMenu();
 
+        const wipCard = e.target.closest('.wip-order-card');
+        if (wipCard) {
+          const maDh = wipCard.getAttribute('data-ma-dh');
+          const order = allOrders.find(o => o.ma_dh === maDh);
+          if (order) showOrderDetail(order);
+          return;
+        }
+
         const card = e.target.closest('.card');
         if (card) {
           const maDh = card.getAttribute('data-ma-dh');
@@ -1519,7 +1884,10 @@
       });
 
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeActionMenu();
+        if (e.key === 'Escape') {
+          closeActionMenu();
+          closeWipPanel();
+        }
       });
     });
 
@@ -1603,6 +1971,7 @@
         const r = await fetch('/user');
         if (!r.ok) return;
         const u = await r.json();
+        currentUser = u;
         if (hasPerm('admin.keylab_export')) {
           document.getElementById('m-export-btn').classList.add('admin-visible');
         }
@@ -1617,6 +1986,10 @@
         if (hasPerm('munger.view')) {
           const mungerBtn = document.getElementById('m-munger-btn');
           if (mungerBtn) mungerBtn.classList.add('admin-visible');
+        }
+        if (canViewWipPanel()) {
+          const wipBtn = document.getElementById('m-wip-btn');
+          if (wipBtn) wipBtn.classList.add('admin-visible');
         }
         if (hasPerm('delay_reports.review')) {
           const delayReportsBtn = document.getElementById('m-delayreports-btn');
