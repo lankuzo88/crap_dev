@@ -22,24 +22,36 @@ const CD_TO_DB = {
 
 const SKIP_STAGES = {
   sua:      [0, 1, 2],
-  lam_tiep: [0, 1],
+  lam_tiep: [0, 1, 2],
   thusuon:  [3, 4],
 };
 
 const MADH_COL_HINTS = ['mã đh', 'mã_dh', 'ma_dh', 'mã đơn', 'madh', 'order_id'];
 
+function normalizeRuleText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function hasThuSuonMarker(value) {
+  const text = normalizeRuleText(value);
+  return /\bts\b/.test(text) || text.includes('thu suon');
+}
+
 function getSkipStages(lk, gc) {
-  const lkLower = (lk || '').toLowerCase();
-  const gcLower = (gc || '').toLowerCase();
-  if (lkLower.includes('sửa'))      return SKIP_STAGES.sua;
-  if (lkLower.includes('làm tiếp')) return SKIP_STAGES.lam_tiep;
-  if (gcLower.includes('ts') || gcLower.includes('thử sườn')) return SKIP_STAGES.thusuon;
+  const lkLower = normalizeRuleText(lk);
+  const gcLower = normalizeRuleText(gc);
+  if (lkLower.includes('sua'))      return SKIP_STAGES.sua;
+  if (lkLower.includes('lam tiep')) return SKIP_STAGES.lam_tiep;
+  if (hasThuSuonMarker(`${lkLower} ${gcLower}`)) return SKIP_STAGES.thusuon;
   return [];
 }
 
 function isThuSuonNote(gc) {
-  const gcLower = (gc || '').toLowerCase();
-  return gcLower.includes('ts') || gcLower.includes('thử sườn');
+  return hasThuSuonMarker(gc);
 }
 
 // Import normalizeUserCongDoan from users.repo to avoid circular dep

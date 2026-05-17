@@ -283,6 +283,35 @@
     .monthly-stage { font-weight: 850; color: #111827; }
     .monthly-employee { font-weight: 700; }
     .monthly-total-row td { background: #fcfcfd; font-weight: 850; color: #111827; }
+    .risk-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .risk-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .risk-kpi { border: 1px solid #eceff3; border-radius: 8px; padding: 10px 12px; background: #fcfcfd; }
+    .risk-kpi-label { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: .35px; font-weight: 800; }
+    .risk-kpi-value { margin-top: 4px; font-size: 22px; font-weight: 850; color: #111827; }
+    .risk-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 940px; background: #fff; }
+    .risk-table th { padding: 10px 12px; text-align: left; background: #f7f9fc; color: #667085; border-bottom: 1px solid #e8e8e8; font-size: 11px; text-transform: uppercase; letter-spacing: .35px; }
+    .risk-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #333; vertical-align: top; }
+    .risk-table tr:last-child td { border-bottom: none; }
+    .risk-card-list { display: none; }
+    .risk-card { border: 1px solid #e4e7ec; border-radius: 8px; background: #fff; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(16,24,40,.06); }
+    .risk-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .risk-card-title { min-width: 0; }
+    .risk-card-sub { margin-top: 3px; color: #667085; font-size: 12px; line-height: 1.35; }
+    .risk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
+    .risk-info { border: 1px solid #f0f2f5; border-radius: 7px; background: #fcfcfd; padding: 8px; min-width: 0; }
+    .risk-info-label { color: #98a2b3; font-size: 10px; text-transform: uppercase; letter-spacing: .25px; font-weight: 800; }
+    .risk-info-value { margin-top: 3px; color: #111827; font-size: 13px; font-weight: 800; word-break: break-word; }
+    .risk-card-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .risk-card-actions .btn { width: 100%; }
+    .risk-order { font-family: monospace; font-weight: 850; color: #1976d2; cursor: pointer; }
+    .risk-badge { display: inline-block; min-width: 74px; text-align: center; border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 850; }
+    .risk-critical { background: #ffebee; color: #c62828; }
+    .risk-high { background: #fff3e0; color: #e65100; }
+    .risk-watch { background: #fffde7; color: #795548; }
+    .risk-reason { color: #667085; margin-top: 4px; line-height: 1.35; }
+    .risk-meta { color: #667085; font-size: 11px; margin-top: 3px; }
+    .risk-stage { font-weight: 800; color: #111827; }
+    .risk-actions-cell { text-align: right; white-space: nowrap; }
     .report-monthly-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
     .report-monthly-list { border: 1px solid #eceff3; border-radius: 10px; background: #fff; padding: 12px; min-width: 0; }
     .report-monthly-title { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: .35px; font-weight: 850; margin-bottom: 7px; }
@@ -302,6 +331,14 @@
       .prod-header { flex-direction: column; }
       .prod-days { grid-template-columns: 1fr; }
       .monthly-summary { grid-template-columns: 1fr; }
+      .risk-summary { grid-template-columns: 1fr 1fr; }
+      .risk-kpi { padding: 9px 10px; }
+      .risk-kpi-label { font-size: 10px; }
+      .risk-kpi-value { font-size: 20px; }
+      .risk-table-wrap { display: none; }
+      .risk-card-list { display: block; }
+      .risk-toolbar { width: 100%; }
+      .risk-toolbar .btn { width: 100%; }
       .report-monthly-cols { grid-template-columns: 1fr; }
       .stats-kpis, .type-grid { grid-template-columns: 1fr; }
 
@@ -364,6 +401,7 @@
   <button class="tab-btn active" onclick="switchTab('reports', this)" id="tabReports">📋 Báo lỗi kỹ thuật <span class="badge" id="pendingBadge" style="display:none">0</span></button>
   <button class="tab-btn" onclick="switchTab('errorcodes', this)">🏷️ Mã lỗi</button>
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
+  <button class="tab-btn" onclick="switchTab('delay-risk', this)">🚨 Nguy cơ trễ</button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
   <button class="tab-btn" onclick="location.href='/delay-reports'">⏱ Báo trễ tiến độ <span class="badge" id="delayPendingBadge" style="display:none">0</span></button>
 </div>
@@ -518,7 +556,27 @@
 </div><!-- /tab-reports -->
 
 <!-- ══════════════════════════════════════════
-     TAB 4: THỐNG KÊ
+     TAB 4: NGUY CƠ TRỄ
+══════════════════════════════════════════ -->
+<div id="tab-delay-risk" class="tab-panel">
+
+  <div class="section">
+    <div class="prod-header">
+      <div>
+        <div class="prod-title">Đơn nguy cơ trễ tiến độ</div>
+        <div class="prod-subtitle">Quét các đơn đang mở, so với lịch sử hoàn thành theo mức tiến độ hiện tại, rồi xếp mức cảnh báo cho admin xử lý sớm.</div>
+      </div>
+      <div class="risk-toolbar">
+        <button class="btn btn-primary prod-refresh" onclick="loadDelayRiskOrders()">Quét nguy cơ trễ</button>
+      </div>
+    </div>
+    <div id="delayRiskBody"><div class="empty-state">Bấm nút quét để kiểm tra đơn có nguy cơ trễ.</div></div>
+  </div>
+
+</div><!-- /tab-delay-risk -->
+
+<!-- ══════════════════════════════════════════
+     TAB 5: THỐNG KÊ
 ══════════════════════════════════════════ -->
 <div id="tab-system" class="tab-panel">
 
@@ -644,6 +702,7 @@
   let prodSelectedEmployee = null;
   let monthlyStats = null;
   let monthlySelectedMonth = '';
+  let delayRiskData = null;
   const ORDER_TYPE_ORDER = ['Làm mới', 'Làm thêm', 'Làm lại', 'Bảo hành', 'Sửa', 'Làm tiếp', 'Khác'];
   const USER_CONG_DOAN_OPTS = [
     ['', '-- Không gán --'],
@@ -693,6 +752,7 @@
     btn.classList.add('active');
     if (name === 'reports' && !reportsLoaded) { reportsLoaded = true; loadReportStats(); loadReportMonthlyStats(); loadReports(); }
     if (name === 'errorcodes') loadErrorCodes();
+    if (name === 'delay-risk' && !delayRiskData) loadDelayRiskOrders();
     if (name === 'system') refreshAllStats();
   }
 
@@ -1360,6 +1420,152 @@
   function refreshAllStats() {
     loadProductionStats();
     loadMonthlyStats(monthlySelectedMonth);
+  }
+
+  function riskLabel(severity) {
+    if (severity === 'critical') return 'Quá hạn';
+    if (severity === 'high') return 'Nguy cơ cao';
+    return 'Theo dõi';
+  }
+
+  function riskKpi(label, value, cls) {
+    return `<div class="risk-kpi">
+      <div class="risk-kpi-label">${esc(label)}</div>
+      <div class="risk-kpi-value ${cls || ''}">${fmtNumber(value || 0)}</div>
+    </div>`;
+  }
+
+  function riskRateText(order) {
+    const late = Math.round((order.similar_late_rate || 0) * 100);
+    const onTime = Math.round((order.similar_on_time_rate || 0) * 100);
+    return `Trễ ${fmtNumber(late)}% · kịp ${fmtNumber(onTime)}% · n=${fmtNumber(order.benchmark?.n || 0)}`;
+  }
+
+  async function loadDelayRiskOrders() {
+    const body = document.getElementById('delayRiskBody');
+    if (!body) return;
+    body.innerHTML = '<div class="empty-state">Đang quét nguy cơ trễ...</div>';
+    try {
+      const res = await fetch('/admin/api/delay-risk-orders?limit=80');
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        body.innerHTML = `<div class="prod-empty">Không quét được nguy cơ trễ${d.error ? ': ' + esc(d.error) : ''}</div>`;
+        return;
+      }
+      delayRiskData = d;
+      renderDelayRiskOrders();
+    } catch(e) {
+      body.innerHTML = `<div class="prod-empty">Lỗi kết nối: ${esc(e.message)}</div>`;
+    }
+  }
+
+  function renderDelayRiskOrders() {
+    const body = document.getElementById('delayRiskBody');
+    const d = delayRiskData;
+    if (!body || !d) return;
+    const counts = d.counts || {};
+    const rows = d.data || [];
+    const meta = [
+      d.activeSource ? `Nguồn đơn đang mở: ${d.activeSource}` : 'Nguồn đơn đang mở: toàn bộ DB',
+      `Mẫu lịch sử: ${fmtNumber(d.sampleOrders || 0)} đơn`,
+      `Cập nhật: ${fmtDate(d.generatedAt || '')}`,
+    ].join(' · ');
+
+    if (!rows.length) {
+      body.innerHTML = `
+        <div class="risk-summary">
+          ${riskKpi('Tổng cảnh báo', 0)}
+          ${riskKpi('Quá hạn', 0, 'sv-rejected')}
+          ${riskKpi('Nguy cơ cao', 0, 'sv-pending')}
+          ${riskKpi('Theo dõi', 0)}
+        </div>
+        <div class="prod-empty">Chưa phát hiện đơn có nguy cơ trễ theo dữ liệu lịch sử hiện tại.<div class="risk-meta">${esc(meta)}</div></div>
+      `;
+      return;
+    }
+
+    const cardRows = rows.map(order => `
+      <article class="risk-card">
+        <div class="risk-card-top">
+          <div class="risk-card-title">
+            <span class="risk-order" onclick="openOrderDetail('${esc(order.ma_dh)}')">${esc(order.ma_dh)}</span>
+            <div class="risk-card-sub">${esc(order.benh_nhan || '—')} · ${esc(order.khach_hang || '—')}</div>
+          </div>
+          <span class="risk-badge risk-${esc(order.severity)}">${esc(riskLabel(order.severity))}</span>
+        </div>
+        <div class="risk-grid">
+          <div class="risk-info">
+            <div class="risk-info-label">Tiến độ</div>
+            <div class="risk-info-value">${esc(order.current_stage || '—')} · ${fmtNumber(order.done)}/${fmtNumber(order.total)}</div>
+          </div>
+          <div class="risk-info">
+            <div class="risk-info-label">Hạn</div>
+            <div class="risk-info-value">${esc(order.due_at || '—')}</div>
+          </div>
+          <div class="risk-info">
+            <div class="risk-info-label">Ca tương tự</div>
+            <div class="risk-info-value">${esc(riskRateText(order))}</div>
+          </div>
+          <div class="risk-info">
+            <div class="risk-info-label">Dự kiến</div>
+            <div class="risk-info-value">${esc(order.expected_finish_at || '—')}</div>
+          </div>
+        </div>
+        <div class="risk-reason">${esc((order.reasons || []).slice(0, 2).join(' · '))}</div>
+        <div class="risk-meta">${esc(order.loai_lenh || 'Khác')} · SL ${fmtNumber(order.sl || 0)} · p50 ${fmtNumber(order.benchmark?.p50_hours || 0)}h · p75 ${fmtNumber(order.benchmark?.p75_hours || 0)}h</div>
+        <div class="risk-card-actions">
+          <button class="btn btn-outline" onclick="openOrderDetail('${esc(order.ma_dh)}')">Xem đơn</button>
+        </div>
+      </article>
+    `).join('');
+
+    const tableRows = rows.map(order => `
+      <tr>
+        <td>
+          <span class="risk-order" onclick="openOrderDetail('${esc(order.ma_dh)}')">${esc(order.ma_dh)}</span>
+          <div class="risk-meta">${esc(order.loai_lenh || 'Khác')} · SL ${fmtNumber(order.sl || 0)}</div>
+        </td>
+        <td><span class="risk-badge risk-${esc(order.severity)}">${esc(riskLabel(order.severity))}</span></td>
+        <td>
+          <div class="risk-stage">${esc(order.current_stage || '—')} · ${fmtNumber(order.done)}/${fmtNumber(order.total)}</div>
+          <div class="risk-meta">${fmtNumber(order.progress_pct)}% hoàn thành</div>
+        </td>
+        <td>
+          <div>${esc(order.due_at || '—')}</div>
+          <div class="risk-meta">Dự kiến: ${esc(order.expected_finish_at || '—')}</div>
+        </td>
+        <td>
+          <div>${esc(order.benh_nhan || '—')}</div>
+          <div class="risk-meta">${esc(order.khach_hang || '—')}</div>
+        </td>
+        <td>
+          <div>${fmtNumber(order.remaining_model_hours || 0)} giờ còn lại theo mẫu</div>
+          <div class="risk-reason">${esc((order.reasons || []).join(' · '))}</div>
+          <div class="risk-meta">Ca tương tự: ${esc(riskRateText(order))}</div>
+          <div class="risk-meta">Benchmark ${esc(order.benchmark?.key || '')}: p50 ${fmtNumber(order.benchmark?.p50_hours || 0)}h · p75 ${fmtNumber(order.benchmark?.p75_hours || 0)}h</div>
+        </td>
+        <td class="risk-actions-cell">
+          <button class="btn btn-outline" onclick="openOrderDetail('${esc(order.ma_dh)}')">Xem đơn</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.innerHTML = `
+      <div class="risk-summary">
+        ${riskKpi('Tổng cảnh báo', d.count || 0)}
+        ${riskKpi('Quá hạn', counts.critical || 0, 'sv-rejected')}
+        ${riskKpi('Nguy cơ cao', counts.high || 0, 'sv-pending')}
+        ${riskKpi('Theo dõi', counts.watch || 0)}
+      </div>
+      <div class="monthly-period">${esc(meta)}</div>
+      <div class="risk-card-list">${cardRows}</div>
+      <div class="prod-table-wrap risk-table-wrap">
+        <table class="risk-table">
+          <thead><tr><th>Mã đơn</th><th>Mức</th><th>Tiến độ</th><th>Hạn</th><th>Bệnh nhân</th><th>Lý do</th><th></th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    `;
   }
 
   function renderProdCell(stats) {

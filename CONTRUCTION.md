@@ -1,6 +1,6 @@
 # ASIA LAB Construction Notes
 
-Last updated: 2026-05-17
+Last updated: 2026-05-18
 
 Tai lieu nay mo ta day du cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
 
@@ -148,7 +148,7 @@ module.exports = {
 - `auth.routes.js` (~49 dong) — login/logout.
 - `dashboard.routes.js` (~145 dong) — `/`, `/mobile`, `/analytics`, `/data.json`, `/reload`, `/status`, `/files`, `/upload` (GET+POST).
 - `orders.routes.js` (~156 dong) — `/api/orders*`.
-- `admin.routes.js` (~394 dong) — admin panel + user CRUD + production stats + monthly stats.
+- `admin.routes.js` — admin panel + user CRUD + production stats + monthly stats + delay-risk orders API.
 - `scraper.routes.js` (~79 dong) — scrape-status, auto-scrape, keylab-*.
 - `analytics.routes.js` (~211 dong) — KTV stats, daily, db stats, trend, customers, history endpoints.
 - `errorReports.routes.js` — bao loi ky thuat, multi-image upload, monthly stats.
@@ -633,14 +633,14 @@ STAGE_COLORS = {
 
 Logic trong `getSkipStages(loai_lenh, ghi_chu)` (`orders.repo.js`) — ap dung ca cho dashboard stage progress va `/api/user/pending-orders`:
 
-- `Sửa`: bo `CBM`, `SÁP/Cadcam`, `SƯỜN`; bat dau tu `ĐẮP`, sau do `MÀI`.
-- `Làm tiếp`: bo `CBM`, `SÁP/Cadcam`; bat dau tu `SƯỜN` → `ĐẮP` → `MÀI`.
-- **Thu suon** (ghi_chu chua `TS` hoac `thử sườn`): bo `ĐẮP`, `MÀI` (dung lai sau SƯỜN).
+- `Sửa`: bo `CBM`, `SÁP/Cadcam`, `SƯỜN`; chi can 2 cong doan cuoi `ĐẮP` → `MÀI`.
+- `Làm tiếp`: bo `CBM`, `SÁP/Cadcam`, `SƯỜN`; chi can 2 cong doan cuoi `ĐẮP` → `MÀI`.
+- **Thu suon** (ghi_chu/loai_lenh co token `TS` hoac `thử sườn`): bo `ĐẮP`, `MÀI`; chi can 3 cong doan dau `CBM` → `SÁP/Cadcam` → `SƯỜN`.
 - `Làm mới`, `Làm lại`, `Bảo hành`, `Làm thêm`: mac dinh di du 5 cong doan tru khi ghi_chu co rule khac.
 
 ### Quan trong / luu y
 
-- Pattern `TS` dang bat kha rong. Chuoi nhu `LTTS`, `LLTS`, `BHTS` co the bi xem la "thu suon" (false positive). Khi sua, can match token `TS` ro rang hon (vi du `\bTS\b`).
+- Pattern `TS` hien match theo token ro rang (`\bts\b`) sau khi normalize bo dau, tranh bat nham chuoi nhu `LTTS`, `LLTS`, `BHTS`.
 - "Thu tho" chua co logic chinh thuc. Neu them, nen match token `TT` ro rang de tranh bat nham (`LTTT`, `LLTT`).
 - Logic skip dung **ca cho stage progress hien thi** va **`/api/user/pending-orders`**. Sua phai dong bo ca 2 cho.
 
@@ -767,6 +767,7 @@ User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 | PATCH | `/api/admin/users/:username/stats-permission` | requireAdmin | `{can_view_stats}` | `{ok}` |
 | GET | `/admin/api/production-stats` | requireAdmin | — | `{days, totals: {qty, orders, employees}, stages: [{stage, employees: [{ktv, totalQty, byDay}]}]}` (3 ngay completion gan nhat) |
 | GET | `/admin/api/monthly-stats` | requireAdmin | `?month=YYYY-MM` | `{month, months, period, data: [{cong_doan, ten_ktv, orders_completed, total_sl, type_breakdown, entries}]}` |
+| GET | `/admin/api/delay-risk-orders` | `stats.view_production` | `?limit=80` | `{ok, count, counts, source, sampleOrders, data: [{ma_dh, severity, due_at, current_stage, benchmark, reasons}]}` |
 
 ### Scraper
 
@@ -908,6 +909,11 @@ Mobile WIP:
 - Tab Monthly Stats:
   - Period selector "Ky 26-25 (DD/MM - DD/MM)".
   - Aggregate by stage + KTV.
+- Tab Delay Risk:
+  - Goi `GET /admin/api/delay-risk-orders?limit=80`.
+  - Tach rieng khoi tab thong ke de dashboard admin khong bi dai.
+  - Desktop hien table rong de so sanh nhieu cot; mobile an table va hien card list 2 cot thong tin de de thao tac.
+  - Card/table co ma don, muc canh bao, tien do active, han, du kien hoan thanh, ti le ca tuong tu dung/trễ, benchmark p50/p75 va nut `Xem don`.
 
 ### upload.html
 - Drag-drop hoac file input `.xlsx/.xls/.xlsm`, max 20MB.
@@ -1194,6 +1200,18 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 - Lay 3 ngay co `thoi_gian_hoan_thanh` gan nhat (xac_nhan='Có').
 - Group theo cong_doan + KTV + loai_lenh.
 - Response: `{days, totals: {qty, orders, employees}, stages: [{stage, employees: [{ktv, totalQty, byDay}]}]}`.
+
+### Delay-risk orders
+- API: `GET /admin/api/delay-risk-orders?limit=80`.
+- Auth: `stats.view_production`.
+- Nguon don hien tai: `getActiveMaDhList()` doc Excel active, sau do query `don_hang` + `tien_do`.
+- Nguon benchmark: `tien_do_history`, lay completion moi nhat theo `ma_dh/thu_tu/cong_doan`, gom theo state `total_active_stages:done_active_stages`.
+- Ap dung `getSkipStages(loai_lenh, ghi_chu)` truoc khi tinh tien do:
+  - `Sửa` va `Làm tiếp`: chi tinh 2 cong doan cuoi `ĐẮP`, `MÀI`.
+  - `Thử sườn`/token `TS`: chi tinh 3 cong doan dau `CBM`, `SÁP/Cadcam`, `SƯỜN`.
+- Bo qua don da hoan tat, don khong co han hop le, va han `yc_hoan_thanh/yc_giao` som hon `nhap_luc`.
+- Chi giu don co bang chung nguy co: da qua han, p75 lich su vuot han, ti le ca tuong tu dung han thap, hoac thoi gian con lai qua sat so voi p90.
+- Response gom `count`, `counts.{critical,high,watch}`, `source`, `sampleOrders`, `generatedAt`, va list da sort theo muc do nguy co.
 
 ### Monthly stats (kỳ 26-25)
 - API: `GET /admin/api/monthly-stats?month=YYYY-MM`.
@@ -1499,7 +1517,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 
 ### Hieu stats
 1. `src/db/migrations.js` (refreshMonthlyStats, billing 26-25)
-2. `src/routes/admin.routes.js` (production-stats, monthly-stats)
+2. `src/routes/admin.routes.js` (production-stats, monthly-stats, delay-risk orders)
 3. `src/routes/stats.routes.js` (chip daily)
 4. `src/routes/analytics.routes.js` (history endpoints)
 5. `admin.html`, `analytics.html`, `munger.html`
@@ -1535,6 +1553,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 | Dashboard data cu | `/reload` endpoint, hoac wait 60s cache expire |
 | Mobile filter sai | Check `routed_to` trong DB, sync logic Python vs JS (`phucHinh.js` vs `db_manager.py`) |
 | Stats sai | `refreshMonthlyStats()` auto chay khi goi `/admin/api/monthly-stats`; kiem tra `tien_do_history` co data |
+| Nguy co tre sai | Kiem tra `getSkipStages()` cho `Làm tiếp`/`Sửa`/`TS`, `tien_do_history` co sample, va han khong som hon `nhap_luc` |
 
 ---
 
@@ -1789,3 +1808,32 @@ Commands da verify:
 - Neu user khong thay menu, kiem tra `/user` co tra `permissions` dung khong.
 - Neu card khong nhap nhay, kiem tra `/api/delay-reports/active` co tra `ma_dh` active va don do co nam trong danh sach hien tai khong.
 - Khi debug banner/card, can co it nhat mot record `delay_reports.trang_thai IN ('pending','confirmed')`.
+
+---
+
+## 22. Cap nhat phien 2026-05-18 — tab Nguy co tre trong admin
+
+### Muc tieu
+
+Them tab rieng trong admin dashboard de tim cac don co nguy co tre dua tren tien do hien tai va benchmark lich su, tranh chen vao tab thong ke san luong lam giao dien dai kho thao tac.
+
+### Files sua chinh
+
+- `src/routes/admin.routes.js`: them endpoint `/admin/api/delay-risk-orders`, tinh benchmark tu `tien_do_history`, loc deadline sai, sort theo muc nguy co.
+- `src/repositories/orders.repo.js`: chinh rule skip stage cho `Làm tiếp`/`Sửa`/`Thử sườn` va match token `TS` ro rang.
+- `admin.html`: them tab `Nguy cơ trễ`, table desktop, card list mobile, KPI summary va nut reload.
+- `CONTRUCTION.md`: cap nhat API, UI, rule nghiep vu va runbook troubleshooting.
+
+### Rule nghiep vu quan trong
+
+- `Làm tiếp` va `Sửa` chi can hoan thanh `ĐẮP` va `MÀI`.
+- `Thử sườn` chi can `CBM`, `SÁP/Cadcam`, `SƯỜN`.
+- Cac rule nay ap dung ca dashboard tien do, pending orders va delay-risk; khi sua phai dong bo qua `getSkipStages()`.
+
+### Verify da chay
+
+- `node --check src\repositories\orders.repo.js`
+- `node --check src\routes\admin.routes.js`
+- Parse inline script trong `admin.html` bang `new Function`.
+- `node -e "require('./src/app'); console.log('app require ok')"`
+- Smoke API `/admin/api/delay-risk-orders?limit=100` sau khi restart PM2.
