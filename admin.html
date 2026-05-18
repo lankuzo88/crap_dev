@@ -1045,6 +1045,21 @@
     }[ch]));
   }
 
+  function cleanDisplayText(value) {
+    return String(value ?? '')
+      .replace(/_x000d_\s*/gi, '\n')
+      .replace(/\\x000d|\\x00d|\\u000d|x000d|x00d/gi, '\n')
+      .replace(/\r\n?/g, '\n')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function displayHtml(value) {
+    return esc(cleanDisplayText(value)).replace(/\n/g, '<br>');
+  }
+
   function imageRefs(report) {
     if (Array.isArray(report.hinh_anh_list)) return report.hinh_anh_list;
     if (!report.hinh_anh) return [];
@@ -1304,7 +1319,7 @@
         <div style="background: #fff; border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h2 style="font-size: 18px; font-weight: 700; color: #1976d2; margin: 0;">${esc(o.ma_dh)}</h2>
-            <div style="cursor: pointer; font-size: 28px; color: #888; padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; transition: all 0.2s;" onclick="closeOrderModal()" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">✕</div>
+            <button type="button" style="cursor: pointer; font-size: 13px; color: #555; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: #f7f7f7; min-width: 56px; min-height: 40px; font-weight: 700;" onclick="closeOrderModal()">Đóng</button>
           </div>
 
           <div style="margin-bottom: 14px;">
@@ -1319,7 +1334,7 @@
 
           <div style="margin-bottom: 14px;">
             <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
-            <div style="font-size: 12px; color: #e65100; font-weight: 600;">${esc(o.phuc_hinh || o.loai_lenh || '—')}</div>
+            <div style="font-size: 12px; color: #e65100; font-weight: 600;">${displayHtml(o.phuc_hinh || o.loai_lenh || '—')}</div>
           </div>
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
@@ -1335,7 +1350,7 @@
 
           ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(230, 81, 0, 0.1); border-left: 3px solid #e65100; border-radius: 4px;">
             <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
-            <div style="font-size: 12px; color: #333;">${o.ghi_chu}</div>
+            <div style="font-size: 12px; color: #333;">${displayHtml(o.ghi_chu)}</div>
           </div>` : ''}
 
           <div style="margin-bottom: 14px;">
@@ -1344,8 +1359,8 @@
           </div>
 
           <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid #e8e8e8; font-size: 11px; color: #888;">
-            <span>📥 ${o.ngay_nhan || o.nhan || '—'}</span>
-            <span>⏱ ${o.ngay_giao || o.yc_ht || '—'}</span>
+            <span>Nhận: ${o.ngay_nhan || o.nhan || '—'}</span>
+            <span>Hẹn: ${o.ngay_giao || o.yc_ht || '—'}</span>
           </div>
         </div>
       `;

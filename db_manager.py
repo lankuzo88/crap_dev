@@ -53,7 +53,12 @@ def normalize_ascii(value) -> str:
 
 def has_in_mau_ham(value) -> bool:
     n = normalize_ascii(value)
-    return 'in mau ham' in n or ('in mau' in n and 'ham' in n)
+    return (
+        'in mau ham' in n
+        or ('in mau' in n and 'ham' in n)
+        or ('in ban' in n and 'ham' in n)
+        or ('in toan' in n and 'ham' in n)
+    )
 
 def split_phuc_hinh_parts(phuc_hinh):
     return [p.strip() for p in re.split(r';|\r?\n', str(phuc_hinh or '')) if p.strip()]
@@ -201,9 +206,16 @@ def init_db():
         target = default_room_for(row["phuc_hinh"])
         if (row["routed_to"] or '') != target:
             conn.execute("UPDATE don_hang SET routed_to=? WHERE ma_dh=?", (target, row["ma_dh"]))
+    route_existing_production_notes(conn)
     sync_keylab_notes(conn)
     conn.commit()
     conn.close()
+
+def route_existing_production_notes(conn: sqlite3.Connection):
+    rows = conn.execute("SELECT ma_dh, ghi_chu_sx, routed_to FROM don_hang WHERE COALESCE(ghi_chu_sx, '') <> ''").fetchall()
+    for row in rows:
+        if has_in_mau_ham(row["ghi_chu_sx"]) and str(row["routed_to"] or "") not in ("zirco", "both"):
+            conn.execute("UPDATE don_hang SET routed_to='zirco' WHERE ma_dh=?", (row["ma_dh"],))
 
 def sync_keylab_notes(conn: sqlite3.Connection):
     if not KEYLAB_NOTES_PATH.exists():
@@ -216,17 +228,27 @@ def sync_keylab_notes(conn: sqlite3.Connection):
     rows = payload.get('orders') if isinstance(payload, dict) else []
     if not isinstance(rows, list):
         return
+    source = str(payload.get('source', '')).strip() if isinstance(payload, dict) else ''
+    allow_overwrite = source == 'keylab_sql'
     for item in rows:
         ma_dh = str(item.get('ma_dh', '')).strip() if isinstance(item, dict) else ''
         if not ma_dh:
             continue
         note = str(item.get('ghi_chu_sx', '')).strip()
-        found = conn.execute("SELECT ma_dh, ghi_chu_sx FROM don_hang WHERE ma_dh=?", (ma_dh,)).fetchone()
+        if not note:
+            continue
+        found = conn.execute("SELECT ma_dh, ghi_chu_sx, routed_to FROM don_hang WHERE ma_dh=?", (ma_dh,)).fetchone()
         if not found:
             continue
-        if str(found["ghi_chu_sx"] or "").strip():
+        old_note = str(found["ghi_chu_sx"] or "").strip()
+        should_route_zirco = has_in_mau_ham(note)
+        if old_note and not allow_overwrite:
             continue
-        if has_in_mau_ham(note):
+        if old_note == note:
+            if should_route_zirco and str(found["routed_to"] or "") not in ("zirco", "both"):
+                conn.execute("UPDATE don_hang SET routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (ma_dh,))
+            continue
+        if should_route_zirco:
             conn.execute("UPDATE don_hang SET ghi_chu_sx=?, routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
         else:
             conn.execute("UPDATE don_hang SET ghi_chu_sx=?, updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
@@ -235,6 +257,7 @@ def sync_keylab_notes(conn: sqlite3.Connection):
 
 def upsert_don_hang(conn: sqlite3.Connection, row: dict):
     ma_goc, so_phu = parse_ma_dh(row['ma_dh'])
+    clear_empty_ghi_chu = 1 if row.get('clear_empty_ghi_chu') else 0
     conn.execute("""
         INSERT INTO don_hang
             (ma_dh, ma_dh_goc, so_phu, la_don_phu,
@@ -256,7 +279,7 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
             phuc_hinh     = CASE WHEN excluded.phuc_hinh     != '' THEN excluded.phuc_hinh     ELSE phuc_hinh     END,
             sl            = CASE WHEN excluded.sl            >  0  THEN excluded.sl            ELSE sl            END,
             loai_lenh     = CASE WHEN excluded.loai_lenh     != '' THEN excluded.loai_lenh     ELSE loai_lenh     END,
-            ghi_chu       = CASE WHEN excluded.ghi_chu       != '' THEN excluded.ghi_chu       ELSE ghi_chu       END,
+            ghi_chu       = CASE WHEN :clear_empty_ghi_chu THEN excluded.ghi_chu WHEN excluded.ghi_chu != '' THEN excluded.ghi_chu ELSE ghi_chu END,
             trang_thai    = CASE WHEN excluded.trang_thai    != '' THEN excluded.trang_thai    ELSE trang_thai    END,
             tai_khoan_cao = CASE WHEN excluded.tai_khoan_cao != '' THEN excluded.tai_khoan_cao ELSE tai_khoan_cao END,
             barcode_labo  = CASE WHEN excluded.barcode_labo  != '' THEN excluded.barcode_labo  ELSE barcode_labo  END,
@@ -269,6 +292,7 @@ def upsert_don_hang(conn: sqlite3.Connection, row: dict):
         'ma_dh_goc': ma_goc,
         'so_phu': so_phu,
         'la_don_phu': 1 if so_phu is not None else 0,
+        'clear_empty_ghi_chu': clear_empty_ghi_chu,
     })
 
 def upsert_tien_do(conn: sqlite3.Connection, row: dict):
@@ -424,6 +448,7 @@ def import_excel_final(filepath: str) -> dict:
                             'barcode_labo': '',
                             'routed_to': '',
                             'nguon_file': fname,
+                            'clear_empty_ghi_chu': True,
                         })
                         n_orders += 1
 

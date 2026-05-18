@@ -49,10 +49,7 @@
         "error_reports.submit",
         "error_reports.view_own",
         "delay_reports.view_active",
-        "stats.view_daily",
-        "error_reports.review",
-        "delay_reports.submit",
-        "delay_reports.review"
+        "stats.view_daily"
       ]
     },
     {
@@ -91,7 +88,10 @@
         "orders.view_pending",
         "delay_reports.submit",
         "delay_reports.view_active",
-        "stats.view_daily"
+        "stats.view_daily",
+        "orders.route",
+        "error_reports.submit",
+        "error_reports.view_own"
       ]
     },
     {

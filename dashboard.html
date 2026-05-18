@@ -716,7 +716,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div class="d-export-section" id="d-export-section" style="display:none">
         <button class="d-export-btn" id="d-export-btn" onclick="triggerKeylabExport()">
           <span id="d-export-ico">🔄</span>
-          <span id="d-export-lbl">Xuất Excel KeyLab</span>
+          <span id="d-export-lbl">Làm mới</span>
         </button>
       </div>
       <div class="d-funnel">
@@ -1182,6 +1182,24 @@ function fmtDate(s) {
   if (dmy) return dmy[1] + '/' + dmy[2];
   return '';
 }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
+function cleanDisplayText(value) {
+  return String(value ?? '')
+    .replace(/_x000d_\s*/gi, '\n')
+    .replace(/\\x000d|\\x00d|\\u000d|x000d|x00d/gi, '\n')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+function displayHtml(value) {
+  return escapeHtml(cleanDisplayText(value)).replace(/\n/g, '<br>');
+}
 
 /* ═══════ FILTER ═══════ */
 function filterOrders(f, q) {
@@ -1343,12 +1361,12 @@ function openModal(id) {
   const orderId = o.ma_dh || o.id || '';
   document.getElementById('MH').innerHTML = `
     <div class="m-id">${orderId}</div>
-    <div class="m-ph">${o.bn || o.ph || '—'}</div>
-    ${o.bn ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${o.ph || ''}</div>` : ''}
+    <div class="m-ph">${displayHtml(o.bn || o.ph || '—')}</div>
+    ${o.bn ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${displayHtml(o.ph || '')}</div>` : ''}
     <div class="m-tags">
       <span class="mtag ${lkC}">${o.lk || '—'}</span>
       <span class="mtag ph-chip ${phCls(o.ph)}">${phShort(o.ph)} × ${o.sl} răng</span>
-      ${o.kh ? `<span class="mtag" style="color:var(--text2);border-color:var(--border2);background:var(--surface2)">${o.kh}</span>` : ''}
+      ${o.kh ? `<span class="mtag" style="color:var(--text2);border-color:var(--border2);background:var(--surface2)">${displayHtml(o.kh)}</span>` : ''}
     </div>`;
   const stCols = o.stages.map((s, i) => {
     const dc = o.stages.filter(x => x.x).length;
@@ -1362,9 +1380,10 @@ function openModal(id) {
       <div class="st-time ${s.sk ? 'st-time-skip' : ''}">${s.sk ? '' : (s.t ? fmtDate(s.t)+' '+fmtTg(s.t) : '')}</div>
     </div>`;
   }).join('');
-  const allPhText = o.allPh || (o.ph ? `${o.ph} SL:${o.sl || 0}` : '');
-  const allPhHtml = allPhText.split('\n').filter(Boolean).map(l => `<div style="padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px;color:var(--text2)">${l}</div>`).join('');
+  const allPhText = cleanDisplayText(o.allPh || (o.ph ? `${o.ph} SL:${o.sl || 0}` : ''));
+  const allPhHtml = allPhText.split('\n').filter(Boolean).map(l => `<div style="padding:3px 0;border-bottom:1px solid var(--border2);font-size:12px;color:var(--text2)">${escapeHtml(l)}</div>`).join('');
   const deliveryText = o.yc_giao ? `${fmtDate(o.yc_giao)} ${fmtTg(o.yc_giao)}` : '—';
+  const completeText = o.yc_ht ? `${fmtDate(o.yc_ht)} ${fmtTg(o.yc_ht)}` : '—';
   const qtyDeliveryGrid = `
     <div class="info-grid" style="margin-bottom:10px">
       <div class="info-box"><div class="info-label">SL</div><div class="info-val amber">${o.sl || '—'}</div></div>
@@ -1374,11 +1393,11 @@ function openModal(id) {
   const hasExcel = o.bn || o.kh || o.yc_giao;
   const excelGrid = hasExcel ? `
     <div class="info-grid" style="margin-bottom:10px">
-      ${o.bn ? `<div class="info-box"><div class="info-label">BỆNH NHÂN</div><div class="info-val">${o.bn}</div></div>` : ''}
-      ${o.kh ? `<div class="info-box"><div class="info-label">PHÒNG KHÁM</div><div class="info-val" style="font-family:'Lexend',sans-serif;color:${nkColor(o.kh)}">${o.kh}</div></div>` : ''}
+      ${o.bn ? `<div class="info-box"><div class="info-label">BỆNH NHÂN</div><div class="info-val">${displayHtml(o.bn)}</div></div>` : ''}
+      ${o.kh ? `<div class="info-box"><div class="info-label">PHÒNG KHÁM</div><div class="info-val" style="font-family:'Lexend',sans-serif;color:${nkColor(o.kh)}">${displayHtml(o.kh)}</div></div>` : ''}
       ${o.nhan ? `<div class="info-box"><div class="info-label">NHẬN LÚC</div><div class="info-val">${fmtDate(o.nhan)} ${fmtTg(o.nhan)}</div></div>` : ''}
-      ${o.yc_ht ? `<div class="info-box"><div class="info-label">Y/C HOÀN THÀNH</div><div class="info-val amber">${fmtDate(o.yc_ht)} ${fmtTg(o.yc_ht)}</div></div>` : ''}
-      ${o.gc ? `<div class="info-box" style="grid-column:span 2"><div class="info-label">GHI CHÚ</div><div class="info-val" style="color:var(--text2)">${o.gc}</div></div>` : ''}
+      ${o.yc_ht ? `<div class="info-box"><div class="info-label">Y/C HOÀN THÀNH</div><div class="info-val amber">${completeText}</div></div>` : ''}
+      ${o.gc ? `<div class="info-box" style="grid-column:span 2"><div class="info-label">GHI CHÚ</div><div class="info-val" style="color:var(--text2)">${displayHtml(o.gc)}</div></div>` : ''}
     </div>` : '';
   document.getElementById('MB').innerHTML = `
     ${qtyDeliveryGrid}
@@ -2260,7 +2279,7 @@ async function triggerKeylabExport() {
 
   btn.disabled = true;
   ico.textContent = '⏳';
-  lbl.textContent = 'Đang xuất...';
+  lbl.textContent = 'Đang làm mới...';
 
   try {
     const r = await fetch('/keylab-export-now', { method: 'POST' });
@@ -2288,7 +2307,7 @@ function resetExportButton() {
   const ico = document.getElementById('d-export-ico');
   const lbl = document.getElementById('d-export-lbl');
   ico.textContent = '🔄';
-  lbl.textContent = 'Xuất Excel KeyLab';
+  lbl.textContent = 'Làm mới';
   btn.disabled = false;
 }
 
@@ -2308,7 +2327,7 @@ async function pollExportStatus() {
 
       if (exportData.running) {
         ico.textContent = '⏳';
-        lbl.textContent = 'Đang xuất Excel...';
+        lbl.textContent = 'Đang làm mới...';
         return;
       }
 

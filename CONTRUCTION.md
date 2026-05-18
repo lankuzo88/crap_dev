@@ -162,13 +162,14 @@ module.exports = {
 - `reportStats.js` — build thong ke thang cho bao loi ky thuat va bao tre, dung ky 26 thang truoc den 25 thang hien thi.
 
 ### Python script (root)
-- `auto_scrape_headless.py` — daemon 24/7 quet Excel moi, spawn parallel scrape + notes.
+- `auto_scrape_headless.py` — daemon 24/7 quet Excel moi va chay `run_scrape.py` cao tien do web LaboAsia.
 - `run_scrape.py` — runner cho 1 file Excel, 1-4 worker scrape song song.
 - `laboasia_gui_scraper_tkinter.py` — core scraper, login Playwright lay JWT, goi JSON API.
 - `labo_cleaner.py` — clean Excel raw thanh workbook 3-sheet co styling.
 - `db_manager.py` — schema init, import JSON/Excel, stats, sync keylab notes.
-- `keylab_exporter.py` — pywinauto UIA automation Keylab2022 de Xuat Excel.
-- `keylab_notes_scraper.py` — pywinauto cao "Ghi chu SX" tu Keylab2022 vao DB.
+- `keylab_exporter.py` — pywinauto UIA automation Keylab2022 de Xuat Excel. **[DEPRECATED 2026-05-18]** Khong con duoc goi tu pipeline; thay bang `keylab_sql_exporter.ps1`.
+- `keylab_sql_exporter.ps1` — export Excel truc tiep tu SQL Server KeyLab, loc don chua giao co phuc hinh chua `su`/`sứ`, khong can mo app KeyLab.
+- `keylab_sql_notes_scraper.ps1` — lay `ghichusanxuat` truc tiep tu SQL Server KeyLab bang stored procedure, khong can mo UI KeyLab.
 - `import_history_data.py` (neu co) — bulk import lich su vao `tien_do_history`.
 
 ### Frontend HTML (root)
@@ -187,8 +188,8 @@ module.exports = {
 - `sessions.json` — legacy file, session chinh hien nam trong SQLite bang `sessions`.
 - `labo_config.json` — `{last_run_file: "..."}`.
 - `keylab_state.json` — `{date: "DD/MM/YYYY", export_count: N}` cho file naming Keylab export.
-- `scraper_errors.json` — luu loi keylab_notes_scraper de retry notes-only.
-- `keylab_notes.json` (optional) — cache notes goc, sync vao `don_hang.ghi_chu_sx`.
+- `scraper_errors.json` — legacy runtime artifact tu notes scraper cu; auto pipeline hien khong doc file nay.
+- `keylab_notes.json` (optional) — cache notes goc, hien duoc tao tu SQL KeyLab (`source: keylab_sql`) va sync vao `don_hang.ghi_chu_sx`.
 
 ### Config files
 - `package.json` — dependencies, scripts.
@@ -202,25 +203,20 @@ module.exports = {
 
 ### Luong tu Keylab den dashboard (file moi)
 
-1. Admin bam "Xuat Excel KeyLab" trong dashboard hoac auto-process tao file Excel trong `Excel/`.
-2. `keylab_exporter.py --once`:
-   - `find_keylab_window()` quet UIA tim window co title chua "keylab" + ("version" or "lab asia").
-   - Click `btnTimKiem` (auto_id) → wait 3s.
-   - Click `btnXuatExcel` → wait 2s.
-   - Poll Save As dialog (0.3s interval, 5s timeout).
-   - Ctrl+A + type filename `DDMMYYYY_N` (state tu `keylab_state.json`).
-   - Click Save button (auto_id="1").
-   - Dismiss "Open with" dialog (Escape).
-   - Retry toi da 2 lan (3 attempt total), delay 2s.
-   - Print `SAVED:<filepath>` va exit.
+1. Admin bam "Xuat Excel KeyLab" trong dashboard.
+2. Node `spawnKeylabExport()` goi `keylab_sql_exporter.ps1`:
+   - Dat ten file `Excel/DDMMYYYY_N.xlsx` theo `keylab_state.json`.
+   - Goi SQL Server KeyLab bang stored procedure `tblDonHang_DonHangDaNhan_SelectAllByTuNgayDenNgay`.
+   - Loai don da giao (`giaothucte` co gia tri).
+   - Gom phuc hinh theo ma don va loc phuc hinh chua `su`/`sứ`.
+   - Ghi Excel cung header KeyLab goc (`Mã ĐH`, `Nhận lúc`, `Y/c hoàn thành`, `Y/c giao`, `Khách hàng`, `Bệnh nhân`, `Phục hình`, `Ghi chú điều phối`, ...).
+   - Print `SAVED:<filepath>` va exit. Khong can mo app KeyLab.
 3. `auto_scrape_headless.py` (daemon 10 phut/lan):
    - `find_newest_excel()` quet `Excel/` bo `_scraped`, `_final`, `_cleaned`.
    - So sanh voi `labo_config.json.last_run_file`.
-   - **File moi** → `run_new_file()` chay 2 thread song song:
-     - Thread 1: `run_scrape.py <excel_path>` (timeout 300s).
-     - Thread 2: `keylab_notes_scraper.py --new-file` (timeout 1800s).
-   - **File cu + co loi notes truoc** → chi chay `keylab_notes_scraper.py` (retry notes-only).
-   - **File cu OK** → chay `run_scrape.py` (progress-only, khong chay notes).
+   - **File moi** → chay `run_scrape.py <excel_path>` (timeout 300s), import DB, cap nhat `last_run_file`.
+   - **File cu** → chay lai `run_scrape.py <excel_path>` de cap nhat tien do web.
+   - Khong con Keylab notes UI scraper; loi notes/`scraper_errors.json` khong chan vong cao tien do.
 4. `run_scrape.py <excel_path>`:
    - `detect_sheet_col()` — auto-detect sheet (`Đơn hàng`/`Don hang`/`Sheet1`) va column ma_dh (fuzzy match `ma_dh`, `mã ĐH`, `Mã đơn`...).
    - Load 1-4 account tu env `LABO_USER1..4` + `LABO_PASS1..4`.
@@ -235,29 +231,14 @@ module.exports = {
    - Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
    - `subprocess.run(labo_cleaner.py)` → `File_sach/*_final.xlsx`.
    - `db_manager.py init_db()` + `import_json()` + `import_excel_final()` vao SQLite.
+   - Goi `keylab_sql_notes_scraper.ps1` de lay `ghichusanxuat` truc tiep tu SQL KeyLab, ghi `keylab_notes.json`, roi sync vao `don_hang.ghi_chu_sx`.
    - Cleanup file trung gian `Data/*` va `File_sach/*` sau import.
    - Exit 0 neu co result, 1 neu khong.
-5. `keylab_notes_scraper.py --new-file`:
-   - Quet Excel active, load list ma_dh.
-   - `wait_for_db_import()` poll `import_log` toi 7 phut (lau hon run_scrape 5 phut).
-   - Sau khi DB co data, filter:
-     - Skip neu `ghi_chu_sx IS NOT NULL AND != ''` (da co notes).
-     - Skip neu `phuc_hinh` co "in mau" (`has_in_mau()`).
-   - Cho moi ma_dh todo:
-     - Filter Row → input ma_dh → Enter (wait 0.5s).
-     - Double-click row → mo detail form (wait 0.8s).
-     - Doc cell "Ghi chu SX row N" tu `gridControlDonHang`.
-     - Click `btnDongLai` close detail (wait 0.3s).
-     - Clear filter (wait 0.3s).
-   - Batch save moi 10 don: `UPDATE don_hang SET ghi_chu_sx = ?` (chi neu ghi_chu_sx hien tai rong).
-   - Neu note co "in mau ham" → `UPDATE routed_to = 'zirco'`.
-   - Ghi loi vao `scraper_errors.json` neu fail. Xoa file neu success va co loi truoc.
-   - **`os._exit(0 or 2)`** de tranh COM thread hang.
-6. Node API doc SQLite, frontend render dashboard.
+5. Node API doc SQLite, frontend render dashboard.
 
 ### Luong khi cung file (re-poll)
 - `auto_scrape_headless.py` chay lai `run_scrape.py` cho progress moi.
-- Notes chi retry khi `scraper_errors.json` bao co loi.
+- Khong co notes-only retry nua.
 
 ### Luong upload web
 1. Admin upload Excel qua form `POST /upload` (multer single('excel'), max 20MB, mime `.xlsx/.xls/.xlsm`).
@@ -284,7 +265,7 @@ WAL checkpoint: `PRAGMA wal_checkpoint(TRUNCATE)` moi 30 phut tu `src/db/index.j
 
 ### Bang `don_hang` — master order
 
-Mot dong per `ma_dh`. Writer: `db_manager.py.upsert_don_hang()`, `keylab_notes_scraper.py`. Reader: Node `orders.routes.js`, frontend `data.json`.
+Mot dong per `ma_dh`. Writer chinh: `db_manager.py.upsert_don_hang()` tu Excel/web scrape. Reader: Node `orders.routes.js`, frontend `data.json`.
 
 | Cot | Kieu | Default | Y nghia |
 |---|---|---|---|
@@ -688,7 +669,13 @@ Match keywords (normalize NFD lowercase remove diacritics):
 
 ### `hasInMauHam(text)`
 
-Check `'in mau ham'` hoac (`'in mau'` + `'ham'`) trong `phuc_hinh` OR `ghi_chu_sx`. Neu match → override room sang `zirco`.
+Check cac pattern sau trong `phuc_hinh` OR `ghi_chu_sx`:
+- `'in mau ham'`
+- (`'in mau'` + `'ham'`)
+- (`'in ban'` + `'ham'`) — them 2026-05-18
+- (`'in toan'` + `'ham'`) — them 2026-05-18
+
+Neu match bat ky → override room sang `zirco`.
 
 ### Route API
 
@@ -971,24 +958,21 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 ### auto_scrape_headless.py
 
 - Entry: `main()` vong lap vo tan, khong CLI flag.
-- Config: `INTERVAL_MINUTES = 10`, `NOTES_TIMEOUT_SECONDS = 30*60 = 1800s`, `run_scrape timeout = 300s`.
+- Config: `INTERVAL_MINUTES = 10`, `run_scrape timeout = 300s`.
 - Function chinh:
   - `find_newest_excel()` — quet `Excel/`, bo file `_scraped/_final/_cleaned`.
   - `get_last_run_file()` — doc `labo_config.json.last_run_file`.
-  - `should_retry_failed_notes()` — kiem tra `scraper_errors.json`.
-  - `scrape_excel(file, run_notes)` — subprocess `run_scrape.py`.
-  - `scrape_keylab_notes(file)` — subprocess `keylab_notes_scraper.py`.
-  - `run_new_file(file)` — `threading` chay song song 2 thread (run_scrape + keylab_notes_scraper).
+  - `scrape_excel(file)` — subprocess `run_scrape.py`, cap nhat `last_run_file` khi thanh cong.
 - Flow:
   1. Lap moi 10 phut.
   2. Tim Excel moi nhat.
   3. Compare voi `last_run_file`:
-     - File moi → `run_new_file()` (parallel).
-     - File cu + notes loi → notes-only retry.
-     - File cu OK → progress-only.
+     - File moi → `scrape_excel()` de cao tien do web va import SQLite.
+     - File cu → `scrape_excel()` de cap nhat tien do web.
+     - Khong con chay Keylab notes UI scraper.
   4. Cap nhat `last_run_file` neu run_scrape thanh cong.
   5. Log vao `auto_scrape.log` + stdout.
-- Error handling: subprocess timeout → log error, tiep tuc cycle. Thread join: 310s run_scrape, 1800s+ notes.
+- Error handling: subprocess timeout → log error, tiep tuc cycle sau. Khong co thread notes.
 
 ### run_scrape.py
 
@@ -1009,8 +993,9 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   8. Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
   9. `subprocess.run(labo_cleaner.py <scraped.xlsx>)` → `File_sach/<stem>_final.xlsx`.
   10. `db_manager.init_db()` + `import_json()` + `import_excel_final()`.
-  11. Cleanup: xoa `json_out`, `scraped_xlsx`, `clean_out`, temp xlsx.
-  12. Exit 0 neu co result, 1 neu khong.
+  11. `sync_keylab_sql_notes()` goi `keylab_sql_notes_scraper.ps1` bang PowerShell de cap nhat `keylab_notes.json`, sau do goi lai `init_db()` de sync vao SQLite.
+  12. Cleanup: xoa `json_out`, `scraped_xlsx`, `clean_out`, temp xlsx.
+  13. Exit 0 neu co result, 1 neu khong.
 
 ### laboasia_gui_scraper_tkinter.py
 
@@ -1076,11 +1061,12 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   - `norm_date(val)` → `DD/MM/YYYY HH:MM:SS`.
   - `upsert_don_hang(conn, row)` — INSERT ON CONFLICT DO UPDATE (prefer non-empty fields).
   - `upsert_tien_do(conn, row)` — INSERT ON CONFLICT DO UPDATE.
-  - `sync_keylab_notes(conn)` — read `keylab_notes.json` → UPDATE `don_hang.ghi_chu_sx`.
+  - `sync_keylab_notes(conn)` — read `keylab_notes.json` → UPDATE `don_hang.ghi_chu_sx`; neu `source=keylab_sql` thi duoc phep overwrite note cu de thay cache UI/mojibake.
 - PRAGMA: WAL, foreign_keys=ON, busy_timeout=30000.
 
 ### keylab_exporter.py
 
+- Legacy UI fallback. Luong export binh thuong cua dashboard hien dung `keylab_sql_exporter.ps1`.
 - CLI flags:
   - `--debug` — print control tree (find auto_id).
   - `--debug-save` — debug Save As dialog detection.
@@ -1099,34 +1085,6 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   7. Dismiss "Open with" dialog (Escape).
 - Output: `Excel/DDMMYYYY_N.xlsx`. Print `SAVED:<path>` cho stdout.
 - Logs: `keylab_export.log`.
-
-### keylab_notes_scraper.py
-
-- CLI flags:
-  - (no flag) — normal mode, require DB co data.
-  - `--dry-run` — test filter, khong click.
-  - `--new-file` — parallel voi run_scrape, wait DB import.
-- Config: `BATCH_SIZE=10`, `FILTER_WAIT_SEC=0.5`, `DETAIL_WAIT_SEC=0.8`, `CLOSE_WAIT_SEC=0.3`, `CLEAR_WAIT_SEC=0.3`, `WAIT_FOR_DB_SEC=420` (7 phut).
-- Filter logic `get_todo_from_db()`:
-  1. Load tat ca ma_dh tu Excel active.
-  2. Query DB `ghi_chu_sx`, `phuc_hinh` cho moi ma_dh.
-  3. Skip neu `ghi_chu_sx IS NOT NULL AND != ''`.
-  4. Skip neu `has_in_mau(phuc_hinh)`.
-  5. Don khong trong DB → van them vao todo (scrape va save sau khi DB co data).
-  6. Stats: Tong / Da co / Co InMau / Chua DB / Can cao.
-- Flow per ma_dh:
-  1. Filter Row → input ma_dh → Enter (wait 0.5s).
-  2. Find visible row in Data Panel.
-  3. Double-click → mo detail `FormTaoDonHang` (wait 0.8s).
-  4. Doc cell `Ghi chú SX row N` tu `gridControlDonHang` (multi-method fallback).
-  5. Click `btnDongLai` (wait 0.3s).
-  6. Clear filter (wait 0.3s).
-- Batch save moi 10 don: `UPDATE don_hang SET ghi_chu_sx = ?` (chi neu ghi_chu_sx hien tai rong).
-- Neu `has_in_mau_ham(note)` → `UPDATE routed_to = 'zirco'`.
-- Error → ghi `scraper_errors.json`. Success + had errors → delete file.
-- **`os._exit(0 or 2)`** — tranh COM thread giu process hang.
-
----
 
 ## 12. Bao loi ky thuat, bao tre, image va R2
 
@@ -1288,7 +1246,7 @@ Get-ChildItem -Path src -Recurse -Filter *.js | ForEach-Object { node --check $_
 
 ### Syntax check Python
 ```powershell
-python -m py_compile auto_scrape_headless.py run_scrape.py keylab_notes_scraper.py keylab_exporter.py db_manager.py labo_cleaner.py laboasia_gui_scraper_tkinter.py
+python -m py_compile auto_scrape_headless.py run_scrape.py keylab_exporter.py db_manager.py labo_cleaner.py laboasia_gui_scraper_tkinter.py
 ```
 
 ### DB commands
@@ -1306,8 +1264,6 @@ python run_scrape.py Excel\some_file.xls
 python auto_scrape_headless.py
 python keylab_exporter.py --check
 python keylab_exporter.py --once
-python keylab_notes_scraper.py --dry-run
-python keylab_notes_scraper.py --new-file
 ```
 
 ### PM2 commands
@@ -1431,10 +1387,10 @@ Logic phan loai phuc hinh + stage skip nam o:
 **Sua rule nghiep vu phai dong bo tat ca cho tren.**
 
 ### Automation Windows
-- `keylab_exporter.py` va `keylab_notes_scraper.py` phu thuoc Keylab2022 dang mo + UI control id co dinh.
+- `keylab_exporter.py` phu thuoc Keylab2022 dang mo + UI control id co dinh.
 - Focus / window state co the lam automation fail.
-- `keylab_notes_scraper.py` dung `os._exit()` de tranh COM thread giu process hang.
-- Save dialog + detail form co retry / timing rieng, KHONG nen toi uu sleep neu chua test that.
+- Save dialog co retry / timing rieng, KHONG nen toi uu sleep neu chua test that.
+- Keylab notes UI scraper da bi go bo; khong them lai vao daemon neu chua co yeu cau ro.
 
 ### Security
 - KHONG log password, session token, R2 secret.
@@ -1498,8 +1454,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 
 ### Hieu Keylab
 1. `keylab_exporter.py` (export Excel)
-2. `keylab_notes_scraper.py` (cao ghi chu SX)
-3. `auto_scrape_headless.py` (orchestration)
+2. `auto_scrape_headless.py` (orchestration sau khi co Excel: chi cao web)
 
 ### Hieu bao loi
 1. `src/routes/errorReports.routes.js`

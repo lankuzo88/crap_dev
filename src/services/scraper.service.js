@@ -29,6 +29,7 @@ const webUploadFiles    = new Set();
 const manualKeyLabExports = new Set();
 
 const KEYLAB_FILE_RE = /^\d{8}_\d+\.(xls|xlsx|xlsm)$/i;
+const KEYLAB_STATE_FILE = pathMod.join(BASE_DIR, 'keylab_state.json');
 
 // Cache reset callback — injected by orders.repo to break circular dep
 let _resetCache = () => {};
@@ -140,35 +141,55 @@ function autoScrape() {
 }
 
 function checkKeylabHealth() {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(PYTHON, ['keylab_exporter.py', '--check'], {
-      cwd: BASE_DIR,
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
-    });
-    let stdout = '';
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    const timeout = setTimeout(() => { proc.kill(); reject(new Error('Health check timeout')); }, 3000);
-    proc.on('close', code => {
-      clearTimeout(timeout);
-      if (code === 0) {
-        const match = stdout.match(/OK: (.+)/);
-        resolve({ ok: true, message: `Keylab đang chạy: ${match ? match[1].trim() : 'Keylab2022'}` });
-      } else {
-        const error = stdout.includes('ERROR:') ? stdout.split('ERROR:')[1].trim() : 'Keylab2022 không chạy';
-        resolve({ ok: false, message: error });
-      }
-    });
-    proc.on('error', err => { clearTimeout(timeout); reject(err); });
-  });
+  const script = pathMod.join(BASE_DIR, 'keylab_sql_exporter.ps1');
+  if (!fsNode.existsSync(script)) {
+    return Promise.resolve({ ok: false, message: 'Khong tim thay keylab_sql_exporter.ps1' });
+  }
+  return Promise.resolve({ ok: true, message: 'KeyLab SQL export san sang (khong can mo app KeyLab)' });
+}
+
+function loadKeylabExportState() {
+  const today = new Date().toLocaleDateString('vi-VN');
+  try {
+    const state = JSON.parse(fsNode.readFileSync(KEYLAB_STATE_FILE, 'utf8'));
+    if (state.date === today && Number.isFinite(Number(state.export_count))) return state;
+  } catch {}
+  return { date: today, export_count: 1 };
+}
+
+function saveKeylabExportState(state) {
+  fsNode.writeFileSync(KEYLAB_STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+}
+
+function nextKeylabSqlExportPath(state) {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(d.getFullYear());
+  return pathMod.join(EXCEL_DIR, `${dd}${mm}${yyyy}_${state.export_count}.xlsx`);
 }
 
 function spawnKeylabExport() {
   keylabExportJob = { running: true, startedAt: new Date().toISOString(), exitCode: null, savedFile: null };
-  log('⌨  Keylab export triggered manually');
+  log('Keylab SQL export triggered manually');
 
-  const proc = spawn(PYTHON, ['keylab_exporter.py', '--once'], {
+  const state = loadKeylabExportState();
+  const outFile = nextKeylabSqlExportPath(state);
+  const filename = pathMod.basename(outFile);
+  manualKeyLabExports.add(filename);
+
+  const proc = spawn('powershell.exe', [
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    pathMod.join(BASE_DIR, 'keylab_sql_exporter.ps1'),
+    '-OutFile',
+    outFile,
+  ], {
     cwd: BASE_DIR,
-    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    env: { ...process.env },
+    windowsHide: true,
   });
 
   let stdout = '';
@@ -183,6 +204,7 @@ function spawnKeylabExport() {
   proc.on('error', err => {
     keylabExportJob.running = false;
     keylabExportJob.exitCode = -1;
+    manualKeyLabExports.delete(filename);
     log(`[keylab] spawn error: ${err.message}`);
   });
   proc.on('close', code => {
@@ -191,9 +213,11 @@ function spawnKeylabExport() {
     const match = stdout.match(/SAVED:(.+)/);
     if (match) {
       keylabExportJob.savedFile = match[1].trim();
-      const filename = pathMod.basename(keylabExportJob.savedFile);
-      manualKeyLabExports.add(filename);
+      state.export_count += 1;
+      saveKeylabExportState(state);
       log(`[keylab] Marked for scrape: ${filename}`);
+    } else {
+      manualKeyLabExports.delete(filename);
     }
     log(`[keylab] done (exit=${code})${keylabExportJob.savedFile ? ' → ' + keylabExportJob.savedFile : ''}`);
   });

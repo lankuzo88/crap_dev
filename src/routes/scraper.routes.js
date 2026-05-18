@@ -60,15 +60,15 @@ router.post('/keylab-export-now', requirePermission('admin.keylab_export'), asyn
     const healthCheck = await checkKeylabHealth();
     if (!healthCheck.ok) {
       log(`⚠ Pre-flight check failed: ${healthCheck.message}`);
-      return res.status(503).json({ ok: false, message: 'Keylab2022 không chạy. Vui lòng mở app trước.' });
+      return res.status(503).json({ ok: false, message: healthCheck.message });
     }
     log(`✓ Pre-flight check passed: ${healthCheck.message}`);
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Không thể kiểm tra Keylab2022' });
+    return res.status(500).json({ ok: false, message: 'Không thể kiểm tra KeyLab SQL export' });
   }
 
   spawnKeylabExport();
-  res.json({ ok: true, message: 'Đang xuất Excel từ KeyLab...' });
+  res.json({ ok: true, message: 'Đang xuất Excel từ KeyLab SQL...' });
 });
 
 router.get('/keylab-export-status', requireAuth, (req, res) => {

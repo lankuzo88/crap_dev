@@ -37,8 +37,8 @@ function normalizeRuleText(value) {
 }
 
 function hasThuSuonMarker(value) {
-  const text = normalizeRuleText(value);
-  return /\bts\b/.test(text) || text.includes('thu suon');
+  const text = normalizeRuleText(value).replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  return /\b[a-z]{0,4}ts\b/.test(text) || text.includes('thu suon') || text.includes('thu tho');
 }
 
 function getSkipStages(lk, gc) {

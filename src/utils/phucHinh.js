@@ -27,7 +27,7 @@ function classifyPhucHinh(text) {
   );
 
   if (n.includes('cui gia') && n.includes('zirconia')) return 'hon';
-  if (n.includes('in mau') || n.includes('mau ham')) return 'inmau';
+  if (hasInMauHam(raw) || n.includes('mau ham')) return 'inmau';
   if (n.includes('rang tam') || t.includes('pmma') || n.includes('in resin')) return 'tam';
 
   if (t.includes('veneer')) {
@@ -96,7 +96,12 @@ function getDefaultRoom(phucHinh) {
 
 function hasInMauHam(text) {
   const n = normalize(text);
-  return n.includes('in mau ham') || (n.includes('in mau') && n.includes('ham'));
+  return (
+    n.includes('in mau ham') ||
+    (n.includes('in mau') && n.includes('ham')) ||
+    (n.includes('in ban') && n.includes('ham')) ||
+    (n.includes('in toan') && n.includes('ham'))
+  );
 }
 
 function getRoomWithProductionNote(phucHinh, note) {

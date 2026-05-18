@@ -24,6 +24,60 @@ BASE_URL      = 'https://laboasia.com.vn/scan'
 SHEET_HINTS   = ['Đơn hàng', 'Don hang', 'Sheet1', 'Sheet']
 COL_HINTS     = ['Mã ĐH', 'mã_dh', 'ma_dh', 'Mã đơn', 'MaDH', 'ORDER_ID']
 
+def sync_keylab_sql_notes(order_ids, stem):
+    """Refresh KeyLab production notes through SQL stored procedures."""
+    if os.environ.get('KEYLAB_SQL_NOTES_DISABLED', '').strip() == '1':
+        log('[runner] KeyLab SQL notes disabled by env.')
+        return False
+
+    script = BASE_DIR / 'keylab_sql_notes_scraper.ps1'
+    if not script.exists():
+        log('[runner] KeyLab SQL notes script not found, skip.')
+        return False
+    if sys.platform != 'win32':
+        log('[runner] KeyLab SQL notes require Windows PowerShell, skip.')
+        return False
+
+    order_file = DATA_DIR / f'{stem}_keylab_order_ids.txt'
+    try:
+        order_file.write_text(
+            '\n'.join(str(x).strip() for x in order_ids if str(x).strip()),
+            encoding='utf-8',
+        )
+        r = subprocess.run(
+            [
+                'powershell.exe',
+                '-NoProfile',
+                '-ExecutionPolicy',
+                'Bypass',
+                '-File',
+                str(script),
+                '-OrderFile',
+                str(order_file),
+                '-OutFile',
+                str(BASE_DIR / 'keylab_notes.json'),
+            ],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            timeout=180,
+            creationflags=_NO_WINDOW,
+        )
+        output = ((r.stdout or '') + (r.stderr or '')).strip()
+        if r.returncode == 0:
+            log(f'[runner] KeyLab SQL notes OK: {output}')
+            return True
+        log(f'[runner] KeyLab SQL notes failed (code {r.returncode}): {output[-600:]}')
+    except Exception as e:
+        log(f'[runner] KeyLab SQL notes error: {e}')
+    finally:
+        try:
+            order_file.unlink(missing_ok=True)
+        except Exception:
+            pass
+    return False
+
 def detect_sheet_col(xlsx_path: str):
     """Tự nhận diện tên sheet và cột mã đơn hàng."""
     import pandas as pd
@@ -192,6 +246,9 @@ def run(excel_path: str):
         if cleaner_path.exists():
             r_xl = import_excel_final(clean_out)
             log(f'[runner] DB import Excel: {r_xl}')
+        if sync_keylab_sql_notes(order_ids, stem):
+            init_db()
+            log('[runner] DB sync KeyLab SQL notes: OK')
     except Exception as e:
         log(f'[runner] DB import lỗi (không ảnh hưởng scrape): {e}')
 

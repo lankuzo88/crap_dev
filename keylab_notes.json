@@ -1,322 +1,355 @@
 {
-  "scraped_at": "2026-05-13 03:46:15",
-  "excel_active": "13052026_2.xls",
-  "total": 54,
-  "errors": 24,
-  "orders": [
-    {
-      "ma_dh": "260905031-2",
-      "ghi_chu_sx": "Sửa sứ hỏi C Trang. C Trang qua NK so màu"
-    },
-    {
-      "ma_dh": "260805065-1",
-      "ghi_chu_sx": "Sửa . KT THAM KHẢO HÌNH + VIDEO Ạ"
-    },
-    {
-      "ma_dh": "261205063",
-      "ghi_chu_sx": "Thử sườn\r\nBS dặn : chỗ R24 mới nhổ, làm sâu xuống cổ răng 1mm để nướu còn teo thêm\r\nKT THAM KHẢO HÌNH & VIDEO"
-    },
-    {
-      "ma_dh": "261205048",
-      "ghi_chu_sx": "Hoàn tất\r\nBN là nữ. | Đã tách giấy."
-    },
-    {
-      "ma_dh": "261205046",
-      "ghi_chu_sx": "Hoàn tất\r\nLàm R thon gọn, tròn cung. Giảm hô. Phủ cùi. Làm dễ gắn. Làm KC chạm nhẹ.\r\nA Lân đã xem cùi: IN MẪU HÀM. CS1"
-    },
-    {
-      "ma_dh": "261205044",
-      "ghi_chu_sx": "Hoàn tất\r\nLàm múi R hàm gọn. R thon gọn. KC vừa chạm (KC BN mỏng).\r\nA Lân đã xem cùi. CS1"
-    },
-    {
-      "ma_dh": "261205035",
-      "ghi_chu_sx": "Hoàn tất. Mất R41\r\nRăng sống tuỷ\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. A. Lân đã xem."
-    },
-    {
-      "ma_dh": "261105045",
-      "ghi_chu_sx": "Hoàn tất\r\nGiảm hô HD. BN làm lại HT. R thon gọn, tròn cung.\r\nVói R46, R vói làm nhỏ thôi, làm múi gọn.\r\nA Lân đã trao đổi: Nâng khớp. 34-35 cho hở khớp.\r\nCS1"
-    },
-    {
-      "ma_dh": "261105036",
-      "ghi_chu_sx": "Hoàn tất\r\nDáng đẹp gọn. Làm dễ gắn. Chú ý: ĐHT.\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261105034",
-      "ghi_chu_sx": "Hoàn tất\r\nDáng đẹp gọn. Chú ý: ĐHT.\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "260205027-2",
-      "ghi_chu_sx": "Làm lại hoàn tất\r\nCó mài chỉnh đường viền ĐHT 1 chút mới LDL. Bể sứ vách T Gần.\r\nMặt nhai là sườn. Màu mặt ngoài hiện giờ bị tối xám xám cho sáng 1 chút. CÓ HÌNH (Bị tối nhìu. Cho lợt hơn)\r\nKT xem giấy chỉ định kèm theo.\r\nA Lân đã xem cùi..GẤP ĐÃ HẸN. Nhận kèm 1R cũ trong hộp nhựa của NK (gửi trả NK)."
-    },
-    {
-      "ma_dh": "261205034",
-      "ghi_chu_sx": "Hoàn tất\r\nR23 đường vòng lớn nhất.\r\nA Lân đã xem cùi: để sau này đặt móc tháo lắp. IN MẪU HÀM.\r\nNhận mẫu HD NK dán sẵn."
-    },
-    {
-      "ma_dh": "261205019",
-      "ghi_chu_sx": "Hoàn tất\r\nLÀM RỜI.\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261205037",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261205013",
-      "ghi_chu_sx": "Hoàn tất\r\nLàm sườn mỏng, cụp cô hết mức có thể\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "261205008",
-      "ghi_chu_sx": "Hoàn tất\r\nR12 đúc chốt\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "261205007",
-      "ghi_chu_sx": "Hoàn tất\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "261205005",
-      "ghi_chu_sx": "Hoàn tất\r\nR33 đúc chốt\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "261205001",
-      "ghi_chu_sx": "Hoàn tất. Không hẹn"
-    },
-    {
-      "ma_dh": "261205018",
-      "ghi_chu_sx": "Hoàn tất\r\nChỉnh hở khớp, BN cắn rất mạnh\r\nA. Lân đã xem | Hoàn tất\r\nR22 mặt trong bằng kim loại\r\nLàm cầu (22-27)"
-    },
-    {
-      "ma_dh": "261205017",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261205016",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261205031",
-      "ghi_chu_sx": "Hoàn tất\r\nDáng R gọn.\r\nA Lân đã xem cùi: vói R35. Gọt nhịp R43 trước khi làm."
-    },
-    {
-      "ma_dh": "261001034-1",
-      "ghi_chu_sx": "Bảo hành hoàn tất\r\nLàm onlay\r\nA. Lân đã trao đổi"
-    },
-    {
-      "ma_dh": "261205029",
-      "ghi_chu_sx": "Hoàn tất\r\nA. Lân đã trao đổi: BN còn làm HD. Chỉnh hàm đối để đều mặt phẳng nhai"
-    },
-    {
-      "ma_dh": "261205026",
-      "ghi_chu_sx": "Nhận 2R sứ\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "261205022",
-      "ghi_chu_sx": "Hoàn tất\r\nA. Lân đã xem. IN MẪU HÀM"
-    },
-    {
-      "ma_dh": "261205021",
-      "ghi_chu_sx": "Hoàn tất\r\nA. Lân đã xem"
-    },
-    {
-      "ma_dh": "262404023-1",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261205047",
-      "ghi_chu_sx": "Hoàn tất\r\nLàm kẹp sứ."
-    },
-    {
-      "ma_dh": "262704053-2",
-      "ghi_chu_sx": "Mẻ sứ ĐHT. Có thể kéo dài sứ ĐHT thêm ít được không?\r\nA Lân đã xem."
-    },
-    {
-      "ma_dh": "260905046-3",
-      "ghi_chu_sx": "BN yêu cầu cho R dài tí bằng R22. Có hình R tạm. Dài giống R tạm \r\nA Lân đã xem"
-    },
-    {
-      "ma_dh": "260805043-1",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã trao đổi."
-    },
-    {
-      "ma_dh": "260905035-1",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã trao đổi."
-    },
-    {
-      "ma_dh": "261205061",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã trao đổi."
-    },
-    {
-      "ma_dh": "261105046",
-      "ghi_chu_sx": "Hoàn tất"
-    },
-    {
-      "ma_dh": "260905053-1",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "261105054-1",
-      "ghi_chu_sx": "Đắp hoàn tất - A Lân đã xem\r\nThêm ĐHT R13 thiếu ngoài + trong \r\nBS dặn thêm : cầu R13-16 thiếu đường hoàn tất nhiều của R13, nên đắp sứ chồm qua nha"
-    },
-    {
-      "ma_dh": "261205071",
-      "ghi_chu_sx": "Hoàn tất - A Lân đã xem cùi"
-    },
-    {
-      "ma_dh": "261205064",
-      "ghi_chu_sx": "Hoàn tất\r\nBS dặn : nướu răng 21 cao hơn R11( có ghể đắp ít sứ hồng R21 cho đều với R11)\r\nKT THAM KHẢO HÌNH & VIDEO Ạ"
-    },
-    {
-      "ma_dh": "261205053",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi. Không HĐ."
-    },
-    {
-      "ma_dh": "261205052",
-      "ghi_chu_sx": "Hoàn tất\r\nDáng R nhỏ gọn.\r\nA Lân đã xem cùi. Không HĐ."
-    },
-    {
-      "ma_dh": "261205051",
-      "ghi_chu_sx": "Hoàn tất\r\nA Lân đã xem cùi. Không HĐ."
-    },
-    {
-      "ma_dh": "261205050",
-      "ghi_chu_sx": "Hoàn tất\r\nĐè nhịp nhổ 2mm, (11-22) dáng R nhỏ gọn không hô.\r\nA Lân đã xem cùi."
-    },
-    {
-      "ma_dh": "262804044-1",
-      "ghi_chu_sx": "Hoàn tất\r\nVói R36 37 46 47 làm gọn. Giảm hô tối đa. Tròn cung. R thon gọn.\r\nA Lân đã xem cùi: IN MẪU HÀM. CS1\r\n12h thứ 4 (13/5) xong sứ --> A Bửu | Thử R\r\nGiảm hô. KC phủ R Hduoi.\r\nGửi kèm 14R sứ -> gói kỹ giúp em."
-    },
-    {
-      "ma_dh": "261205045",
-      "ghi_chu_sx": "Hoàn tất\r\nLàm R thon gọn.\r\nA Lân đã xem cùi. CS1"
-    },
-    {
-      "ma_dh": "260205045-2",
-      "ghi_chu_sx": "Làm thêm hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
-    },
-    {
-      "ma_dh": "261205039",
-      "ghi_chu_sx": "Hoàn tất. Răng sống tuỷ\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn"
-    },
-    {
-      "ma_dh": "261205036",
-      "ghi_chu_sx": "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn"
-    },
-    {
-      "ma_dh": "261205069",
-      "ghi_chu_sx": "Thử sườn - A Lân đã xem cùi \r\nĐHT dưới nướu, bờ cong. Sườn mỏng tối đa"
-    },
-    {
-      "ma_dh": "261205067",
-      "ghi_chu_sx": "Hoàn tất | In toàn hàm hay bán hàm ghi lại giúp em ạ"
-    },
-    {
-      "ma_dh": "261205066",
-      "ghi_chu_sx": "Hoàn tất - A Lân đã xem cùi"
-    },
-    {
-      "ma_dh": "261205070",
-      "ghi_chu_sx": "Hoàn tất | In toàn hàm hay bán hàm ghi lại giúp em ạ"
-    },
-    {
-      "ma_dh": "261205076",
-      "ghi_chu_sx": "Thử sườn - A Lân đã xem cùi | Đã tách giấy"
-    }
-  ],
-  "error_list": [
-    {
-      "ma_dh": "261005034-1",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "260905058-2",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "261105042",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261105029",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "261504071-3",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205068",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260605001-2",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205012",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "261205011",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205003",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205015",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "20311050-09",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260805014-1",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "261205033",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205030",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "260905015-1",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261205020",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260905033-1",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260705035-1",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "260905032-1",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "261105052-1",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    },
-    {
-      "ma_dh": "261205075",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260705028-1",
-      "err": "not_visible"
-    },
-    {
-      "ma_dh": "260505070-2",
-      "err": "read_err:{'auto_id': 'FormTaoDonHang', 'control_type': 'Window', 'top_level_only': False, 'parent': <uia_element_info.UIAElementInfo - 'LAB ASIA - KEYLAB VERSION 2022 - SUPPORT 24/7 : 0968 567 050 - EMAIL: DENTALLAB.COM.VN@GMAIL.COM', WindowsForms10.Window.8.app.0.134c08f_r6_ad1, 853412>, 'backend': 'uia'}"
-    }
-  ]
+    "scraped_at":  "2026-05-18 23:49:32",
+    "source":  "keylab_sql",
+    "procedure":  "dbo.tblDonHang_DonHangDaNhan_SelectAllByIDDonHang_SoPhieu",
+    "total":  69,
+    "matched":  69,
+    "errors":  0,
+    "orders":  [
+                   {
+                       "ma_dh":  "261505035-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "251307007-2",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất - A Lân đã xem cùi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "251611006-4",
+                       "ghi_chu_sx":  "Làm lại hoàn tất - của bảo hành (nhận kèm 3R cũ)\r\nThiếu ĐHT mặt trong , đã lấy dấu lại \r\nAnh Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "260405022-2",
+                       "ghi_chu_sx":  "Chỉnh lại dáng R \r\nAnh Lân đã trao đổi : kéo dài CC thêm 1mm",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "260605026-1",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261205029-1",
+                       "ghi_chu_sx":  "Làm thêm hoàn tất\r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261505017-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261605018",
+                       "ghi_chu_sx":  "Hoàn tất\r\nMy đã xem cùi. IN MẪU HÀM",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261605025-1",
+                       "ghi_chu_sx":  "Đắp hoàn tất\r\nR11-21 lên khoảng 2 yem. R22 mặt trong mài lên khoảng 2 yem. R23 khểnh nhẹ. Phủ sứ mỏng gọn gọn.\r\nChỉ định TS: R nhỏ gọn, giảm hô. KHÔNG HẸN\r\nA Lân đã xem.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261605043",
+                       "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hay bán hàm ghi lại nha!",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261705005",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705006",
+                       "ghi_chu_sx":  "Hoàn tất\r\nHoàn tất\r\nA Lân đã xem cùi : không đục lỗ",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261705009",
+                       "ghi_chu_sx":  "Hoàn tất - Làm rời",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705011",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705013",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐắp sứ giống như R bị tụt nướu\r\nA Lân đã trao đổi : cùi sống, dấu chạy R cối, đã báo BS -\u003e làm bình thường có thể gọt bỏ",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705016",
+                       "ghi_chu_sx":  "Hoàn tất - 20 đv\r\nCầu 36-45 : 10đv , mất R41. Tựa R37\r\nAnh Lân đã trao đổi : Đắp lẹm dễ gắn",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262504008-2",
+                       "ghi_chu_sx":  "Đệm sứ CR 11-23 \r\nAnh Lân đã trao đổi : Thêm nhịp chỗ đánh dấu . Ép CC R23",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261205057-1",
+                       "ghi_chu_sx":  "Thử sườn \r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261205076-1",
+                       "ghi_chu_sx":  "Đắp hoàn tất\r\nChị My đã trao đổi : Thêm những chỗ bs đánh dấu. R21 không làm đưa ra theo cung R22 . Làm giảm hô tối đa . R dài hơn 22 xíu thôi . Có mẫu cũ của BN",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261505036-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261505036-2",
+                       "ghi_chu_sx":  "Làm thêm thử sườn\r\nA. Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705041",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262304034-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "260505069-3",
+                       "ghi_chu_sx":  "Thêm nhịp sát thạch cao.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "260905031-3",
+                       "ghi_chu_sx":  "Nứt sứ mặt trong đường giữa R11-21\r\nR11, 21 lép mặt (N)--\u003e đắp sứ để cong lồi R11, 21 1/2 rìa. Đắp nhịp R12-22\r\nKhớp cắn R24, 25 hở--\u003e thêm sứ. A. Lân đã xem\r\nBsi gửi HÌNH",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261505051-1",
+                       "ghi_chu_sx":  "Làm lại thử sườn. Nhận 7 sườn cũ\r\nDo sườn rất lỏng. Thiếu ĐHT R12, 22 nhiều\r\nChia lại cầu: (12-23) (13-14). A. Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "240808062-2",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất do bể sứ\r\nLàm thêm hoàn tất\r\nChú ý mài hở khớp. 2 cầu (12-22) và (23-25)\r\nA Lân đã xem cùi.",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261105035-2",
+                       "ghi_chu_sx":  "Sửa lại (bể sứ)\r\nA Lân đã trao đổi: kéo sứ ĐHT các R đánh dấu.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261405027-1",
+                       "ghi_chu_sx":  "Sửa màu (CÓ HÌNH)\r\nA Lân đã xem.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261505032-1",
+                       "ghi_chu_sx":  "Đắp hoàn tất\r\nĐè kín nhịp nhổ. Dáng đẹp gọn.\r\nChỉ định TS: R sống tuỷ làm dễ gắn. Dáng R6+7 làm bằng dàn R5. Làm đối đầu.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705026",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705028",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm. Còn làm HT \r\nAnh Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705032",
+                       "ghi_chu_sx":  "Hoàn tất - A Lân đã xem cùi \r\nDáng đẹp gọn. Làm dễ gắn. Chú ý : ĐHT",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705033",
+                       "ghi_chu_sx":  "Hoàn tất - A Lân đã xem cùi \r\nLàm dễ gắn. R sống tuỷ. Chú ý : ĐHT. Đè kín nhịp",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805021",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi.",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261805040",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐè nhịp và tam giác nướu 1.5mm. Dáng R nhỏ gọn, chú ý khớp cắn.\r\nGẤP KHÔNG HẸN",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805042",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐHT dưới nướu bờ cong. Sườn mỏng tối đa.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805043",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805044",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐừng để bị đục sứ nhé",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805010",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: cạo nhịp nhiều, đừng để hở nhịp (Bs phàn nàn), đặt tựa R13.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805012",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: nướu giả vùng hàm II. IN MẪU HÀM.\r\nGẤP KHÔNG HẸN",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805013",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi: IN MẪU HÀM.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805015",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805006",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805008",
+                       "ghi_chu_sx":  "Hoàn tất. GK của NK\r\nA. Lân đã trao đổi: làm tròn cung, cho hở khớp. Nướu giả",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805011",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: 2 đv mất R23. R24 KHÔNG LÀM DÁNG R23.\r\nKhông HĐ.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805016",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805017",
+                       "ghi_chu_sx":  "Hoàn tất\r\nLàm đối xứng R32. Khớp cắn ngược\r\nA. Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "10411028-06",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất\r\nAnh Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261405017-1",
+                       "ghi_chu_sx":  "Đắp lại R31 bị nứt. Có Video. A. Lân đã xem\r\n12H NGÀY 18/05 XONG SỨ --\u003eA. TÀI\r\nGửi kèm 2 ron bi lớn + Gói kỹ 8 sứ\r\nCó video\r\n09H NGÀY 19/05 XONG KHUNG --\u003e A BỬU\r\nThử răng\r\nCó video. Nhận VR 8R\r\nGói kỹ 8 sứ",
+                       "keylab_rows":  3
+                   },
+                   {
+                       "ma_dh":  "261405020-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261405021-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805002",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805003",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805004",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805005",
+                       "ghi_chu_sx":  "Hoàn tất\r\nHoàn tất\r\nLàm cầu (25-27). Mài răng đẹp\r\nA. Lân đã xem",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261805009",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805020",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805025",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi: đục lỗ.",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261805039",
+                       "ghi_chu_sx":  "Thử thô",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805046",
+                       "ghi_chu_sx":  "Hoàn tất \r\n4R sứ rời 12,11,21,22 (tạo cảm giác cho R nhỏ lại). Cầu 5R (13-17). R thật, R sống tuỷ. CÓ HÌNH CHỤP KC. \r\nA Lân đã xem cùi",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805026",
+                       "ghi_chu_sx":  "Hoàn tất\r\nR sống tuỷ. R17 mặt nhai KL. Đắp lẹm chỉnh cộm. \r\nCái màu răng của khách nó nâu nâu v á. Làm cái màu na ná cái màu cùi á. Mà đừng sáng quá nha.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805027",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng đẹp gọn. Chú ý: ĐHT.",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805037",
+                       "ghi_chu_sx":  "Hoàn tất\r\nGiảm hô tối đa. R thon gọn.\r\nCS1",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805038",
+                       "ghi_chu_sx":  "Hoàn tất\r\nGiảm hô tối đa. Tròn cung. R thon gọn.\r\nCS1",
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261705030",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi : IN MẪU HÀM. Làm cùi giả xong -\u003e IN MẪU\r\nLàm sườn xong - đợi VR TL rồi đắp sứ + bổ sung thời gian đi A Bửu sau\r\nThử R\r\nGửi kèm A Bửu 11R sứ + 1 cùi giả R12 (gói kỹ giúp em)",
+                       "keylab_rows":  3
+                   },
+                   {
+                       "ma_dh":  "261705034",
+                       "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hàm hay bán hàm ghi lại giúp em ạ",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261705036",
+                       "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hàm hay bán hàm note lại dùm em",
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "261805019",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi. ĐÃ HẸN",
+                       "keylab_rows":  2
+                   }
+               ]
 }

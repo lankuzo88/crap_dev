@@ -551,7 +551,8 @@
 
     .tg-date {
       font-size: 11px;
-      color: var(--text-light);
+      color: var(--text-primary);
+      font-weight: 800;
     }
 
     .tg-count {
@@ -760,8 +761,8 @@
       overflow: hidden;
     }
     .stage-pip.skip {
-      opacity: 0.25;
-      background: repeating-linear-gradient(90deg, var(--border-card) 0, var(--border-card) 3px, transparent 3px, transparent 6px);
+      background: repeating-linear-gradient(90deg, #999 0, #999 4px, transparent 4px, transparent 8px);
+      opacity: 0.5;
     }
     .stage-pip .pip-fill {
       position: absolute;
@@ -896,8 +897,8 @@
         <a id="m-upload-btn" class="menu-item admin-only" href="/upload">
           <span class="menu-icon">📤</span><span>Upload Excel</span>
         </a>
-        <button id="m-export-btn" class="menu-item admin-only" onclick="triggerKeylabExport()" title="Xu&#7845;t Excel KeyLab">
-          <span class="menu-icon" id="m-export-icon">🔄</span><span id="m-export-label">Xuất Excel KeyLab</span>
+        <button id="m-export-btn" class="menu-item admin-only" onclick="triggerKeylabExport()" title="Làm mới">
+          <span class="menu-icon" id="m-export-icon">🔄</span><span id="m-export-label">Làm mới</span>
         </button>
         <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
           <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
@@ -995,7 +996,7 @@
         if (active) current_stage = active.n;
       }
       const urgent = o.yc_ht
-        ? (new Date(o.yc_ht) - Date.now()) < 2 * 3600 * 1000
+        ? ((parseDeadline(o.yc_ht) || 0) - Date.now()) < 2 * 3600 * 1000
         : false;
       return {
         ma_dh:         o.ma_dh,
@@ -1449,6 +1450,21 @@
       }[ch]));
     }
 
+    function cleanDisplayText(value) {
+      return String(value ?? '')
+        .replace(/_x000d_\s*/gi, '\n')
+        .replace(/\\x000d|\\x00d|\\u000d|x000d|x00d/gi, '\n')
+        .replace(/\r\n?/g, '\n')
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    function displayHtml(value) {
+      return htmlSafe(cleanDisplayText(value)).replace(/\n/g, '<br>');
+    }
+
     function openWipPanel() {
       if (!canViewWipPanel()) return;
       closeActionMenu();
@@ -1528,7 +1544,7 @@
             <div class="wip-order-patient">${htmlSafe(patient)}</div>
             <div class="wip-order-qty">SL: ${Number(o.sl) || 0}</div>
           </div>
-          <div class="wip-order-ph">${htmlSafe(o.phuc_hinh || '---')}</div>
+          <div class="wip-order-ph">${displayHtml(o.phuc_hinh || '---')}</div>
           <div class="wip-order-foot" style="margin-top:6px">
             <div class="wip-order-stage">Đang ở: ${htmlSafe(STAGE_SHORT[o.current_stage] || o.current_stage || '---')} · ${progress}%</div>
             <div class="wip-order-deadline">${htmlSafe(formatDate(o.yc_ht))} ${htmlSafe(formatTime(o.yc_ht))}</div>
@@ -1591,11 +1607,23 @@
       return grouped;
     }
 
+    function parseDeadline(str) {
+      if (!str) return null;
+      const parts = String(str).trim().split(/\s+/);
+      const d = parts[0];
+      const t = parts[1] || '00:00:00';
+      if (d.includes('/')) {
+        const [dd, mm, yyyy] = d.split('/');
+        return new Date(`${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${t}`);
+      }
+      return new Date(str);
+    }
+
     function sortOrdersByDeadline(orders) {
       return [...orders].sort((a, b) => {
-        const dateA = a.yc_ht ? new Date(a.yc_ht) : new Date('9999-12-31');
-        const dateB = b.yc_ht ? new Date(b.yc_ht) : new Date('9999-12-31');
-        if (dateA !== dateB) return dateA - dateB;
+        const dateA = parseDeadline(a.yc_ht) || new Date('9999-12-31');
+        const dateB = parseDeadline(b.yc_ht) || new Date('9999-12-31');
+        if (dateA - dateB !== 0) return dateA - dateB;
         return (a.ma_dh || '').localeCompare(b.ma_dh || '');
       });
     }
@@ -1607,9 +1635,9 @@
         if (isNoA && !isNoB) return 1;
         if (!isNoA && isNoB) return -1;
         if (isNoA && isNoB) return 0;
-        const dateA = new Date(keyA);
-        const dateB = new Date(keyB);
-        return dateA - dateB;
+        const dateA = parseDeadline(keyA);
+        const dateB = parseDeadline(keyB);
+        return (dateA || 0) - (dateB || 0);
       });
     }
 
@@ -1672,7 +1700,7 @@
             <div class="card-patient">${patient}</div>
             <div class="card-sl">${shownQty.label}: ${shownQty.qty}</div>
           </div>
-          <div class="card-prosthesis">${o.phuc_hinh}</div>
+          <div class="card-prosthesis">${displayHtml(o.phuc_hinh)}</div>
           ${currentKtv ? `<div class="card-stage-label" style="font-size: 11px; color: var(--text-primary); margin-top: 4px;">👤 ${currentKtv}</div>` : ''}
           ${pipsHtml ? `<div class="stage-pips">${pipsHtml}</div>` : ''}
           ${lkChip}
@@ -1698,9 +1726,9 @@
       sortedGroups.forEach(([key, group]) => {
         const { orders, cat } = group;
         orders.sort((a, b) => {
-          const dateA = a.yc_ht ? new Date(a.yc_ht) : new Date('9999-12-31');
-          const dateB = b.yc_ht ? new Date(b.yc_ht) : new Date('9999-12-31');
-          if (dateA !== dateB) return dateA - dateB;
+          const dateA = parseDeadline(a.yc_ht) || new Date('9999-12-31');
+          const dateB = parseDeadline(b.yc_ht) || new Date('9999-12-31');
+          if (dateA - dateB !== 0) return dateA - dateB;
           return (a.ma_dh || '').localeCompare(b.ma_dh || '');
         });
 
@@ -1709,6 +1737,10 @@
         const dateRaw = (orders[0].yc_ht || '').split(' ')[0];
         const dateParts = dateRaw ? dateRaw.split('-') : [];
         const dateLabel = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}` : '';
+        const giaoLabels = [...new Set(orders
+          .map(o => parseYcHtDay(o.yc_ht)?.label)
+          .filter(Boolean))];
+        const giaoLabel = giaoLabels.length === 1 ? giaoLabels[0] : (giaoLabels.length > 1 ? `${giaoLabels[0]}+` : '');
 
         html += `
           <div class="time-group">
@@ -1721,6 +1753,7 @@
                 'KHÁC'
               }${time !== '—' ? ` · ${time}` : ''}${dateLabel ? ` · ${dateLabel}` : ''}</div>
               <div class="tg-meta">
+                ${giaoLabel ? `<div class="tg-date">Giao ${giaoLabel}</div>` : ''}
                 <div class="tg-count">${orders.length} đơn · ${totalSL} răng</div>
               </div>
             </div>
@@ -1911,7 +1944,7 @@
         <div style="background: var(--bg-card); border-radius: 8px; padding: 16px; max-height: 80vh; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">${o.ma_dh}</h2>
-            <div style="cursor: pointer; font-size: 28px; color: var(--text-muted); padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; transition: all 0.2s;" onclick="closeOrderDetail()" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">✕</div>
+            <button type="button" style="cursor: pointer; font-size: 13px; color: var(--text-primary); padding: 8px 12px; border: 1px solid var(--border-card); border-radius: 6px; background: #fff; min-width: 56px; min-height: 40px; font-weight: 700;" onclick="closeOrderDetail()">Đóng</button>
           </div>
 
           <div style="margin-bottom: 14px;">
@@ -1926,7 +1959,7 @@
 
           <div style="margin-bottom: 14px;">
             <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
-            <div style="font-size: 12px; color: var(--terracotta); font-weight: 600;">${o.phuc_hinh || '—'}</div>
+            <div style="font-size: 12px; color: var(--terracotta); font-weight: 600;">${displayHtml(o.phuc_hinh || '—')}</div>
           </div>
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
@@ -1937,13 +1970,13 @@
             </div>
             <div style="flex: 1;">
               <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
-              <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">${o.yc_giao || '—'}</div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">${o.yc_ht || '—'}</div>
             </div>
           </div>
 
           ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(196, 131, 111, 0.1); border-left: 3px solid var(--terracotta-light); border-radius: 4px;">
-            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
-            <div style="font-size: 12px; color: var(--text-primary);">${o.ghi_chu}</div>
+            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú điều phối</div>
+            <div style="font-size: 12px; color: var(--text-primary);">${displayHtml(o.ghi_chu)}</div>
           </div>` : ''}
 
           <div style="margin-bottom: 14px;">
@@ -1952,8 +1985,8 @@
           </div>
 
           <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-card); font-size: 11px; color: var(--text-primary);">
-            <span>📥 ${o.nhan || '—'}</span>
-            <span>⏱ ${o.yc_ht || '—'}</span>
+            <span>Nhận: ${o.nhan || '—'}</span>
+            <span>Hẹn: ${o.yc_giao || '—'}</span>
           </div>
         </div>
       `;
