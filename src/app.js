@@ -30,6 +30,7 @@ app.use('/', require('./routes/errorReports.routes'));
 app.use('/', require('./routes/delayReports.routes'));
 app.use('/', require('./routes/munger.routes'));
 app.use('/', require('./routes/stats.routes'));
+app.use('/', require('./routes/backup.routes'));
 
 // ── Static: ảnh lỗi (auth protected) ─────────────────
 const { serveErrorImages, blockDirectHtml } = require('./middleware/security');

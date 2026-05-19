@@ -382,6 +382,29 @@
       /* Xóa border-radius của inner div trong order modal (tránh góc lộ ra) */
       #orderModalContent > div { border-radius: 0 !important; }
     }
+
+    /* ── BACKUP TAB ── */
+    .backup-dir-bar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 12px 16px; background: #f5f5f5; border-radius: 8px; margin-bottom: 20px;
+    }
+    .backup-dir-label { font-size: 13px; color: #555; }
+    .backup-dir-name  { font-size: 13px; font-weight: 600; color: #1a1a1a; word-break: break-all; }
+    .backup-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .backup-table th { text-align: left; padding: 8px 12px; background: #f5f5f5; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: .4px; }
+    .backup-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .backup-table tr:last-child td { border-bottom: none; }
+    .backup-table code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    .backup-status-ok      { color: #2e7d32; font-weight: 600; }
+    .backup-status-new     { color: #e65100; font-weight: 600; }
+    .backup-status-pending { color: #999; }
+    .backup-footer { display: flex; align-items: center; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+    .backup-last-sync { font-size: 12px; color: #888; }
+    .backup-progress-wrap { margin-top: 16px; }
+    .backup-progress-track { height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+    .backup-progress-bar   { height: 100%; background: #1976d2; border-radius: 3px; transition: width .3s; width: 0%; }
+    .backup-progress-text  { font-size: 12px; color: #555; }
+    .backup-unsupported    { padding: 20px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #f57c00; color: #e65100; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -402,6 +425,7 @@
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
   <button class="tab-btn" onclick="switchTab('delay-risk', this)">🚨 Nguy cơ trễ</button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
+  <button class="tab-btn" onclick="switchTab('backup', this)">💾 Sao lưu</button>
   <button class="tab-btn" onclick="location.href='/delay-reports'">⏱ Báo trễ tiến độ <span class="badge" id="delayPendingBadge" style="display:none">0</span></button>
 </div>
 
@@ -605,6 +629,56 @@
   </div>
 
 </div><!-- /tab-system -->
+
+<!-- ══════════════════════════════════════════
+     TAB: SAO LƯU
+══════════════════════════════════════════ -->
+<div id="tab-backup" class="tab-panel">
+
+  <div id="backupNotSupported" class="backup-unsupported" style="display:none">
+    ⚠️ Trình duyệt không hỗ trợ File System Access API. Vui lòng dùng <strong>Chrome</strong> hoặc <strong>Edge</strong> (phiên bản mới) để sử dụng tính năng sao lưu.
+  </div>
+
+  <div id="backupMain">
+    <div class="section">
+      <h2>💾 Sao lưu dữ liệu server</h2>
+
+      <div class="backup-dir-bar">
+        <div>
+          <div class="backup-dir-label">Thư mục lưu backup</div>
+          <div id="backupDirName" class="backup-dir-name" style="display:none"></div>
+        </div>
+        <button class="btn btn-outline" id="backupPickBtn" onclick="pickBackupDir()">📁 Chọn thư mục</button>
+      </div>
+
+      <table class="backup-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Mô tả</th>
+            <th>Kích thước</th>
+            <th>Server cập nhật</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="backupFileBody">
+          <tr><td colspan="5" style="color:#999;padding:20px;text-align:center">Đang tải...</td></tr>
+        </tbody>
+      </table>
+
+      <div class="backup-footer">
+        <button class="btn btn-primary" id="backupSyncBtn" onclick="runBackupSync()" disabled>🔄 Đồng bộ ngay</button>
+        <span class="backup-last-sync" id="backupLastSyncTime"></span>
+      </div>
+
+      <div class="backup-progress-wrap" id="backupProgressWrap" style="display:none">
+        <div class="backup-progress-track"><div class="backup-progress-bar" id="backupProgressBar"></div></div>
+        <div class="backup-progress-text" id="backupProgressText"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-backup -->
 </div><!-- /container -->
 
 <!-- ════ MODALS ════ -->
@@ -750,6 +824,7 @@
     if (name === 'errorcodes') loadErrorCodes();
     if (name === 'delay-risk' && !delayRiskData) loadDelayRiskOrders();
     if (name === 'system') refreshAllStats();
+    if (name === 'backup') initBackupTab();
   }
 
   // ── INIT ──────────────────────────────────────
@@ -1838,6 +1913,185 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeLightbox(); closeRejectModal(); closeResetModal(); closeConfirmModal(); closeOrderModal(); }
   });
+
+  // ── BACKUP TAB ────────────────────────────────────────────────────────
+  let _bkpDirHandle = null;
+  let _bkpManifest  = [];
+  let _bkpTabInited = false;
+
+  async function _bkpDb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('asialab-backup', 1);
+      r.onupgradeneeded = e => e.target.result.createObjectStore('kv');
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+  async function _bkpSaveHandle(h) {
+    const db = await _bkpDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(h, 'dir');
+      tx.oncomplete = res; tx.onerror = e => rej(e.target.error);
+    });
+  }
+  async function _bkpLoadHandle() {
+    const db = await _bkpDb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('kv', 'readonly');
+      const r = tx.objectStore('kv').get('dir');
+      r.onsuccess = e => res(e.target.result || null);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  async function initBackupTab() {
+    if (_bkpTabInited) return;
+    _bkpTabInited = true;
+    if (!('showDirectoryPicker' in window)) {
+      document.getElementById('backupNotSupported').style.display = 'block';
+      document.getElementById('backupMain').style.display = 'none';
+      return;
+    }
+    await _bkpLoadManifest();
+    try {
+      const h = await _bkpLoadHandle();
+      if (h) {
+        const perm = await h.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') { _bkpDirHandle = h; _bkpUpdateDirUI(h.name); }
+      }
+    } catch {}
+    _bkpRenderFileList();
+    const ls = localStorage.getItem('backup-last-sync-time');
+    if (ls) document.getElementById('backupLastSyncTime').textContent = 'Lần cuối: ' + ls;
+  }
+
+  async function _bkpLoadManifest() {
+    try {
+      const r = await fetch('/admin/api/backup/manifest');
+      const d = await r.json();
+      if (d.ok) { _bkpManifest = d.files; }
+    } catch {}
+  }
+
+  function _bkpUpdateDirUI(name) {
+    const nameEl = document.getElementById('backupDirName');
+    const syncBtn = document.getElementById('backupSyncBtn');
+    const pickBtn = document.getElementById('backupPickBtn');
+    if (name) {
+      nameEl.textContent = '📁 ' + name;
+      nameEl.style.display = 'block';
+      pickBtn.textContent  = '📁 Đổi thư mục';
+      syncBtn.disabled = false;
+    } else {
+      nameEl.style.display = 'none';
+      pickBtn.textContent  = '📁 Chọn thư mục';
+      syncBtn.disabled = true;
+    }
+  }
+
+  async function pickBackupDir() {
+    try {
+      const h = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'documents' });
+      _bkpDirHandle = h;
+      await _bkpSaveHandle(h);
+      _bkpUpdateDirUI(h.name);
+      _bkpTabInited = false;
+    } catch (e) { if (e.name !== 'AbortError') showAlert('Lỗi chọn thư mục: ' + e.message, 'error'); }
+  }
+
+  function _bkpFmtSize(b) {
+    if (!b) return '—';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+  function _bkpFmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function _bkpRenderFileList() {
+    const lastSync = JSON.parse(localStorage.getItem('backup-last-sync') || '{}');
+    const tbody = document.getElementById('backupFileBody');
+    if (!_bkpManifest.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#999;text-align:center;padding:20px">Đang tải...</td></tr>';
+      return;
+    }
+    tbody.innerHTML = _bkpManifest.map(f => {
+      const ls = lastSync[f.id];
+      let st;
+      if (!f.exists) st = '<span class="backup-status-pending">Không có file</span>';
+      else if (!ls)  st = '<span class="backup-status-new">Chưa sao lưu</span>';
+      else if (new Date(f.mtime) > new Date(ls)) st = '<span class="backup-status-new">Có bản mới</span>';
+      else st = '<span class="backup-status-ok">✓ Đồng bộ</span>';
+      return `<tr>
+        <td><code>${f.name}</code></td>
+        <td style="color:#666;font-size:12px">${f.desc}</td>
+        <td>${_bkpFmtSize(f.size)}</td>
+        <td style="font-size:12px;color:#555">${_bkpFmtDate(f.mtime)}</td>
+        <td>${st}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function runBackupSync() {
+    if (!_bkpDirHandle) { showAlert('Vui lòng chọn thư mục trước', 'error'); return; }
+    let perm;
+    try { perm = await _bkpDirHandle.requestPermission({ mode: 'readwrite' }); }
+    catch { perm = 'denied'; }
+    if (perm !== 'granted') {
+      showAlert('Cần cấp quyền ghi vào thư mục. Hãy chọn lại thư mục.', 'error');
+      _bkpDirHandle = null; _bkpUpdateDirUI(null); return;
+    }
+
+    const syncBtn = document.getElementById('backupSyncBtn');
+    const wrap    = document.getElementById('backupProgressWrap');
+    const bar     = document.getElementById('backupProgressBar');
+    const txt     = document.getElementById('backupProgressText');
+
+    syncBtn.disabled = true;
+    wrap.style.display = 'block';
+    bar.style.width = '0%';
+
+    await _bkpLoadManifest();
+    const files  = _bkpManifest.filter(f => f.exists);
+    const lastSync = JSON.parse(localStorage.getItem('backup-last-sync') || '{}');
+    const errors = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      bar.style.width = Math.round((i / files.length) * 100) + '%';
+      txt.textContent = `Đang tải ${f.name}... (${i+1}/${files.length})`;
+      try {
+        const resp = await fetch(`/admin/api/backup/download/${f.id}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const blob = await resp.blob();
+        const fh  = await _bkpDirHandle.getFileHandle(f.name, { create: true });
+        const writable = await fh.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        lastSync[f.id] = new Date().toISOString();
+      } catch (e) { errors.push(f.name + ': ' + e.message); }
+    }
+
+    bar.style.width = '100%';
+    localStorage.setItem('backup-last-sync', JSON.stringify(lastSync));
+    const now = new Date().toLocaleString('vi-VN');
+    localStorage.setItem('backup-last-sync-time', now);
+    document.getElementById('backupLastSyncTime').textContent = 'Lần cuối: ' + now;
+
+    if (errors.length) {
+      txt.textContent = `Hoàn tất — ${errors.length} lỗi`;
+      showAlert('Lỗi khi backup: ' + errors.join(' | '), 'error');
+    } else {
+      txt.textContent = 'Đồng bộ thành công! ✓';
+      showAlert('Sao lưu thành công ' + files.length + ' file.', 'success');
+    }
+    _bkpRenderFileList();
+    setTimeout(() => { syncBtn.disabled = false; wrap.style.display = 'none'; }, 3000);
+  }
 
   init();
 </script>
