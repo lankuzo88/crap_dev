@@ -32,11 +32,13 @@ const KEYLAB_FILE_RE = /^\d{8}_\d+\.(xls|xlsx|xlsm)$/i;
 const KEYLAB_STATE_FILE = pathMod.join(BASE_DIR, 'keylab_state.json');
 
 // Cache reset callback — injected by orders.repo to break circular dep
-let _resetCache = () => {};
-let _closeDB    = () => {};
+let _resetCache  = () => {};
+let _closeDB     = () => {};
+let _autoClose   = () => {};
 
-function setResetCallback(fn) { _resetCache = fn; }
-function setCloseDBCallback(fn) { _closeDB = fn; }
+function setResetCallback(fn)     { _resetCache = fn; }
+function setCloseDBCallback(fn)   { _closeDB = fn; }
+function setAutoCloseCallback(fn) { _autoClose = fn; }
 
 function getScrapeJob()     { return scrapeJob; }
 function getKeylabJob()     { return keylabExportJob; }
@@ -59,6 +61,7 @@ function finishScraper(code) {
   scrapeJob.running = false;
   scrapeJob.exitCode = code;
   _resetCache();
+  _autoClose();
   _closeDB();
   log(`🏁 Scraper pipeline done: ${scrapeJob.file}, exit=${code}`);
   if (scrapeQueue.length > 0) {
@@ -289,6 +292,7 @@ module.exports = {
   getWebUploadFiles,
   setResetCallback,
   setCloseDBCallback,
+  setAutoCloseCallback,
   spawnScraper,
   queueOrScrape,
   autoScrape,
