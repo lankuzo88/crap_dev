@@ -1,6 +1,6 @@
 # ASIA LAB Construction Notes
 
-Last updated: 2026-05-18
+Last updated: 2026-05-20
 
 Tai lieu nay mo ta day du cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
 
@@ -32,8 +32,7 @@ Production workspace. Khong phai sandbox.
 ### Cac actor trong he thong
 
 - **Admin**: full quyen — quan ly user, upload Excel, trigger Keylab export, duyet bao loi, xem stats, route don.
-- **User (cong doan)**: nhin queue pending theo cong doan cua minh, scan barcode, route don, bao loi cong doan minh.
-- **QC**: bao loi va kiem loi theo flow rieng (chua admin).
+- **User (cong doan)**: nhin queue pending theo cong doan cua minh, scan barcode, route don, bao loi cong doan minh. Quyen nang cao (bao loi review, stats, WIP...) cap qua permissions rieng, khong can role moi.
 
 ---
 
@@ -184,7 +183,7 @@ module.exports = {
 - `uploads/error-images/` — anh loi local cu/fallback va file legacy; anh moi cua bao loi ky thuat/bao tre uu tien R2.
 - `logs/` — PM2 logs.
 - `.env` — credentials runtime (R2, LABO_USER*, IMAGE_*).
-- `users.json` — user accounts (passwordHash bcrypt, role, cong_doan, can_view_stats).
+- `users.json` — user accounts (passwordHash bcrypt, role, cong_doan, permissions[]).
 - `sessions.json` — legacy file, session chinh hien nam trong SQLite bang `sessions`.
 - `labo_config.json` — `{last_run_file: "..."}`.
 - `keylab_state.json` — `{date: "DD/MM/YYYY", export_count: N}` cho file naming Keylab export.
@@ -352,7 +351,7 @@ UNIQUE(ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh). Index `idx_tdh_billing_m
 |---|---|---|
 | token | TEXT PK | crypto.randomBytes(32).hex |
 | username | TEXT NOT NULL | |
-| role | TEXT NOT NULL | admin/user/qc |
+| role | TEXT NOT NULL | admin/user |
 | expires | INTEGER NOT NULL | Unix ms |
 
 Index `idx_sessions_expires(expires)`. Cleanup moi 1h.
@@ -404,6 +403,26 @@ Image refs:
 - Backend moi ghi `hinh_anh` bang JSON array de ho tro nhieu anh.
 - Frontend va API van parse duoc du lieu cu dang single URL/path.
 - Anh moi upload qua R2 bang `uploadImage`; neu validation sau upload fail thi server xoa cac anh vua upload.
+
+### Bang `delay_reports` — bao tre tien do
+
+| Cot | Kieu | Y nghia |
+|---|---|---|
+| id | INTEGER | PK |
+| ma_dh | TEXT | FK don_hang.ma_dh |
+| yc_hoan_thanh | TEXT | Deadline lay tu don hang luc tao |
+| cong_doan_bao_tre | TEXT | Cong doan bi tre (theo user report) |
+| nguyen_nhan | TEXT | Ly do tre |
+| hinh_anh | TEXT | JSON array image refs (R2 URLs) |
+| trang_thai | TEXT DEFAULT 'pending' | pending/confirmed/rejected |
+| submitted_by | TEXT | username |
+| submitted_at | TEXT | datetime('now','localtime') |
+| reviewed_by | TEXT | username hoac 'system' |
+| reviewed_at | TEXT | |
+| ghi_chu_admin | TEXT | |
+
+- Moi don chi duoc co 1 bao tre trang_thai `pending` hoac `confirmed` tai 1 thoi diem (check khi submit).
+- Auto-close: khi scraper chay xong, `autoCloseCompletedDelayReports()` trong `orders.repo.js` tu dong close (trang_thai='rejected', reviewed_by='system') cac don `pending/confirmed` ma `ma_dh` khong con xuat hien trong active Keylab export (don da xuat xuong/hoan thanh). Logic dung `NOT IN (active_ids)` thay vi check `pct=100` vi Keylab xoa don khoi export sau khi hoan thanh.
 
 ### Bang `feedback_types` va `feedbacks`
 
@@ -505,22 +524,64 @@ JSON `type_breakdown` shape:
 
 ```json
 {
-  "admin": {
-    "passwordHash": "$2b$10$...",
-    "role": "admin",
-    "cong_doan": "",
-    "can_view_stats": true
-  },
-  "ktv_dap_1": {
-    "passwordHash": "$2b$10$...",
-    "role": "user",
-    "cong_doan": "đắp",
-    "can_view_stats": false
-  }
+  "users": [
+    {
+      "username": "admin",
+      "passwordHash": "$2b$10$...",
+      "role": "admin",
+      "cong_doan": "",
+      "permissions": ["*"]
+    },
+    {
+      "username": "ktv_dap_1",
+      "passwordHash": "$2b$10$...",
+      "role": "user",
+      "cong_doan": "đắp",
+      "permissions": ["orders.view_pending", "error_reports.submit", "error_reports.view_own", "delay_reports.view_active"]
+    }
+  ]
 }
 ```
 
-22 user dang co trong production: 1 admin + 21 user/qc.
+22 user trong production: 1 admin + 21 user.
+
+### Roles
+
+Chi co 2 role:
+- `admin`: permission `["*"]` — full quyen moi thu.
+- `user`: default permissions `["orders.view_pending", "error_reports.submit", "error_reports.view_own", "delay_reports.view_active"]`. Quyen nang cao cap them qua `permissions[]`.
+
+Khong con role `qc` hay `delay_qc`. Cac dac quyen truoc day cua QC gio duoc cap qua permissions rieng (vi du `error_reports.review`, `delay_reports.review`).
+
+### Permissions
+
+Danh sach tat ca permission (`PERMISSIONS` array trong `users.repo.js`):
+
+| Permission | Y nghia |
+|---|---|
+| `orders.view_pending` | Xem don hang pending |
+| `orders.view_all` | Xem tat ca don hang |
+| `orders.route` | Route don sang phong |
+| `stats.view_daily` | Xem summary chip thong ke ngay (mobile) |
+| `stats.view_production` | Xem production stats 3 ngay va delay risk |
+| `stats.view_monthly` | Xem monthly stats |
+| `stats.view_wip` | Xem WIP cong doan panel (mobile) |
+| `error_reports.submit` | Gui bao loi ky thuat |
+| `error_reports.view_own` | Xem bao loi cua chinh minh |
+| `error_reports.review` | Xem/duyet/tu choi tat ca bao loi + xem allowed stages full |
+| `error_codes.manage` | CRUD danh muc ma loi |
+| `delay_reports.submit` | Gui bao tre tien do |
+| `delay_reports.view_active` | Xem danh sach don dang bao tre (ma_dh + trang_thai only) |
+| `delay_reports.review` | Xem/duyet/tu choi tat ca bao tre + full detail + xem allowed stages full |
+| `admin.users.manage` | Quan ly user (them/sua/xoa) |
+| `admin.upload_excel` | Upload Excel |
+| `admin.keylab_export` | Trigger Keylab export |
+| `analytics.view` | Xem analytics |
+| `munger.view` | Xem Munger KPI dashboard |
+
+`admin` co `["*"]` → cover tat ca permission tren tu dong.
+
+`hasPermission(userOrUsername, permission)` check `["*"]` hoac ten permission cu the.
 
 ### Password
 - Luu bcrypt `passwordHash` (saltRounds=10).
@@ -537,11 +598,6 @@ JSON `type_breakdown` shape:
 - Cleanup: setInterval moi 1h chay `cleanExpiredSessions()`.
 - Cookie `Secure` flag KHONG set vi server listen local sau Caddy. Neu doi topology, danh gia lai.
 
-### Roles
-- `admin`: full quyen — dashboard, upload, export, user management, stats, duyet bao loi.
-- `user`: theo cong doan, thay queue pending.
-- `qc`: bao loi/kiem loi theo flow rieng, khong phai admin.
-
 ### Cong doan user (canonical)
 
 `USER_CONG_DOAN_VALUES` trong `users.repo.js`:
@@ -553,7 +609,7 @@ JSON `type_breakdown` shape:
 - `đắp`
 - `mài`
 
-`USER_CONG_DOAN_LEGACY_MAP` chuyen legacy names → canonical (vi du `sap` → `sáp`, `suon` → `sườn`).
+`USER_CONG_DOAN_LEGACY_MAP` chuyen legacy names → canonical (vi du `SÁP/Cadcam` → `sáp`, `SƯỜN` → `sườn`).
 
 ### Mapping user cong_doan → DB cong_doan
 
@@ -570,18 +626,11 @@ Mapping user cong_doan → room (`users.routes.js`):
 - `CAD/CAM` → `zirco`
 - (khac) → null (khong filter room)
 
-### Permission `can_view_stats`
-
-- Luu trong `users.json`.
-- Admin luon thay summary stats chip mobile (bypass).
-- User chi thay summary `/api/stats/daily` neu `can_view_stats = true`.
-- User van dung filter chip ngay ca khi khong co quyen xem summary.
-- Toggle via `PATCH /api/admin/users/:username/stats-permission`.
-
 ### Middleware
 
 - `requireAuth(req, res, next)` — doc cookie `sid` qua `getSessionToken()`, `getSession(token)` check expiry, attach `req.session = {username, role, cong_doan}` hoac redirect `/login` (browser) hoac 401 JSON (API).
 - `requireAdmin(req, res, next)` — `requireAuth` + check `role === 'admin'`, else 403 JSON.
+- `requirePermission(perm)` — `requireAuth` + `hasPermission(username, perm)`, else 403 JSON.
 - `loginLimiter` — `express-rate-limit`, 5 attempt / 15 phut, return 429 sau khi vuot quota.
 - `blockDirectHtml` — chan request `.html` (tru `login.html`) chua auth.
 - `serveErrorImages` — static `/uploads/error-images` co auth check.
@@ -738,7 +787,7 @@ User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
-| GET | `/user` | requireAuth | `{username, role, cong_doan, can_view_stats}` |
+| GET | `/user` | requireAuth | `{username, role, cong_doan, permissions: []}` |
 | GET | `/api/user/pending-orders` | requireAuth | `{ok, orders: []}` — orders cua cong_doan user, ap skip rules |
 
 ### Admin
@@ -746,12 +795,12 @@ User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 | Method | Path | Auth | Body/Query | Response |
 |---|---|---|---|---|
 | GET | `/admin` | requireAdmin | — | Serve `admin.html` |
-| GET | `/admin/api/users` | requireAdmin | — | `{users: [{username, role, cong_doan, can_view_stats}]}` |
+| GET | `/admin/api/users` | requireAdmin | — | `{users: [{username, role, cong_doan, permissions: []}]}` |
 | POST | `/admin/api/users` | requireAdmin | `{username, password, role, cong_doan}` | `{ok}` |
 | PATCH | `/admin/api/users/:username/cong-doan` | requireAdmin | `{cong_doan}` | `{ok}` |
+| PATCH | `/admin/api/users/:username/permissions` | requireAdmin | `{permissions: []}` | `{ok}` |
 | DELETE | `/admin/api/users/:username` | requireAdmin | — | `{ok}` (chan xoa chinh minh) |
 | POST | `/admin/api/users/:username/reset-password` | requireAdmin | `{newPassword}` | `{ok}` |
-| PATCH | `/api/admin/users/:username/stats-permission` | requireAdmin | `{can_view_stats}` | `{ok}` |
 | GET | `/admin/api/production-stats` | requireAdmin | — | `{days, totals: {qty, orders, employees}, stages: [{stage, employees: [{ktv, totalQty, byDay}]}]}` (3 ngay completion gan nhat) |
 | GET | `/admin/api/monthly-stats` | requireAdmin | `?month=YYYY-MM` | `{month, months, period, data: [{cong_doan, ten_ktv, orders_completed, total_sl, type_breakdown, entries}]}` |
 | GET | `/admin/api/delay-risk-orders` | `stats.view_production` | `?limit=80` | `{ok, count, counts, source, sampleOrders, data: [{ma_dh, severity, due_at, current_stage, benchmark, reasons}]}` |
@@ -796,7 +845,7 @@ Historical (cho `analytics.html`):
 
 | Method | Path | Auth | Response |
 |---|---|---|---|
-| GET | `/api/stats/daily` | requireAuth + `can_view_stats` | `{ok, data: [{ngay, ngay_sort, mat_dan, kim_loai, zirconia, cui_gia, in_mau_ham, rang_tam, tong}]}` group theo `yc_hoan_thanh` |
+| GET | `/api/stats/daily` | requireAuth + `stats.view_daily` | `{ok, data: [{ngay, ngay_sort, mat_dan, kim_loai, zirconia, cui_gia, in_mau_ham, rang_tam, tong}]}` group theo `yc_hoan_thanh` |
 
 ### Feedback
 
@@ -866,7 +915,8 @@ KPI shapes:
   - Admin hoac user khong cong_doan: doc `/data.json`.
   - User co cong_doan: doc `/api/user/pending-orders`.
 - Filter chips horizontal scroll: tat ca, zirconia, kim loai, mat dan, cui gia, in mau, rang tam.
-- Summary chip pills theo `yc_ht` chi hien neu admin OR `can_view_stats`.
+- Summary chip pills theo `yc_ht` chi hien neu co permission `stats.view_daily`.
+- Pills co the click → mo modal danh sach don chua hoan thanh trong ngay do (sort theo yc_hoan_thanh, nhom theo gio, duong ke mau terracotta giua cac nhom gio).
 - Modal stage progress: hien thu tu CBM/SÁP/SƯỜN/ĐẮP/MÀI + thoi gian hoan thanh + KTV.
 - Route color stripe trai card: ROOM_COLORS theo `routed_to`.
 - Auto refresh: **30 phut** neu user, **60 phut** neu admin.
@@ -875,12 +925,15 @@ KPI shapes:
 - FAB button "Quet chuyen qua [room khac]" cho user co cong_doan (sap/CAD-CAM): scan barcode → POST `/api/orders/route` target = `getTransferTargetRoom(myRoom)`.
 
 Mobile WIP:
-- Menu admin co tab/button `WIP cong doan`: mo panel full-screen rieng tren mobile, dung `allOrders` hien co.
+- Button `WIP cong doan` chi hien neu co permission `stats.view_wip` (`canViewWipPanel()` check `hasPerm('stats.view_wip')`).
+- Mo panel full-screen rieng tren mobile, dung `allOrders` hien co.
 - WIP mobile bam theo desktop pipeline: `Tat ca WIP` = don con bat ky cong doan chua xong; tung cong doan = don co stage do chua `x` va khong skip. Card WIP click mo modal chi tiet don.
 
 ### admin.html
 - Tab Users:
-  - Liet ke + create + delete + set cong_doan + reset password + toggle `can_view_stats`.
+  - Liet ke + create + delete + set cong_doan + reset password + cap/thu quyen (permission chips).
+  - Role dropdown chi co `user` va `admin`. Khong con `qc`/`delay_qc`.
+  - Permission chips hien tung quyen, co the bat/tat tung cai.
 - Tab Error Codes:
   - Grouped by stage, mau theo `STAGE_COLORS`.
   - CRUD: mã lỗi, tên lỗi, công đoạn, mô tả.
@@ -1093,11 +1146,15 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 - `error_reports`: bao loi ky thuat (ma_dh, error_code_id, cong_doan, hinh_anh, mo_ta, trang_thai, submitted_by/at, reviewed_by/at, ghi_chu_admin).
 - `hinh_anh` moi la JSON array image refs; code van doc duoc legacy single URL/path.
 
-### Role logic (`getAllowedStages(username, role, cong_doan)`)
-- Admin + QC: thay tat ca cong_doan.
+### Role logic (`getAllowedStages(username, role, cong_doan)` — bao loi ky thuat)
+- Co permission `error_reports.review`: thay tat ca cong_doan.
 - User `CBM`: chi bao CBM.
 - User `dap`/`mai`: thay cong doan truoc do + dap/mai theo flow chuoi kim loai/zirconia.
 - User `sap`/`CAD/CAM`/`suon`: thay cong doan truoc do theo flow kim loai/zirconia.
+
+### Role logic (`getAllowedDelayStages(userInfo)` — bao tre tien do)
+- Co permission `delay_reports.review`: thay tat ca cong_doan.
+- User thuong: thay cong doan tu dau → cong_doan cua minh (theo flow STAGE_ORDER). `sap` va `CAD/CAM` song song; `dap` va `mai` song song.
 
 ### Bao tre cong doan
 - `delay_reports.cong_doan_bao_tre` la cong doan user muon bao tre, khong nhat thiet bang cong doan dang lam.
@@ -1147,7 +1204,7 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 
 ### Daily mobile chip stats
 - API: `GET /api/stats/daily`
-- Auth: requireAuth + (admin OR `can_view_stats`).
+- Auth: requireAuth + permission `stats.view_daily`.
 - Source: read active Excel `ma_dh` list, group theo `yc_hoan_thanh`.
 - Phan loai phuc hinh: `mat_dan`, `kim_loai`, `zirconia`, `cui_gia`, `in_mau_ham`, `rang_tam` (qua `classifyPhucHinhPart()`).
 - Response: `{ok, data: [{ngay, ngay_sort, mat_dan, kim_loai, ..., tong}]}`.
