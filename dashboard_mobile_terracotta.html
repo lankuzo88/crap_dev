@@ -489,6 +489,45 @@
       font-size: 11px;
       color: var(--text-muted);
     }
+    .summary-pill { cursor: pointer; }
+    .summary-pill:active { opacity: 0.7; }
+
+    #dayModalOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 997;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      display: flex !important;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    #dayModalOverlay.open { opacity: 1; pointer-events: auto; }
+    #dayModalContent {
+      width: 100%;
+      max-width: 480px;
+      max-height: 75vh;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
+    }
+    .day-order-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1.5px solid #999;
+      cursor: pointer;
+    }
+    .day-order-row:active { background: rgba(196, 131, 111, 0.08); border-radius: 6px; }
+    .day-order-row:last-child { border-bottom: none; }
+    .day-group-sep {
+      height: 2px;
+      background: var(--terracotta);
+      margin: 4px -16px;
+      opacity: 0.85;
+    }
 
     /* ═══════════════════════════════
        PH BADGE
@@ -1145,7 +1184,7 @@
     }
 
     function canViewFilterSummary() {
-      return hasPerm('stats.view_daily') || currentUser?.can_view_stats === true;
+      return hasPerm('stats.view_daily');
     }
 
     function hasPerm(permission) {
@@ -1400,8 +1439,8 @@
         return;
       }
 
-      el.innerHTML = rows.map(([, r]) => `
-        <div class="summary-pill">
+      el.innerHTML = rows.map(([key, r]) => `
+        <div class="summary-pill" onclick="openDayModal('${key}','${r.label}')" role="button">
           <div class="summary-date">${r.label}</div>
           <div class="summary-count">${r.orders} đơn · ${r.qty} răng</div>
         </div>
@@ -1434,10 +1473,7 @@
     }
 
     function canViewWipPanel() {
-      return currentUser?.role === 'admin'
-        || hasPerm('stats.view_daily')
-        || hasPerm('stats.view_production')
-        || hasPerm('admin.users.manage');
+      return hasPerm('stats.view_wip');
     }
 
     function htmlSafe(value) {
@@ -1999,6 +2035,87 @@
       document.getElementById('modalOverlay').classList.remove('open');
     }
 
+    let _dayModalOrders = [];
+
+    function openDayModal(dayKey, label) {
+      _dayModalOrders = getChipFiltered()
+        .filter(o => parseYcHtDay(o.yc_ht)?.key === dayKey)
+        .filter(o => o.current_stage !== 'HOÀN TẤT')
+        .sort((a, b) => {
+          const ta = (a.yc_ht || '').split(' ')[1] || '99:99';
+          const tb = (b.yc_ht || '').split(' ')[1] || '99:99';
+          return ta.localeCompare(tb);
+        });
+
+      function renderDayRow(o, i) {
+        const timeStr = (o.yc_ht || '').split(' ')[1]?.slice(0, 5) || '';
+        const qty = filterQty(o, filterPh);
+        const phT = phType(o.phuc_hinh);
+        const phBadge = `<span class="ph-badge ph-${phT}">${phShort(o.phuc_hinh)}</span>`;
+        const pipsHtml = (o.stagesData || []).map(s => {
+          if (s.sk) return `<div class="stage-pip skip"><div class="pip-fill"></div></div>`;
+          const cls = s.x ? 'done' : (s.n === o.current_stage ? 'current' : '');
+          return `<div class="stage-pip ${cls}"><div class="pip-fill"></div></div>`;
+        }).join('');
+        return `
+          <div class="day-order-row" onclick="showDayOrderDetail(${i})">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">${o.ma_dh}</span>
+                ${phBadge}
+              </div>
+              <div style="font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.benh_nhan || '—'} · ${o.khach_hang || '—'}</div>
+              ${pipsHtml ? `<div class="stage-pips" style="margin-top:5px;">${pipsHtml}</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0;min-width:72px;">
+              <div style="font-size:11px;font-weight:600;color:var(--terracotta);">${o.current_stage}</div>
+              <div style="font-size:10px;color:var(--text-primary);margin-top:2px;">${qty} răng${timeStr ? ' · ' + timeStr : ''}</div>
+            </div>
+          </div>`;
+      }
+
+      let rows;
+      if (!_dayModalOrders.length) {
+        rows = `<div style="padding:28px 0;text-align:center;color:var(--text-muted);font-size:13px;">✅ Tất cả đơn ngày này đã hoàn thành</div>`;
+      } else {
+        // Nhóm theo HH:MM, chèn separator đỏ gạch giữa các nhóm giờ khác nhau
+        const groups = [];
+        let lastTime = null;
+        _dayModalOrders.forEach((o, i) => {
+          const t = (o.yc_ht || '').split(' ')[1]?.slice(0, 5) || '';
+          if (t !== lastTime) { groups.push([]); lastTime = t; }
+          groups[groups.length - 1].push({ o, i });
+        });
+        rows = groups.map((grp, gi) =>
+          (gi > 0 ? '<div class="day-group-sep"></div>' : '') +
+          grp.map(({ o, i }) => renderDayRow(o, i)).join('')
+        ).join('');
+      }
+
+      document.getElementById('dayModalContent').innerHTML = `
+        <div style="background:var(--bg-card);padding:16px;max-height:75vh;overflow-y:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Chưa hoàn thành · ${label}</div>
+              <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-top:3px;">${_dayModalOrders.length} đơn đang làm</div>
+            </div>
+            <button type="button" onclick="closeDayModal()" style="cursor:pointer;font-size:13px;color:var(--text-primary);padding:8px 12px;border:1px solid var(--border-card);border-radius:6px;background:#fff;font-weight:700;min-height:36px;">Đóng</button>
+          </div>
+          ${rows}
+        </div>
+      `;
+      document.getElementById('dayModalOverlay').classList.add('open');
+    }
+
+    function closeDayModal() {
+      document.getElementById('dayModalOverlay').classList.remove('open');
+    }
+
+    function showDayOrderDetail(idx) {
+      const o = _dayModalOrders[idx];
+      if (o) showOrderDetail(o);
+    }
+
     async function initAdminUI() {
       try {
         const r = await fetch('/user');
@@ -2117,9 +2234,14 @@
 
   </script>
 
-  <!-- Modal -->
+  <!-- Modal chi tiết đơn -->
   <div id="modalOverlay" style="display: none;">
     <div id="modalContent"></div>
+  </div>
+
+  <!-- Modal danh sách đơn chưa hoàn thành theo ngày -->
+  <div id="dayModalOverlay" onclick="if(event.target===this)closeDayModal()">
+    <div id="dayModalContent"></div>
   </div>
 </body>
 </html>

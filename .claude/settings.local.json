@@ -97,7 +97,18 @@
       "PowerShell(wmic product where \"name like '%Google Drive%'\" get name, version 2>&1)",
       "PowerShell(wmic product where 'name like \"%Google Drive%\"' get name, version 2>&1)",
       "Bash(Get-Content logs/pm2-out.log -Tail 5)",
-      "Bash(pm2 reload *)"
+      "Bash(pm2 reload *)",
+      "PowerShell(Get-WmiObject *)",
+      "Bash(xargs grep *)",
+      "Bash(Select-String -Path \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\crap_dev\\\\admin.html\" -Pattern \"stats|perm|quyền|view_\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table LineNumber, Line -Wrap)",
+      "PowerShell(Select-String -Path \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\crap_dev\\\\admin.html\" -Pattern \"stats|PERM|quyền|view_\" | Select-Object -First 20 | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "PowerShell(Select-String -Path \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\crap_dev\\\\admin.html\" -Pattern \"permissions|PERMISSIONS|renderPermissions|permChip|perm_\" | Select-Object -First 20 | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\crap_dev\" -Recurse -Force)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(grep -E \"\\\\.\\(js|html|json\\)$\")",
+      "PowerShell(pm2 restart *)"
     ]
   }
 }

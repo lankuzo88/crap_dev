@@ -13,6 +13,7 @@ const PERMISSIONS = [
   'stats.view_daily',
   'stats.view_production',
   'stats.view_monthly',
+  'stats.view_wip',
   'error_reports.submit',
   'error_reports.view_own',
   'error_reports.review',
@@ -29,8 +30,6 @@ const PERMISSIONS = [
 const ROLE_DEFAULT_PERMISSIONS = {
   admin: ['*'],
   user: ['orders.view_pending', 'error_reports.submit', 'error_reports.view_own', 'delay_reports.view_active'],
-  qc: ['orders.view_pending', 'error_reports.submit', 'error_reports.view_own', 'delay_reports.view_active'],
-  delay_qc: ['orders.view_pending', 'delay_reports.submit', 'delay_reports.view_active'],
 };
 const USER_CONG_DOAN_LEGACY_MAP = {
   '': '',
@@ -63,21 +62,17 @@ function isValidUserCongDoan(value) {
   return USER_CONG_DOAN_VALUES.includes(value);
 }
 
-function normalizePermissions(value, role, canViewStats) {
+function normalizePermissions(value, role) {
   const defaults = ROLE_DEFAULT_PERMISSIONS[role] || ROLE_DEFAULT_PERMISSIONS.user;
   const raw = Array.isArray(value) ? value : defaults;
   const allowed = new Set(['*', ...PERMISSIONS]);
-  const normalized = [...new Set(raw.filter(p => allowed.has(p)))];
-  if (canViewStats === true && !normalized.includes('*') && !normalized.includes('stats.view_daily')) {
-    normalized.push('stats.view_daily');
-  }
-  return normalized;
+  return [...new Set(raw.filter(p => allowed.has(p)))];
 }
 
 function hasPermission(userOrUsername, permission) {
   const user = typeof userOrUsername === 'string' ? USERS[userOrUsername] : userOrUsername;
   if (!user) return false;
-  const permissions = normalizePermissions(user.permissions, user.role, user.can_view_stats);
+  const permissions = normalizePermissions(user.permissions, user.role);
   return permissions.includes('*') || permissions.includes(permission);
 }
 
@@ -101,8 +96,7 @@ function loadUsers() {
           passwordHash: u.passwordHash || u.password,
           role: u.role,
           cong_doan,
-          can_view_stats: u.can_view_stats === true,
-          permissions: normalizePermissions(u.permissions, u.role, u.can_view_stats === true),
+          permissions: normalizePermissions(u.permissions, u.role),
         };
       });
       replaceUsers(loadedUsers);
@@ -125,8 +119,7 @@ function saveUsers() {
       passwordHash: data.passwordHash,
       role: data.role,
       cong_doan: data.cong_doan || '',
-      can_view_stats: data.can_view_stats === true,
-      permissions: normalizePermissions(data.permissions, data.role, data.can_view_stats === true),
+      permissions: normalizePermissions(data.permissions, data.role),
     }));
     fs.writeFileSync(USERS_JSON_PATH, JSON.stringify({ users }, null, 2));
   } catch (e) {

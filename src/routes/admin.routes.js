@@ -22,8 +22,7 @@ router.get('/admin/api/users', requirePermission('admin.users.manage'), (req, re
     username,
     role: data.role,
     cong_doan: data.cong_doan || '',
-    can_view_stats: data.can_view_stats === true,
-    permissions: normalizePermissions(data.permissions, data.role, data.can_view_stats === true),
+    permissions: normalizePermissions(data.permissions, data.role),
   }));
   res.json(users);
 });
@@ -32,7 +31,7 @@ router.post('/admin/api/users', requirePermission('admin.users.manage'), express
   const { username, password, role, cong_doan, permissions } = req.body;
   if (!username || !password || !role) return res.status(400).json({ error: 'Missing username, password, or role' });
   if (USERS[username]) return res.status(400).json({ error: 'Username already exists' });
-  if (!['admin', 'user', 'qc', 'delay_qc'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
   const normalizedCongDoan = normalizeUserCongDoan(cong_doan);
   if (!isValidUserCongDoan(normalizedCongDoan)) return res.status(400).json({ error: 'Invalid cong_doan' });
   try {
@@ -68,10 +67,10 @@ router.patch('/admin/api/users/:username/role', requirePermission('admin.users.m
   const { username } = req.params;
   const { role } = req.body;
   if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
-  if (!['admin', 'user', 'qc', 'delay_qc'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
   if (username === req.session.user && role !== 'admin') return res.status(400).json({ error: 'Cannot remove your own admin role' });
   USERS[username].role = role;
-  USERS[username].permissions = normalizePermissions(undefined, role, USERS[username].can_view_stats === true);
+  USERS[username].permissions = normalizePermissions(undefined, role);
   saveUsers();
   log(`🔧 role set: ${username} → ${role}`);
   res.json({ ok: true, username, role });
@@ -82,11 +81,10 @@ router.patch('/admin/api/users/:username/permissions', requirePermission('admin.
   const { permissions } = req.body;
   if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
   if (!Array.isArray(permissions)) return res.status(400).json({ error: 'permissions must be an array' });
-  USERS[username].permissions = normalizePermissions(permissions, USERS[username].role, false);
-  USERS[username].can_view_stats = USERS[username].permissions.includes('*') || USERS[username].permissions.includes('stats.view_daily');
+  USERS[username].permissions = normalizePermissions(permissions, USERS[username].role);
   saveUsers();
   log(`🔐 permissions set: ${username} → ${USERS[username].permissions.join(',') || 'none'}`);
-  res.json({ ok: true, username, permissions: USERS[username].permissions, can_view_stats: USERS[username].can_view_stats });
+  res.json({ ok: true, username, permissions: USERS[username].permissions });
 });
 
 router.delete('/admin/api/users/:username', requirePermission('admin.users.manage'), (req, res) => {
@@ -116,18 +114,6 @@ router.post('/admin/api/users/:username/reset-password', requirePermission('admi
   }
 });
 
-router.patch('/api/admin/users/:username/stats-permission', requirePermission('admin.users.manage'), express.json(), (req, res) => {
-  const { username } = req.params;
-  const { can_view_stats } = req.body;
-  if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
-  USERS[username].can_view_stats = can_view_stats === true;
-  const perms = normalizePermissions(USERS[username].permissions, USERS[username].role, false).filter(p => p !== 'stats.view_daily');
-  if (USERS[username].can_view_stats) perms.push('stats.view_daily');
-  USERS[username].permissions = normalizePermissions(perms, USERS[username].role, false);
-  saveUsers();
-  log(`📊 stats-permission: ${username} → ${USERS[username].can_view_stats}`);
-  res.json({ ok: true, username, can_view_stats: USERS[username].can_view_stats });
-});
 
 function dateKey(date) {
   return [

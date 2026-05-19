@@ -1912,7 +1912,7 @@ function parseDesktopYcHtDay(ycHt) {
 function renderDesktopFilterSummary(orders) {
   const el = document.getElementById('d-filter-summary');
   if (!el) return;
-  if (!hasPerm('stats.view_daily') && CURRENT_USER?.can_view_stats !== true) {
+  if (!hasPerm('stats.view_daily')) {
     el.innerHTML = '';
     el.style.display = 'none';
     return;

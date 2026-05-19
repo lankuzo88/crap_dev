@@ -29,7 +29,7 @@ const STAGE_ORDER = {
 
 function getAllowedStages(username, userRole, userCongDoan) {
   userCongDoan = normalizeUserCongDoan(userCongDoan);
-  if (userRole === 'qc' || userRole === 'admin') return ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
+  if (hasPermission(username, 'error_reports.review')) return ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
   if (userCongDoan === 'CBM') return ['CBM'];
   if (userCongDoan === 'đắp' || userCongDoan === 'mài') {
     const allowed = new Set();

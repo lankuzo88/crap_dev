@@ -91,3 +91,5 @@ sessions.json
 .claude/
 keylab_state.json
 labo_config.json
+scraper_errors.json
+RAC/

@@ -18,7 +18,7 @@ const STAGE_ORDER = {
 const ALL_STAGES = ['CBM', 'sáp', 'CAD/CAM', 'sườn', 'đắp', 'mài'];
 
 function getAllowedDelayStages(userInfo = {}) {
-  if (userInfo.role === 'admin' || userInfo.role === 'qc') return ALL_STAGES;
+  if (hasPermission(userInfo, 'delay_reports.review')) return ALL_STAGES;
   const userStage = normalizeUserCongDoan(userInfo.cong_doan);
   if (!userStage) return [];
 

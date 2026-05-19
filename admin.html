@@ -88,7 +88,6 @@
     .role-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
     .role-admin { background: #ffebee; color: #c62828; }
     .role-user  { background: #e8f5e9; color: #2e7d32; }
-    .role-qc    { background: #e3f2fd; color: #1565c0; }
     .cd-badge   { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e3f2fd; color: #1565c0; }
     .actions { display: flex; gap: 6px; }
     .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
@@ -433,8 +432,6 @@
           <label for="role">Vai trò</label>
           <select id="role">
             <option value="user">User (Nhân viên)</option>
-            <option value="qc">QC (Kiểm tra)</option>
-            <option value="delay_qc">Báo trễ tiến độ</option>
             <option value="admin">Admin (Quản lý)</option>
           </select>
         </div>
@@ -714,11 +711,9 @@
     ['mài', 'Mài'],
   ];
   const USER_CONG_DOAN_LABELS = Object.fromEntries(USER_CONG_DOAN_OPTS);
-  const ROLE_LABELS = { admin: 'Admin', user: 'User', qc: 'QC', delay_qc: 'Báo trễ tiến độ' };
+  const ROLE_LABELS = { admin: 'Admin', user: 'User' };
   const ROLE_OPTS = [
     ['user', 'User'],
-    ['qc', 'QC'],
-    ['delay_qc', 'Báo trễ tiến độ'],
     ['admin', 'Admin'],
   ];
   const PERMISSION_LABELS = [
@@ -729,6 +724,7 @@
     ['stats.view_daily', 'Xem thống kê ngày'],
     ['stats.view_production', 'Xem thống kê sản xuất'],
     ['stats.view_monthly', 'Xem thống kê tháng'],
+    ['stats.view_wip', 'Xem WIP công đoạn'],
     ['error_reports.submit', 'Gửi báo lỗi kỹ thuật'],
     ['error_reports.view_own', 'Xem báo lỗi kỹ thuật của mình'],
     ['error_reports.review', 'Duyệt báo lỗi kỹ thuật'],
@@ -815,7 +811,7 @@
 
       let html = `<table class="data-table">
         <thead><tr>
-          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Quyền</th><th>TK chips</th><th>Hành động</th>
+          <th>Tên đăng nhập</th><th>Vai trò</th><th>Công đoạn</th><th>Quyền</th><th>Hành động</th>
         </tr></thead><tbody>`;
 
       for (const u of users) {
@@ -836,7 +832,6 @@
             <span>${label}</span>
           </label>`;
         }).join('');
-        const statsChecked = u.can_view_stats ? 'checked' : '';
         html += `<tr>
           <td><strong>${u.username}</strong>${isMe ? ' <span style="color:#aaa;font-size:11px">(bạn)</span>' : ''}</td>
           <td>
@@ -856,12 +851,6 @@
                 ${permHtml}
               </div>
             </details>
-          </td>
-          <td>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
-              <input type="checkbox" ${statsChecked} onchange="setStatsPerm('${u.username}', this.checked)" style="width:16px;height:16px;cursor:pointer;">
-              <span>${u.can_view_stats ? 'Bật' : 'Tắt'}</span>
-            </label>
           </td>
           <td><div class="actions">
             <button class="btn btn-secondary" onclick="openResetPassword('${u.username}')">Đổi pass</button>
@@ -943,19 +932,6 @@
     } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); loadUsers(); }
   }
 
-  async function setStatsPerm(username, can_view_stats) {
-    try {
-      const res = await fetch(`/api/admin/users/${username}/stats-permission`, {
-        method: 'PATCH', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ can_view_stats }),
-      });
-      const d = await res.json();
-      if (!res.ok) { showAlert(d.error || 'Lỗi cập nhật', 'error'); loadUsers(); return; }
-      const label = can_view_stats ? 'Bật' : 'Tắt';
-      showAlert(`✅ Thống kê ${label} cho ${username}`, 'success');
-      loadUsers();
-    } catch(e) { showAlert('Lỗi: ' + e.message, 'error'); }
-  }
 
   // ── ERROR CODES ───────────────────────────────
   const STAGE_COLORS = { CBM:'#e65100', 'sáp':'#6a1b9a', 'CAD/CAM':'#1565c0', 'sườn':'#1b5e20', 'đắp':'#b71c1c', 'mài':'#424242' };
