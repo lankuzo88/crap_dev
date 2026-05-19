@@ -370,6 +370,30 @@ function resetCache() {
   cache = null; cacheKey = ''; cacheTime = 0;
 }
 
+function autoCloseCompletedDelayReports() {
+  const db = getDB();
+  if (!db) return;
+  try {
+    const data = getDataFromDB();
+    const completedIds = data.orders.filter(o => o.pct === 100).map(o => o.ma_dh);
+    if (completedIds.length === 0) return;
+    const placeholders = completedIds.map(() => '?').join(',');
+    const result = db.prepare(`
+      UPDATE delay_reports
+      SET trang_thai    = 'rejected',
+          reviewed_by   = 'system',
+          reviewed_at   = datetime('now','localtime'),
+          ghi_chu_admin = 'Tự động đóng: đơn đã hoàn thành 100% tiến độ'
+      WHERE ma_dh IN (${placeholders})
+        AND trang_thai IN ('pending', 'confirmed')
+    `).run(...completedIds);
+    if (result.changes > 0)
+      log(`✅ Tự động đóng ${result.changes} delay report cho đơn hoàn thành`);
+  } catch (e) {
+    log(`⚠ autoCloseCompletedDelayReports: ${e.message}`);
+  }
+}
+
 function getData(forceReload = false) {
   if (dbHasData()) {
     const age = Date.now() - cacheTime;
@@ -422,4 +446,5 @@ module.exports = {
   getDataFromDB,
   getData,
   resetCache,
+  autoCloseCompletedDelayReports,
 };

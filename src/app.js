@@ -5,11 +5,12 @@ const express = require('express');
 const app     = express();
 
 // Wire up scraper ↔ orders cache reset (tránh circular dep)
-const { setResetCallback, setCloseDBCallback } = require('./services/scraper.service');
-const { resetCache } = require('./repositories/orders.repo');
+const { setResetCallback, setCloseDBCallback, setAutoCloseCallback } = require('./services/scraper.service');
+const { resetCache, autoCloseCompletedDelayReports } = require('./repositories/orders.repo');
 const { closeDB }    = require('./db/index');
 setResetCallback(resetCache);
 setCloseDBCallback(closeDB);
+setAutoCloseCallback(autoCloseCompletedDelayReports);
 
 // ── Body parser ───────────────────────────────────────
 app.set('trust proxy', 1);
