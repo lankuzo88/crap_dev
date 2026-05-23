@@ -1,6 +1,6 @@
 # ASIA LAB Construction Notes
 
-Last updated: 2026-05-20
+Last updated: 2026-05-23
 
 Tai lieu nay mo ta day du cau truc, luong du lieu, module chinh va cach van hanh du an ASIA LAB trong workspace production:
 
@@ -16,7 +16,7 @@ ASIA LAB la he thong quan ly don hang va tien do san xuat cho labo nha khoa. He 
 
 1. **Node.js Express server** phuc vu dashboard, API, auth, admin, upload, bao loi, thong ke.
 2. **SQLite `labo_data.db`** lam nguon du lieu chinh.
-3. **Python automation** export tu Keylab2022 (UI automation), cao tien do tu LaboAsia (HTTP API), lam sach Excel va import vao SQLite.
+3. **Python/PowerShell automation** export KeyLab qua SQL Server, cao tien do tu LaboAsia (HTTP API), lam sach Excel va import vao SQLite.
 
 Production workspace. Khong phai sandbox.
 
@@ -26,12 +26,12 @@ Production workspace. Khong phai sandbox.
 - Python 3.x voi `pandas`, `openpyxl`, `xlrd`, `requests`, `playwright`, `pywinauto`, `pywin32`.
 - SQLite voi WAL mode.
 - Cloudflare R2 (S3-compatible) cho luu anh bao loi ky thuat va bao tre tien do.
-- PM2 cluster mode 4 instance cho Node + 1 instance cho auto-scrape Python.
+- PM2 cluster mode 2 instance cho Node (giảm từ 4 xuống 2 ngày 2026-05-21 cho phù hợp tải ~30 user) + 1 instance cho auto-scrape Python.
 - Caddy reverse proxy `asiakanban.com` ve `127.0.0.1:3000`.
 
 ### Cac actor trong he thong
 
-- **Admin**: full quyen — quan ly user, upload Excel, trigger Keylab export, duyet bao loi, xem stats, route don.
+- **Admin**: full quyen — quan ly user, upload Excel, duyet bao loi, xem stats, route don. KeyLab export thu cong da bi disable; luong chinh la auto SQL exporter hourly.
 - **User (cong doan)**: nhin queue pending theo cong doan cua minh, scan barcode, route don, bao loi cong doan minh. Quyen nang cao (bao loi review, stats, WIP...) cap qua permissions rieng, khong can role moi.
 
 ---
@@ -45,7 +45,7 @@ Production workspace. Khong phai sandbox.
 - Host listen: `127.0.0.1`
 - Port mac dinh: `3000` (env `PORT` override)
 - PM2 app name: `asia-lab-server`
-- PM2 mode: cluster, `instances: 4`
+- PM2 mode: cluster, `instances: 2`
 - `max_memory_restart`: 500M
 - `min_uptime`: 10s, `max_restarts`: 10, `restart_delay`: 5000ms
 - Logs: `logs/pm2-out.log`, `logs/pm2-error.log`
@@ -58,6 +58,7 @@ Production workspace. Khong phai sandbox.
 - PM2 app name: `auto-scrape`
 - Interpreter: `python` (cwd = project root)
 - Chu ky: moi `INTERVAL_MINUTES = 10` phut
+- KeyLab SQL export tu dong: moi `KEYLAB_EXPORT_INTERVAL_MINUTES = 60` phut trong cung daemon; sau khi export thanh cong se scrape/import file vua xuat va sync KeyLab SQL notes qua `run_scrape.py`.
 - `max_memory_restart`: 300M, `min_uptime`: 30s, `max_restarts`: 5, `restart_delay`: 10000ms
 - Env bo sung trong ecosystem.config.js:
   - `PYTHONIOENCODING=utf-8`
@@ -82,7 +83,7 @@ module.exports = {
     {
       name: 'asia-lab-server',
       script: 'server.js',
-      instances: 4,
+      instances: 2,
       exec_mode: 'cluster',
       autorestart: true,
       max_memory_restart: '500M',
@@ -131,15 +132,15 @@ module.exports = {
 
 #### Middleware (`src/middleware/`)
 - `auth.js` (~30 dong) — `requireAuth`, `requireAdmin`.
-- `security.js` (~45 dong) — `loginLimiter` (5 attempt / 15 min, 429), `blockDirectHtml`, `serveErrorImages`.
+- `security.js` (~82 dong) — `loginLimiter` (array 2 lớp: per-IP 300/15 phút + per-username 10/15 phút, `skipSuccessfulRequests`, IPv6-safe key), `blockDirectHtml`, `serveErrorImages`.
 
 #### Repositories (`src/repositories/`)
 - `users.repo.js` (~101 dong) — `USERS` in-memory dict + load/save `users.json`, bcrypt hash, normalize cong_doan.
 - `orders.repo.js` (~414 dong) — doc Excel/JSON, build orders, cache 60s (SQLite path priority), stage skip rules, `getData(forceReload?)`, `resetCache()`.
 
 #### Services (`src/services/`)
-- `session.service.js` (~101 dong) — `genToken()` (crypto 32 bytes hex), `createSession/getSession/deleteSession`, TTL 7 ngay, cleanup moi 1h.
-- `scraper.service.js` (~277 dong) — spawn `run_scrape.py`, queue management, file watcher debounce 3s, spawn `keylab_exporter.py --once` va `--check`, callback `setResetCallback`/`setCloseDBCallback`.
+- `session.service.js` (~101 dong) — `genToken()` (crypto 32 bytes hex), `createSession/getSession/deleteSession/refreshSession`, TTL 12 gio mac dinh hoac 30 ngay khi tick remember, cleanup moi 1h.
+- `scraper.service.js` (~277 dong) — spawn `run_scrape.py` cho Upload Excel, queue management, shared `scrape_pipeline.lock` de tranh dung do voi auto exporter, callback `setResetCallback`/`setCloseDBCallback`.
 - `image.service.js` (~189 dong) — multer R2Storage custom, `sharp` compress (rotate, resize fit-inside 1600x1600, webp 75%), upload nhieu anh toi da `REPORT_IMAGE_LIMIT`, helper JSON image refs, `uploadImage`, `deleteErrorImage` (R2 truoc, fallback local), `cleanupExpiredErrorImages` (90 ngay), schedule 24h.
 - `r2.service.js` (~15 dong) — S3Client factory (region 'auto'), export `PutObjectCommand`, `DeleteObjectCommand`.
 
@@ -161,14 +162,14 @@ module.exports = {
 - `reportStats.js` — build thong ke thang cho bao loi ky thuat va bao tre, dung ky 26 thang truoc den 25 thang hien thi.
 
 ### Python script (root)
-- `auto_scrape_headless.py` — daemon 24/7 quet Excel moi va chay `run_scrape.py` cao tien do web LaboAsia.
+- `auto_scrape_headless.py` — daemon 24/7; moi 10 phut cap nhat tien do web LaboAsia, moi 60 phut tu dong xuat KeyLab SQL roi scrape/import file moi.
 - `run_scrape.py` — runner cho 1 file Excel, 1-4 worker scrape song song.
 - `laboasia_gui_scraper_tkinter.py` — core scraper, login Playwright lay JWT, goi JSON API.
 - `labo_cleaner.py` — clean Excel raw thanh workbook 3-sheet co styling.
 - `db_manager.py` — schema init, import JSON/Excel, stats, sync keylab notes.
 - `keylab_exporter.py` — pywinauto UIA automation Keylab2022 de Xuat Excel. **[DEPRECATED 2026-05-18]** Khong con duoc goi tu pipeline; thay bang `keylab_sql_exporter.ps1`.
 - `keylab_sql_exporter.ps1` — export Excel truc tiep tu SQL Server KeyLab, loc don chua giao co phuc hinh chua `su`/`sứ`, khong can mo app KeyLab.
-- `keylab_sql_notes_scraper.ps1` — lay `ghichusanxuat` truc tiep tu SQL Server KeyLab bang stored procedure, khong can mo UI KeyLab.
+- `keylab_sql_notes_scraper.ps1` — lay `ghichusanxuat` va `sx_info` truc tiep tu SQL Server KeyLab bang stored procedure, khong can mo UI KeyLab.
 - `import_history_data.py` (neu co) — bulk import lich su vao `tien_do_history`.
 
 ### Frontend HTML (root)
@@ -188,7 +189,7 @@ module.exports = {
 - `labo_config.json` — `{last_run_file: "..."}`.
 - `keylab_state.json` — `{date: "DD/MM/YYYY", export_count: N}` cho file naming Keylab export.
 - `scraper_errors.json` — legacy runtime artifact tu notes scraper cu; auto pipeline hien khong doc file nay.
-- `keylab_notes.json` (optional) — cache notes goc, hien duoc tao tu SQL KeyLab (`source: keylab_sql`) va sync vao `don_hang.ghi_chu_sx`.
+- `keylab_notes.json` (optional) — cache notes goc, hien duoc tao tu SQL KeyLab (`source: keylab_sql`) va sync vao `don_hang.ghi_chu_sx` + `don_hang.keylab_sx_info`.
 
 ### Config files
 - `package.json` — dependencies, scripts.
@@ -202,20 +203,22 @@ module.exports = {
 
 ### Luong tu Keylab den dashboard (file moi)
 
-1. Admin bam "Xuat Excel KeyLab" trong dashboard.
-2. Node `spawnKeylabExport()` goi `keylab_sql_exporter.ps1`:
+1. `auto_scrape_headless.py` trong PM2 tu dong chay KeyLab SQL export moi 60 phut. Dashboard khong con nut lam moi KeyLab thu cong; hai duong chinh chi la Upload Excel va auto exporter.
+2. Auto daemon hoac Node `spawnKeylabExport()` goi `keylab_sql_exporter.ps1`:
    - Dat ten file `Excel/DDMMYYYY_N.xlsx` theo `keylab_state.json`.
    - Goi SQL Server KeyLab bang stored procedure `tblDonHang_DonHangDaNhan_SelectAllByTuNgayDenNgay`.
    - Loai don da giao (`giaothucte` co gia tri).
    - Gom phuc hinh theo ma don va loc phuc hinh chua `su`/`sứ`.
    - Ghi Excel cung header KeyLab goc (`Mã ĐH`, `Nhận lúc`, `Y/c hoàn thành`, `Y/c giao`, `Khách hàng`, `Bệnh nhân`, `Phục hình`, `Ghi chú điều phối`, ...).
    - Print `SAVED:<filepath>` va exit. Khong can mo app KeyLab.
-3. `auto_scrape_headless.py` (daemon 10 phut/lan):
+3. `auto_scrape_headless.py` (daemon 10 phut/lan, kem export SQL moi 60 phut):
+   - Doc `labo_config.json.last_keylab_sql_export_at`; neu qua 60 phut thi xuat file KeyLab SQL moi.
+   - Neu export thanh cong thi scrape/import ngay file vua xuat.
    - `find_newest_excel()` quet `Excel/` bo `_scraped`, `_final`, `_cleaned`.
    - So sanh voi `labo_config.json.last_run_file`.
    - **File moi** → chay `run_scrape.py <excel_path>` (timeout 300s), import DB, cap nhat `last_run_file`.
    - **File cu** → chay lai `run_scrape.py <excel_path>` de cap nhat tien do web.
-   - Khong con Keylab notes UI scraper; loi notes/`scraper_errors.json` khong chan vong cao tien do.
+   - Khong con Keylab notes UI scraper; notes SQL sync theo `run_scrape.py`.
 4. `run_scrape.py <excel_path>`:
    - `detect_sheet_col()` — auto-detect sheet (`Đơn hàng`/`Don hang`/`Sheet1`) va column ma_dh (fuzzy match `ma_dh`, `mã ĐH`, `Mã đơn`...).
    - Load 1-4 account tu env `LABO_USER1..4` + `LABO_PASS1..4`.
@@ -230,10 +233,26 @@ module.exports = {
    - Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
    - `subprocess.run(labo_cleaner.py)` → `File_sach/*_final.xlsx`.
    - `db_manager.py init_db()` + `import_json()` + `import_excel_final()` vao SQLite.
-   - Goi `keylab_sql_notes_scraper.ps1` de lay `ghichusanxuat` truc tiep tu SQL KeyLab, ghi `keylab_notes.json`, roi sync vao `don_hang.ghi_chu_sx`.
+   - Goi `keylab_sql_notes_scraper.ps1` de lay `ghichusanxuat` va `sx_info` truc tiep tu SQL KeyLab, ghi `keylab_notes.json`, roi sync vao `don_hang.ghi_chu_sx` va `don_hang.keylab_sx_info`.
    - Cleanup file trung gian `Data/*` va `File_sach/*` sau import.
    - Exit 0 neu co result, 1 neu khong.
-5. Node API doc SQLite, frontend render dashboard.
+5. Node API doc SQLite, parse `keylab_sx_info` JSON trong `/data.json` va `/api/user/pending-orders`, frontend render dashboard.
+
+### KeyLab production info (`sx_info`)
+
+`keylab_sql_notes_scraper.ps1` mo rong notes sync bang hai nhom SQL:
+
+- Detail procedure: lay `ghichusanxuat` va detail san pham theo `ma_dh`.
+- Header procedure: lay cac field production nhu mau, sap can, gia khop, khay lay dau, ham doi, vi tri nuou/bo vai, chi dinh/trao doi.
+
+Payload `sx_info` trong `keylab_notes.json` gom:
+
+- `colors`: mau rang/mau TK da loc trung va bo gia tri boolean.
+- `attributes`: phu kien di kem dang key/value, vi du `sap_can`, `gia_khop`, `khay_lay_dau`, `so_khay_lay_dau`, `ham_doi`, `phu_kien`, `gui_labo_ngoai`.
+- `instructions`: luu y chung nha khoa, gom `chi_dinh`, `noi_dung_khac`, `trao_doi_bac_si`.
+- `products`: detail san pham de audit/source, hien UI khong render truc tiep "Theo phuc hinh" nua vi card da co mau va so do rang.
+
+Khong sync/hien thi `the_bao_hanh` trong block production info. UI cung khong hien `loai_san_pham` trong block nay.
 
 ### Luong khi cung file (re-poll)
 - `auto_scrape_headless.py` chay lai `run_scrape.py` cho progress moi.
@@ -283,6 +302,7 @@ Mot dong per `ma_dh`. Writer chinh: `db_manager.py.upsert_don_hang()` tu Excel/w
 | loai_lenh | TEXT | '' | Lam moi/Lam lai/Sua/Bao hanh/Lam tiep/Lam them |
 | ghi_chu | TEXT | '' | Ghi chu dieu phoi |
 | ghi_chu_sx | TEXT | '' | Ghi chu SX (tu Keylab) |
+| keylab_sx_info | TEXT | '' | JSON production info tu KeyLab SQL: colors, attributes, instructions, products |
 | trang_thai | TEXT | '' | Trang thai don |
 | tai_khoan_cao | TEXT | '' | Account code (hyct, kythuat, sonnt, lanhn) |
 | barcode_labo | TEXT | '' | Barcode dan tren don |
@@ -353,6 +373,7 @@ UNIQUE(ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh). Index `idx_tdh_billing_m
 | username | TEXT NOT NULL | |
 | role | TEXT NOT NULL | admin/user |
 | expires | INTEGER NOT NULL | Unix ms |
+| ttl_ms | INTEGER NOT NULL DEFAULT 43200000 | Sliding TTL cua session: 12 gio mac dinh hoac 30 ngay khi tick remember |
 
 Index `idx_sessions_expires(expires)`. Cleanup moi 1h.
 
@@ -575,7 +596,7 @@ Danh sach tat ca permission (`PERMISSIONS` array trong `users.repo.js`):
 | `delay_reports.review` | Xem/duyet/tu choi tat ca bao tre + full detail + xem allowed stages full |
 | `admin.users.manage` | Quan ly user (them/sua/xoa) |
 | `admin.upload_excel` | Upload Excel |
-| `admin.keylab_export` | Trigger Keylab export |
+| `admin.keylab_export` | Legacy/disabled KeyLab export permission; `/keylab-export-now` hien tra 410 |
 | `analytics.view` | Xem analytics |
 | `munger.view` | Xem Munger KPI dashboard |
 
@@ -590,9 +611,11 @@ Danh sach tat ca permission (`PERMISSIONS` array trong `users.repo.js`):
 
 ### Session
 - Cookie: `sid`
-- HttpOnly, SameSite=Strict
-- TTL: 7 ngay (`SESS_TTL = 7 * 24 * 3600 * 1000`)
-- Cookie age: 604800 sec
+- HttpOnly, SameSite=Lax
+- TTL mac dinh: 12 gio (`SESS_TTL = 12 * 3600 * 1000`)
+- Remember TTL: 30 ngay (`REMEMBER_TTL = 30 * 24 * 3600 * 1000`) khi tick "Ghi nhớ đăng nhập" tren `login.html`.
+- Cookie age: 43200 sec mac dinh, 2592000 sec neu remember.
+- Authenticated request refresh cookie/DB expiry ve dung moc cua session (`ttl_ms`); DB write duoc throttle bang drift 5 phut de tranh ghi lien tuc khi dashboard poll.
 - Token: `crypto.randomBytes(32).toString('hex')`
 - Storage: SQLite bang `sessions`
 - Cleanup: setInterval moi 1h chay `cleanExpiredSessions()`.
@@ -631,7 +654,10 @@ Mapping user cong_doan → room (`users.routes.js`):
 - `requireAuth(req, res, next)` — doc cookie `sid` qua `getSessionToken()`, `getSession(token)` check expiry, attach `req.session = {username, role, cong_doan}` hoac redirect `/login` (browser) hoac 401 JSON (API).
 - `requireAdmin(req, res, next)` — `requireAuth` + check `role === 'admin'`, else 403 JSON.
 - `requirePermission(perm)` — `requireAuth` + `hasPermission(username, perm)`, else 403 JSON.
-- `loginLimiter` — `express-rate-limit`, 5 attempt / 15 phut, return 429 sau khi vuot quota.
+- `loginLimiter` — array gom 2 limiter chain (express-rate-limit v8):
+  - Lop 1 per-IP: max 300/15 phut, `skipSuccessfulRequests`, dung lam tuyen flood/credential stuffing.
+  - Lop 2 per-username: max 10/15 phut, `keyGenerator` lay `req.body.username` (fallback `ipKeyGenerator(req.ip)` cho IPv6-safe), `skipSuccessfulRequests`, chan brute force theo tai khoan ke ca khi user share NAT chung.
+  - Login thanh cong (redirect `/`) khong tinh quota; that bai (redirect `/login?error=1`) co tinh — phan biet qua `Location` header trong `requestWasSuccessful`.
 - `blockDirectHtml` — chan request `.html` (tru `login.html`) chua auth.
 - `serveErrorImages` — static `/uploads/error-images` co auth check.
 
@@ -756,7 +782,7 @@ User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 | Method | Path | Auth | Body / Query | Response |
 |---|---|---|---|---|
 | GET | `/login`, `/login.html` | none | — | Serve `login.html` (redirect `/` neu da login) |
-| POST | `/login` | loginLimiter | `username`, `password` | Redirect `/` (success) hoac `/login?error=...` (fail), 429 neu rate-limited |
+| POST | `/login` | loginLimiter (per-IP + per-username) | `username`, `password`, optional `remember=1` | Redirect `/` (success) hoac `/login?error=...` (fail), 429 neu rate-limited. Chi fail moi tinh quota. |
 | GET | `/logout` | session | — | Delete session, clear cookie, redirect `/login` |
 
 ### Dashboard & core data
@@ -810,11 +836,11 @@ User sap (cong_doan `sáp`) co button "Quet chuyen sang Zirco", va nguoc lai.
 | Method | Path | Auth | Response |
 |---|---|---|---|
 | GET | `/scrape-status` | requireAuth | `{job, queue: [filenames]}` |
-| GET | `/api/auto-scrape/status` | requireAuth | `{enabled, running, currentFile, nextRun, mode, queue}` |
-| POST | `/api/auto-scrape/run` | requireAdmin | Spawn latest Excel. Error 409 neu running. |
+| GET | `/api/auto-scrape/status` | requireAuth | `{enabled, running, currentFile, nextRun, mode, queue}`; `nextRun` hien progress 10 phut + KeyLab SQL export 60 phut |
+| POST | `/api/auto-scrape/run` | requireAdmin | Disabled 410; khong dung manual scrape latest Excel nua. |
 | GET | `/keylab-status` | requireAuth | `{running, startedAt, exitCode, savedFile, log: []}` |
-| GET | `/keylab-health` | requireAuth | `{ok, message}` (spawn `keylab_exporter.py --check`) |
-| POST | `/keylab-export-now` | requireAdmin | Pre-flight health check. Spawn `keylab_exporter.py --once`. Return `{ok, message}` |
+| GET | `/keylab-health` | requireAuth | Bao KeyLab SQL export duoc quan ly boi hourly auto exporter. |
+| POST | `/keylab-export-now` | requireAdmin | Disabled 410; nut lam moi KeyLab thu cong da bo. |
 | GET | `/keylab-export-status` | requireAuth | (alias `/keylab-status`) |
 
 ### Analytics
@@ -897,7 +923,8 @@ KPI shapes:
 ## 10. Frontend behavior chi tiet
 
 ### login.html
-- Form POST `/login` voi `username`, `password`.
+- Form POST `/login` voi `username`, `password`, tuy chon `remember=1`.
+- Checkbox "Ghi nhớ đăng nhập" tao session 30 ngay; khong tick thi 12 gio.
 - Hien error neu URL co `?error`.
 - Dark theme terracotta. Logo 🦷.
 - Responsive breakpoint 420px.
@@ -905,7 +932,7 @@ KPI shapes:
 ### dashboard.html (desktop)
 - Doc `/data.json`.
 - Auto refresh moi **5 phut**.
-- Admin thay button: "Admin Dashboard", "Upload Excel", "Xuat Excel KeyLab" (POST `/keylab-export-now` + poll), "Munger Dashboard".
+- Admin thay button: "Admin Dashboard", "Upload Excel", "Munger Dashboard". Nut "Lam moi"/"Xuat Excel KeyLab" thu cong da bo de tranh trung voi auto exporter.
 - User thuong: chuyen sang view pending order theo cong doan.
 - Render: order card, stage pips ngang (5 cong doan), filter phuc hinh (`zirc/kl/vnr/tam/inmau/hon/all`), pipeline view (group by `yc_giao` time window: sang 08-11, trua 11-14, chieu 14-18, toi 18-23), summary stats.
 - Stage pips: `.done` = filled glow, `.current` = 50% fill, `.skip` = pattern xach.
@@ -918,9 +945,13 @@ KPI shapes:
 - Summary chip pills theo `yc_ht` chi hien neu co permission `stats.view_daily`.
 - Pills co the click → mo modal danh sach don chua hoan thanh trong ngay do (sort theo yc_hoan_thanh, nhom theo gio, duong ke mau terracotta giua cac nhom gio).
 - Modal stage progress: hien thu tu CBM/SÁP/SƯỜN/ĐẮP/MÀI + thoi gian hoan thanh + KTV.
+- Modal card co block `Thong tin san xuat` ngay trong modal chinh, nam sau `Ghi chu dieu phoi` va truoc `Tien do cong doan`; khong con modal con KeyLab.
+- Block production doc `keylab_sx_info` + `ghi_chu_sx` theo dung `ma_dh` va chi render cac thong tin can thiet: `Mau sac`, `Phu kien di kem`, `Ghi chu san xuat`, `Luu y chung nha khoa`.
+- `Phu kien di kem` render dang chip de gon tren mobile. Neu co `khay_lay_dau` va `so_khay_lay_dau`, UI gop thanh mot chip nhu `Khay lay dau: 1`; khong hien chip `So khay` rieng.
+- Block production khong hien: tien do, the bao hanh, loai san pham, va nhom "Theo phuc hinh" vi mau/so do rang da co trong card/du lieu don.
 - Route color stripe trai card: ROOM_COLORS theo `routed_to`.
 - Auto refresh: **30 phut** neu user, **60 phut** neu admin.
-- Keylab export polling: moi **2 phut** poll `/keylab-export-status` + `/scrape-status` khi co job.
+- KeyLab export khong con polling tu dashboard; auto exporter PM2 xuat SQL moi 60 phut va scrape/import file vua tao.
 - Barcode scanner: ZXing UMD CDN `@zxing/library@0.19.2`, `facingMode: 'environment'`, scan → `searchOrders(value, {autoSelectExact: true})`.
 - FAB button "Quet chuyen qua [room khac]" cho user co cong_doan (sap/CAD-CAM): scan barcode → POST `/api/orders/route` target = `getTransferTargetRoom(myRoom)`.
 
@@ -1011,20 +1042,23 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
 ### auto_scrape_headless.py
 
 - Entry: `main()` vong lap vo tan, khong CLI flag.
-- Config: `INTERVAL_MINUTES = 10`, `run_scrape timeout = 300s`.
+- Config: `INTERVAL_MINUTES = 10`, `KEYLAB_EXPORT_INTERVAL_MINUTES = 60`, `run_scrape timeout = 300s`, KeyLab SQL export timeout = 900s.
 - Function chinh:
+  - `export_keylab_sql_if_due()` - doc `labo_config.json.last_keylab_sql_export_at`; neu qua 60 phut thi goi `keylab_sql_exporter.ps1`, cap nhat `keylab_state.json` va scrape file vua xuat.
   - `find_newest_excel()` — quet `Excel/`, bo file `_scraped/_final/_cleaned`.
   - `get_last_run_file()` — doc `labo_config.json.last_run_file`.
   - `scrape_excel(file)` — subprocess `run_scrape.py`, cap nhat `last_run_file` khi thanh cong.
 - Flow:
   1. Lap moi 10 phut.
-  2. Tim Excel moi nhat.
-  3. Compare voi `last_run_file`:
+  2. Neu den gio hourly, chay KeyLab SQL export ra `Excel/DDMMYYYY_N.xlsx`.
+  3. Neu export thanh cong, scrape/import file moi do va sync KeyLab SQL notes trong `run_scrape.py`.
+  4. Neu chua den gio export hoac export loi, tim Excel moi nhat.
+  5. Compare voi `last_run_file`:
      - File moi → `scrape_excel()` de cao tien do web va import SQLite.
      - File cu → `scrape_excel()` de cap nhat tien do web.
      - Khong con chay Keylab notes UI scraper.
-  4. Cap nhat `last_run_file` neu run_scrape thanh cong.
-  5. Log vao `auto_scrape.log` + stdout.
+  6. Cap nhat `last_run_file` neu run_scrape thanh cong.
+  7. Log vao `auto_scrape.log` + stdout.
 - Error handling: subprocess timeout → log error, tiep tuc cycle sau. Khong co thread notes.
 
 ### run_scrape.py
@@ -1046,7 +1080,7 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   8. Neu input `.xls` → convert temp `.xlsx` trong `Data/`.
   9. `subprocess.run(labo_cleaner.py <scraped.xlsx>)` → `File_sach/<stem>_final.xlsx`.
   10. `db_manager.init_db()` + `import_json()` + `import_excel_final()`.
-  11. `sync_keylab_sql_notes()` goi `keylab_sql_notes_scraper.ps1` bang PowerShell de cap nhat `keylab_notes.json`, sau do goi lai `init_db()` de sync vao SQLite.
+  11. `sync_keylab_sql_notes()` goi `keylab_sql_notes_scraper.ps1` bang PowerShell de cap nhat `keylab_notes.json`, sau do goi lai `init_db()` de sync `ghi_chu_sx` va `keylab_sx_info` vao SQLite.
   12. Cleanup: xoa `json_out`, `scraped_xlsx`, `clean_out`, temp xlsx.
   13. Exit 0 neu co result, 1 neu khong.
 
@@ -1114,7 +1148,7 @@ Theme: dark + terracotta accent `#a85a4f`. Mobile-first.
   - `norm_date(val)` → `DD/MM/YYYY HH:MM:SS`.
   - `upsert_don_hang(conn, row)` — INSERT ON CONFLICT DO UPDATE (prefer non-empty fields).
   - `upsert_tien_do(conn, row)` — INSERT ON CONFLICT DO UPDATE.
-  - `sync_keylab_notes(conn)` — read `keylab_notes.json` → UPDATE `don_hang.ghi_chu_sx`; neu `source=keylab_sql` thi duoc phep overwrite note cu de thay cache UI/mojibake.
+  - `sync_keylab_notes(conn)` — read `keylab_notes.json` → UPDATE `don_hang.ghi_chu_sx` va `don_hang.keylab_sx_info`; neu `source=keylab_sql` thi duoc phep overwrite note cu de thay cache UI/mojibake.
 - PRAGMA: WAL, foreign_keys=ON, busy_timeout=30000.
 
 ### keylab_exporter.py
@@ -1454,7 +1488,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 - Auth cookie chua set `Secure` (vi listen local sau Caddy). Neu chuyen topology → danh gia lai.
 - Direct HTML access bi chan boi `blockDirectHtml` middleware (tru `login.html`).
 - Route HTML deu co `requireAuth` / `requireAdmin`.
-- `loginLimiter` 5 attempt / 15 phut chong brute force.
+- `loginLimiter` 2 lop (per-IP 300, per-username 10 / 15 phut) chong brute force; an toan voi user share NAT van phong vi key theo username.
 
 ### File output cleanup
 - `run_scrape.py` xoa `Data/*` va `File_sach/*` sau khi import thanh cong.
@@ -1576,7 +1610,7 @@ Logic phan loai phuc hinh + stage skip nam o:
 Phien nay them flow **Bao tre tien do** va refactor phan quyen tu role cung sang permission linh dong theo user.
 
 Nguyen tac moi:
-- `role` van ton tai de lam template/mau nhanh: `admin`, `user`, `qc`, `delay_qc`.
+- `role` chi con 2 gia tri: `admin`, `user` (role `qc` / `delay_qc` da bi bo o commit `0f577b3` ngay 2026-05-19).
 - Quyen that su dung de check API nam trong `permissions` cua tung user.
 - Admin co `permissions: ["*"]`.
 - User co the co mot hoac nhieu quyen doc lap; vi du vua xem thong ke, vua bao tre, vua bao loi.
@@ -1605,7 +1639,7 @@ Danh sach quyen hien co:
 | `delay_reports.review` | Duyet/tuy choi bao tre |
 | `admin.users.manage` | Quan ly user/role/permissions |
 | `admin.upload_excel` | Upload Excel va chay auto-scrape manual |
-| `admin.keylab_export` | Xuat Excel KeyLab |
+| `admin.keylab_export` | Legacy/disabled KeyLab export permission; manual endpoint hien tra 410 |
 | `analytics.view` | Xem analytics endpoints/page |
 | `munger.view` | Xem Munger dashboard |
 
@@ -1635,7 +1669,7 @@ Tab Users co them:
   - `PATCH /admin/api/users/:username/permissions` body `{permissions: []}`.
   - `PATCH /admin/api/users/:username/role` khi doi role se reset permissions ve default cua role.
 
-`can_view_stats` van duoc giu de tuong thich, nhung khi bat/tat se dong bo voi permission `stats.view_daily`.
+`can_view_stats` da bi gỡ khoi `users.json` o commit `0f577b3`. Endpoint `/user` van tra `can_view_stats: false` mac dinh de cac frontend cu khong vo nghia, nhung dat ban-cu (permission-driven): quyen tuong duong la `stats.view_daily`.
 
 ### Bao tre tien do — schema
 
@@ -1740,7 +1774,7 @@ Da chuyen nhieu route tu role hardcode sang permission:
   - upload page/post: `admin.upload_excel`
 - `scraper.routes.js`
   - manual scrape: `admin.upload_excel`
-  - KeyLab export: `admin.keylab_export`
+  - KeyLab export: legacy `admin.keylab_export`; manual endpoint hien disabled 410, auto exporter hourly la duong chinh
 - `analytics.routes.js`
   - all analytics APIs: `analytics.view`
 - `munger.routes.js`
@@ -1801,7 +1835,7 @@ Sua chinh:
 - `admin.html`
 - `dashboard.html`
 - `dashboard_mobile_terracotta.html`
-- `users.json` (role thuc te hien co: `hongtham`, `thihanh` dang la `delay_qc`)
+- `users.json` (role hien tai chi con `admin` va `user`; quyen review delay reports cap qua permission `delay_reports.review`).
 
 ### Verify da chay
 
@@ -1849,3 +1883,132 @@ Them tab rieng trong admin dashboard de tim cac don co nguy co tre dua tren tien
 - Parse inline script trong `admin.html` bang `new Function`.
 - `node -e "require('./src/app'); console.log('app require ok')"`
 - Smoke API `/admin/api/delay-risk-orders?limit=100` sau khi restart PM2.
+
+---
+
+## 23. Cap nhat phien 2026-05-21 — KeyLab hourly va dashboard card depth
+
+### Muc tieu
+
+- Tu dong xuat KeyLab SQL moi 60 phut trong process `auto-scrape` hien co.
+- Sau moi lan xuat hourly thanh cong, scrape/import ngay file Excel vua tao va sync KeyLab SQL notes theo `run_scrape.py`.
+- Dong bo chip `In mau` voi rule routing phong sap/zirco: don co `ghi_chu_sx` match `hasInMauHam()` cung phai vao chip `In mau`.
+- Tang do noi khoi cho card dashboard desktop/mobile va row trong modal ngay cua mobile ma khong doi mau sac, text, du lieu hay business logic.
+
+### Files sua chinh
+
+- `auto_scrape_headless.py`: them `KEYLAB_EXPORT_INTERVAL_MINUTES = 60`, `export_keylab_sql_if_due()`, moc `last_keylab_sql_export_at` va `last_keylab_sql_export_file` trong `labo_config.json`.
+- `src/routes/scraper.routes.js`: cap nhat `/api/auto-scrape/status` de noi ro progress 10 phut + KeyLab SQL export 60 phut; disable `/keylab-export-now` va `/api/auto-scrape/run`.
+- `src/services/scraper.service.js`: Upload Excel dung shared `scrape_pipeline.lock`; neu auto exporter dang chay thi dua file upload vao queue retry.
+- `dashboard_mobile_terracotta.html`: chip `In mau` doc them `ghi_chu_sx`; card chinh va row trong modal ngay dung shadow/inset de noi khoi.
+- `dashboard.html`: chip `In mau` doc them `ghi_chu_sx`; card desktop `.d-order-card` dung shadow/inset de noi khoi.
+- `CONSTRUCTION.md`: cap nhat luong KeyLab va ghi chu UI.
+
+### Rule nghiep vu quan trong
+
+- `auto_scrape_headless.py` van la process tu dong duy nhat cho pipeline nen khong them scheduler/process rieng.
+- Chi con hai duong cap nhat chinh: Upload Excel thu cong va auto exporter hourly; nut Lam moi/KeyLab export thu cong bi go khoi desktop/mobile.
+- `scrape_pipeline.lock` chan `run_scrape.py` chay song song giua Upload Excel va auto exporter; lock cu hon 45 phut duoc xem la stale.
+- Hourly export chi cap nhat `last_keylab_sql_export_at` khi `keylab_sql_exporter.ps1` tra `SAVED:<path>` va file ton tai.
+- Notes san xuat tiep tuc sync trong `run_scrape.py` qua `keylab_sql_notes_scraper.ps1`; khong khoi phuc KeyLab UI notes scraper.
+- `In mau` match cac pattern: `in mau ham`, `in mau` + `ham`, `in ban` + `ham`, `in toan` + `ham` trong `phuc_hinh` hoac `ghi_chu_sx`.
+
+### Verify da chay
+
+- `python -m py_compile auto_scrape_headless.py`
+- `node --check src\routes\scraper.routes.js`
+- `node -e "require('./src/app'); console.log('app require ok')"`
+- Parse inline script trong `dashboard.html` va `dashboard_mobile_terracotta.html` bang `new Function`.
+- `pm2 restart auto-scrape`
+- `pm2 restart asia-lab-server`
+- Live check: auto-scrape xuat `Excel\21052026_2.xlsx`, import log co `21052026_2_scraped.json` va `21052026_2_final.xlsx` trang thai `ok`, `keylab_notes.json` source `keylab_sql` matched `61/61`, errors `0`.
+
+---
+
+## 24. Cap nhat phien 2026-05-21 (chieu) — capacity tuning va login limiter NAT-safe
+
+### Muc tieu
+
+- Chuan bi he thong de gánh ~30-100 user truy cap dong thoi, da so chung mang van phong (NAT chung 1 public IP).
+- Don dep UI: go nut "Lam moi" (↻) thua trong WIP panel mobile.
+- Toi uu RAM/CPU footprint cho phu hop tai thuc te.
+
+### Files sua chinh
+
+- `src/middleware/security.js`: refactor `loginLimiter` tu 1 layer per-IP (5/15 phut) sang 2 layer chain:
+  - Per-IP: max 300/15 phut, `skipSuccessfulRequests` (loose, chong flood/credential stuffing).
+  - Per-username: max 10/15 phut, `keyGenerator` doc `req.body.username` (fallback `ipKeyGenerator(req.ip)`), `skipSuccessfulRequests` (tight, chan brute force tai khoan).
+  - `requestWasSuccessful` phan biet success/fail qua `Location` header (`/` = success, `/login?error=1` = fail).
+  - Dung `ipKeyGenerator` helper tu v8 cho IPv6-safe.
+  - Export van la `loginLimiter`, nhung gio la array 2 middleware → Express tu flatten, khong phai sua `auth.routes.js`.
+- `dashboard_mobile_terracotta.html`: gỡ `<button class="wip-refresh">↻</button>` trong WIP panel header va CSS `.wip-refresh` (auto-refresh trong `loadData()` da goi `refreshWipIfOpen()` nen nut thu cong thua).
+- `ecosystem.config.js`: `instances: 4` → `instances: 2`. Da `pm2 scale asia-lab-server 2` live + `pm2 save`. Ly do: 4 cluster worker overkill cho ~30 user, ngon ~300 MB RAM thua trong khi may chi co 8 GB total va Keylab2022 export hourly can cho.
+
+### Ly do thiet ke 2 layer limiter
+
+- Voi `trust proxy = 1` + Caddy reverse_proxy, `req.ip` la public IP cua client. User van phong NAT chung 1 IP → limiter per-IP cu (max 5/15 phut) khoa toan bo van phong sau lan login thu 6.
+- Per-username key isolate moi tai khoan → user mistype password chi anh huong chinh ho.
+- Per-IP loose (300) van giu lop chong DDoS/credential stuffing tu ngoai.
+- `skipSuccessfulRequests` quan trong: login thanh cong cua 100 user vao buoi sang khong tinh quota, chi fail moi dem.
+
+### Verify da chay
+
+- `node -e "const m=require('./src/middleware/security'); console.log(Array.isArray(m.loginLimiter), m.loginLimiter.length)"` → `true 2`.
+- Integration test sandbox (Express mini-app): 12 fail cung username → 10 pass, 2 ket 429 (per-user PASS); user khac van login duoc khi bi khoa (PASS); 5 success + 12 fail tren cung user → success khong tinh quota (PASS).
+- `curl /login` sau restart → HTTP 200, 216 ms.
+- `pm2 list`: 2 worker online (id 8, 9, PID 12744, 10324), auto-scrape khong bi anh huong.
+- RAM trong/sau: 4 × ~110-140 MB ≈ 500-600 MB → 2 × ~114 MB ≈ 228 MB (tiet kiem ~300 MB).
+
+### Rui ro / luu y van hanh
+
+- Khi may reboot, PM2 resurrect tu `dump.pm2` (`pm2 save` da chay) → khoi dong dung 2 worker. Neu can rollback ve 4 worker: `pm2 scale asia-lab-server 4` + sua `ecosystem.config.js` + `pm2 save`.
+- Sau khi sua security.js, code chi co hieu luc sau `pm2 restart asia-lab-server` (da chay luc 19:33).
+- Per-username limit phu thuoc `req.body.username` co san khi limiter chay → cau hinh body-parser global trong `src/app.js:17-18` dam bao dieu nay; neu thay doi thu tu middleware can kiem tra lai.
+- `/api/*` van CHUA co rate limit chung. Neu sau nay them, phai key theo `req.session.user` (dat sau `requireAuth`), khong key theo IP vi NAT chung.
+
+---
+
+## 25. Cap nhat phien 2026-05-23 — KeyLab production info trong mobile modal
+
+### Muc tieu
+
+- Mo rong luong KeyLab SQL notes de lay them thong tin san xuat dung theo `ma_dh`.
+- Dua thong tin san xuat vao modal card mobile mot cach gon, khong can mo modal con.
+- Chi hien thong tin that su bo sung cho card; khong lap lai tien do, loai san pham, the bao hanh, hay nhom theo phuc hinh.
+
+### Files sua chinh
+
+- `keylab_sql_notes_scraper.ps1`: them `sx_info` gom `colors`, `attributes`, `instructions`, `products`; doc header/detail stored procedures cua KeyLab SQL.
+- `db_manager.py`: them/migrate cot `don_hang.keylab_sx_info`, sync `sx_info` tu `keylab_notes.json`.
+- `src/db/migrations.js`: dong bo schema va sync `keylab_sx_info` khi Node init/migrate.
+- `src/repositories/orders.repo.js`: select va parse `keylab_sx_info` cho `/data.json`.
+- `src/routes/users.routes.js`: select va parse `keylab_sx_info` cho `/api/user/pending-orders`.
+- `dashboard_mobile_terracotta.html`: render block `Thong tin san xuat` inline trong modal card.
+- `keylab_notes.json`: cache SQL da co `sx_info` cho cac don matched.
+
+### Rule hien thi mobile
+
+- `Mau sac`: render chip tu `sx_info.colors`.
+- `Phu kien di kem`: render chip tu `sx_info.attributes`; boolean `co` chi hien label, vi du `Sap can`, `Ham doi`.
+- `Khay lay dau`: neu co ca `khay_lay_dau` va `so_khay_lay_dau`, UI gop thanh mot chip `Khay lay dau: N`; khong hien `So khay` rieng.
+- `Ghi chu san xuat`: lay tu `don_hang.ghi_chu_sx`.
+- `Luu y chung nha khoa`: lay tu `sx_info.instructions` (`chi_dinh`, `noi_dung_khac`, `trao_doi_bac_si`).
+- Note dai co `Xem them` / `Thu gon`; nut nay duoc tang font-size len 14px de de bam tren mobile.
+
+### Khong hien trong block nay
+
+- Tien do cong doan, vi modal da co block rieng `Tien do cong doan`.
+- `the_bao_hanh` / the bao hanh.
+- `loai_san_pham` / Loai.
+- Nhom `Theo phuc hinh`, vi mau va so do rang da co o card/du lieu don.
+- Chu nguon `KeyLab SQL` sau ma don.
+
+### Verify da chay
+
+- `node -e` parse inline script trong `dashboard_mobile_terracotta.html` bang `new Function` → `mobile scripts parse ok 2`.
+- `node --check src\repositories\orders.repo.js`
+- `node --check src\routes\users.routes.js`
+- `node --check src\db\migrations.js`
+- `python -m py_compile db_manager.py`
+- `GET http://localhost:3000/mobile` tra 200.
+- SQLite check co `83` don co `keylab_sx_info`; sample `262105038` co color `A3.5` va attributes `sap_can`, `ham_doi`.

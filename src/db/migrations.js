@@ -79,10 +79,17 @@ function initSessionsTable() {
       token TEXT PRIMARY KEY,
       username TEXT NOT NULL,
       role TEXT NOT NULL,
-      expires INTEGER NOT NULL
+      expires INTEGER NOT NULL,
+      ttl_ms INTEGER NOT NULL DEFAULT 43200000
     );
     CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
   `);
+  if (!hasColumn(db, 'sessions', 'ttl_ms')) {
+    db.exec('ALTER TABLE sessions ADD COLUMN ttl_ms INTEGER NOT NULL DEFAULT 43200000');
+    log('âœ… Added sessions.ttl_ms');
+  }
+  const defaultExpiry = Date.now() + 43200000;
+  db.prepare('UPDATE sessions SET expires = ? WHERE ttl_ms = 43200000 AND expires > ?').run(defaultExpiry, defaultExpiry);
 }
 
 function initOrderBarcodeColumn() {
@@ -136,6 +143,10 @@ function initKeylabNotesRouting() {
     db.exec("ALTER TABLE don_hang ADD COLUMN ghi_chu_sx TEXT DEFAULT ''");
     log('Added don_hang.ghi_chu_sx');
   }
+  if (!hasColumn(db, 'don_hang', 'keylab_sx_info')) {
+    db.exec("ALTER TABLE don_hang ADD COLUMN keylab_sx_info TEXT DEFAULT ''");
+    log('Added don_hang.keylab_sx_info');
+  }
 
   if (!fs.existsSync(KEYLAB_NOTES_PATH)) return;
 
@@ -151,9 +162,7 @@ function initKeylabNotesRouting() {
   if (!notes.length) return;
 
   const { getRoomWithProductionNote, hasInMauHam } = require('../utils/phucHinh');
-  const select = db.prepare('SELECT ma_dh, phuc_hinh, routed_to, ghi_chu_sx FROM don_hang WHERE ma_dh = ?');
-  const updateNote = db.prepare("UPDATE don_hang SET ghi_chu_sx = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?");
-  const updateNoteAndRoute = db.prepare("UPDATE don_hang SET ghi_chu_sx = ?, routed_to = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?");
+  const select = db.prepare('SELECT ma_dh, phuc_hinh, routed_to, ghi_chu_sx, keylab_sx_info FROM don_hang WHERE ma_dh = ?');
 
   let matched = 0;
   let routed = 0;
@@ -163,20 +172,35 @@ function initKeylabNotesRouting() {
       if (!maDh) continue;
       const row = select.get(maDh);
       if (!row) continue;
-      if (String(row.ghi_chu_sx || '').trim()) continue;
 
       matched += 1;
       const note = String(item?.ghi_chu_sx || '').trim();
+      const sxInfo = item?.sx_info && typeof item.sx_info === 'object' ? JSON.stringify(item.sx_info) : '';
       const targetRoom = getRoomWithProductionNote(row.phuc_hinh, note);
       const currentRoom = row.routed_to || '';
       const oldNote = row.ghi_chu_sx || '';
+      const oldSxInfo = row.keylab_sx_info || '';
       const mustRouteZirco = hasInMauHam(row.phuc_hinh) || hasInMauHam(note);
+      const updates = [];
+      const params = [];
 
-      if (!currentRoom || oldNote !== note || (mustRouteZirco && currentRoom !== targetRoom)) {
-        updateNoteAndRoute.run(note, targetRoom, maDh);
+      if (note && oldNote !== note) {
+        updates.push('ghi_chu_sx = ?');
+        params.push(note);
+      }
+      if (sxInfo && oldSxInfo !== sxInfo) {
+        updates.push('keylab_sx_info = ?');
+        params.push(sxInfo);
+      }
+      if (!currentRoom || (mustRouteZirco && currentRoom !== targetRoom)) {
+        updates.push('routed_to = ?');
+        params.push(targetRoom);
         if (currentRoom !== targetRoom) routed += 1;
-      } else {
-        updateNote.run(note, maDh);
+      }
+      if (updates.length) {
+        updates.push("updated_at = datetime('now','localtime')");
+        params.push(maDh);
+        db.prepare(`UPDATE don_hang SET ${updates.join(', ')} WHERE ma_dh = ?`).run(...params);
       }
     }
   });
@@ -598,4 +622,82 @@ function syncCurrentProgressToHistory(db) {
   tx(rows);
 }
 
-module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+function initClinicTagsTable() {
+  const db = getDB();
+  if (!db) { log('⚠ initClinicTagsTable: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS clinic_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      khach_hang TEXT NOT NULL,
+      label TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      created_by TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_clinic_tags_kh ON clinic_tags(khach_hang);
+    CREATE UNIQUE INDEX IF NOT EXISTS uniq_clinic_tags_kh_label ON clinic_tags(khach_hang, label);
+  `);
+  log('✅ clinic_tags table initialized');
+}
+
+function initFeedbackTables() {
+  const db = getDB();
+  if (!db) { log('⚠ initFeedbackTables: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS feedback_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS feedbacks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh TEXT DEFAULT '',
+      feedback_type_id INTEGER,
+      description TEXT NOT NULL,
+      severity TEXT DEFAULT 'medium',
+      status TEXT DEFAULT 'open',
+      reported_by TEXT,
+      assigned_to TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime')),
+      resolved_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_feedbacks_status ON feedbacks(status);
+    CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at);
+  `);
+  if (!hasColumn(db, 'feedbacks', 'nha_khoa')) {
+    db.exec("ALTER TABLE feedbacks ADD COLUMN nha_khoa TEXT NOT NULL DEFAULT ''");
+    log('✅ Added feedbacks.nha_khoa');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_feedbacks_nha_khoa ON feedbacks(nha_khoa)');
+  const count = db.prepare('SELECT COUNT(*) as c FROM feedback_types').get();
+  if (count.c === 0) {
+    const ins = db.prepare('INSERT INTO feedback_types (name, category, description) VALUES (?, ?, ?)');
+    const seed = [
+      ['Khen màu đẹp / đúng shade', 'tot', 'Nha khoa hài lòng về màu sắc phục hình'],
+      ['Khen fit sát / dễ lắp', 'tot', 'Phục hình vừa khít, lắp thuận lợi'],
+      ['Khen hình thể / thẩm mỹ đẹp', 'tot', 'Hình thể, đường nét hoặc thẩm mỹ được đánh giá tốt'],
+      ['Khen giao đúng hẹn', 'tot', 'Đơn được giao đúng hoặc sớm hơn thời gian cam kết'],
+      ['Khen hỗ trợ nhanh', 'tot', 'Nhân sự lab phản hồi hoặc hỗ trợ nha khoa tốt'],
+      ['Sai màu / lệch shade', 'chat_luong', 'Màu phục hình không khớp yêu cầu hoặc răng thật'],
+      ['Sai hình thể / thẩm mỹ', 'chat_luong', 'Hình dáng, contour, anatomy hoặc thẩm mỹ chưa đạt'],
+      ['Fit không khớp / cộm cấn', 'chat_luong', 'Phục hình khó lắp, cộm, cấn hoặc tiếp xúc chưa ổn'],
+      ['Bề mặt lỗi / nứt mẻ', 'chat_luong', 'Bề mặt chưa mịn, sứt mẻ, nứt hoặc hoàn thiện chưa đạt'],
+      ['Cần sửa / làm lại', 'chat_luong', 'Nha khoa yêu cầu sửa hoặc làm lại sản phẩm'],
+      ['Giao hàng trễ', 'tien_do_dich_vu', 'Đơn hàng giao không đúng thời gian cam kết'],
+      ['Phản hồi chậm / hỗ trợ chưa tốt', 'tien_do_dich_vu', 'Lab phản hồi chậm hoặc phối hợp chưa tốt'],
+      ['Sai thông tin đơn hàng', 'thong_tin_phu_kien', 'Thông tin đơn hàng, bệnh nhân, bác sĩ hoặc yêu cầu bị sai'],
+      ['Thiếu phụ kiện / thiếu dấu hoàn tất', 'thong_tin_phu_kien', 'Thiếu phụ kiện, dấu hoàn tất hoặc dữ liệu cần để làm đúng'],
+      ['Góp ý cải thiện', 'khac', 'Góp ý chung để cải thiện quy trình hoặc chất lượng dịch vụ'],
+      ['Khác', 'khac', 'Phản hồi không thuộc các nhóm trên'],
+    ];
+    const tx = db.transaction(rows => { for (const [n, c, d] of rows) ins.run(n, c, d); });
+    tx(seed);
+    log('✅ Feedback types seeded (9 entries)');
+  }
+  log('✅ Feedback tables initialized');
+}
+
+module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

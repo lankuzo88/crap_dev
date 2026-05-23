@@ -7,6 +7,15 @@ const { FILE_SACH_DIR, DATA_DIR, EXCEL_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 const str = v => (v != null) ? String(v).trim() : '';
+function parseJsonField(value, fallback = {}) {
+  if (!value) return fallback;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 // ── Stage constants ───────────────────────────────────
 const STAGE_NAMES = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
@@ -24,6 +33,7 @@ const SKIP_STAGES = {
   sua:      [0, 1, 2],
   lam_tiep: [0, 1, 2],
   thusuon:  [3, 4],
+  inmau:    [0],
 };
 
 const MADH_COL_HINTS = ['mã đh', 'mã_dh', 'ma_dh', 'mã đơn', 'madh', 'order_id'];
@@ -41,17 +51,49 @@ function hasThuSuonMarker(value) {
   return /\b[a-z]{0,4}ts\b/.test(text) || text.includes('thu suon') || text.includes('thu tho');
 }
 
-function getSkipStages(lk, gc) {
+function hasInMauHamMarker(value) {
+  const n = normalizeRuleText(value);
+  return (
+    n.includes('in mau ham') ||
+    (n.includes('in mau') && n.includes('ham')) ||
+    (n.includes('in ban') && n.includes('ham')) ||
+    (n.includes('in toan') && n.includes('ham'))
+  );
+}
+
+function getSkipStages(lk, gc, phPlus = '') {
   const lkLower = normalizeRuleText(lk);
   const gcLower = normalizeRuleText(gc);
-  if (lkLower.includes('sua'))      return SKIP_STAGES.sua;
-  if (lkLower.includes('lam tiep')) return SKIP_STAGES.lam_tiep;
-  if (hasThuSuonMarker(`${lkLower} ${gcLower}`)) return SKIP_STAGES.thusuon;
-  return [];
+  const phPlusLower = normalizeRuleText(phPlus);
+  const skip = new Set();
+
+  if (lkLower.includes('sua')) {
+    SKIP_STAGES.sua.forEach(i => skip.add(i));
+  } else if (lkLower.includes('lam tiep')) {
+    SKIP_STAGES.lam_tiep.forEach(i => skip.add(i));
+  } else if (hasThuSuonMarker(`${lkLower} ${gcLower}`)) {
+    SKIP_STAGES.thusuon.forEach(i => skip.add(i));
+  }
+
+  if (hasInMauHamMarker(`${phPlusLower} ${gcLower}`)) {
+    SKIP_STAGES.inmau.forEach(i => skip.add(i));
+  }
+
+  return [...skip].sort((a, b) => a - b);
 }
 
 function isThuSuonNote(gc) {
   return hasThuSuonMarker(gc);
+}
+
+function getCurrentStageFromStages(stages) {
+  const latestDoneIndex = (stages || []).reduce((latest, stage, index) => (
+    !stage.sk && stage.x ? Math.max(latest, index) : latest
+  ), -1);
+  const current = (stages || []).find((stage, index) => (
+    !stage.sk && !stage.x && index > latestDoneIndex
+  ));
+  return current?.n || 'HOÀN TẤT';
 }
 
 // Import normalizeUserCongDoan from users.repo to avoid circular dep
@@ -199,7 +241,8 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
     const jStage   = jsonStageMap[ma]  || { lk: '', tk: '', stages: {}, ph: '', sl: 0 };
     const lk = exStage.lk || jStage.lk || '';
     const tk = exStage.tk || jStage.tk || '';
-    const skip = getSkipStages(lk, exOrder.gc || '');
+    const phForSkip = exStage.ph || jStage.ph || '';
+    const skip = getSkipStages(lk, exOrder.gc || '', phForSkip);
 
     const stages = STAGE_NAMES.map((name, i) => {
       const ex = exStage.stages[name] || {};
@@ -213,6 +256,8 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
     const active = stages.filter(s => !s.sk);
     const done   = active.filter(s => s.x).length;
     const total  = active.length;
+    const currentStage = getCurrentStageFromStages(stages);
+    const activeThuSuon = isThuSuonNote(exOrder.gc || '') && total > 0 && done >= total;
     let curKtv = '';
     for (let i = stages.length - 1; i >= 0; i--) {
       if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
@@ -231,9 +276,9 @@ function buildOrders(excelOrders, excelStageMap, jsonStageMap) {
       sl:      exOrder.sl || jStage.sl || 0,
       gc:      exOrder.gc || '',
       lk, tk,
-      stages, done, total,
+      stages, current_stage: activeThuSuon ? STAGE_NAMES[2] : currentStage, done, total,
       pct: total > 0 ? Math.round(done / total * 100) : 0,
-      curKtv, lastTg,
+      curKtv, lastTg, active_thu_suon: activeThuSuon,
     });
   }
 
@@ -273,13 +318,15 @@ function getActiveMaDhList() {
 function getDataFromDB() {
   const db = getDB();
   const active = getActiveMaDhList();
+  const activeSet = new Set(active?.ids || []);
+  const hasActiveList = activeSet.size > 0;
   let rows;
   if (active && active.ids.length > 0) {
     const ph = active.ids.map(() => '?').join(',');
     rows = db.prepare(`
       SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.trang_thai, d.tai_khoan_cao, d.routed_to,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -296,7 +343,7 @@ function getDataFromDB() {
     rows = db.prepare(`
       SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.trang_thai, d.tai_khoan_cao, d.routed_to,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -313,7 +360,7 @@ function getDataFromDB() {
   for (const row of rows) {
     const lk   = row.loai_lenh || '';
     const gc   = row.ghi_chu   || '';
-    const skip = getSkipStages(lk, gc);
+    const skip = getSkipStages(lk, gc, `${row.phuc_hinh || ''} ${row.ghi_chu_sx || ''}`);
 
     const stagesMap = {};
     for (const part of (row.stages_raw || '').split(';;')) {
@@ -334,6 +381,8 @@ function getDataFromDB() {
     const activeStages = stages.filter(s => !s.sk);
     const done  = activeStages.filter(s => s.x).length;
     const total = activeStages.length;
+    const currentStage = getCurrentStageFromStages(stages);
+    const activeThuSuon = hasActiveList && activeSet.has(row.ma_dh) && isThuSuonNote(gc) && total > 0 && done >= total;
     let curKtv = '';
     for (let i = stages.length - 1; i >= 0; i--) {
       if (!stages[i].sk && stages[i].k) { curKtv = stages[i].k; break; }
@@ -344,10 +393,13 @@ function getDataFromDB() {
     orders.push({
       ma_dh: row.ma_dh, nhan: row.nhap_luc || '', yc_ht: row.yc_hoan_thanh || '',
       yc_giao: row.yc_giao || '', kh: row.khach_hang || '', bn: row.benh_nhan || '',
-      ph: row.phuc_hinh || '', sl: row.sl || 0, gc: row.ghi_chu || '', ghi_chu_sx: row.ghi_chu_sx || '', lk,
+      ph: row.phuc_hinh || '', sl: row.sl || 0, gc: row.ghi_chu || '', ghi_chu_sx: row.ghi_chu_sx || '',
+      keylab_sx_info: parseJsonField(row.keylab_sx_info),
+      lk,
       routed_to: row.routed_to || 'sap',
-      tk: row.tai_khoan_cao || '', stages, done, total,
+      tk: row.tai_khoan_cao || '', stages, current_stage: activeThuSuon ? STAGE_NAMES[2] : currentStage, done, total,
       pct: total > 0 ? Math.round(done / total * 100) : 0, curKtv, lastTg,
+      active_thu_suon: activeThuSuon,
     });
   }
 
@@ -395,13 +447,24 @@ function autoCloseCompletedDelayReports() {
   }
 }
 
+function injectClinicTags(orders) {
+  try {
+    const { getAllTagsMap } = require('./clinicTags.repo');
+    const map = getAllTagsMap();
+    if (!map || !map.size) return orders;
+    return orders.map(o => ({ ...o, clinic_tags: map.get(o.kh || '') || [] }));
+  } catch { return orders; }
+}
+
 function getData(forceReload = false) {
   if (dbHasData()) {
     const age = Date.now() - cacheTime;
     const key = 'sqlite';
     if (!forceReload && cache && cacheKey === key && age < TTL) return cache;
     try {
-      cache = getDataFromDB(); cacheKey = key; cacheTime = Date.now();
+      const raw = getDataFromDB();
+      cache = { ...raw, orders: injectClinicTags(raw.orders) };
+      cacheKey = key; cacheTime = Date.now();
       log(`✓ ${cache.orders.length} đơn (SQLite)`);
       return cache;
     } catch (e) { log(`⚠ SQLite read error: ${e.message} — fallback to files`); }
@@ -424,7 +487,7 @@ function getData(forceReload = false) {
     catch (e) { log(`⚠ JSON: ${e.message}`); }
   }
 
-  const orders = buildOrders(excelOrders, excelStageMap, jsonStageMap);
+  const orders = injectClinicTags(buildOrders(excelOrders, excelStageMap, jsonStageMap));
   cache = { source: { excel: srcExcel, json: srcJson }, orders };
   cacheKey = key; cacheTime = Date.now();
   log(`✓ ${orders.length} đơn | Excel: ${srcExcel || '—'} | JSON: ${srcJson || '—'}`);

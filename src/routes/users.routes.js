@@ -9,6 +9,24 @@ const {
 } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+function parseJsonField(value, fallback = {}) {
+  if (!value) return fallback;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function isConfirmedText(value) {
+  const normalized = String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+  return normalized === 'co' || normalized === 'xac nhan';
+}
 
 function roomForUserCongDoan(congDoan) {
   const raw = String(congDoan || '').trim();
@@ -53,13 +71,14 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     const roomFilter = room
       ? `AND COALESCE(d.routed_to, 'sap') IN ('sap', 'zirco', 'both')`
       : '';
-    const completionFilter = dbCongDoan === STAGE_NAMES[4]
+    const completionFilter = (dbCongDoan === STAGE_NAMES[4] || dbCongDoan === STAGE_NAMES[2])
       ? ''
       : `AND NOT (LOWER(COALESCE(t.xac_nhan, '')) IN ('có', 'xác nhận'))`;
 
     const ph = active.ids.map(() => '?').join(',');
     const pendingOrders = db.prepare(`
-      SELECT DISTINCT d.ma_dh, d.loai_lenh, d.ghi_chu, d.routed_to
+      SELECT DISTINCT d.ma_dh, d.loai_lenh, d.ghi_chu, d.phuc_hinh, d.ghi_chu_sx, d.routed_to,
+             COALESCE(t.xac_nhan, '') AS stage_xac_nhan
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE d.ma_dh IN (${ph})
@@ -73,8 +92,11 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     const pendingMaDhs = pendingOrders
       .filter(r => {
         if (userStageIndex < 0) return true;
+        const stageDone = isConfirmedText(r.stage_xac_nhan);
+        if (stageDone && !(dbCongDoan === STAGE_NAMES[2] && isThuSuonNote(r.ghi_chu))) return false;
         if ((dbCongDoan === STAGE_NAMES[3] || dbCongDoan === STAGE_NAMES[4]) && isThuSuonNote(r.ghi_chu)) return false;
-        return !getSkipStages(r.loai_lenh || '', r.ghi_chu || '').includes(userStageIndex);
+        const phPlus = `${r.phuc_hinh || ''} ${r.ghi_chu_sx || ''}`;
+        return !getSkipStages(r.loai_lenh || '', r.ghi_chu || '', phPlus).includes(userStageIndex);
       })
       .map(r => r.ma_dh);
 
@@ -84,7 +106,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
     const rows = db.prepare(`
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.routed_to,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.routed_to,
              GROUP_CONCAT(
                t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
                COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
@@ -109,7 +131,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
           if (!isNaN(thu_tu)) stagesMap[thu_tu] = { n: p[1], k: p[2], x: p[3] === 'Có' || p[3] === 'xác nhận', t: p[4] };
         }
       }
-      const skip = getSkipStages(lk, gc);
+      const skip = getSkipStages(lk, gc, `${row.phuc_hinh || ''} ${row.ghi_chu_sx || ''}`);
       const stages = STAGE_NAMES.map((name, i) => {
         const s = stagesMap[i + 1] || { n: name, k: '', x: false, t: '' };
         return { n: name, k: s.k, x: s.x, t: s.t, sk: skip.includes(i) };
@@ -123,13 +145,26 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
       }
       let lastTg = '';
       stages.forEach(s => { if (s.t) lastTg = s.t; });
+      const activeThuSuon = isThuSuonNote(gc) && total > 0 && done >= total;
       orders.push({
         ma_dh: row.ma_dh, nhan: row.nhap_luc || '', yc_ht: row.yc_hoan_thanh || '',
         yc_giao: row.yc_giao || '', kh: row.khach_hang || '', bn: row.benh_nhan || '',
-        ph: row.phuc_hinh || '', sl: row.sl || 0, gc, ghi_chu_sx: row.ghi_chu_sx || '', lk, routed_to: row.routed_to || 'sap',
+        ph: row.phuc_hinh || '', sl: row.sl || 0, gc, ghi_chu_sx: row.ghi_chu_sx || '',
+        keylab_sx_info: parseJsonField(row.keylab_sx_info),
+        lk, routed_to: row.routed_to || 'sap',
+        current_stage: activeThuSuon ? STAGE_NAMES[2] : undefined,
         stages, done, total, pct: total > 0 ? Math.round(done / total * 100) : 0, curKtv, lastTg,
+        active_thu_suon: activeThuSuon,
+        clinic_tags: [],
       });
     }
+    try {
+      const { getAllTagsMap } = require('../repositories/clinicTags.repo');
+      const tagsMap = getAllTagsMap();
+      if (tagsMap && tagsMap.size) {
+        orders.forEach(o => { o.clinic_tags = tagsMap.get(o.kh || '') || []; });
+      }
+    } catch {}
     res.json({ ok: true, orders });
   } catch (err) {
     log(`[User Orders] Error: ${err.message}`);

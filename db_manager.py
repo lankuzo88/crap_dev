@@ -148,6 +148,7 @@ def init_db():
         loai_lenh     TEXT    DEFAULT '',
         ghi_chu       TEXT    DEFAULT '',
         ghi_chu_sx    TEXT    DEFAULT '',
+        keylab_sx_info TEXT   DEFAULT '',
         trang_thai    TEXT    DEFAULT '',
         tai_khoan_cao TEXT    DEFAULT '',
         barcode_labo  TEXT    DEFAULT '',
@@ -199,6 +200,8 @@ def init_db():
         conn.execute("ALTER TABLE don_hang ADD COLUMN routed_to TEXT DEFAULT NULL")
     if "ghi_chu_sx" not in cols:
         conn.execute("ALTER TABLE don_hang ADD COLUMN ghi_chu_sx TEXT DEFAULT ''")
+    if "keylab_sx_info" not in cols:
+        conn.execute("ALTER TABLE don_hang ADD COLUMN keylab_sx_info TEXT DEFAULT ''")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_barcode_labo ON don_hang(barcode_labo)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_don_hang_routed_to ON don_hang(routed_to)")
     rows = conn.execute("SELECT ma_dh, phuc_hinh, routed_to FROM don_hang").fetchall()
@@ -235,23 +238,30 @@ def sync_keylab_notes(conn: sqlite3.Connection):
         if not ma_dh:
             continue
         note = str(item.get('ghi_chu_sx', '')).strip()
-        if not note:
+        sx_info = item.get('sx_info') if isinstance(item.get('sx_info'), dict) else {}
+        sx_info_json = json.dumps(sx_info, ensure_ascii=False) if sx_info else ''
+        if not note and not sx_info_json:
             continue
-        found = conn.execute("SELECT ma_dh, ghi_chu_sx, routed_to FROM don_hang WHERE ma_dh=?", (ma_dh,)).fetchone()
+        found = conn.execute("SELECT ma_dh, ghi_chu_sx, keylab_sx_info, routed_to FROM don_hang WHERE ma_dh=?", (ma_dh,)).fetchone()
         if not found:
             continue
         old_note = str(found["ghi_chu_sx"] or "").strip()
+        old_sx_info = str(found["keylab_sx_info"] or "").strip()
         should_route_zirco = has_in_mau_ham(note)
-        if old_note and not allow_overwrite:
-            continue
-        if old_note == note:
-            if should_route_zirco and str(found["routed_to"] or "") not in ("zirco", "both"):
-                conn.execute("UPDATE don_hang SET routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (ma_dh,))
-            continue
-        if should_route_zirco:
-            conn.execute("UPDATE don_hang SET ghi_chu_sx=?, routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
-        else:
-            conn.execute("UPDATE don_hang SET ghi_chu_sx=?, updated_at=datetime('now','localtime') WHERE ma_dh=?", (note, ma_dh))
+        updates = []
+        params = []
+        if note and (allow_overwrite or not old_note) and old_note != note:
+            updates.append("ghi_chu_sx=?")
+            params.append(note)
+        if sx_info_json and old_sx_info != sx_info_json:
+            updates.append("keylab_sx_info=?")
+            params.append(sx_info_json)
+        if should_route_zirco and str(found["routed_to"] or "") not in ("zirco", "both"):
+            updates.append("routed_to='zirco'")
+        if updates:
+            updates.append("updated_at=datetime('now','localtime')")
+            params.append(ma_dh)
+            conn.execute(f"UPDATE don_hang SET {', '.join(updates)} WHERE ma_dh=?", params)
 
 # ── Upsert helpers ────────────────────────────────────────────────────────────
 

@@ -195,6 +195,20 @@
       color: var(--terracotta);
     }
 
+    .feedback-alert-dot {
+      display: none;
+      width: 8px;
+      height: 8px;
+      margin-left: auto;
+      border-radius: 50%;
+      background: #e53935;
+      box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.16);
+    }
+
+    .feedback-alert-dot.show {
+      display: inline-block;
+    }
+
     .menu-item.danger {
       color: var(--terracotta);
     }
@@ -231,8 +245,7 @@
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
     }
 
-    .wip-back,
-    .wip-refresh {
+    .wip-back {
       width: 36px;
       height: 36px;
       border: 1px solid var(--terracotta-light);
@@ -267,9 +280,218 @@
 
     .wip-content {
       flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      padding-bottom: 28px;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0;
+      position: relative;
+    }
+
+    .wip-map-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      background: #f7f2ee;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #wipCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #wipCanvas.dragging {
+      cursor: grabbing;
+    }
+
+    .wip-kpi-bar {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 8px;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .wip-kpi {
+      min-width: 0;
+      padding: 6px 9px 7px;
+      border: 1px solid rgba(196, 131, 111, 0.22);
+      border-left: 4px solid #94a3b8;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 6px 14px rgba(88, 56, 43, 0.08);
+    }
+
+    .wip-kpi-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #8a817b;
+      line-height: 1.1;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wip-kpi-value {
+      margin-top: 2px;
+      font-size: 16px;
+      font-weight: 850;
+      color: #2d2724;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wip-kpi-meta {
+      margin-top: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #6b625d;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wip-kpi.is-ok     { border-left-color: #16a34a; }
+    .wip-kpi.is-warn   { border-left-color: #eab308; }
+    .wip-kpi.is-alert  { border-left-color: #ea580c; }
+    .wip-kpi.is-danger { border-left-color: #991b1b; }
+    .wip-kpi.is-ok     .wip-kpi-value { color: #15803d; }
+    .wip-kpi.is-danger .wip-kpi-value { color: #991b1b; }
+
+    .wip-map-hud {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 138px;
+      z-index: 3;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .wip-map-status {
+      display: none;
+    }
+
+    .wip-map-tools {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
+      flex-wrap: wrap;
+      pointer-events: auto;
+    }
+
+    .wip-map-btn {
+      height: 28px;
+      min-width: 30px;
+      padding: 0 8px;
+      border: 1px solid rgba(196, 131, 111, 0.24);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--text-primary);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      box-shadow: 0 6px 14px rgba(88, 56, 43, 0.08);
+      cursor: pointer;
+    }
+
+    .wip-map-btn.active {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+      color: #fff;
+    }
+
+    .wip-map-legend {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 6px 8px;
+      border: 1px solid rgba(196, 131, 111, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.88);
+      pointer-events: none;
+      box-shadow: 0 8px 18px rgba(88, 56, 43, 0.07);
+    }
+
+    .wip-map-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .wip-map-legend i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .wip-overview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .wip-overview-item {
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      background: var(--bg-card);
+      padding: 9px 8px;
+      min-width: 0;
+    }
+
+    .wip-overview-item.alert {
+      border-color: rgba(220, 38, 38, 0.28);
+      background: rgba(220, 38, 38, 0.06);
+    }
+
+    .wip-overview-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .wip-overview-value {
+      margin-top: 5px;
+      color: var(--text-primary);
+      font-size: 20px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .wip-overview-meta {
+      margin-top: 4px;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 650;
+      line-height: 1.2;
     }
 
     .wip-summary {
@@ -404,6 +626,123 @@
       line-height: 1.25;
     }
 
+    .wip-stage-buckets {
+      margin-top: 7px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 3px;
+    }
+    .wip-stage-buckets .bk {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 2px;
+      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.10);
+      line-height: 1.05;
+    }
+    .wip-stage-buckets .bk-lbl {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      opacity: 0.75;
+    }
+    .wip-stage-buckets .bk-num {
+      margin-top: 1px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .wip-stage-buckets .bk.is-zero { opacity: 0.35; }
+    .wip-stage-buckets .bk-lt2 { color: #64748b; }
+    .wip-stage-buckets .bk-lt8 { color: #475569; }
+    .wip-stage-buckets .bk-lt24 {
+      color: #ea580c;
+      background: rgba(234, 88, 12, 0.13);
+    }
+    .wip-stage-buckets .bk-gt24 {
+      color: #dc2626;
+      background: rgba(220, 38, 38, 0.16);
+    }
+    .wip-stage-buckets .bk-lt24.is-zero,
+    .wip-stage-buckets .bk-gt24.is-zero {
+      background: rgba(148, 163, 184, 0.10);
+    }
+
+    .wip-order-age-warn { color: #ea580c; font-weight: 700; }
+    .wip-order-age-danger { color: #dc2626; font-weight: 800; }
+
+    .wip-ktv-summary {
+      margin: 4px 0 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      background: rgba(196, 131, 111, 0.05);
+    }
+    .wip-ktv-summary-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .wip-ktv-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .wip-ktv-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      background: var(--bg-card);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      line-height: 1.2;
+    }
+    .wip-ktv-chip.active {
+      background: var(--terracotta);
+      color: #fff;
+      border-color: var(--terracotta);
+    }
+    .wip-ktv-chip .ktv-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 16px;
+      padding: 0 5px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      background: rgba(196, 131, 111, 0.15);
+      color: var(--terracotta);
+    }
+    .wip-ktv-chip.active .ktv-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+    .wip-ktv-chip.wip-ktv-unclaimed {
+      border-color: rgba(220, 38, 38, 0.35);
+    }
+    .wip-ktv-chip.wip-ktv-unclaimed .ktv-count {
+      background: rgba(220, 38, 38, 0.15);
+      color: #dc2626;
+    }
+    .wip-ktv-chip.wip-ktv-unclaimed.active {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+    .wip-ktv-chip.wip-ktv-clear {
+      border-style: dashed;
+      color: var(--text-muted);
+    }
+
     /* ═══════════════════════════════
        FILTER BAR
     ═══════════════════════════════ */
@@ -513,20 +852,89 @@
       overflow: hidden;
     }
     .day-order-row {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 11px 0;
-      border-bottom: 1.5px solid #999;
+      padding: 11px 12px 11px 14px;
+      margin-bottom: 9px;
+      border: 1px solid rgba(196, 131, 111, 0.18);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(253, 248, 245, 0.96) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 9px 18px rgba(88, 56, 43, 0.11),
+        0 2px 5px rgba(88, 56, 43, 0.08);
       cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      overflow: hidden;
     }
-    .day-order-row:active { background: rgba(196, 131, 111, 0.08); border-radius: 6px; }
-    .day-order-row:last-child { border-bottom: none; }
-    .day-group-sep {
-      height: 2px;
-      background: var(--terracotta);
-      margin: 4px -16px;
+    .day-order-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--terracotta), var(--terracotta-light));
+      opacity: 0.9;
+    }
+    .day-order-row:active {
+      transform: translateY(1px) scale(0.995);
+      border-color: rgba(196, 131, 111, 0.3);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 4px 9px rgba(88, 56, 43, 0.14),
+        0 1px 3px rgba(88, 56, 43, 0.1);
+    }
+    .day-order-row:last-child { margin-bottom: 0; }
+    .day-order-main { flex: 1; min-width: 0; }
+    .day-order-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; min-width: 0; }
+    .day-order-code { font-size: 13px; font-weight: 800; color: var(--text-primary); letter-spacing: 0; white-space: nowrap; }
+    .day-order-sub {
+      font-size: 11px;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.88;
+    }
+    .day-order-pips { margin-top: 6px; }
+    .day-order-side {
+      flex-shrink: 0;
+      min-width: 78px;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .day-order-stage {
+      max-width: 96px;
+      padding: 3px 7px;
+      border-radius: 7px;
+      background: rgba(196, 131, 111, 0.12);
+      border: 1px solid rgba(196, 131, 111, 0.22);
+      color: var(--terracotta);
+      font-size: 10px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+    .day-order-meta {
+      color: var(--text-primary);
+      font-size: 10px;
+      line-height: 1.25;
+      font-weight: 600;
       opacity: 0.85;
+    }
+    .day-group-sep {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(196, 131, 111, 0.55), transparent);
+      margin: 11px 4px;
     }
 
     /* ═══════════════════════════════
@@ -616,8 +1024,13 @@
       border-radius: 8px;
       padding: 7px;
       cursor: pointer;
-      transition: all 0.2s;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 16px 31px rgba(88, 56, 43, 0.2),
+        0 4px 10px rgba(88, 56, 43, 0.13);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
       animation: slideIn 0.3s ease-out backwards;
+      will-change: transform, box-shadow;
     }
 
     .card.morning { border-left-color: var(--terracotta-light); }
@@ -646,7 +1059,11 @@
     }
 
     .card:active {
-      transform: scale(0.98);
+      transform: translateY(1px) scale(0.985);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        0 8px 17px rgba(88, 56, 43, 0.18),
+        0 3px 7px rgba(88, 56, 43, 0.12);
     }
 
     @keyframes slideIn {
@@ -783,6 +1200,63 @@
       max-width: 400px;
       max-height: 85vh;
       z-index: 1000;
+    }
+    .production-section {
+      border: 1px solid var(--border-card);
+      background: rgba(255, 255, 255, 0.86);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+    .production-section-title {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 7px;
+      text-transform: uppercase;
+    }
+    .production-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 7px;
+    }
+    .production-chip {
+      border: 1px solid rgba(196, 131, 111, 0.28);
+      background: rgba(196, 131, 111, 0.08);
+      color: var(--text-primary);
+      border-radius: 4px;
+      padding: 4px 7px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .production-subtitle {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .production-preview {
+      position: relative;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    .production-preview.collapsed {
+      max-height: 52px;
+    }
+    .production-more {
+      border: 0;
+      background: transparent;
+      color: var(--terracotta);
+      padding: 4px 0 0;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
     }
 
     /* ── STAGE PROGRESS DOTS ─── */
@@ -936,11 +1410,11 @@
         <a id="m-upload-btn" class="menu-item admin-only" href="/upload">
           <span class="menu-icon">📤</span><span>Upload Excel</span>
         </a>
-        <button id="m-export-btn" class="menu-item admin-only" onclick="triggerKeylabExport()" title="Làm mới">
-          <span class="menu-icon" id="m-export-icon">🔄</span><span id="m-export-label">Làm mới</span>
-        </button>
         <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
           <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
+        </a>
+        <a id="m-feedback-btn" class="menu-item" href="/feedback">
+          <span class="menu-icon">📝</span><span>Phản hồi nha khoa</span><span class="feedback-alert-dot" id="m-feedback-dot" aria-hidden="true"></span>
         </a>
         <button id="m-wip-btn" class="menu-item admin-only" type="button" onclick="openWipPanel()">
           <span class="menu-icon">WIP</span><span>WIP công đoạn</span>
@@ -984,9 +1458,8 @@
       <button class="wip-back" type="button" onclick="closeWipPanel()">‹</button>
       <div class="wip-title">
         <div class="wip-title-main">WIP công đoạn</div>
-        <div class="wip-title-sub" id="wipSubtitle">Đơn chưa hoàn tất theo từng công đoạn</div>
+        <div class="wip-title-sub" id="wipSubtitle">Đơn đang ôm theo từng công đoạn</div>
       </div>
-      <button class="wip-refresh" type="button" onclick="renderWipPanel()">↻</button>
     </div>
     <div id="wipContent" class="wip-content"></div>
   </div>
@@ -1028,12 +1501,25 @@
       return ROOM_COLORS[room] || ROOM_COLORS.sap;
     }
 
-    function adaptOrder(o) {
-      let current_stage = 'HOÀN TẤT';
-      if (o.stages) {
-        const active = o.stages.find(s => !s.sk && !s.x);
-        if (active) current_stage = active.n;
+    function getCurrentStageFromStages(stages) {
+      const list = stages || [];
+      const latestDoneIndex = list.reduce((latest, stage, index) => (
+        !stage.sk && stage.x ? Math.max(latest, index) : latest
+      ), -1);
+      const current = list.find((stage, index) => !stage.sk && !stage.x && index > latestDoneIndex);
+      return current?.n || 'HOÀN TẤT';
+    }
+
+    function normalizeKeylabSxInfo(info) {
+      if (!info) return {};
+      if (typeof info === 'string') {
+        try { return JSON.parse(info) || {}; } catch { return {}; }
       }
+      return typeof info === 'object' ? info : {};
+    }
+
+    function adaptOrder(o) {
+      const current_stage = o.current_stage || getCurrentStageFromStages(o.stages || []);
       const urgent = o.yc_ht
         ? ((parseDeadline(o.yc_ht) || 0) - Date.now()) < 2 * 3600 * 1000
         : false;
@@ -1050,14 +1536,78 @@
         nhan:          o.nhan || '',
         loai_lenh:     o.lk || '',
         ghi_chu_sx:    o.ghi_chu_sx || '',
+        keylab_sx_info: normalizeKeylabSxInfo(o.keylab_sx_info),
         routed_to:     o.routed_to || 'sap',
+        active_thu_suon: !!o.active_thu_suon,
+        clinic_tags:   Array.isArray(o.clinic_tags) ? o.clinic_tags : [],
         urgent,
         stagesData:    o.stages || [],
       };
     }
 
     function normalizePhText(value) {
-      return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      // \u0111/\u0110 l\u00e0 codepoint nguy\u00ean t\u1eed, NFD kh\u00f4ng t\u00e1ch \u2192 c\u1ea7n thay ri\u00eang \u0111\u1ec3 search kh\u00f4ng d\u1ea5u kh\u1edbp \u0111\u01b0\u1ee3c
+      return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\u0111/g, 'd');
+    }
+
+    // === Note KTV parser cho S\u1eeda/L\u00e0m th\u00eam/L\u00e0m l\u1ea1i/B\u1ea3o h\u00e0nh ===
+    // Map alias kh\u00f4ng d\u1ea5u \u2192 c\u00f4ng \u0111o\u1ea1n theo cong_doan c\u1ee7a user trong users.json.
+    // L\u00e2n l\u00e0 admin (m\u00e0i). T\u00ean ngo\u00e0i map (\u0110\u1ea1t, Tr\u00ed, Sang, An, ...) \u0111\u01b0\u1ee3c b\u1ecf qua theo y\u00eau c\u1ea7u.
+    const NOTE_KTV_MAP = {
+      'lan':    { stage: 'M\u00c0I',        name: 'L\u00e2n' },     // admin
+      'tuan':   { stage: 'M\u00c0I',        name: 'Tu\u1ea5n' },    // minhtuan
+      'hy':     { stage: 'M\u00c0I',        name: 'H\u1ef7' },      // thehy
+      'tran':   { stage: 'M\u00c0I',        name: 'Tr\u00e2n' },    // baotran
+      'thu':    { stage: 'M\u00c0I',        name: 'Th\u01b0' },     // giathu
+      'huu':    { stage: 'M\u00c0I',        name: 'H\u1eefu' },     // tanhuu
+      'my':     { stage: '\u0110\u1eaeP',        name: 'My' },      // trucmy
+      'truong': { stage: '\u0110\u1eaeP',        name: 'Tr\u01b0\u1eddng' },  // vutruong
+      'hong':   { stage: '\u0110\u1eaeP',        name: 'H\u1ed3ng' },    // camhong
+      'trang':  { stage: '\u0110\u1eaeP',        name: 'Trang' },   // hoaitrang
+      'vy':     { stage: '\u0110\u1eaeP',        name: 'Vy' },      // yenvy
+      'truc':   { stage: '\u0110\u1eaeP',        name: 'Tr\u1ef1c' },    // trungtruc
+      'si':     { stage: 'S\u01af\u1edcN',       name: 'S\u0129' },      // tansi
+      'trai':   { stage: 'S\u01af\u1edcN',       name: 'Tr\u1ea3i' },    // vantrai
+      'tham':   { stage: 'S\u00c1P/Cadcam', name: 'Th\u1eafm' },    // hongtham
+      'hanh':   { stage: 'S\u00c1P/Cadcam', name: 'H\u1ea1nh' },    // thihanh
+      'son':    { stage: 'S\u00c1P/Cadcam', name: 'S\u01a1n' },     // thaison
+      'huyen':  { stage: 'S\u00c1P/Cadcam', name: 'Huy\u1ebfn' },   // vanhuyen
+      'van':    { stage: 'CBM',        name: 'V\u1ea1n' },     // vanvan
+      'toan':   { stage: 'CBM',        name: 'To\u00e0n' },    // chitoan
+    };
+    const NOTE_STAGE_ORDER = { 'CBM': 0, 'S\u00c1P/Cadcam': 1, 'S\u01af\u1edcN': 2, '\u0110\u1eaeP': 3, 'M\u00c0I': 4 };
+    const NOTE_STOP_WORDS = new Set([
+      'sua','lam','lai','them','tiep','bao','hanh','ko','khong','ten','gui','cua','da','hen','va','hoac','cach','toi','hom','nay','mai'
+    ]);
+    function isNoteStopToken(tok) {
+      if (!tok || tok.length <= 1) return true;
+      if (NOTE_STOP_WORDS.has(tok)) return true;
+      if (/^x\d+$/.test(tok)) return true;
+      if (/^\d+$/.test(tok)) return true;
+      // token to\u00e0n ph\u1ee5 \u00e2m (kh\u00f4ng c\u00f3 a/e/i/o/u, y v\u1eabn gi\u1eef): llht, bhht, ts, gk, nk, ...
+      if (/^[bcdfghjklmnpqrstvwxz]{2,5}$/.test(tok)) return true;
+      return false;
+    }
+    function parseNoteKtvs(ghiChu, loaiLenh) {
+      if (!ghiChu) return [];
+      const lkN = String(loaiLenh || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u0111\u0110]/g, 'd').toLowerCase().trim();
+      if (!(lkN.includes('sua') || lkN.includes('lam them') || lkN.includes('lam lai') || lkN.includes('bao hanh'))) return [];
+      const text = String(ghiChu)
+        .replace(/_x[0-9a-fA-F]{4}_/g, ' ') // g\u1ee1 escape Excel _x000d_ / _x000a_
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u0111\u0110]/g, 'd').toLowerCase()
+        .replace(/x\d+/g, ' ');
+      const tokens = text.split(/[\s\-\u2014\u2013/,()+.;:\r\n_]+/).filter(Boolean);
+      const seen = new Set();
+      const found = [];
+      for (const tok of tokens) {
+        if (isNoteStopToken(tok)) continue;
+        const m = NOTE_KTV_MAP[tok];
+        if (!m || seen.has(m.name)) continue;
+        seen.add(m.name);
+        found.push(m);
+      }
+      found.sort((a, b) => (NOTE_STAGE_ORDER[a.stage] ?? 99) - (NOTE_STAGE_ORDER[b.stage] ?? 99));
+      return found;
     }
     function splitPhParts(ph) {
       return String(ph || '').split(/;|\r?\n/).map(part => part.trim()).filter(Boolean);
@@ -1065,6 +1615,18 @@
     function partQty(part) {
       const m = String(part || '').match(/SL\s*:\s*(\d+)/i);
       return m ? Number(m[1]) || 0 : 0;
+    }
+    function hasInMauHamText(text) {
+      const n = normalizePhText(text);
+      return (
+        n.includes('in mau ham') ||
+        (n.includes('in mau') && n.includes('ham')) ||
+        (n.includes('in ban') && n.includes('ham')) ||
+        (n.includes('in toan') && n.includes('ham'))
+      );
+    }
+    function orderHasInMauHam(o) {
+      return hasInMauHamText(o?.phuc_hinh) || hasInMauHamText(o?.ghi_chu_sx);
     }
     function partType(part) {
       const p = (part || '').toLowerCase();
@@ -1079,7 +1641,7 @@
       const isTemporaryMaterial =
         n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
 
-      if (n.includes('in mau') || n.includes('mau ham')) return 'inmau';
+      if (hasInMauHamText(part) || n.includes('in mau') || n.includes('mau ham')) return 'inmau';
       if (isTemporaryMaterial) return 'tam';
       if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
       if (p.includes('veneer')) {
@@ -1107,11 +1669,14 @@
     }
     function phMatches(o, filter) {
       if (filter === 'all') return true;
+      if (filter === 'inmau' && orderHasInMauHam(o)) return true;
       return (phBreakdown(o.phuc_hinh, o.sl)[filter] || 0) > 0;
     }
     function filterQty(o, filter) {
       if (filter === 'all') return Number(o.sl) || 0;
-      return phBreakdown(o.phuc_hinh, o.sl)[filter] || 0;
+      const qty = phBreakdown(o.phuc_hinh, o.sl)[filter] || 0;
+      if (filter === 'inmau' && !qty && orderHasInMauHam(o)) return Number(o.sl) || 0;
+      return qty;
     }
     function filterLabel(filter) {
       return {
@@ -1168,6 +1733,49 @@
     let transferScannerActive = false;
     let activeDelayReports = new Map();
     let wipSelectedStage = 'all';
+    let wipSelectedKtv = null;
+    let wipStatsData = null;
+    let wipOrderCache = new Map();
+    let lastCardsFingerprint = '';
+    let lastFilterSummaryFingerprint = '';
+    let lastWipFingerprint = '';
+    let lastUserFingerprint = '';
+    const M_WIP_UNCLAIMED = 'Chưa nhận';
+    const M_WIP_MAP = {
+      initialized: false,
+      canvas: null,
+      ctx: null,
+      dpr: 1,
+      rect: { left: 0, top: 0, width: 0, height: 0 },
+      scale: 0.7,
+      minScale: 0.32,
+      maxScale: 2.6,
+      panX: 12,
+      panY: 68,
+      targetScale: 0.7,
+      targetPanX: 12,
+      targetPanY: 68,
+      worldW: 420,
+      worldH: 1300,
+      layout: null,
+      layoutMode: 'compact',
+      hitItems: [],
+      hover: null,
+      filter: 'all',
+      animating: false,
+      needsFit: true,
+      pointers: new Map(),
+      dragStart: null,
+      pinchStart: null,
+      dragMoved: false,
+      velocityX: 0,
+      velocityY: 0,
+      lastMoveSample: null,
+      textCache: new Map(),
+      riskStamp: 0,
+      stageP75: {},
+      kpis: null,
+    };
     const roomLabel = { sap: 'SÁP', zirco: 'Zirco', both: 'SÁP + Zirco' };
     function getTransferTargetRoom() {
       if (myRoom === 'sap') return 'zirco';
@@ -1192,6 +1800,10 @@
       return permissions.includes('*') || permissions.includes(permission);
     }
 
+    function isUserPendingMode() {
+      return currentUser?.role !== 'admin' && hasPerm('orders.view_pending') && currentUser?.cong_doan;
+    }
+
     async function loadActiveDelayReports() {
       try {
         const r = await fetch('/api/delay-reports/active');
@@ -1199,6 +1811,17 @@
         const d = await r.json();
         if (!d.ok) return;
         activeDelayReports = new Map((d.data || []).map(rep => [rep.ma_dh, rep]));
+      } catch {}
+    }
+
+    async function updateFeedbackAlert() {
+      const dot = document.getElementById('m-feedback-dot');
+      if (!dot) return;
+      try {
+        const r = await fetch('/api/feedbacks?status=open&limit=1&t=' + Date.now());
+        if (!r.ok) return;
+        const data = await r.json();
+        dot.classList.toggle('show', Boolean(data.ok && data.data && data.data.length));
       } catch {}
     }
 
@@ -1229,7 +1852,7 @@
 
     async function loadData() {
       try {
-        if (hasPerm('orders.view_pending') && currentUser?.cong_doan) {
+        if (isUserPendingMode()) {
           await loadUserPendingOrders();
         } else {
           const res = await fetch('/data.json');
@@ -1272,9 +1895,21 @@
         const r = await fetch('/user');
         if (!r.ok) return;
         const u = await r.json();
+        const fp = JSON.stringify({
+          user: u.user || u.username,
+          cong_doan: u.cong_doan,
+          role: u.role,
+          perms: u.permissions,
+        });
         currentUser = u;
         myRoom = roomForUser(u.cong_doan);
-        if (hasPerm('orders.view_pending') && u.cong_doan) {
+        updateFeedbackAlert();
+        if (fp === lastUserFingerprint) return;
+        lastUserFingerprint = fp;
+        lastCardsFingerprint = '';
+        lastFilterSummaryFingerprint = '';
+        if (allOrders.length) renderFilterSummary(getChipFiltered());
+        if (isUserPendingMode()) {
           setupUserMobile();
         }
         if (hasPerm('delay_reports.submit')) {
@@ -1366,17 +2001,17 @@
       let list = allOrders;
       if (filterPh !== 'all') list = list.filter(o => phMatches(o, filterPh));
       if (!filterSearch) return list;
-      const q = filterSearch.toLowerCase().trim();
+      const q = normalizePhText(filterSearch).trim();
       return list.filter(o =>
-        (o.ma_dh       || '').toLowerCase().includes(q) ||
-        (o.benh_nhan   || '').toLowerCase().includes(q) ||
-        (o.khach_hang  || '').toLowerCase().includes(q) ||
-        (o.phuc_hinh   || '').toLowerCase().includes(q) ||
-        (o.ghi_chu     || '').toLowerCase().includes(q) ||
-        (o.ghi_chu_sx  || '').toLowerCase().includes(q) ||
-        (o.current_stage || '').toLowerCase().includes(q) ||
-        (o.loai_lenh   || '').toLowerCase().includes(q) ||
-        (o.yc_giao     || '').toLowerCase().includes(q)
+        normalizePhText(o.ma_dh).includes(q) ||
+        normalizePhText(o.benh_nhan).includes(q) ||
+        normalizePhText(o.khach_hang).includes(q) ||
+        normalizePhText(o.phuc_hinh).includes(q) ||
+        normalizePhText(o.ghi_chu).includes(q) ||
+        normalizePhText(o.ghi_chu_sx).includes(q) ||
+        normalizePhText(o.current_stage).includes(q) ||
+        normalizePhText(o.loai_lenh).includes(q) ||
+        normalizePhText(o.yc_giao).includes(q)
       );
     }
 
@@ -1413,13 +2048,13 @@
     function renderFilterSummary(orders) {
       const el = document.getElementById('filterSummary');
       if (!el) return;
+      if (!currentUser) return;
       if (!canViewFilterSummary()) {
+        lastFilterSummaryFingerprint = 'hidden';
         el.innerHTML = '';
         el.style.display = 'none';
         return;
       }
-
-      el.style.display = '';
 
       const byDay = new Map();
       orders.forEach(o => {
@@ -1434,6 +2069,11 @@
       });
 
       const rows = Array.from(byDay.entries()).sort(([a], [b]) => a.localeCompare(b));
+      const fingerprint = rows.map(([key, r]) => `${key}:${r.orders}:${r.qty}`).join('|') || 'empty';
+      if (fingerprint === lastFilterSummaryFingerprint && el.style.display === 'flex') return;
+      lastFilterSummaryFingerprint = fingerprint;
+      el.style.display = 'flex';
+
       if (!rows.length) {
         el.innerHTML = '<div class="summary-empty">Chưa có ngày hoàn thành</div>';
         return;
@@ -1501,6 +2141,162 @@
       return htmlSafe(cleanDisplayText(value)).replace(/\n/g, '<br>');
     }
 
+    function listFromKeylab(value) {
+      return Array.isArray(value) ? value.filter(Boolean) : [];
+    }
+
+    const KEYLAB_PRODUCTION_LABELS = {
+      sap_can: 'Sáp cắn',
+      gia_khop: 'Giá khớp',
+      khay_lay_dau: 'Khay lấy dấu',
+      so_khay_lay_dau: 'Khay lấy dấu',
+      ham_doi: 'Hàm đối',
+      tren_nuou: 'Trên nướu',
+      ngang_nuou: 'Ngang nướu',
+      duoi_nuou: 'Dưới nướu',
+      bo_vai: 'Bờ vai',
+      khac: 'Khác',
+      phu_kien: 'Phụ kiện',
+      gui_labo_ngoai: 'Gửi labo ngoài',
+      chi_dinh: 'Chỉ định',
+      noi_dung_khac: 'Nội dung khác',
+      trao_doi_bac_si: 'Trao đổi bác sĩ',
+    };
+
+    function productionLabel(label) {
+      return KEYLAB_PRODUCTION_LABELS[label] || label || '';
+    }
+
+    function productionValue(value) {
+      return String(value || '').trim().toLowerCase() === 'co' ? 'Có' : value;
+    }
+
+    function hasProductionInfo(order) {
+      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      return !!(
+        cleanDisplayText(order?.ghi_chu_sx) ||
+        listFromKeylab(info.colors).length ||
+        listFromKeylab(info.attributes).length ||
+        listFromKeylab(info.instructions).length ||
+        (Array.isArray(order?.clinic_tags) && order.clinic_tags.length) ||
+        (order?.khach_hang && canEditClinicTags())
+      );
+    }
+
+    function renderProductionChips(items) {
+      const list = listFromKeylab(items);
+      const trayCountItem = list.find(item => item?.label === 'so_khay_lay_dau' && cleanDisplayText(item?.value));
+      const hasTrayFlag = list.some(item => item?.label === 'khay_lay_dau' && cleanDisplayText(item?.value));
+      return list.map(item => {
+        const label = item?.label || '';
+        const value = item?.value || '';
+        if (!value) return '';
+        if (label === 'so_khay_lay_dau' && hasTrayFlag) return '';
+        const shownValue = productionValue(value);
+        const labelText = productionLabel(label);
+        const trayCount = label === 'khay_lay_dau' ? cleanDisplayText(trayCountItem?.value) : '';
+        const text = String(value).trim().toLowerCase() === 'co'
+          ? (trayCount ? `${labelText}: ${trayCount}` : labelText)
+          : `${labelText}: ${shownValue}`;
+        return `<span class="production-chip">${displayHtml(text)}</span>`;
+      }).join('');
+    }
+
+    function renderProductionPreview(id, title, text, maxChars = 120, alwaysHide = false) {
+      const value = cleanDisplayText(text);
+      if (!value) return '';
+      if (alwaysHide) {
+        return `<div>
+          <div class="production-subtitle">${htmlSafe(title)}</div>
+          <div id="${htmlSafe(id)}" class="production-preview" style="display:none;">${displayHtml(value)}</div>
+          <button type="button" class="production-more" onclick="toggleProductionHidden('${htmlSafe(id)}', this)">Xem thêm</button>
+        </div>`;
+      }
+      const collapsed = value.length > maxChars || value.includes('\n');
+      return `<div>
+        <div class="production-subtitle">${htmlSafe(title)}</div>
+        <div id="${htmlSafe(id)}" class="production-preview${collapsed ? ' collapsed' : ''}">${displayHtml(value)}</div>
+        ${collapsed ? `<button type="button" class="production-more" onclick="toggleProductionPreview('${htmlSafe(id)}', this)">Xem thêm</button>` : ''}
+      </div>`;
+    }
+
+    function toggleProductionPreview(id, button) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const collapsed = el.classList.toggle('collapsed');
+      if (button) button.textContent = collapsed ? 'Xem thêm' : 'Thu gọn';
+    }
+
+    function toggleProductionHidden(id, button) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isHidden = el.style.display === 'none';
+      el.style.display = isHidden ? 'block' : 'none';
+      if (button) button.textContent = isHidden ? 'Thu gọn' : 'Xem thêm';
+    }
+
+    function canEditClinicTags() {
+      if (!currentUser) return false;
+      if (currentUser.role === 'admin') return true;
+      return (currentUser.permissions || []).includes('clinic_notes.edit');
+    }
+
+    async function promptAddClinicTag(khach_hang, ma_dh, btn) {
+      const label = (prompt(`Thêm chip cho "${khach_hang}":`) || '').trim();
+      if (!label) return;
+      if (label.length > 60) { showToast('Tối đa 60 ký tự', 'warn'); return; }
+      try {
+        const r = await fetch('/admin/api/clinic-tags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ khach_hang, label }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          showToast(data.error === 'duplicate' ? 'Chip đã tồn tại' : (data.error || 'Lỗi thêm chip'), 'warn');
+          return;
+        }
+        const chip = document.createElement('span');
+        chip.className = 'production-chip';
+        chip.textContent = label;
+        btn.parentNode.insertBefore(chip, btn);
+        allOrders.filter(o => o.khach_hang === khach_hang).forEach(o => {
+          if (!Array.isArray(o.clinic_tags)) o.clinic_tags = [];
+          if (!o.clinic_tags.includes(label)) o.clinic_tags.push(label);
+        });
+        showToast('Đã thêm chip');
+      } catch { showToast('Lỗi mạng', 'warn'); }
+    }
+
+    function renderInlineProductionInfo(order) {
+      if (!order || !hasProductionInfo(order)) return '';
+      const info = normalizeKeylabSxInfo(order.keylab_sx_info);
+      const colors = listFromKeylab(info.colors);
+      const attrChips = renderProductionChips(info.attributes);
+      const instructionText = listFromKeylab(info.instructions)
+        .map(item => [productionLabel(item?.label || ''), productionValue(item?.value || '')].filter(Boolean).join(': '))
+        .filter(Boolean)
+        .join('\n');
+      const note = cleanDisplayText(order.ghi_chu_sx);
+      const idPrefix = `prod-${String(order.ma_dh || '').replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+      const clinicTags = Array.isArray(order.clinic_tags) ? order.clinic_tags : [];
+      const canEdit = order.khach_hang && canEditClinicTags();
+      const clinicChipsHtml = (clinicTags.length || canEdit) ? `
+        <div class="production-subtitle" style="margin-top:8px;">Thêm bởi nội bộ</div>
+        <div class="production-chip-list" id="ctags-${htmlSafe(String(order.ma_dh || '').replace(/[^a-zA-Z0-9]/g, '-'))}">
+          ${clinicTags.map(t => `<span class="production-chip">${htmlSafe(t)}</span>`).join('')}
+          ${canEdit ? `<button type="button" class="production-chip" style="cursor:pointer;border-style:dashed;background:transparent;" onclick="promptAddClinicTag('${htmlSafe(order.khach_hang)}','${htmlSafe(order.ma_dh)}',this)">+ Thêm</button>` : ''}
+        </div>` : '';
+      return `<div class="production-section">
+        <div class="production-section-title">Thông tin sản xuất</div>
+        ${colors.length ? `<div class="production-subtitle">Màu sắc</div><div class="production-chip-list">${colors.map(c => `<span class="production-chip">${htmlSafe(c)}</span>`).join('')}</div>` : ''}
+        ${attrChips ? `<div class="production-subtitle">Phụ kiện đi kèm</div><div class="production-chip-list">${attrChips}</div>` : ''}
+        ${renderProductionPreview(`${idPrefix}-note`, 'Ghi chú sản xuất', note, 140)}
+        ${renderProductionPreview(`${idPrefix}-inst`, 'Lưu ý chung nha khoa', instructionText, 120, true)}
+        ${clinicChipsHtml}
+      </div>`;
+    }
+
     function openWipPanel() {
       if (!canViewWipPanel()) return;
       closeActionMenu();
@@ -1508,7 +2304,7 @@
       if (!panel) return;
       panel.classList.add('open');
       panel.setAttribute('aria-hidden', 'false');
-      renderWipPanel();
+      renderWipPanel(wipSelectedStage, true);
     }
 
     function closeWipPanel() {
@@ -1520,19 +2316,159 @@
 
     function refreshWipIfOpen() {
       const panel = document.getElementById('wipPanel');
-      if (panel && panel.classList.contains('open')) renderWipPanel(wipSelectedStage);
+      if (panel && panel.classList.contains('open')) renderWipPanel(wipSelectedStage, true);
     }
 
-    function isWipOrder(o) {
-      return (o.stagesData || []).some(s => !s.sk && !s.x);
+    function normalizeWipOrder(o) {
+      return {
+        ...o,
+        ma_dh:      o.ma_dh || '',
+        benh_nhan:  o.benh_nhan || '',
+        khach_hang: o.khach_hang || '',
+        phuc_hinh:  o.phuc_hinh || '',
+        sl:         Number(o.sl) || 0,
+        yc_ht:      o.yc_ht || '',
+        yc_giao:    o.yc_giao || '',
+        nhan:       o.nhan || '',
+        current_stage: o.current_stage || 'HOÀN TẤT',
+        current_stage_started_at: typeof o.current_stage_started_at === 'number' ? o.current_stage_started_at : null,
+        current_stage_age_minutes: typeof o.current_stage_age_minutes === 'number' ? o.current_stage_age_minutes : null,
+        stagesData: Array.isArray(o.stagesData) ? o.stagesData : [],
+      };
+    }
+
+    function wipStageAgeMinutes(o) {
+      if (!o || o.current_stage === 'HOÀN TẤT') return null;
+      if (typeof o.current_stage_started_at === 'number' && o.current_stage_started_at > 0) {
+        return Math.max(0, Math.floor((Date.now() - o.current_stage_started_at) / 60000));
+      }
+      return typeof o.current_stage_age_minutes === 'number' ? o.current_stage_age_minutes : null;
+    }
+
+    function wipAgeBucket(o) {
+      const m = wipStageAgeMinutes(o);
+      if (m == null) return null;
+      if (m < 120) return 'lt2';
+      if (m < 480) return 'lt8';
+      if (m < 1440) return 'lt24';
+      return 'gt24';
+    }
+
+    function wipBucketCounts(orders) {
+      const counts = { lt2: 0, lt8: 0, lt24: 0, gt24: 0 };
+      for (const o of orders || []) {
+        const b = wipAgeBucket(o);
+        if (b) counts[b] += 1;
+      }
+      return counts;
+    }
+
+    function formatAgeShort(minutes) {
+      if (minutes == null) return '';
+      if (minutes < 60) return `${minutes}p`;
+      const hours = minutes / 60;
+      if (hours < 48) return `${Math.floor(hours)}h`;
+      return `${Math.floor(hours / 24)}n`;
+    }
+
+    function isPlaceholderKtv(name) {
+      if (!name) return true;
+      if (/^[-—–_.\s]+$/.test(name)) return true;
+      if (/^(n\/a|na|none|null|unknown|chua nhan|chưa nhận)$/i.test(name)) return true;
+      return false;
+    }
+
+    function ktvForOrder(o) {
+      if (!o) return null;
+      const stages = o.stagesData || [];
+      if (o.current_stage === 'HOÀN TẤT') {
+        for (let i = stages.length - 1; i >= 0; i--) {
+          const s = stages[i];
+          if (!s.sk && s.k) return s.k;
+        }
+        return null;
+      }
+      const current = stages.find(s => !s.sk && s.n === o.current_stage);
+      return current && current.k ? current.k : null;
+    }
+
+    function buildKtvBreakdown(orders) {
+      const map = new Map();
+      let unclaimed = 0;
+      for (const o of orders || []) {
+        const k = ktvForOrder(o);
+        if (k == null) unclaimed++;
+        else map.set(k, (map.get(k) || 0) + 1);
+      }
+      const entries = [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'vi'));
+      return { entries, unclaimed };
+    }
+
+    function filterWipByKtv(name) {
+      wipSelectedKtv = wipSelectedKtv === name ? null : name;
+      renderWipPanel(wipSelectedStage, false);
+    }
+
+    function computeOrdersFingerprint(orders) {
+      return (orders || [])
+        .map(o => [
+          o.ma_dh, o.current_stage, o.sl, o.yc_ht, o.yc_giao, o.routed_to,
+          o.urgent ? '1' : '0', o.delay_report ? '1' : '0',
+          (o.stagesData || []).map(s => (s.x ? '1' : '0') + (s.sk ? 's' : '') + (s.k || '')).join(',')
+        ].join('|'))
+        .sort()
+        .join(';;');
+    }
+
+    function computeWipFingerprint(data) {
+      if (!data) return '';
+      const ser = arr => (arr || []).map(o => [
+        o.ma_dh, o.current_stage, o.current_stage_started_at || 0,
+        (o.stagesData || []).map(s => (s.x ? '1' : '0') + (s.k || '')).join(',')
+      ].join('|')).sort().join(';;');
+      return ser(data.received?.orders) + '##' + ser(data.carryover?.orders);
+    }
+
+    function isInteractionBlocking() {
+      const modal = document.getElementById('modalOverlay');
+      if (modal && modal.classList.contains('open')) return true;
+      const menu = document.getElementById('actionMenu');
+      if (menu && menu.classList.contains('open')) return true;
+      if (typeof transferScannerActive !== 'undefined' && transferScannerActive) return true;
+      return false;
+    }
+
+    async function loadWipStats() {
+      const res = await fetch('/api/stats/wip?t=' + Date.now());
+      if (!res.ok) throw new Error('Không tải được WIP');
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Không tải được WIP');
+      data.received = data.received || {};
+      data.carryover = data.carryover || {};
+      data.received.orders = (data.received.orders || []).map(normalizeWipOrder);
+      data.carryover.orders = (data.carryover.orders || []).map(normalizeWipOrder);
+      wipStatsData = data;
+      wipOrderCache = new Map(
+        [...data.received.orders, ...data.carryover.orders].map(order => [order.ma_dh, order])
+      );
+      M_WIP_MAP.stageP75 = data.stage_p75 || {};
+      M_WIP_MAP.kpis = data.kpis || null;
+      mUpdateWipKpis(M_WIP_MAP.kpis);
+      return data;
     }
 
     function getWipOrdersForStage(stage) {
-      if (stage === 'all') return allOrders.filter(isWipOrder);
-      return allOrders.filter(o => {
-        const s = (o.stagesData || []).find(st => st.n === stage);
-        return s && !s.sk && !s.x;
-      });
+      if (!wipStatsData) return [];
+      const received = wipStatsData.received.orders || [];
+      const carryover = wipStatsData.carryover.orders || [];
+      if (stage === 'carryover') return carryover;
+      if (stage === 'done') return received.filter(o => o.current_stage === 'HOÀN TẤT');
+      const wip = [
+        ...received.filter(o => o.current_stage !== 'HOÀN TẤT'),
+        ...carryover,
+      ];
+      if (stage === 'all') return wip;
+      return wip.filter(o => o.current_stage === stage);
     }
 
     function wipProgress(o) {
@@ -1544,12 +2480,15 @@
 
     function calcWipStageStats() {
       const totalOrders = getWipOrdersForStage('all');
+      const completed = getWipOrdersForStage('done');
+      const carryover = getWipOrdersForStage('carryover');
       const stats = [{
         stage: 'all',
-        name: 'Tất cả WIP',
+        name: 'Tổng đang ôm',
         count: totalOrders.length,
         qty: totalOrders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
         color: 'var(--terracotta)',
+        buckets: wipBucketCounts(totalOrders),
       }];
 
       STAGE_NAMES.forEach(stage => {
@@ -1560,16 +2499,69 @@
           count: orders.length,
           qty: orders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
           color: STAGE_COLORS[stage] || 'var(--terracotta)',
+          buckets: wipBucketCounts(orders),
         });
       });
 
+      stats.push({
+        stage: 'done',
+        name: 'Hoàn tất hôm nay',
+        count: completed.length,
+        qty: completed.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
+        color: '#16a34a',
+        buckets: null,
+      });
+      stats.push({
+        stage: 'carryover',
+        name: 'Tồn qua ngày',
+        count: carryover.length,
+        qty: carryover.reduce((sum, o) => sum + (Number(o.sl) || 0), 0),
+        color: '#dc2626',
+        buckets: wipBucketCounts(carryover),
+      });
+
       return stats;
+    }
+
+    function renderWipBuckets(buckets) {
+      if (!buckets) return '';
+      const cells = [
+        { key: 'lt2',  label: '&lt;2h',  n: buckets.lt2 || 0 },
+        { key: 'lt8',  label: '2-8h',    n: buckets.lt8 || 0 },
+        { key: 'lt24', label: '8-24h',   n: buckets.lt24 || 0 },
+        { key: 'gt24', label: '&gt;24h', n: buckets.gt24 || 0 },
+      ];
+      return `
+        <div class="wip-stage-buckets" aria-label="Phân bố tuổi đơn ở stage">
+          ${cells.map(c => `
+            <div class="bk bk-${c.key} ${c.n === 0 ? 'is-zero' : ''}">
+              <span class="bk-lbl">${c.label}</span>
+              <span class="bk-num">${c.n}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
     }
 
     function renderWipOrder(o) {
       const stageColor = STAGE_COLORS[o.current_stage] || 'var(--terracotta)';
       const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '---';
       const progress = wipProgress(o);
+      const receiveAge = Number(o.receive_age_days);
+      const receiveMeta = Number.isFinite(receiveAge) && receiveAge > 0 ? ` · nhận ${receiveAge} ngày trước` : '';
+
+      const ageMinutes = wipStageAgeMinutes(o);
+      let ageHtml = '';
+      if (ageMinutes != null && ageMinutes >= 60) {
+        const ageStr = htmlSafe(formatAgeShort(ageMinutes));
+        const cls = ageMinutes >= 1440 ? 'wip-order-age-danger'
+                  : ageMinutes >= 480  ? 'wip-order-age-warn'
+                  : '';
+        ageHtml = cls
+          ? ` · <span class="${cls}">ngâm ${ageStr}</span>`
+          : ` · ngâm ${ageStr}`;
+      }
+
       return `
         <div class="wip-order-card" data-ma-dh="${htmlSafe(o.ma_dh)}" style="border-left-color:${stageColor}">
           <div class="wip-order-top">
@@ -1582,52 +2574,1163 @@
           </div>
           <div class="wip-order-ph">${displayHtml(o.phuc_hinh || '---')}</div>
           <div class="wip-order-foot" style="margin-top:6px">
-            <div class="wip-order-stage">Đang ở: ${htmlSafe(STAGE_SHORT[o.current_stage] || o.current_stage || '---')} · ${progress}%</div>
+            <div class="wip-order-stage">Đang ở: ${htmlSafe(STAGE_SHORT[o.current_stage] || o.current_stage || '---')} · ${progress}%${ageHtml}${htmlSafe(receiveMeta)}</div>
             <div class="wip-order-deadline">${htmlSafe(formatDate(o.yc_ht))} ${htmlSafe(formatTime(o.yc_ht))}</div>
           </div>
         </div>
       `;
     }
 
-    function renderWipPanel(stage = wipSelectedStage) {
-      wipSelectedStage = stage || 'all';
+    async function renderWipPanelLegacy(stage = wipSelectedStage, forceReload = false) {
+      const nextStage = stage || 'all';
+      if (nextStage !== wipSelectedStage) wipSelectedKtv = null;
+      wipSelectedStage = nextStage;
       const content = document.getElementById('wipContent');
       const subtitle = document.getElementById('wipSubtitle');
       if (!content) return;
 
+      const isInitialLoad = !wipStatsData;
+      if (isInitialLoad || forceReload) {
+        if (isInitialLoad) {
+          content.innerHTML = '<div class="empty-state"><div class="icon">○</div><p>Đang tải WIP...</p></div>';
+        }
+        try {
+          await loadWipStats();
+        } catch (e) {
+          content.innerHTML = `<div class="empty-state"><div class="icon">!</div><p>${htmlSafe(e.message || 'Không tải được WIP')}</p></div>`;
+          if (subtitle) subtitle.textContent = 'Không tải được dữ liệu WIP';
+          return;
+        }
+      }
+
+      const fingerprint = computeWipFingerprint(wipStatsData) + '|' + wipSelectedStage + '|' + (wipSelectedKtv || '__null');
+      if (fingerprint === lastWipFingerprint && !isInitialLoad) return;
+      lastWipFingerprint = fingerprint;
+
       const stats = calcWipStageStats();
       const selected = stats.find(s => s.stage === wipSelectedStage) || stats[0];
-      const orders = sortOrdersByDeadline(getWipOrdersForStage(selected.stage));
+      const fullOrders = sortOrdersByDeadline(getWipOrdersForStage(selected.stage));
+      const ktvBreakdown = buildKtvBreakdown(fullOrders);
+
+      const knownKtv = new Set(ktvBreakdown.entries.map(([n]) => n));
+      const validFilter = wipSelectedKtv == null
+        || wipSelectedKtv === '__none'
+        || knownKtv.has(wipSelectedKtv);
+      if (!validFilter) wipSelectedKtv = null;
+
+      let orders = fullOrders;
+      if (wipSelectedKtv != null) {
+        orders = fullOrders.filter(o => {
+          const k = ktvForOrder(o);
+          if (wipSelectedKtv === '__none') return k == null;
+          return k === wipSelectedKtv;
+        });
+      }
+
       const qty = orders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0);
-      if (subtitle) subtitle.textContent = `${selected.name}: ${orders.length} đơn · ${qty} răng`;
+      const fullQty = fullOrders.reduce((sum, o) => sum + (Number(o.sl) || 0), 0);
+      const received = wipStatsData.received || {};
+      const carryover = wipStatsData.carryover || {};
+      const subtitleText = wipSelectedKtv != null
+        ? `${selected.name} → ${wipSelectedKtv === '__none' ? 'Chưa nhận' : wipSelectedKtv}: ${orders.length} đơn · ${qty} răng`
+        : `${selected.name}: ${fullOrders.length} đơn · ${fullQty} răng`;
+      if (subtitle) subtitle.textContent = subtitleText;
+
+      const totalWipOrders = (received.wip_orders || 0) + (carryover.total_orders || 0);
+      const totalWipQty = (received.wip_qty || 0) + (carryover.total_qty || 0);
+      const overviewHtml = `
+        <div class="wip-overview">
+          <div class="wip-overview-item">
+            <div class="wip-overview-label">Nhận hôm nay</div>
+            <div class="wip-overview-value">${received.total_orders || 0}</div>
+            <div class="wip-overview-meta">${received.total_qty || 0} răng</div>
+          </div>
+          <div class="wip-overview-item">
+            <div class="wip-overview-label">Tổng đang ôm</div>
+            <div class="wip-overview-value">${totalWipOrders}</div>
+            <div class="wip-overview-meta">${totalWipQty} răng</div>
+          </div>
+          <div class="wip-overview-item alert">
+            <div class="wip-overview-label">Tồn qua ngày</div>
+            <div class="wip-overview-value">${carryover.total_orders || 0}</div>
+            <div class="wip-overview-meta">${carryover.total_qty || 0} răng</div>
+          </div>
+        </div>
+      `;
 
       const summaryHtml = stats.map(s => `
         <button class="wip-stage-card ${s.stage === selected.stage ? 'active' : ''}" type="button" onclick="renderWipPanel('${htmlSafe(s.stage)}')" style="border-left-color:${s.color}">
           <div class="wip-stage-name">${htmlSafe(s.name)}</div>
           <div class="wip-stage-count">${s.count}</div>
           <div class="wip-stage-meta">${s.qty} răng chờ</div>
+          ${renderWipBuckets(s.buckets)}
         </button>
       `).join('');
 
+      const showKtvSummary = selected.stage !== 'done' && fullOrders.length > 0;
+      const ktvSummaryHtml = showKtvSummary ? `
+        <div class="wip-ktv-summary">
+          <div class="wip-ktv-summary-label">KTV vừa hoàn tất stage trước (click để lọc):</div>
+          <div class="wip-ktv-chips-row">
+            ${wipSelectedKtv != null ? `
+              <button class="wip-ktv-chip wip-ktv-clear" type="button" onclick="filterWipByKtv(null)">
+                <span class="ktv-name">✕ Bỏ lọc</span>
+              </button>
+            ` : ''}
+            ${ktvBreakdown.entries.map(([name, n]) => `
+              <button class="wip-ktv-chip ${wipSelectedKtv === name ? 'active' : ''}" type="button" onclick="filterWipByKtv('${htmlSafe(name)}')">
+                <span class="ktv-name">${htmlSafe(name)}</span>
+                <span class="ktv-count">${n}</span>
+              </button>
+            `).join('')}
+            ${ktvBreakdown.unclaimed > 0 ? `
+              <button class="wip-ktv-chip wip-ktv-unclaimed ${wipSelectedKtv === '__none' ? 'active' : ''}" type="button" onclick="filterWipByKtv('__none')">
+                <span class="ktv-name">Chưa có ai</span>
+                <span class="ktv-count">${ktvBreakdown.unclaimed}</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      ` : '';
+
       const listHtml = orders.length
         ? `<div class="wip-order-list">${orders.map(renderWipOrder).join('')}</div>`
-        : '<div class="empty-state"><div class="icon">○</div><p>Không có đơn WIP</p></div>';
+        : `<div class="empty-state"><div class="icon">○</div><p>${wipSelectedKtv != null ? 'KTV này không có đơn ở stage hiện tại' : 'Không có đơn WIP'}</p></div>`;
 
       content.innerHTML = `
+        ${overviewHtml}
         <div class="wip-summary">${summaryHtml}</div>
         <div class="wip-list-title">
           <span>${htmlSafe(selected.name)}</span>
           <span class="wip-list-meta">${orders.length} đơn · ${qty} răng</span>
         </div>
+        ${ktvSummaryHtml}
         ${listHtml}
       `;
     }
 
-    function setMobileExportState(icon, disabled = false) {
-      const btn = document.getElementById('m-export-btn');
-      const iconEl = document.getElementById('m-export-icon');
-      if (iconEl) iconEl.textContent = icon;
-      if (btn) btn.disabled = disabled;
+    function mWipClamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function mWipStageLabel(stage) {
+      return STAGE_SHORT[stage] || String(stage || '').replace('SÁP/Cadcam', 'SÁP');
+    }
+
+    function mWipParseDateTime(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return null;
+      let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+      if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4] || 23), Number(m[5] || 59));
+      m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+      if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 23), Number(m[5] || 59));
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function mWipDeadlineMinutes(o) {
+      const d = mWipParseDateTime(o?.yc_ht || o?.yc_giao);
+      return d ? Math.floor((d.getTime() - Date.now()) / 60000) : null;
+    }
+
+    const M_WIP_WORK_START_H = 8;
+    const M_WIP_WORK_END_H   = 21;
+
+    function mWipWorkingMinutesSince(startMs, nowMs) {
+      if (startMs == null) return null;
+      if (nowMs <= startMs) return 0;
+      let total = 0;
+      let cursor = startMs;
+      while (cursor < nowMs) {
+        const d = new Date(cursor);
+        const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), M_WIP_WORK_START_H, 0, 0, 0).getTime();
+        const dayEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), M_WIP_WORK_END_H,   0, 0, 0).getTime();
+        const segStart = Math.max(cursor, dayStart);
+        const segEnd   = Math.min(nowMs, dayEnd);
+        if (segEnd > segStart) total += segEnd - segStart;
+        cursor = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0, 0).getTime();
+      }
+      return Math.floor(total / 60000);
+    }
+
+    function mWipStageWorkingAge(o) {
+      if (!o || o.current_stage === 'HOÀN TẤT') return null;
+      const started = o.current_stage_started_at;
+      if (typeof started !== 'number' || started <= 0) return null;
+      return mWipWorkingMinutesSince(started, Date.now());
+    }
+
+    // Ngâm theo working-minutes (chỉ tính 8h-21h), so với P75 lịch sử của từng stage:
+    //   warn   (vàng)   ≥ 1× P75
+    //   alert  (cam)    ≥ 2× P75
+    //   danger (đỏ đậm) ≥ 3× P75
+    // Fallback nếu thiếu P75: ngưỡng cứng 12h/24h/48h (working).
+    function mWipComputeRisk(o) {
+      const age = mWipStageWorkingAge(o);
+      if (age == null) return 'normal';
+      const stage = o && o.current_stage;
+      const baseline = stage && M_WIP_MAP.stageP75 && M_WIP_MAP.stageP75[stage];
+      const p75 = baseline && baseline.p75 > 0 ? baseline.p75 : null;
+      if (p75 == null) {
+        if (age >= 2880) return 'danger';
+        if (age >= 1440) return 'alert';
+        if (age >= 720)  return 'warn';
+        return 'normal';
+      }
+      if (age >= 3 * p75) return 'danger';
+      if (age >= 2 * p75) return 'alert';
+      if (age >= p75)     return 'warn';
+      return 'normal';
+    }
+
+    function mWipOrderRisk(o) {
+      return o && o._wipRisk ? o._wipRisk : mWipComputeRisk(o);
+    }
+
+    const M_WIP_RISK_COLOR = {
+      normal: null,
+      warn:   '#eab308',
+      alert:  '#ea580c',
+      danger: '#991b1b',
+    };
+    const M_WIP_RISK_BG = {
+      normal: '#ffffff',
+      warn:   '#fefce8',
+      alert:  '#fff7ed',
+      danger: '#fef2f2',
+    };
+
+    function mWipOrderMatchesFilter(o) {
+      const f = M_WIP_MAP.filter;
+      if (f === 'alert') return mWipOrderRisk(o) !== 'normal';
+      if (f === 'unclaimed') {
+        const k = o && '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
+        return !k;
+      }
+      if (f === 'deadline') {
+        const m = o && '_wipDeadlineMin' in o ? o._wipDeadlineMin : mWipDeadlineMinutes(o);
+        return m != null && m <= 240;
+      }
+      return true;
+    }
+
+    function mWipDeriveStageStartedAt(stages, fallbackTs) {
+      if (!Array.isArray(stages) || !stages.length) {
+        return fallbackTs == null ? null : fallbackTs;
+      }
+      let latestDoneAt = null;
+      for (const s of stages) {
+        if (!s || s.sk || !s.x) continue;
+        const parsed = mWipParseDateTime(s.t);
+        const ts = parsed ? parsed.getTime() : null;
+        if (ts != null && (latestDoneAt == null || ts > latestDoneAt)) latestDoneAt = ts;
+      }
+      if (latestDoneAt != null) return latestDoneAt;
+      return fallbackTs == null ? null : fallbackTs;
+    }
+
+    function mWipMergeWithMain(wipOrder, mainOrder) {
+      if (!mainOrder) return wipOrder;
+      const merged = {
+        ...wipOrder,
+        stagesData:    Array.isArray(mainOrder.stagesData) ? mainOrder.stagesData : wipOrder.stagesData,
+        current_stage: mainOrder.current_stage || wipOrder.current_stage,
+        yc_ht:         mainOrder.yc_ht    || wipOrder.yc_ht,
+        yc_giao:       mainOrder.yc_giao  || wipOrder.yc_giao,
+        khach_hang:    mainOrder.khach_hang || wipOrder.khach_hang,
+        benh_nhan:     mainOrder.benh_nhan  || wipOrder.benh_nhan,
+        sl:            Number(mainOrder.sl) || wipOrder.sl,
+        phuc_hinh:     mainOrder.phuc_hinh || wipOrder.phuc_hinh,
+        loai_lenh:     mainOrder.loai_lenh || wipOrder.loai_lenh,
+        ghi_chu:       mainOrder.ghi_chu || wipOrder.ghi_chu,
+        ghi_chu_sx:    mainOrder.ghi_chu_sx || wipOrder.ghi_chu_sx,
+        keylab_sx_info: mainOrder.keylab_sx_info || wipOrder.keylab_sx_info,
+        routed_to:     mainOrder.routed_to || wipOrder.routed_to,
+        delay_report:  mainOrder.delay_report || null,
+      };
+      const fallback = wipOrder.current_stage_started_at
+        ?? (mWipParseDateTime(wipOrder.nhan)?.getTime() ?? null);
+      merged.current_stage_started_at = mWipDeriveStageStartedAt(merged.stagesData, fallback);
+      merged.current_stage_age_minutes = merged.current_stage_started_at != null
+        ? Math.max(0, Math.floor((Date.now() - merged.current_stage_started_at) / 60000))
+        : null;
+      return merged;
+    }
+
+    function mWipMapOrders() {
+      const wipOrders = getWipOrdersForStage('all');
+      const mainByMa = new Map((allOrders || []).map(o => [o.ma_dh, o]));
+      const merged = wipOrders.map(o => {
+        const base = { ...o, yc_ht: o.yc_ht || o.yc_giao || '' };
+        return mWipMergeWithMain(base, mainByMa.get(o.ma_dh));
+      });
+      return sortOrdersByDeadline(merged);
+    }
+
+    function mBuildWipMapLayout(mode = M_WIP_MAP.layoutMode || 'compact') {
+      const canvas = M_WIP_MAP.canvas;
+      const cachedW = M_WIP_MAP.rect && M_WIP_MAP.rect.width;
+      const width = cachedW || (canvas ? canvas.getBoundingClientRect().width : window.innerWidth);
+      const useTwoCols = width >= 560;
+      const compact = mode === 'compact';
+      const cols = useTwoCols ? 2 : 1;
+      const margin = 28;
+      const gapX = 22;
+      const gapY = compact ? 10 : 18;
+      const top = 24;
+      const stageW = useTwoCols ? 260 : 330;
+      const stageMinH = compact ? 132 : 208;
+      const orders = mWipMapOrders();
+      const stages = [];
+      const colHeights = Array(cols).fill(top);
+      M_WIP_MAP.layoutMode = mode;
+      M_WIP_MAP.textCache.clear();
+      M_WIP_MAP.riskStamp = Date.now();
+      for (const order of orders) {
+        order._wipKtv = ktvForOrder(order);
+        order._wipDeadlineMin = mWipDeadlineMinutes(order);
+        order._wipRisk = mWipComputeRisk(order);
+      }
+
+      STAGE_NAMES.forEach((stage, idx) => {
+        const stageOrders = orders.filter(o => o.current_stage === stage);
+        const laneMap = new Map();
+        for (const order of stageOrders) {
+          const laneName = order._wipKtv || M_WIP_UNCLAIMED;
+          if (!laneMap.has(laneName)) laneMap.set(laneName, []);
+          laneMap.get(laneName).push(order);
+        }
+        const laneNames = [...laneMap.keys()].sort((a, b) => {
+          if (a === M_WIP_UNCLAIMED) return -1;
+          if (b === M_WIP_UNCLAIMED) return 1;
+          return laneMap.get(b).length - laneMap.get(a).length || a.localeCompare(b, 'vi');
+        });
+        const col = useTwoCols ? idx % 2 : 0;
+        const x = margin + col * (stageW + gapX);
+        const y = colHeights[col];
+        let laneY = y + 78;
+        const lanes = laneNames.map(name => {
+          const laneOrders = laneMap.get(name);
+          const cardsPerRow = useTwoCols ? 2 : 2;
+          const rows = Math.max(1, Math.ceil(laneOrders.length / cardsPerRow));
+          const laneH = 34 + rows * 64 + 8;
+          const lane = { name, orders: laneOrders, x: x + 10, y: laneY, w: stageW - 20, h: laneH, cardsPerRow };
+          laneY += laneH + 10;
+          return lane;
+        });
+        const dotCols = Math.max(7, Math.floor((stageW - 32) / 24));
+        const dotRows = Math.ceil(Math.min(stageOrders.length, 140) / dotCols);
+        const compactStageH = 106 + Math.max(34, dotRows * 21 + 18);
+        const stageH = compact ? Math.max(stageMinH, compactStageH) : Math.max(stageMinH, laneY - y + 10);
+        let alertCount = 0;
+        let dangerCount = 0;
+        let unclaimedCount = 0;
+        let qtySum = 0;
+        for (const o of stageOrders) {
+          if (o._wipRisk !== 'normal') alertCount++;
+          if (o._wipRisk === 'danger') dangerCount++;
+          if (!o._wipKtv) unclaimedCount++;
+          qtySum += Number(o.sl) || 0;
+        }
+        stages.push({
+          stage,
+          orders: stageOrders,
+          lanes,
+          alerts: alertCount,
+          dangers: dangerCount,
+          unclaimed: unclaimedCount,
+          qty: qtySum,
+          x,
+          y,
+          w: stageW,
+          h: stageH,
+          color: STAGE_COLORS[stage] || '#c4836f',
+        });
+        colHeights[col] = y + stageH + gapY;
+      });
+
+      M_WIP_MAP.worldW = margin * 2 + cols * stageW + (cols - 1) * gapX;
+      M_WIP_MAP.worldH = Math.max(...colHeights) + 76;
+      M_WIP_MAP.layout = { stages, orders, cols };
+      return M_WIP_MAP.layout;
+    }
+
+    function mEnsureWipCanvasShell() {
+      const content = document.getElementById('wipContent');
+      if (!content) return null;
+      if (!document.getElementById('wipCanvas')) {
+        content.className = 'wip-content wip-map-shell';
+        content.innerHTML = `
+          <canvas id="wipCanvas"></canvas>
+          <div class="wip-kpi-bar" id="wipKpiBar">
+            <div class="wip-kpi" id="wipKpiThroughput">
+              <div class="wip-kpi-label">Hôm nay</div>
+              <div class="wip-kpi-value">—</div>
+              <div class="wip-kpi-meta">—</div>
+            </div>
+            <div class="wip-kpi" id="wipKpiDeadline">
+              <div class="wip-kpi-label">Sát hạn</div>
+              <div class="wip-kpi-value">—</div>
+              <div class="wip-kpi-meta">—</div>
+            </div>
+            <div class="wip-kpi" id="wipKpiBottleneck">
+              <div class="wip-kpi-label">Nút thắt</div>
+              <div class="wip-kpi-value">—</div>
+              <div class="wip-kpi-meta">—</div>
+            </div>
+            <div class="wip-kpi" id="wipKpiBalance">
+              <div class="wip-kpi-label">Phân công</div>
+              <div class="wip-kpi-value">—</div>
+              <div class="wip-kpi-meta">—</div>
+            </div>
+          </div>
+          <div class="wip-map-hud">
+            <div class="wip-map-status" id="wipMapStatus">Đang tải WIP...</div>
+            <div class="wip-map-tools">
+              <button class="wip-map-btn" type="button" onclick="mWipResetView()">Tổng</button>
+              <button class="wip-map-btn" type="button" onclick="mWipZoomBy(1.22)">+</button>
+              <button class="wip-map-btn" type="button" onclick="mWipZoomBy(0.82)">-</button>
+              <button class="wip-map-btn active" type="button" data-m-wip-filter="all" onclick="mWipSetFilter('all')">Tất cả</button>
+              <button class="wip-map-btn" type="button" data-m-wip-filter="alert" onclick="mWipSetFilter('alert')">Cảnh báo</button>
+              <button class="wip-map-btn" type="button" data-m-wip-filter="unclaimed" onclick="mWipSetFilter('unclaimed')">Chờ</button>
+              <button class="wip-map-btn" type="button" data-m-wip-filter="deadline" onclick="mWipSetFilter('deadline')">Hạn</button>
+            </div>
+          </div>
+          <div class="wip-map-legend">
+            <span><i style="background:#eab308"></i>Vượt P75 stage</span>
+            <span><i style="background:#ea580c"></i>≥ 2× P75</span>
+            <span><i style="background:#991b1b"></i>≥ 3× P75</span>
+            <span><i style="background:#94a3b8"></i>Chờ nhận</span>
+          </div>`;
+      }
+      return document.getElementById('wipCanvas');
+    }
+
+    function mInitWipCanvas() {
+      const canvas = mEnsureWipCanvasShell();
+      if (!canvas) return;
+      M_WIP_MAP.canvas = canvas;
+      M_WIP_MAP.ctx = canvas.getContext('2d');
+      if (M_WIP_MAP.initialized) {
+        mResizeWipCanvas();
+        return;
+      }
+      M_WIP_MAP.initialized = true;
+
+      canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        mWipZoomAt(Math.exp(-e.deltaY * 0.0012), e.offsetX, e.offsetY);
+      }, { passive: false });
+
+      canvas.addEventListener('pointerdown', e => {
+        canvas.setPointerCapture?.(e.pointerId);
+        mWipSyncTargetToCamera();
+        M_WIP_MAP.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        M_WIP_MAP.dragMoved = false;
+        M_WIP_MAP.velocityX = 0;
+        M_WIP_MAP.velocityY = 0;
+        M_WIP_MAP.lastMoveSample = { x: e.clientX, y: e.clientY, t: performance.now() };
+        canvas.classList.add('dragging');
+        if (M_WIP_MAP.pointers.size === 1) {
+          M_WIP_MAP.dragStart = { x: e.clientX, y: e.clientY, panX: M_WIP_MAP.panX, panY: M_WIP_MAP.panY };
+          M_WIP_MAP.pinchStart = null;
+        } else if (M_WIP_MAP.pointers.size === 2) {
+          const pts = [...M_WIP_MAP.pointers.values()];
+          const center = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          mWipRefreshRect();
+          const rect = M_WIP_MAP.rect;
+          M_WIP_MAP.pinchStart = {
+            dist,
+            scale: M_WIP_MAP.scale,
+            worldX: (center.x - rect.left - M_WIP_MAP.panX) / M_WIP_MAP.scale,
+            worldY: (center.y - rect.top - M_WIP_MAP.panY) / M_WIP_MAP.scale,
+          };
+        }
+      });
+
+      canvas.addEventListener('pointermove', e => {
+        if (!M_WIP_MAP.pointers.has(e.pointerId)) {
+          if (e.pointerType !== 'touch') {
+            const rect = M_WIP_MAP.rect;
+            M_WIP_MAP.hover = mWipHitTest((e.clientX - rect.left - M_WIP_MAP.panX) / M_WIP_MAP.scale, (e.clientY - rect.top - M_WIP_MAP.panY) / M_WIP_MAP.scale);
+          }
+          return;
+        }
+        M_WIP_MAP.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (M_WIP_MAP.pointers.size === 2 && M_WIP_MAP.pinchStart) {
+          M_WIP_MAP.velocityX = 0;
+          M_WIP_MAP.velocityY = 0;
+          const pts = [...M_WIP_MAP.pointers.values()];
+          const center = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          const next = mWipClamp(M_WIP_MAP.pinchStart.scale * (dist / Math.max(1, M_WIP_MAP.pinchStart.dist)), M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
+          const rect = M_WIP_MAP.rect;
+          M_WIP_MAP.scale = next;
+          M_WIP_MAP.panX = center.x - rect.left - M_WIP_MAP.pinchStart.worldX * next;
+          M_WIP_MAP.panY = center.y - rect.top - M_WIP_MAP.pinchStart.worldY * next;
+          const clamped = mWipClampPan(M_WIP_MAP.scale, M_WIP_MAP.panX, M_WIP_MAP.panY);
+          M_WIP_MAP.panX = clamped.panX;
+          M_WIP_MAP.panY = clamped.panY;
+          mWipSyncTargetToCamera();
+          M_WIP_MAP.dragMoved = true;
+          M_WIP_MAP.needsFit = false;
+          return;
+        }
+        if (M_WIP_MAP.pointers.size === 1 && M_WIP_MAP.dragStart) {
+          const now = performance.now();
+          const sample = M_WIP_MAP.lastMoveSample;
+          if (sample) {
+            const dt = Math.max(12, now - sample.t);
+            const vx = (e.clientX - sample.x) / dt;
+            const vy = (e.clientY - sample.y) / dt;
+            M_WIP_MAP.velocityX = M_WIP_MAP.velocityX * 0.65 + vx * 0.35;
+            M_WIP_MAP.velocityY = M_WIP_MAP.velocityY * 0.65 + vy * 0.35;
+          }
+          M_WIP_MAP.lastMoveSample = { x: e.clientX, y: e.clientY, t: now };
+          const dx = e.clientX - M_WIP_MAP.dragStart.x;
+          const dy = e.clientY - M_WIP_MAP.dragStart.y;
+          if (Math.abs(dx) + Math.abs(dy) > 4) M_WIP_MAP.dragMoved = true;
+          M_WIP_MAP.panX = M_WIP_MAP.dragStart.panX + dx;
+          M_WIP_MAP.panY = M_WIP_MAP.dragStart.panY + dy;
+          const clamped = mWipClampPan(M_WIP_MAP.scale, M_WIP_MAP.panX, M_WIP_MAP.panY);
+          M_WIP_MAP.panX = clamped.panX;
+          M_WIP_MAP.panY = clamped.panY;
+          mWipSyncTargetToCamera();
+          M_WIP_MAP.needsFit = false;
+        }
+      });
+
+      const endPointer = e => {
+        const wasTap = !M_WIP_MAP.dragMoved && M_WIP_MAP.pointers.size === 1;
+        M_WIP_MAP.pointers.delete(e.pointerId);
+        if (M_WIP_MAP.pointers.size === 0) {
+          canvas.classList.remove('dragging');
+          M_WIP_MAP.dragStart = null;
+          M_WIP_MAP.pinchStart = null;
+          M_WIP_MAP.lastMoveSample = null;
+          if (wasTap) {
+            const rect = M_WIP_MAP.rect;
+            const hit = mWipHitTest((e.clientX - rect.left - M_WIP_MAP.panX) / M_WIP_MAP.scale, (e.clientY - rect.top - M_WIP_MAP.panY) / M_WIP_MAP.scale);
+            if (hit?.type === 'order') {
+              const order = allOrders.find(o => o.ma_dh === hit.id) || wipOrderCache.get(hit.id);
+              if (order) showOrderDetail(order);
+            } else if (hit?.type === 'stage') {
+              mWipFocusStage(hit.stage);
+            }
+          } else if (M_WIP_MAP.dragMoved) {
+            const speed = Math.hypot(M_WIP_MAP.velocityX, M_WIP_MAP.velocityY);
+            if (speed > 0.035) {
+              mWipSetCamera(
+                M_WIP_MAP.scale,
+                M_WIP_MAP.panX + M_WIP_MAP.velocityX * 260,
+                M_WIP_MAP.panY + M_WIP_MAP.velocityY * 260
+              );
+            }
+          }
+        }
+      };
+      canvas.addEventListener('pointerup', endPointer);
+      canvas.addEventListener('pointercancel', endPointer);
+      canvas.addEventListener('dblclick', () => mWipResetView());
+      window.addEventListener('resize', () => {
+        mResizeWipCanvas();
+        if (M_WIP_MAP.layout) mBuildWipMapLayout(M_WIP_MAP.layoutMode);
+        if (M_WIP_MAP.needsFit) mWipFitMap(true);
+      });
+      window.addEventListener('orientationchange', () => {
+        mResizeWipCanvas();
+        if (M_WIP_MAP.layout) mBuildWipMapLayout(M_WIP_MAP.layoutMode);
+        if (M_WIP_MAP.needsFit) mWipFitMap(true);
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) mWipRefreshRect();
+      });
+      mResizeWipCanvas();
+    }
+
+    function mResizeWipCanvas() {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      M_WIP_MAP.rect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      M_WIP_MAP.dpr = dpr;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      M_WIP_MAP.textCache.clear();
+    }
+
+    function mWipRefreshRect() {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      M_WIP_MAP.rect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+    }
+
+    function mSetWipMapStatus(text) {
+      const el = document.getElementById('wipMapStatus');
+      if (el) el.textContent = text || '';
+      const subtitle = document.getElementById('wipSubtitle');
+      if (subtitle && text) subtitle.textContent = text;
+    }
+
+    function mWipUpdateToolbar() {
+      document.querySelectorAll('[data-m-wip-filter]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mWipFilter === M_WIP_MAP.filter);
+      });
+    }
+
+    function mWipDesiredLayoutMode(scale = M_WIP_MAP.targetScale || M_WIP_MAP.scale) {
+      return scale < 0.72 ? 'compact' : 'detail';
+    }
+
+    function mWipEnsureLayoutMode(mode) {
+      if (!M_WIP_MAP.layout || M_WIP_MAP.layoutMode !== mode) {
+        mBuildWipMapLayout(mode);
+      }
+    }
+
+    function mWipClampPan(scale, panX, panY) {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return { panX, panY };
+      const rect = M_WIP_MAP.rect;
+      const safeX = 24;
+      const topSafe = 180;
+      const bottomSafe = 54;
+      const scaledW = M_WIP_MAP.worldW * scale;
+      const scaledH = M_WIP_MAP.worldH * scale;
+      let nextX = panX;
+      let nextY = panY;
+
+      if (scaledW <= rect.width - safeX * 2) {
+        nextX = (rect.width - scaledW) / 2;
+      } else {
+        nextX = mWipClamp(panX, rect.width - scaledW - safeX, safeX);
+      }
+
+      if (scaledH <= rect.height - topSafe - bottomSafe) {
+        nextY = topSafe + (rect.height - topSafe - bottomSafe - scaledH) / 2;
+      } else {
+        nextY = mWipClamp(panY, rect.height - scaledH - bottomSafe, topSafe);
+      }
+      return { panX: nextX, panY: nextY };
+    }
+
+    function mWipSwitchLayoutMode(mode) {
+      if (!M_WIP_MAP.layout || M_WIP_MAP.layoutMode === mode) return;
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return;
+      const rect = M_WIP_MAP.rect;
+      const sx = rect.width / 2;
+      const sy = rect.height / 2;
+      const ratioX = mWipClamp(((sx - M_WIP_MAP.panX) / M_WIP_MAP.scale) / Math.max(1, M_WIP_MAP.worldW), 0, 1);
+      const ratioY = mWipClamp(((sy - M_WIP_MAP.panY) / M_WIP_MAP.scale) / Math.max(1, M_WIP_MAP.worldH), 0, 1);
+      mBuildWipMapLayout(mode);
+      const current = mWipClampPan(M_WIP_MAP.scale, sx - ratioX * M_WIP_MAP.worldW * M_WIP_MAP.scale, sy - ratioY * M_WIP_MAP.worldH * M_WIP_MAP.scale);
+      M_WIP_MAP.panX = current.panX;
+      M_WIP_MAP.panY = current.panY;
+      const target = mWipClampPan(M_WIP_MAP.targetScale, sx - ratioX * M_WIP_MAP.worldW * M_WIP_MAP.targetScale, sy - ratioY * M_WIP_MAP.worldH * M_WIP_MAP.targetScale);
+      M_WIP_MAP.targetPanX = target.panX;
+      M_WIP_MAP.targetPanY = target.panY;
+    }
+
+    function mWipMaybeSwitchLayoutMode() {
+      if (M_WIP_MAP.pointers.size) return;
+      if (Math.abs((M_WIP_MAP.targetScale || M_WIP_MAP.scale) - M_WIP_MAP.scale) > 0.035) return;
+      const scale = M_WIP_MAP.scale;
+      if (M_WIP_MAP.layoutMode === 'compact' && scale > 0.82) mWipSwitchLayoutMode('detail');
+      else if (M_WIP_MAP.layoutMode === 'detail' && scale < 0.58) mWipSwitchLayoutMode('compact');
+    }
+
+    function mWipMaybeRefreshRisk(now) {
+      if (M_WIP_MAP.pointers.size) return;
+      if (!M_WIP_MAP.layout) return;
+      if (now - (M_WIP_MAP.riskStamp || 0) < 30000) return;
+      M_WIP_MAP.riskStamp = now;
+      for (const o of M_WIP_MAP.layout.orders) {
+        o._wipDeadlineMin = mWipDeadlineMinutes(o);
+        o._wipRisk = mWipComputeRisk(o);
+      }
+    }
+
+    function mWipSetCamera(scale, panX, panY, immediate = false) {
+      M_WIP_MAP.targetScale = mWipClamp(scale, M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
+      const clamped = mWipClampPan(M_WIP_MAP.targetScale, panX, panY);
+      M_WIP_MAP.targetPanX = clamped.panX;
+      M_WIP_MAP.targetPanY = clamped.panY;
+      if (immediate) {
+        M_WIP_MAP.scale = M_WIP_MAP.targetScale;
+        M_WIP_MAP.panX = M_WIP_MAP.targetPanX;
+        M_WIP_MAP.panY = M_WIP_MAP.targetPanY;
+      }
+    }
+
+    function mWipSyncTargetToCamera() {
+      M_WIP_MAP.targetScale = M_WIP_MAP.scale;
+      M_WIP_MAP.targetPanX = M_WIP_MAP.panX;
+      M_WIP_MAP.targetPanY = M_WIP_MAP.panY;
+    }
+
+    function mStepWipCamera() {
+      const ease = M_WIP_MAP.pointers.size ? 1 : 0.24;
+      const ds = M_WIP_MAP.targetScale - M_WIP_MAP.scale;
+      const dx = M_WIP_MAP.targetPanX - M_WIP_MAP.panX;
+      const dy = M_WIP_MAP.targetPanY - M_WIP_MAP.panY;
+      if (Math.abs(ds) < 0.0008 && Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25) {
+        M_WIP_MAP.scale = M_WIP_MAP.targetScale;
+        M_WIP_MAP.panX = M_WIP_MAP.targetPanX;
+        M_WIP_MAP.panY = M_WIP_MAP.targetPanY;
+        return;
+      }
+      M_WIP_MAP.scale += ds * ease;
+      M_WIP_MAP.panX += dx * ease;
+      M_WIP_MAP.panY += dy * ease;
+      const clamped = mWipClampPan(M_WIP_MAP.scale, M_WIP_MAP.panX, M_WIP_MAP.panY);
+      M_WIP_MAP.panX = clamped.panX;
+      M_WIP_MAP.panY = clamped.panY;
+    }
+
+    function mWipFitMap(immediate = false) {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return;
+      mWipEnsureLayoutMode('compact');
+      const rect = M_WIP_MAP.rect;
+      const scale = mWipClamp(Math.min((rect.width - 18) / M_WIP_MAP.worldW, (rect.height - 220) / M_WIP_MAP.worldH), M_WIP_MAP.minScale, 0.9);
+      mWipSetCamera(scale, Math.max(8, (rect.width - M_WIP_MAP.worldW * scale) / 2), 184, immediate);
+      M_WIP_MAP.needsFit = false;
+    }
+
+    function mWipResetView() {
+      M_WIP_MAP.needsFit = true;
+      mWipFitMap();
+    }
+
+    function mWipZoomAt(factor, sx, sy) {
+      const old = M_WIP_MAP.targetScale || M_WIP_MAP.scale;
+      const next = mWipClamp(old * factor, M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
+      const oldPanX = Number.isFinite(M_WIP_MAP.targetPanX) ? M_WIP_MAP.targetPanX : M_WIP_MAP.panX;
+      const oldPanY = Number.isFinite(M_WIP_MAP.targetPanY) ? M_WIP_MAP.targetPanY : M_WIP_MAP.panY;
+      const wx = (sx - oldPanX) / old;
+      const wy = (sy - oldPanY) / old;
+      mWipSetCamera(next, sx - wx * next, sy - wy * next);
+      M_WIP_MAP.needsFit = false;
+    }
+
+    function mWipZoomBy(factor) {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas) return;
+      const rect = M_WIP_MAP.rect;
+      mWipZoomAt(factor, rect.width / 2, rect.height / 2);
+    }
+
+    function mWipSetFilter(filter) {
+      M_WIP_MAP.filter = filter || 'all';
+      mWipUpdateToolbar();
+      mUpdateWipMapTitle();
+    }
+
+    function mWipFocusStage(stage) {
+      const canvas = M_WIP_MAP.canvas;
+      if (!canvas || !M_WIP_MAP.layout) return;
+      mWipSwitchLayoutMode('detail');
+      mWipEnsureLayoutMode('detail');
+      const detailLayout = M_WIP_MAP.layout;
+      const s = detailLayout.stages.find(x => x.stage === stage);
+      if (!s) return;
+      const rect = M_WIP_MAP.rect;
+      const scale = mWipClamp(Math.min(1.18, (rect.width - 28) / s.w), M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
+      mWipSetCamera(scale, rect.width / 2 - (s.x + s.w / 2) * scale, 188 - s.y * scale);
+      M_WIP_MAP.needsFit = false;
+    }
+
+    function mWipHitTest(wx, wy) {
+      for (let i = M_WIP_MAP.hitItems.length - 1; i >= 0; i--) {
+        const it = M_WIP_MAP.hitItems[i];
+        if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) return it;
+      }
+      return null;
+    }
+
+    function mStartWipMapLoop() {
+      if (M_WIP_MAP.animating) return;
+      M_WIP_MAP.animating = true;
+      requestAnimationFrame(mDrawWipMapFrame);
+    }
+
+    function mDrawWipMapFrame(now) {
+      const panel = document.getElementById('wipPanel');
+      if (!panel?.classList.contains('open')) {
+        M_WIP_MAP.animating = false;
+        return;
+      }
+      const t = now || performance.now();
+      mStepWipCamera();
+      mWipMaybeSwitchLayoutMode();
+      mWipMaybeRefreshRisk(Date.now());
+      mDrawWipMap(t);
+      requestAnimationFrame(mDrawWipMapFrame);
+    }
+
+    function mRoundRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    function mCanvasText(ctx, text, x, y, maxW, font, color, align = 'left') {
+      ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = 'alphabetic';
+      const raw = String(text || '');
+      const limit = Math.max(0, Math.round(maxW));
+      const key = font + '\0' + limit + '\0' + raw;
+      const cache = M_WIP_MAP.textCache;
+      let s = cache.get(key);
+      if (s === undefined) {
+        if (ctx.measureText(raw).width <= maxW) {
+          s = raw;
+        } else {
+          let lo = 1;
+          let hi = raw.length;
+          while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (ctx.measureText(raw.slice(0, mid) + '...').width <= maxW) lo = mid;
+            else hi = mid - 1;
+          }
+          s = raw.slice(0, lo) + '...';
+        }
+        if (cache.size > 2000) cache.clear();
+        cache.set(key, s);
+      }
+      ctx.fillText(s, x, y);
+    }
+
+    function mDrawWipMap(now) {
+      const canvas = M_WIP_MAP.canvas;
+      const ctx = M_WIP_MAP.ctx;
+      const layout = M_WIP_MAP.layout;
+      if (!canvas || !ctx || !layout) return;
+      const rect = M_WIP_MAP.rect;
+      const dpr = M_WIP_MAP.dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.fillStyle = '#f7f2ee';
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      ctx.save();
+      ctx.translate(M_WIP_MAP.panX, M_WIP_MAP.panY);
+      ctx.scale(M_WIP_MAP.scale, M_WIP_MAP.scale);
+      M_WIP_MAP.hitItems = [];
+      mDrawWipWorld(ctx, layout, now);
+      ctx.restore();
+    }
+
+    function mDrawWipWorld(ctx, layout, now) {
+      const received = wipStatsData?.received || {};
+      const carryover = wipStatsData?.carryover || {};
+      const totalWipOrders = (received.wip_orders || 0) + (carryover.total_orders || 0);
+      const totalWipQty = (received.wip_qty || 0) + (carryover.total_qty || 0);
+      let alertCount = 0;
+      let dangerCount = 0;
+      let unclaimedCount = 0;
+      for (const o of layout.orders) {
+        const r = o._wipRisk || mWipOrderRisk(o);
+        if (r !== 'normal') alertCount++;
+        if (r === 'danger') dangerCount++;
+        const k = '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
+        if (!k) unclaimedCount++;
+      }
+      const pulse = 0.55 + Math.sin(now / 520) * 0.18;
+      const blink = M_WIP_MAP.pointers.size ? 0.22 : 0.35 + Math.max(0, Math.sin(now / 620)) * 0.65;
+      const z = M_WIP_MAP.scale;
+
+      ctx.strokeStyle = 'rgba(196,131,111,.12)';
+      ctx.lineWidth = 1;
+      for (let y = 0; y <= M_WIP_MAP.worldH; y += 72) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(M_WIP_MAP.worldW, y);
+        ctx.stroke();
+      }
+
+      for (const stage of layout.stages) mDrawMobileStage(ctx, stage, z, pulse, blink);
+    }
+
+    function mDrawSummaryPill(ctx, x, y, w, label, value, meta, accent = '#c4836f') {
+      mRoundRect(ctx, x, y, w, 66, 8);
+      ctx.fillStyle = 'rgba(255,255,255,.92)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(196,131,111,.22)';
+      ctx.stroke();
+      ctx.fillStyle = accent;
+      ctx.fillRect(x, y, 5, 66);
+      mCanvasText(ctx, label, x + 14, y + 21, w - 24, '800 13px Inter', '#6b625d');
+      mCanvasText(ctx, value, x + 14, y + 47, w - 84, '850 25px Inter', '#2d2724');
+      mCanvasText(ctx, meta, x + w - 10, y + 45, 72, '800 11px Inter', '#8a817b', 'right');
+    }
+
+    function mDrawMobileStage(ctx, stage, z, pulse, blink) {
+      const filteredOrders = stage.orders.filter(mWipOrderMatchesFilter);
+      const dimStage = M_WIP_MAP.filter !== 'all' && filteredOrders.length === 0;
+      ctx.save();
+      ctx.globalAlpha = dimStage ? 0.28 : 1;
+      mRoundRect(ctx, stage.x, stage.y, stage.w, stage.h, 10);
+      ctx.fillStyle = '#fffaf7';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(196,131,111,.24)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.fillStyle = stage.color;
+      ctx.fillRect(stage.x, stage.y, 7, stage.h);
+
+      M_WIP_MAP.hitItems.push({ type: 'stage', stage: stage.stage, x: stage.x, y: stage.y, w: stage.w, h: 76 });
+      mCanvasText(ctx, mWipStageLabel(stage.stage), stage.x + 18, stage.y + 29, stage.w - 112, '850 19px Inter', '#2d2724');
+      mCanvasText(ctx, `${stage.orders.length}`, stage.x + stage.w - 16, stage.y + 31, 76, '850 24px Inter', stage.color, 'right');
+      mCanvasText(ctx, `${stage.qty} răng · ${stage.lanes.length || 1} lane`, stage.x + 18, stage.y + 55, stage.w - 36, '800 12px Inter', '#7a716b');
+      if (stage.alerts) {
+        const badgeColor = stage.dangers ? M_WIP_RISK_COLOR.danger : M_WIP_RISK_COLOR.warn;
+        mDrawMobileBadge(ctx, stage.x + 18, stage.y + 64, `${stage.alerts} cảnh báo`, badgeColor, 0);
+      }
+      if (stage.unclaimed) mDrawMobileBadge(ctx, stage.x + stage.w - 112, stage.y + 64, `${stage.unclaimed} chờ`, '#64748b', 0);
+
+      if (z < 0.72) {
+        mDrawMobileStageOverview(ctx, stage, pulse, blink);
+      } else {
+        for (const lane of stage.lanes) mDrawMobileLane(ctx, lane, z, pulse, blink, stage.color);
+        if (!stage.lanes.length) mCanvasText(ctx, 'Không có đơn đang chờ', stage.x + 18, stage.y + 122, stage.w - 36, '800 13px Inter', '#9a918b');
+      }
+      ctx.restore();
+    }
+
+    function mDrawMobileBadge(ctx, x, y, text, color, blink) {
+      ctx.save();
+      mRoundRect(ctx, x, y, 94, 22, 11);
+      ctx.fillStyle = color;
+      if (blink) ctx.globalAlpha *= mWipClamp(0.35 + blink * 0.65, 0.35, 1);
+      ctx.fill();
+      mCanvasText(ctx, text, x + 47, y + 15, 82, '850 10px Inter', '#fff', 'center');
+      ctx.restore();
+    }
+
+    function mDrawMobileStageOverview(ctx, stage, pulse, blink) {
+      const x = stage.x + 16;
+      const y = stage.y + 102;
+      const w = stage.w - 32;
+      const h = Math.max(76, stage.h - 124);
+      mRoundRect(ctx, x, y, w, h, 8);
+      ctx.fillStyle = 'rgba(196,131,111,.08)';
+      ctx.fill();
+      const orders = stage.orders.slice(0, 140);
+      const cols = Math.max(7, Math.floor(w / 24));
+      const r = 5.6;
+      const radiusByRisk = { normal: r, warn: r + 0.6, alert: r + 1.2, danger: r + 2 };
+      orders.forEach((o, i) => {
+        const risk = mWipOrderRisk(o);
+        const match = mWipOrderMatchesFilter(o);
+        const cx = x + 16 + (i % cols) * ((w - 32) / cols);
+        const cy = y + 18 + Math.floor(i / cols) * 21;
+        if (cy > y + h - 10) return;
+        const dotR = radiusByRisk[risk] || r;
+        ctx.beginPath();
+        ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = !match
+          ? 'rgba(148,163,184,.22)'
+          : (M_WIP_RISK_COLOR[risk] || stage.color);
+        ctx.fill();
+        if (match && risk === 'danger') {
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = 'rgba(0,0,0,.35)';
+          ctx.stroke();
+        }
+        const ktv = '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
+        if (!ktv) {
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      });
+    }
+
+    function mDrawMobileLane(ctx, lane, z, pulse, blink, stageColor) {
+      mRoundRect(ctx, lane.x, lane.y, lane.w, lane.h, 8);
+      ctx.fillStyle = lane.name === M_WIP_UNCLAIMED ? 'rgba(148,163,184,.12)' : 'rgba(255,255,255,.76)';
+      ctx.fill();
+      ctx.strokeStyle = lane.name === M_WIP_UNCLAIMED ? 'rgba(100,116,139,.24)' : 'rgba(196,131,111,.16)';
+      ctx.stroke();
+      mCanvasText(ctx, lane.name, lane.x + 10, lane.y + 22, lane.w - 70, '850 12px Inter', lane.name === M_WIP_UNCLAIMED ? '#64748b' : '#2d2724');
+      mCanvasText(ctx, `${lane.orders.length}`, lane.x + lane.w - 10, lane.y + 22, 36, '850 15px Inter', stageColor, 'right');
+
+      const gap = 8;
+      const cardW = (lane.w - 20 - gap * (lane.cardsPerRow - 1)) / lane.cardsPerRow;
+      const cardH = 58;
+      lane.orders.forEach((o, idx) => {
+        const col = idx % lane.cardsPerRow;
+        const row = Math.floor(idx / lane.cardsPerRow);
+        const x = lane.x + 10 + col * (cardW + gap);
+        const y = lane.y + 34 + row * (cardH + 6);
+        mDrawMobileCard(ctx, o, x, y, cardW, cardH, z, pulse, blink, stageColor);
+      });
+    }
+
+    function mDrawMobileCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor) {
+      const risk = mWipOrderRisk(o);
+      const match = mWipOrderMatchesFilter(o);
+      const riskColor = M_WIP_RISK_COLOR[risk] || stageColor;
+      ctx.save();
+      ctx.globalAlpha = match ? 1 : 0.18;
+      mRoundRect(ctx, x, y, w, h, 7);
+      ctx.fillStyle = M_WIP_RISK_BG[risk] || '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = risk === 'normal' ? 'rgba(196,131,111,.24)' : riskColor;
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+      ctx.fillStyle = risk === 'normal' ? stageColor : riskColor;
+      ctx.fillRect(x, y, risk === 'normal' ? 5 : 7, h);
+      if (risk === 'danger') {
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = riskColor;
+        ctx.fillRect(x - 1, y - 1, 9, h + 2);
+        ctx.restore();
+      }
+      M_WIP_MAP.hitItems.push({ type: 'order', id: o.ma_dh, x, y, w, h, order: o });
+      mCanvasText(ctx, o.ma_dh || '---', x + 11, y + 17, w - 18, '850 11px Inter', '#2d2724');
+      if (z >= 0.92) mCanvasText(ctx, o.khach_hang || '---', x + 11, y + 33, w - 18, '800 9px Inter', '#6b625d');
+      if (z >= 1.22) {
+        const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '---';
+        mCanvasText(ctx, `${patient} · SL ${Number(o.sl) || 0}`, x + 11, y + 49, w - 18, '800 8.5px Inter', '#8a817b');
+      } else {
+        mCanvasText(ctx, `SL ${Number(o.sl) || 0}`, x + w - 8, y + h - 9, 34, '850 9px Inter', '#8a817b', 'right');
+      }
+      ctx.restore();
+    }
+
+    function mWipFormatMinutes(min) {
+      if (min == null) return '—';
+      if (min <= 0) return 'quá hạn';
+      if (min < 60) return `${min}p`;
+      const h = min / 60;
+      if (h < 24) return `${h.toFixed(h < 10 ? 1 : 0)}h`;
+      return `${Math.floor(h / 24)}n`;
+    }
+
+    function mWipSetKpi(id, value, meta, state) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const v = el.querySelector('.wip-kpi-value');
+      const m = el.querySelector('.wip-kpi-meta');
+      if (v) v.textContent = value;
+      if (m) m.textContent = meta;
+      el.classList.remove('is-ok', 'is-warn', 'is-alert', 'is-danger');
+      if (state) el.classList.add('is-' + state);
+    }
+
+    function mUpdateWipKpis(kpis) {
+      if (!kpis) return;
+      const t = kpis.throughput || {};
+      if (t.received_today != null) {
+        const value = `${t.received_today}→${t.completed_today}`;
+        const net = t.net_today;
+        const netStr = net > 0 ? `+${net}` : `${net}`;
+        const deltaStr = t.delta_pct != null
+          ? ` · vs TB ${t.avg_7day} (${t.delta_pct > 0 ? '+' : ''}${t.delta_pct}%)`
+          : '';
+        let state = 'ok';
+        if (t.delta_pct != null) {
+          if (t.delta_pct <= -25) state = 'danger';
+          else if (t.delta_pct <= -10) state = 'warn';
+        }
+        mWipSetKpi('wipKpiThroughput', value, `WIP ${netStr}${deltaStr}`, state);
+      }
+
+      const d = kpis.deadline || {};
+      let dlState = null;
+      if (d.count >= 8) dlState = 'danger';
+      else if (d.count >= 4) dlState = 'alert';
+      else if (d.count >= 1) dlState = 'warn';
+      const dlMeta = d.count
+        ? (d.urgent_count
+            ? `≤4h · ${d.urgent_count} đơn <1h`
+            : `≤4h · sát nhất ${mWipFormatMinutes(d.most_urgent_minutes)}`)
+        : 'Không có đơn nào sát hạn';
+      mWipSetKpi('wipKpiDeadline', `${d.count || 0} đơn`, dlMeta, dlState);
+
+      const b = kpis.bottleneck;
+      if (b && b.stage) {
+        const ratio = b.avg_ratio != null ? `${b.avg_ratio}× TB` : '—';
+        const value = mWipStageLabel(b.stage);
+        const meta = `${b.over_p75_count}/${b.stage_count} vượt P75 · tb ${ratio}`;
+        const ratioVal = b.avg_ratio || 0;
+        let bnState = null;
+        if (ratioVal >= 3) bnState = 'danger';
+        else if (ratioVal >= 2) bnState = 'alert';
+        else if (ratioVal >= 1) bnState = 'warn';
+        mWipSetKpi('wipKpiBottleneck', value, meta, bnState);
+      } else {
+        mWipSetKpi('wipKpiBottleneck', '—', 'Chưa đủ dữ liệu', null);
+      }
+
+      const bal = kpis.balance || {};
+      if (bal.top_ktv) {
+        const med = Math.max(1, bal.median_ktv_count || 1);
+        const heavy = bal.top_ktv_count >= 2 * med;
+        const dropped = (bal.unclaimed_pct || 0) >= 15;
+        let state = null;
+        if (heavy && dropped) state = 'danger';
+        else if (heavy || dropped) state = 'alert';
+        const value = `${bal.top_ktv}: ${bal.top_ktv_count}`;
+        const meta = `${bal.unclaimed_count} chưa nhận (${bal.unclaimed_pct || 0}%) · TB ${bal.median_ktv_count}`;
+        mWipSetKpi('wipKpiBalance', value, meta, state);
+      } else {
+        const meta = `${bal.unclaimed_count || 0} chưa nhận`;
+        mWipSetKpi('wipKpiBalance', '—', meta, null);
+      }
+    }
+
+    function mUpdateWipMapTitle() {
+      const layout = M_WIP_MAP.layout;
+      if (!layout) return;
+      const received = wipStatsData?.received || {};
+      const carryover = wipStatsData?.carryover || {};
+      const focus = M_WIP_MAP.filter === 'all' ? 'tất cả' : M_WIP_MAP.filter === 'alert' ? 'cảnh báo' : M_WIP_MAP.filter === 'unclaimed' ? 'chờ nhận' : 'sát hạn';
+      mSetWipMapStatus(`${layout.orders.length} đơn · nhận ${received.total_orders || 0} · tồn ${carryover.total_orders || 0} · lọc ${focus}`);
+    }
+
+    async function renderWipPanel(stage = wipSelectedStage, forceReload = false) {
+      mInitWipCanvas();
+      if (!M_WIP_MAP.canvas) return;
+      const nextStage = stage || 'all';
+      if (nextStage !== wipSelectedStage) wipSelectedKtv = null;
+      wipSelectedStage = nextStage;
+
+      const isInitialLoad = !wipStatsData;
+      if (isInitialLoad || forceReload) {
+        mSetWipMapStatus(isInitialLoad ? 'Đang tải WIP...' : 'Đang cập nhật WIP...');
+        try {
+          await loadWipStats();
+        } catch (e) {
+          mSetWipMapStatus(e.message || 'Không tải được WIP');
+          return;
+        }
+      }
+
+      const fingerprint = computeWipFingerprint(wipStatsData);
+      if (fingerprint !== lastWipFingerprint || isInitialLoad || forceReload || !M_WIP_MAP.layout) {
+        mBuildWipMapLayout(isInitialLoad ? 'compact' : mWipDesiredLayoutMode());
+        lastWipFingerprint = fingerprint;
+        if (M_WIP_MAP.needsFit || isInitialLoad) mWipFitMap(isInitialLoad);
+      }
+      mResizeWipCanvas();
+      mWipUpdateToolbar();
+      mUpdateWipMapTitle();
+      if (nextStage !== 'all') mWipFocusStage(nextStage);
+      mStartWipMapLoop();
     }
 
     function groupByCompletionTime(orders) {
@@ -1739,6 +3842,17 @@
           <div class="card-prosthesis">${displayHtml(o.phuc_hinh)}</div>
           ${currentKtv ? `<div class="card-stage-label" style="font-size: 11px; color: var(--text-primary); margin-top: 4px;">👤 ${currentKtv}</div>` : ''}
           ${pipsHtml ? `<div class="stage-pips">${pipsHtml}</div>` : ''}
+          ${(() => {
+            const noteKtvs = parseNoteKtvs(o.ghi_chu, o.loai_lenh);
+            if (!noteKtvs.length) return '';
+            const byStage = {};
+            for (const k of noteKtvs) { (byStage[k.stage] = byStage[k.stage] || []).push(k.name); }
+            const cells = o.stagesData.map(s => {
+              const names = byStage[s.n] || [];
+              return `<div style="flex:1; text-align:center; font-size:11px; line-height:1.3; color:#000; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names.join(', ')}</div>`;
+            }).join('');
+            return `<div style="display:flex; gap:4px; margin-top:4px; margin-bottom:-7px;">${cells}</div>`;
+          })()}
           ${lkChip}
         </div>
       `;
@@ -1748,6 +3862,10 @@
       const list = getFiltered();
       renderFilterSummary(getChipFiltered());
       const container = document.getElementById('cardList');
+
+      const fingerprint = computeOrdersFingerprint(list) + '|' + filterPh + '|' + (filterSearch || '');
+      if (fingerprint === lastCardsFingerprint) return;
+      lastCardsFingerprint = fingerprint;
 
       if (list.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="icon">○</div><p>Không có đơn nào</p></div>';
@@ -1923,11 +4041,19 @@
       (async () => {
         await initUserContext();
         loadData();
-        const interval = hasPerm('orders.view_pending') ? 30_000 : 60_000;
+        const interval = isUserPendingMode() ? 30_000 : 60_000;
         setInterval(async () => {
+          if (document.hidden) return;
+          if (isInteractionBlocking()) return;
           await initUserContext();
           loadData();
         }, interval);
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            initUserContext();
+            loadData();
+          }
+        });
         initAdminUI();
       })();
 
@@ -1939,7 +4065,7 @@
         const wipCard = e.target.closest('.wip-order-card');
         if (wipCard) {
           const maDh = wipCard.getAttribute('data-ma-dh');
-          const order = allOrders.find(o => o.ma_dh === maDh);
+          const order = allOrders.find(o => o.ma_dh === maDh) || wipOrderCache.get(maDh);
           if (order) showOrderDetail(order);
           return;
         }
@@ -2015,6 +4141,8 @@
             <div style="font-size: 12px; color: var(--text-primary);">${displayHtml(o.ghi_chu)}</div>
           </div>` : ''}
 
+          ${renderInlineProductionInfo(o)}
+
           <div style="margin-bottom: 14px;">
             <div style="color: var(--text-light); font-size: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Tiến độ công đoạn</div>
             ${stageHtml}
@@ -2059,16 +4187,16 @@
         }).join('');
         return `
           <div class="day-order-row" onclick="showDayOrderDetail(${i})">
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">${o.ma_dh}</span>
+            <div class="day-order-main">
+              <div class="day-order-head">
+                <span class="day-order-code">${o.ma_dh}</span>
                 ${phBadge}
               </div>
               <div style="font-size:11px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.benh_nhan || '—'} · ${o.khach_hang || '—'}</div>
-              ${pipsHtml ? `<div class="stage-pips" style="margin-top:5px;">${pipsHtml}</div>` : ''}
+              ${pipsHtml ? `<div class="stage-pips day-order-pips">${pipsHtml}</div>` : ''}
             </div>
-            <div style="text-align:right;flex-shrink:0;min-width:72px;">
-              <div style="font-size:11px;font-weight:600;color:var(--terracotta);">${o.current_stage}</div>
+            <div class="day-order-side">
+              <div class="day-order-stage">${o.current_stage}</div>
               <div style="font-size:10px;color:var(--text-primary);margin-top:2px;">${qty} răng${timeStr ? ' · ' + timeStr : ''}</div>
             </div>
           </div>`;
@@ -2122,9 +4250,6 @@
         if (!r.ok) return;
         const u = await r.json();
         currentUser = u;
-        if (hasPerm('admin.keylab_export')) {
-          document.getElementById('m-export-btn').classList.add('admin-visible');
-        }
         if (hasPerm('admin.users.manage')) {
           const adminBtn = document.getElementById('m-admin-btn');
           if (adminBtn) adminBtn.classList.add('admin-visible');
@@ -2153,83 +4278,8 @@
           const errorBtn = document.getElementById('m-baoloi-btn');
           if (errorBtn) errorBtn.classList.add('delay-visible');
         }
+        updateFeedbackAlert();
       } catch {}
-    }
-
-    async function triggerKeylabExport() {
-      setMobileExportState('⏳', true);
-
-      try {
-        const r = await fetch('/keylab-export-now', { method: 'POST' });
-        const data = await r.json();
-
-        if (!data.ok) {
-          setMobileExportState('⚠️', true);
-          setTimeout(() => {
-            setMobileExportState('🔄', false);
-          }, 3500);
-          return;
-        }
-
-        // Start polling
-        pollExportStatusMobile();
-
-      } catch {
-        setMobileExportState('❌', true);
-        setTimeout(() => {
-          setMobileExportState('🔄', false);
-        }, 3500);
-      }
-    }
-
-    let pollIntervalMobile = null;
-
-    async function pollExportStatusMobile() {
-      if (pollIntervalMobile) clearInterval(pollIntervalMobile);
-
-      pollIntervalMobile = setInterval(async () => {
-        try {
-          const exportRes = await fetch('/keylab-export-status');
-          const exportData = await exportRes.json();
-
-          if (exportData.running) {
-            setMobileExportState('⏳', true);
-            return;
-          }
-
-          if (exportData.exitCode !== 0) {
-            setMobileExportState('❌', true);
-            clearInterval(pollIntervalMobile);
-            setTimeout(() => {
-              setMobileExportState('🔄', false);
-            }, 3500);
-            return;
-          }
-
-          const scrapeRes = await fetch('/scrape-status');
-          const scrapeData = await scrapeRes.json();
-
-          if (scrapeData.running) {
-            setMobileExportState('🔄', true);
-            return;
-          }
-
-          if (scrapeData.exitCode === 0) {
-            setMobileExportState('✅', true);
-            clearInterval(pollIntervalMobile);
-            setTimeout(() => location.reload(), 1000);
-          } else {
-            setMobileExportState('⚠️', true);
-            clearInterval(pollIntervalMobile);
-            setTimeout(() => {
-              setMobileExportState('🔄', false);
-            }, 3500);
-          }
-
-        } catch (err) {
-          console.error('Poll error:', err);
-        }
-      }, 2000);
     }
 
   </script>
