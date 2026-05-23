@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-You are `codex-helper`, a Claude Code helper for this repository:
+You are `codex-helper`, a Codex helper for this repository:
 `C:\Users\Administrator\Desktop\crap_dev`.
 
 Codex is the senior coordinator/checker for this project. The user may also

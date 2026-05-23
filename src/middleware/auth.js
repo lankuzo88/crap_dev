@@ -1,11 +1,17 @@
 'use strict';
-const { getSession, getSessionToken, deleteSession } = require('../services/session.service');
+const { getSession, getSessionToken, deleteSession, refreshSession, buildSessionCookie } = require('../services/session.service');
 const { USERS, hasPermission } = require('../repositories/users.repo');
 
 function currentSessionWithUserRole(sess) {
   const user = USERS[sess.user] || USERS[sess.username];
   if (!user) return sess;
   return { ...sess, role: user.role || sess.role };
+}
+
+function refreshAuthenticatedSession(res, sess) {
+  const refreshed = refreshSession(sess.token, sess.expires, sess.ttlMs);
+  res.setHeader('Set-Cookie', buildSessionCookie(sess.token, refreshed.expires, refreshed.ttlMs));
+  return { ...sess, expires: refreshed.expires, ttlMs: refreshed.ttlMs };
 }
 
 function requireAuth(req, res, next) {
@@ -15,7 +21,7 @@ function requireAuth(req, res, next) {
     deleteSession(token);
     return res.redirect('/login');
   }
-  req.session = currentSessionWithUserRole(sess);
+  req.session = currentSessionWithUserRole(refreshAuthenticatedSession(res, sess));
   next();
 }
 
@@ -26,7 +32,7 @@ function requireAdmin(req, res, next) {
     deleteSession(token);
     return res.redirect('/login');
   }
-  const currentSess = currentSessionWithUserRole(sess);
+  const currentSess = currentSessionWithUserRole(refreshAuthenticatedSession(res, sess));
   if (currentSess.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
@@ -42,7 +48,7 @@ function requirePermission(permission) {
       deleteSession(token);
       return res.redirect('/login');
     }
-    const currentSess = currentSessionWithUserRole(sess);
+    const currentSess = currentSessionWithUserRole(refreshAuthenticatedSession(res, sess));
     if (!hasPermission(currentSess.user, permission)) {
       return res.status(403).json({ ok: false, error: 'Permission denied', permission });
     }

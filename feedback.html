@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Phản Hồi Nha Khoa - ASIA LAB</title>
+  <style>
+    :root {
+      --bg-primary: #7a9b8a;
+      --bg-card: #f5f3f0;
+      --border-card: #e0d9d3;
+      --terracotta-light: #c4836f;
+      --terracotta: #a85a4f;
+      --rust-dark: #8b4438;
+      --text-primary: #1a1a1a;
+      --text-muted: #888;
+      --header-h: 56px;
+      --green: #4caf50;
+      --amber: #ff9800;
+      --red: #e53935;
+      --blue: #1e88e5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 14px; -webkit-text-size-adjust: 100%; }
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100dvh; }
+
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+      background: var(--rust-dark); display: flex; align-items: center;
+      padding: 0 12px; gap: 10px; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .header-back {
+      color: #fff; text-decoration: none; font-size: 13px;
+      padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3);
+      white-space: nowrap;
+    }
+    .header-title { color: #fff; font-size: 16px; font-weight: 700; flex: 1; }
+    .header-btn {
+      color: #fff; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; display: none;
+    }
+    .header-btn:active { opacity: .7; }
+
+    .body { padding-top: calc(var(--header-h) + 16px); padding-bottom: 40px; }
+
+    .card {
+      background: var(--bg-card); border-radius: 14px; margin: 0 12px 12px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }
+    .card-title {
+      font-size: 13px; font-weight: 700; color: var(--terracotta);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px;
+    }
+
+    .field { margin-bottom: 14px; position: relative; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-card);
+      border-radius: 8px; font-size: 15px; background: #fff; color: var(--text-primary);
+      outline: none; appearance: none; -webkit-appearance: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(168,90,79,.12);
+    }
+    .field textarea { resize: none; min-height: 80px; }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+
+    .clinic-wrap { position: relative; }
+    .suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+      border: 1.5px solid var(--terracotta); border-top: none; border-radius: 0 0 8px 8px;
+      max-height: 200px; overflow-y: auto; z-index: 50; display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .suggestions.show { display: block; }
+    .sug-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0ede9; font-size: 14px; }
+    .sug-item:last-child { border-bottom: none; }
+    .sug-item:active, .sug-item:hover { background: #fdf2f0; }
+
+    .btn {
+      width: 100%; padding: 13px; background: var(--terracotta); color: #fff;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+      cursor: pointer; letter-spacing: .3px;
+    }
+    .btn:active { opacity: .8; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--terracotta); border: 1.5px solid var(--terracotta); }
+    .btn-sm { width: auto; padding: 9px 18px; font-size: 13px; border-radius: 8px; }
+    .btn-row { display: flex; gap: 10px; }
+    .btn-row .btn { flex: 1; }
+
+    .filter-row { display: flex; gap: 10px; align-items: flex-end; }
+    .filter-row .field { flex: 1; margin-bottom: 0; }
+    .filter-row .btn-sm { margin-bottom: 0; flex-shrink: 0; }
+
+    .fb-item {
+      background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+      border-left: 4px solid var(--amber); box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .fb-item:last-child { margin-bottom: 0; }
+    .fb-item.sev-high { border-left-color: var(--red); }
+    .fb-item.sev-low  { border-left-color: var(--green); }
+    .fb-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+    .fb-clinic { font-weight: 700; font-size: 14px; color: var(--rust-dark); }
+    .fb-date { font-size: 11px; color: var(--text-muted); white-space: nowrap; margin-left: 8px; flex-shrink: 0; }
+    .fb-type { font-size: 12px; color: var(--terracotta); font-weight: 600; margin-bottom: 5px; }
+    .fb-desc { font-size: 13px; color: var(--text-primary); line-height: 1.55; }
+    .fb-meta { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .fb-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .fb-tag-madh   { background: #e3f2fd; color: var(--blue); }
+    .fb-tag-high   { background: #fce4ec; color: var(--red); }
+    .fb-tag-medium { background: #fff3e0; color: var(--amber); }
+    .fb-tag-low    { background: #e8f5e9; color: var(--green); }
+    .fb-tag-by     { background: #f0ede9; color: var(--text-muted); }
+
+    .stats-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .stats-head .card-title { margin-bottom: 0; flex: 1; }
+    .stats-month {
+      width: auto; min-width: 130px; padding: 8px 28px 8px 10px; border: 1.5px solid var(--border-card);
+      border-radius: 8px; background-color: #fff; font-size: 13px; color: var(--text-primary);
+    }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-box { background: #fff; border-radius: 10px; padding: 10px 8px; border-left: 4px solid var(--terracotta); }
+    .stat-box.good { border-left-color: var(--green); }
+    .stat-box.bad { border-left-color: var(--amber); }
+    .stat-box.urgent { border-left-color: var(--red); }
+    .stat-n { font-size: 22px; line-height: 1; font-weight: 800; color: var(--rust-dark); }
+    .stat-l { font-size: 10px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .3px; }
+    .stats-cols { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .stat-list { background: #fff; border-radius: 10px; padding: 10px 12px; }
+    .stat-list-title { font-size: 11px; font-weight: 800; color: var(--terracotta); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+    .stat-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 7px 0; border-top: 1px solid #f0ede9; font-size: 13px; align-items: center; }
+    .stat-row:first-of-type { border-top: 0; }
+    .stat-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .stat-row-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .stat-row-count { font-weight: 800; color: var(--rust-dark); }
+
+    .empty { text-align: center; color: var(--text-muted); padding: 32px 16px; font-size: 14px; }
+    .loading { text-align: center; color: var(--text-muted); padding: 32px 16px; font-size: 13px; }
+
+    .section-create { display: none; }
+    .section-create.show { display: block; }
+
+    .count-label { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+    @media (min-width: 760px) {
+      .body { max-width: 980px; margin: 0 auto; }
+      .stats-cols { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 430px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-head { align-items: stretch; flex-direction: column; }
+      .stats-month { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="header-back">← Trang chủ</a>
+  <div class="header-title">📝 Phản Hồi Nha Khoa</div>
+  <button class="header-btn" id="btn-toggle-create" onclick="toggleCreate()">+ Tạo mới</button>
+</div>
+
+<div class="body">
+
+  <!-- Create form for users with feedback.submit permission -->
+  <div id="section-create" class="section-create">
+    <div class="card">
+      <div class="card-title">Tạo phản hồi mới</div>
+
+      <div class="field">
+        <label>Nha Khoa <span style="color:var(--red)">*</span></label>
+        <div class="clinic-wrap">
+          <input type="text" id="c-clinic" placeholder="Gõ để tìm nha khoa..." autocomplete="off"
+            oninput="sugCreate(this.value)" onfocus="sugCreate(this.value)">
+          <div class="suggestions" id="c-clinic-sug"></div>
+        </div>
+        <input type="hidden" id="c-clinic-val">
+      </div>
+
+      <div class="field">
+        <label>Mã đơn hàng <span style="color:var(--text-muted);font-weight:400">(không bắt buộc)</span></label>
+        <input type="text" id="c-madh" placeholder="Ví dụ: DH001234" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>Loại phản hồi <span style="color:var(--red)">*</span></label>
+        <select id="c-type" onchange="syncSeverityWithType()">
+          <option value="">-- Chọn loại --</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Nội dung <span style="color:var(--red)">*</span></label>
+        <textarea id="c-desc" placeholder="Mô tả chi tiết ý kiến / yêu cầu của nha khoa..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Mức độ / hướng xử lý</label>
+        <select id="c-sev">
+          <option value="low">Tốt / ghi nhận tích cực</option>
+          <option value="medium" selected>Cần theo dõi / xử lý thường</option>
+          <option value="high">Tệ / cần xử lý gấp</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline btn-sm" onclick="toggleCreate()">Huỷ</button>
+        <button class="btn btn-sm" id="btn-submit" onclick="submitFeedback()">Lưu phản hồi</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stats-head">
+      <div class="card-title">Thống kê phản hồi theo tháng</div>
+      <select class="stats-month" id="stats-month" onchange="loadFeedbackStats(this.value)"></select>
+    </div>
+    <div id="stats-wrap">
+      <div class="loading">Đang tải thống kê...</div>
+    </div>
+  </div>
+
+  <!-- Filter + List -->
+  <div class="card">
+    <div class="card-title">Xem phản hồi theo nha khoa</div>
+    <div class="filter-row">
+      <div class="field">
+        <div class="clinic-wrap">
+          <input type="text" id="f-clinic" placeholder="Tất cả nha khoa..." autocomplete="off"
+            oninput="sugFilter(this.value)" onfocus="sugFilter(this.value)">
+          <div class="suggestions" id="f-clinic-sug"></div>
+        </div>
+        <input type="hidden" id="f-clinic-val">
+      </div>
+      <button class="btn btn-sm" style="margin-bottom:0" onclick="loadFeedbacks()">Xem</button>
+    </div>
+  </div>
+
+  <div id="fb-wrap">
+    <div class="loading">Đang tải...</div>
+  </div>
+
+</div>
+
+<script>
+  let CLINICS = [];
+  let IS_ADMIN = false;
+  let CAN_CREATE = false;
+
+  async function init() {
+    try {
+      const r = await fetch('/user');
+      if (!r.ok) { location.href = '/login'; return; }
+      const u = await r.json();
+      IS_ADMIN = u.role === 'admin';
+      const perms = u.permissions || [];
+      CAN_CREATE = perms.includes('*') || perms.includes('feedback.submit');
+    } catch { location.href = '/login'; return; }
+
+    if (CAN_CREATE) {
+      document.getElementById('btn-toggle-create').style.display = '';
+      setCreateVisible(true);
+      loadFeedbackTypes();
+    }
+
+    await loadClinics();
+    await loadFeedbackStats();
+    loadFeedbacks();
+  }
+
+  async function loadClinics() {
+    try {
+      const r = await fetch('/api/feedbacks/clinics');
+      const d = await r.json();
+      if (d.ok) CLINICS = d.data;
+    } catch {}
+  }
+
+  async function loadFeedbackTypes() {
+    try {
+      const r = await fetch('/api/feedback/types');
+      const d = await r.json();
+      if (!d.ok) return;
+      const sel = document.getElementById('c-type');
+      sel.innerHTML = '<option value="">-- Chọn loại --</option>';
+      const grouped = {};
+      for (const t of d.data) {
+        (grouped[t.category] = grouped[t.category] || []).push(t);
+      }
+      const groupLabels = {
+        tot: 'Phản hồi tốt',
+        chat_luong: 'Vấn đề chất lượng',
+        tien_do_dich_vu: 'Tiến độ / dịch vụ',
+        thong_tin_phu_kien: 'Thông tin / phụ kiện',
+        khac: 'Khác',
+      };
+      const groupOrder = ['tot', 'chat_luong', 'tien_do_dich_vu', 'thong_tin_phu_kien', 'khac'];
+      for (const cat of groupOrder.filter(key => grouped[key])) {
+        const items = grouped[cat];
+        const og = document.createElement('optgroup');
+        og.label = groupLabels[cat] || cat;
+        for (const it of items) {
+          const opt = document.createElement('option');
+          opt.value = it.id;
+          opt.textContent = it.name;
+          opt.dataset.category = it.category || '';
+          og.appendChild(opt);
+        }
+        sel.appendChild(og);
+      }
+    } catch {}
+  }
+
+  async function loadFeedbacks() {
+    const wrap = document.getElementById('fb-wrap');
+    wrap.innerHTML = '<div class="loading">Đang tải...</div>';
+    const clinic = document.getElementById('f-clinic-val').value.trim();
+    const limit = CAN_CREATE ? 50 : 10;
+    let url = `/api/feedbacks?limit=${limit}`;
+    if (clinic) url += `&nha_khoa=${encodeURIComponent(clinic)}`;
+    try {
+      const r = await fetch(url);
+      const d = await r.json();
+      if (!d.ok) { wrap.innerHTML = '<div class="card"><div class="empty">Lỗi tải dữ liệu</div></div>'; return; }
+      renderFeedbacks(d.data, clinic);
+    } catch {
+      wrap.innerHTML = '<div class="card"><div class="empty">Không thể kết nối máy chủ</div></div>';
+    }
+  }
+
+  const SEV_LABEL = { high: 'Tệ / gấp', medium: 'Cần xử lý', low: 'Tốt' };
+  const CATEGORY_LABEL = {
+    tot: 'Phản hồi tốt',
+    chat_luong: 'Vấn đề chất lượng',
+    tien_do_dich_vu: 'Tiến độ / dịch vụ',
+    thong_tin_phu_kien: 'Thông tin / phụ kiện',
+    khac: 'Khác',
+  };
+  const SEVERITY_LABEL = { high: 'Tệ / gấp', medium: 'Cần xử lý', low: 'Tốt' };
+
+  async function loadFeedbackStats(month = '') {
+    const wrap = document.getElementById('stats-wrap');
+    const select = document.getElementById('stats-month');
+    if (!wrap || !select) return;
+    wrap.innerHTML = '<div class="loading">Đang tải thống kê...</div>';
+    try {
+      const qs = month ? `?month=${encodeURIComponent(month)}` : '';
+      const r = await fetch('/api/feedbacks/stats' + qs);
+      const d = await r.json();
+      if (!r.ok || !d.ok) {
+        wrap.innerHTML = '<div class="empty">Không tải được thống kê phản hồi</div>';
+        return;
+      }
+      const months = d.months?.length ? d.months : [{ month: d.month, total: d.summary?.total || 0 }];
+      select.innerHTML = months.map(item =>
+        `<option value="${esc(item.month)}" ${item.month === d.month ? 'selected' : ''}>${formatMonth(item.month)} (${item.total})</option>`
+      ).join('');
+      renderFeedbackStats(d);
+    } catch {
+      wrap.innerHTML = '<div class="empty">Không thể kết nối máy chủ</div>';
+    }
+  }
+
+  function renderFeedbackStats(data) {
+    const wrap = document.getElementById('stats-wrap');
+    const s = data.summary || {};
+    wrap.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-n">${s.total || 0}</div><div class="stat-l">Tổng phản hồi</div></div>
+        <div class="stat-box good"><div class="stat-n">${s.good || 0}</div><div class="stat-l">Tốt</div></div>
+        <div class="stat-box bad"><div class="stat-n">${s.bad || 0}</div><div class="stat-l">Cần xử lý</div></div>
+        <div class="stat-box urgent"><div class="stat-n">${s.urgent || 0}</div><div class="stat-l">Tệ / gấp</div></div>
+      </div>
+      <div class="stats-cols">
+        ${renderStatList('Theo nha khoa', data.byClinic, item => item.name)}
+        ${renderStatList('Theo loại phản hồi', data.byType, item => item.name)}
+        ${renderStatList('Theo nhóm', data.byCategory, item => CATEGORY_LABEL[item.name] || item.name)}
+      </div>
+    `;
+  }
+
+  function renderStatList(title, rows, labelFn) {
+    if (!rows?.length) {
+      return `<div class="stat-list"><div class="stat-list-title">${esc(title)}</div><div class="empty" style="padding:18px 8px">Chưa có dữ liệu</div></div>`;
+    }
+    return `<div class="stat-list">
+      <div class="stat-list-title">${esc(title)}</div>
+      ${rows.map(item => `
+        <div class="stat-row">
+          <div>
+            <div class="stat-row-name">${esc(labelFn(item))}</div>
+            <div class="stat-row-meta">Tốt ${item.good || 0} · Cần xử lý ${item.bad || 0}${item.urgent ? ' · Gấp ' + item.urgent : ''}</div>
+          </div>
+          <div class="stat-row-count">${item.total || 0}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  function formatMonth(value) {
+    const m = String(value || '').match(/^(\d{4})-(\d{2})$/);
+    return m ? `${m[2]}/${m[1]}` : (value || 'Tháng hiện tại');
+  }
+
+  function renderFeedbacks(items, clinic) {
+    const wrap = document.getElementById('fb-wrap');
+    const title = clinic
+      ? `Phản hồi của <strong>${esc(clinic)}</strong>`
+      : 'Tất cả phản hồi';
+    const countTxt = items.length
+      ? `<div class="count-label">${title} — ${items.length} bản ghi</div>`
+      : '';
+
+    if (!items.length) {
+      wrap.innerHTML = `<div class="card">${countTxt}<div class="empty">Chưa có phản hồi nào</div></div>`;
+      return;
+    }
+
+    const rows = items.map(fb => {
+      const cls = fb.severity === 'high' ? 'sev-high' : fb.severity === 'low' ? 'sev-low' : '';
+      const dt  = (fb.created_at || '').replace('T', ' ').slice(0, 16);
+      const madh = fb.ma_dh ? `<span class="fb-tag fb-tag-madh">${esc(fb.ma_dh)}</span>` : '';
+      const sev  = `<span class="fb-tag fb-tag-${fb.severity || 'medium'}">${SEV_LABEL[fb.severity] || fb.severity}</span>`;
+      const by   = CAN_CREATE ? `<span class="fb-tag fb-tag-by">bởi ${esc(fb.reported_by || '?')}</span>` : '';
+      const typeLine = fb.type_name
+        ? `<div class="fb-type">${esc(fb.type_name)}${fb.category ? ' · ' + esc(CATEGORY_LABEL[fb.category] || fb.category) : ''}</div>`
+        : '';
+      return `
+        <div class="fb-item ${cls}">
+          <div class="fb-header">
+            <div class="fb-clinic">${esc(fb.nha_khoa || '—')}</div>
+            <div class="fb-date">${dt}</div>
+          </div>
+          ${typeLine}
+          <div class="fb-desc">${esc(fb.description)}</div>
+          <div class="fb-meta">${madh}${sev}${by}</div>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `<div class="card">${countTxt}${rows}</div>`;
+  }
+
+  function setCreateVisible(visible) {
+    const sec = document.getElementById('section-create');
+    const btn = document.getElementById('btn-toggle-create');
+    sec.classList.toggle('show', visible);
+    if (btn) btn.textContent = visible ? 'Ẩn tạo mới' : '+ Tạo mới';
+  }
+
+  function toggleCreate() {
+    const sec = document.getElementById('section-create');
+    const showing = !sec.classList.contains('show');
+    setCreateVisible(showing);
+    if (showing) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function syncSeverityWithType() {
+    const sel = document.getElementById('c-type');
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt) return;
+    if (opt.dataset.category === 'tot') {
+      document.getElementById('c-sev').value = 'low';
+    } else if (opt.value && document.getElementById('c-sev').value === 'low') {
+      document.getElementById('c-sev').value = 'medium';
+    }
+  }
+
+  async function submitFeedback() {
+    const clinic = document.getElementById('c-clinic-val').value.trim();
+    const madh   = document.getElementById('c-madh').value.trim();
+    const typeId = document.getElementById('c-type').value;
+    const desc   = document.getElementById('c-desc').value.trim();
+    const sev    = document.getElementById('c-sev').value;
+
+    if (!clinic) { alert('Vui lòng chọn nha khoa'); return; }
+    if (!typeId) { alert('Vui lòng chọn loại phản hồi'); return; }
+    if (!desc)   { alert('Vui lòng nhập nội dung phản hồi'); return; }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+    try {
+      const r = await fetch('/api/feedbacks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nha_khoa: clinic, ma_dh: madh, feedback_type_id: Number(typeId), description: desc, severity: sev })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        document.getElementById('c-clinic').value = '';
+        document.getElementById('c-clinic-val').value = '';
+        document.getElementById('c-madh').value = '';
+        document.getElementById('c-type').value = '';
+        document.getElementById('c-desc').value = '';
+        document.getElementById('c-sev').value = 'medium';
+        setCreateVisible(true);
+        loadFeedbackStats();
+        loadFeedbacks();
+      } else {
+        alert('Lỗi: ' + (d.error || 'Không xác định'));
+      }
+    } catch { alert('Không thể kết nối máy chủ'); }
+
+    btn.disabled = false; btn.textContent = 'Lưu phản hồi';
+  }
+
+  /* Autocomplete — Create */
+  function sugCreate(q) {
+    renderSug('c-clinic-sug', q, name => {
+      document.getElementById('c-clinic').value = name;
+      document.getElementById('c-clinic-val').value = name;
+      document.getElementById('c-clinic-sug').classList.remove('show');
+    });
+  }
+
+  /* Autocomplete — Filter */
+  function sugFilter(q) {
+    renderSug('f-clinic-sug', q, name => {
+      document.getElementById('f-clinic').value = name;
+      document.getElementById('f-clinic-val').value = name;
+      document.getElementById('f-clinic-sug').classList.remove('show');
+      loadFeedbacks();
+    });
+  }
+
+  function renderSug(elId, q, onSelect) {
+    const sug = document.getElementById(elId);
+    const matches = q
+      ? CLINICS.filter(c => c.toLowerCase().includes(q.toLowerCase())).slice(0, 15)
+      : CLINICS.slice(0, 15);
+    if (!matches.length) { sug.classList.remove('show'); return; }
+    sug.innerHTML = matches.map((c, i) =>
+      `<div class="sug-item" data-index="${i}">${esc(c)}</div>`
+    ).join('');
+    sug.querySelectorAll('.sug-item').forEach(item => {
+      const name = matches[Number(item.dataset.index)];
+      item.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        onSelect(name);
+      });
+    });
+    sug.classList.add('show');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.clinic-wrap'))
+      document.querySelectorAll('.suggestions').forEach(el => el.classList.remove('show'));
+  });
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

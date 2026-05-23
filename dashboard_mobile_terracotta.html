@@ -71,6 +71,27 @@
       flex-shrink: 0;
     }
 
+    .search-scan-btn {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      border-radius: 7px;
+      border: 1px solid var(--terracotta-light);
+      background: rgba(196, 131, 111, 0.08);
+      color: var(--terracotta);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .search-scan-btn:active {
+      opacity: 0.75;
+    }
+
     .search-bar input {
       flex: 1;
       border: none;
@@ -1260,6 +1281,242 @@
     }
 
     /* ── STAGE PROGRESS DOTS ─── */
+    .tooth-chart-section {
+      border: 1px solid var(--border-card);
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+    .tooth-chart-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .tooth-chart-total {
+      color: var(--terracotta);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .tooth-chart {
+      position: relative;
+      background: #f6f0eb;
+      border: 1px solid rgba(196, 131, 111, 0.18);
+      border-radius: 6px;
+      padding: 22px 8px;
+      overflow: hidden;
+    }
+    .tooth-chart::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(84, 64, 55, 0.5);
+      border-radius: 2px;
+      z-index: 4;
+    }
+    .tooth-region {
+      position: absolute;
+      z-index: 5;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(196, 131, 111, 0.14);
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-size: 7px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .tooth-region.tl { top: 6px; left: 6px; }
+    .tooth-region.tr { top: 6px; right: 6px; }
+    .tooth-region.bl { bottom: 6px; left: 6px; }
+    .tooth-region.br { bottom: 6px; right: 6px; }
+    .tooth-row-wrap { position: relative; }
+    .tooth-row {
+      display: grid;
+      grid-template-columns: repeat(16, minmax(0, 1fr));
+      gap: 3px;
+      position: relative;
+      z-index: 3;
+    }
+    .tooth-bite-line {
+      height: 14px;
+      margin: 1px 3px;
+      border-top: 1px dashed rgba(84, 64, 55, 0.24);
+    }
+    .tooth-chip {
+      position: relative;
+      height: 29px;
+      min-width: 0;
+      border: 0;
+      border-radius: 4px;
+      background: #e9ddd5;
+      color: #9b8b82;
+      font-family: var(--mono);
+      font-size: 8px;
+      font-weight: 800;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.05);
+    }
+    .tooth-unit-count {
+      position: absolute;
+      right: -3px;
+      bottom: -4px;
+      min-width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.92);
+      background: #b65748;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 12px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.22);
+    }
+    .tooth-chip.upper { border-radius: 4px 4px 7px 7px; }
+    .tooth-chip.lower { border-radius: 7px 7px 4px 4px; }
+    .tooth-chip.active {
+      color: #fff;
+      transform: scale(1.04);
+      box-shadow: 0 3px 8px rgba(84, 64, 55, 0.18), inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+    .tooth-chip.zirc { background: linear-gradient(160deg, #4979b9, #255f9f); }
+    .tooth-chip.kl { background: linear-gradient(160deg, #997d68, #6e5748); }
+    .tooth-chip.vnr { background: linear-gradient(160deg, #d78672, #b65748); }
+    .tooth-chip.hon { background: linear-gradient(160deg, #7f8c6b, #52664f); }
+    .tooth-chip.inmau { background: linear-gradient(160deg, #4f9a8b, #2e746a); }
+    .tooth-chip.tam { background: linear-gradient(160deg, #b88d4f, #8c6634); }
+    .tooth-chip.multi { background: linear-gradient(135deg, #4979b9, #b65748 52%, #6e5748); }
+    .tooth-chip.full {
+      outline: 2px solid rgba(196, 131, 111, 0.3);
+      outline-offset: -2px;
+    }
+    .tooth-bridge-layer {
+      position: absolute;
+      inset: -4px 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .tooth-bridge-frame {
+      position: absolute;
+      border: 2px solid var(--terracotta);
+      pointer-events: none;
+    }
+    .tooth-bridge-frame.upper {
+      top: 0;
+      height: 16px;
+      border-bottom: none;
+      border-radius: 9px 9px 0 0;
+    }
+    .tooth-bridge-frame.lower {
+      bottom: 0;
+      height: 16px;
+      border-top: none;
+      border-radius: 0 0 9px 9px;
+    }
+    .tooth-bridge-bar {
+      position: absolute;
+      height: 7px;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #6f4f43, #4c372f);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    .tooth-bridge-bar.upper { top: 5px; }
+    .tooth-bridge-bar.lower { bottom: 5px; }
+    .tooth-unit-delta {
+      position: absolute;
+      top: -10px;
+      right: -2px;
+      z-index: 6;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 999px;
+      padding: 1px 5px;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 1.35;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.18);
+    }
+    .tooth-unit-delta.extra { background: #b65748; }
+    .tooth-unit-delta.missing { background: #4f7a5f; }
+    .tooth-legend,
+    .tooth-products {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tooth-legend-item,
+    .tooth-product-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(196, 131, 111, 0.18);
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 4px;
+      padding: 4px 6px;
+      color: var(--text-primary);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .tooth-swatch {
+      width: 10px;
+      height: 10px;
+      flex: 0 0 10px;
+      border-radius: 3px;
+    }
+    .tooth-product-pill {
+      max-width: 100%;
+      align-items: flex-start;
+      font-weight: 600;
+    }
+    .tooth-product-pill b {
+      color: var(--terracotta);
+      font-weight: 800;
+    }
+    .tooth-note-pill {
+      border-radius: 999px;
+      padding: 1px 5px;
+      background: rgba(84, 64, 55, 0.1);
+      color: var(--text-primary);
+      font-size: 9px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tooth-delta-pill {
+      border-radius: 999px;
+      padding: 1px 5px;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tooth-delta-pill.extra { background: #b65748; }
+    .tooth-delta-pill.missing { background: #4f7a5f; }
+    .tooth-original-text {
+      margin-top: 8px;
+      color: var(--terracotta);
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
     .stage-pips {
       display: flex;
       gap: 4px;
@@ -1399,6 +1656,7 @@
   <!-- Search Bar -->
   <div class="search-bar">
     <span class="search-icon">🔍</span>
+    <button class="search-scan-btn" type="button" onclick="openLookupScanner()" title="Quét barcode để mở đơn">▣</button>
     <input id="searchInput" type="search" placeholder="Tìm mã đơn, bệnh nhân, nha khoa..." autocomplete="off">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
     <div class="action-menu" id="actionMenu">
@@ -1628,6 +1886,26 @@
     function orderHasInMauHam(o) {
       return hasInMauHamText(o?.phuc_hinh) || hasInMauHamText(o?.ghi_chu_sx);
     }
+    // Đếm số hàm (trên/dưới) có răng phục hình → SL in mẫu cho ca lấy từ ghi chú.
+    function inMauJawInfo(ph) {
+      let upper = false, lower = false;
+      const text = String(ph || '');
+      const codes = text.match(/\b(\d{2})\b/g) || [];
+      for (const code of codes) {
+        const pos = toothPos(code);
+        if (!pos) continue;
+        if (pos.row === 'upper') upper = true;
+        else if (pos.row === 'lower') lower = true;
+      }
+      if (/HTren/i.test(text)) upper = true;
+      if (/HDuoi/i.test(text)) lower = true;
+      const count = (upper ? 1 : 0) + (lower ? 1 : 0);
+      let label = 'In mẫu hàm';
+      if (upper && lower) label = 'In mẫu 2 hàm';
+      else if (upper) label = 'In mẫu hàm trên';
+      else if (lower) label = 'In mẫu hàm dưới';
+      return { count, label };
+    }
     function partType(part) {
       const p = (part || '').toLowerCase();
       const n = normalizePhText(part);
@@ -1675,7 +1953,9 @@
     function filterQty(o, filter) {
       if (filter === 'all') return Number(o.sl) || 0;
       const qty = phBreakdown(o.phuc_hinh, o.sl)[filter] || 0;
-      if (filter === 'inmau' && !qty && orderHasInMauHam(o)) return Number(o.sl) || 0;
+      if (filter === 'inmau' && !qty && orderHasInMauHam(o)) {
+        return inMauJawInfo(o.phuc_hinh).count;
+      }
       return qty;
     }
     function filterLabel(filter) {
@@ -1696,6 +1976,361 @@
         total: Number(o.sl) || 0,
       };
     }
+
+    const TOOTH_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+    const TOOTH_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+    const TOOTH_ROWS = { upper: TOOTH_UPPER, lower: TOOTH_LOWER };
+    const TOOTH_INDEX = new Map();
+    TOOTH_UPPER.forEach((tooth, index) => TOOTH_INDEX.set(String(tooth), { row: 'upper', index }));
+    TOOTH_LOWER.forEach((tooth, index) => TOOTH_INDEX.set(String(tooth), { row: 'lower', index }));
+
+    function toothPos(tooth) {
+      return TOOTH_INDEX.get(String(tooth)) || null;
+    }
+
+    function expandFdiRange(from, to) {
+      const a = toothPos(from);
+      const b = toothPos(to);
+      if (!a || !b || a.row !== b.row) {
+        return [from, to].map(String).filter(t => toothPos(t));
+      }
+      const row = TOOTH_ROWS[a.row];
+      const start = Math.min(a.index, b.index);
+      const end = Math.max(a.index, b.index);
+      return row.slice(start, end + 1).map(String);
+    }
+
+    function parseToothGroups(rawValue) {
+      const raw = cleanDisplayText(rawValue);
+      if (!raw) return [];
+      const groups = [];
+      const normalized = normalizePhText(raw);
+      if (/\bhtren\b/.test(normalized) || normalized.includes('ham tren')) {
+        groups.push({ type: 'full', row: 'upper', teeth: TOOTH_UPPER.map(String), raw: 'HTren' });
+      }
+      if (/\bhduoi\b/.test(normalized) || normalized.includes('ham duoi')) {
+        groups.push({ type: 'full', row: 'lower', teeth: TOOTH_LOWER.map(String), raw: 'HDuoi' });
+      }
+
+      const compact = raw
+        .replace(/[，、]/g, ',')
+        .replace(/[.;．。]/g, ',')
+        .replace(/\s+/g, '');
+      compact.split(',').forEach(token => {
+        if (!token) return;
+        const bridge = token.match(/^(\d{2})-(\d{2})$/);
+        if (bridge) {
+          const teeth = expandFdiRange(bridge[1], bridge[2]);
+          if (teeth.length) groups.push({ type: 'bridge', teeth, raw: `${bridge[1]}-${bridge[2]}` });
+          return;
+        }
+        const single = token.match(/^(\d{2})$/);
+        if (single && toothPos(single[1])) {
+          groups.push({ type: 'single', teeth: [single[1]], raw: single[1] });
+        }
+      });
+      return groups;
+    }
+
+    function extractRangFromPart(part) {
+      const match = String(part || '').match(/R\s*:\s*([^)]*?)(?:,\s*-\s*SL\s*:|\s*-\s*SL\s*:|\))/i);
+      return match ? match[1].replace(/,+\s*$/g, '').trim() : '';
+    }
+
+    function stripRangBlock(part) {
+      return cleanDisplayText(part).replace(/\s*\([^)]*R\s*:[^)]*\)\s*/i, '').trim();
+    }
+
+    function toothProductType(productName) {
+      return partType(productName || '');
+    }
+
+    function getToothChartProducts(order) {
+      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      const sxProducts = Array.isArray(info.products) ? info.products : [];
+      const adjustments = parseProductionToothAdjustments(getProductionToothNote(order));
+      const phProducts = splitPhParts(order?.phuc_hinh).map((part, index) => {
+        const rang = extractRangFromPart(part);
+        const name = stripRangBlock(part) || cleanDisplayText(part);
+        const sxMatch = sxProducts.find(item => (
+          normalizePhText(item?.san_pham || '') &&
+          normalizePhText(name).includes(normalizePhText(item?.san_pham || ''))
+        ));
+        return {
+          id: `ph-${index}`,
+          name,
+          rang,
+          qty: partQty(part),
+          shade: cleanDisplayText(sxMatch?.mau_rang || ''),
+          type: toothProductType(part),
+          groups: parseToothGroups(rang),
+        };
+      }).map(product => applyProductionToothAdjustments(product, adjustments)).filter(product => product.groups.length && product.type !== 'inmau');
+
+      if (phProducts.length) return phProducts;
+
+      const products = sxProducts.map((item, index) => {
+        const name = cleanDisplayText(item?.san_pham || item?.product || '');
+        const rang = cleanDisplayText(item?.rang || '');
+        const groups = parseToothGroups(rang);
+        return {
+          id: `sx-${index}`,
+          name: name || `Phục hình ${index + 1}`,
+          rang,
+          qty: Number(item?.so_luong || item?.sl) || 0,
+          shade: cleanDisplayText(item?.mau_rang || ''),
+          type: toothProductType(name),
+          groups,
+        };
+      }).map(product => applyProductionToothAdjustments(product, adjustments)).filter(product => product.groups.length && product.type !== 'inmau');
+
+      if (products.length) return products;
+
+      return [];
+    }
+
+    function annotateToothProducts(products) {
+      return (products || []).map(product => {
+        const fdiCount = product.groups.reduce((sum, group) => sum + group.teeth.length, 0);
+        const duplicateExtra = Object.values(product.toothUnits || {})
+          .reduce((sum, count) => sum + Math.max(0, Number(count) - 1), 0);
+        const representedCount = fdiCount + duplicateExtra;
+        const qty = Number(product.qty) || 0;
+        const unitCount = qty || representedCount;
+        const unitDelta = qty ? qty - representedCount : 0;
+        return { ...product, fdiCount, unitCount, unitDelta };
+      });
+    }
+
+    function toothDeltaLabel(delta) {
+      if (!delta) return '';
+      return delta > 0 ? `dư +${delta}` : `thiếu ${Math.abs(delta)}`;
+    }
+
+    function toothUnitModeLabel(product) {
+      const mode = product.groups.some(group => group.type === 'bridge')
+        ? 'cầu'
+        : (product.groups.some(group => group.type === 'full') ? 'toàn hàm' : 'rời');
+      return `${mode} ${product.unitCount || product.fdiCount || 0} răng`;
+    }
+
+    function getProductionToothNote(order) {
+      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      const instructionText = listFromKeylab(info.instructions)
+        .map(item => [item?.label || '', item?.value || ''].filter(Boolean).join(': '))
+        .join('\n');
+      return [order?.ghi_chu_sx || '', instructionText].filter(Boolean).join('\n');
+    }
+
+    function parseProductionToothAdjustments(text) {
+      const normalized = normalizePhText(cleanDisplayText(text));
+      const excluded = new Set();
+      const repeats = new Map();
+      let m;
+      const excludeRe = /(?:khong|ko)\s+lam\s+r?\s*(\d{2})/g;
+      while ((m = excludeRe.exec(normalized))) {
+        if (toothPos(m[1])) excluded.add(m[1]);
+      }
+      const removeRe = /(?:bo|tru)\s+r?\s*(\d{2})/g;
+      while ((m = removeRe.exec(normalized))) {
+        if (toothPos(m[1])) excluded.add(m[1]);
+      }
+      const repeatA = /\b([2-9])\s*(?:r|rang)\s*r?\s*(\d{2})\b/g;
+      while ((m = repeatA.exec(normalized))) {
+        const count = Number(m[1]) || 0;
+        if (count > 1 && toothPos(m[2])) repeats.set(m[2], Math.max(repeats.get(m[2]) || 1, count));
+      }
+      const repeatB = /\br\s*(\d{2})\s*(?:co|la)?\s*([2-9])\s*(?:r|rang)\b/g;
+      while ((m = repeatB.exec(normalized))) {
+        const count = Number(m[2]) || 0;
+        if (count > 1 && toothPos(m[1])) repeats.set(m[1], Math.max(repeats.get(m[1]) || 1, count));
+      }
+      return { excluded, repeats };
+    }
+
+    // Layer A: nếu ghi chú sản xuất khai báo cầu kiểu "Cầu (XX-YY)" thì ưu tiên
+    // cấu trúc lâm sàng đó cho bracket, bỏ qua pair-segments encoding của KeyLab.
+    function parseClinicalBridges(order) {
+      const note = getProductionToothNote(order);
+      if (!note) return [];
+      const norm = normalizePhText(cleanDisplayText(note));
+      if (!/\bcau\b/.test(norm)) return [];
+      const bridges = [];
+      const rx = /\((\d{2})\s*-\s*(\d{2})\)/g;
+      let m;
+      while ((m = rx.exec(norm))) {
+        const teeth = expandFdiRange(m[1], m[2]).map(String);
+        if (teeth.length >= 2 && teeth.every(t => toothPos(t))) {
+          bridges.push({ from: m[1], to: m[2], teeth });
+        }
+      }
+      return bridges;
+    }
+
+    function applyProductionToothAdjustments(product, adjustments) {
+      if (!adjustments) return product;
+      const originalTeeth = new Set(product.groups.flatMap(group => group.teeth));
+      const excludedTeeth = [...adjustments.excluded].filter(tooth => originalTeeth.has(tooth));
+      const productRepeats = new Map();
+      adjustments.repeats.forEach((count, tooth) => {
+        if (originalTeeth.has(tooth)) productRepeats.set(tooth, count);
+      });
+
+      // Chỉ áp dụng exclude/repeat khi tổng đầu ra khớp đúng SL khai báo.
+      // Lệch → khả năng cao là false positive (shade code "4R15", "trừ" nghĩa
+      // "except", mô tả range "2R 35-36"…) → bỏ toàn bộ adjustment cho product này.
+      const qty = Number(product.qty) || 0;
+      if (qty > 0 && (excludedTeeth.length || productRepeats.size)) {
+        const extraUnits = Array.from(productRepeats.values())
+          .reduce((sum, c) => sum + Math.max(0, Number(c) - 1), 0);
+        const proposedTotal = (originalTeeth.size - excludedTeeth.length) + extraUnits;
+        if (proposedTotal !== qty) return product;
+      }
+
+      const groups = product.groups
+        .map(group => ({
+          ...group,
+          teeth: group.teeth.filter(tooth => !adjustments.excluded.has(tooth)),
+        }))
+        .filter(group => group.teeth.length);
+      const toothUnits = {};
+      groups.forEach(group => {
+        group.teeth.forEach(tooth => {
+          toothUnits[tooth] = Math.max(toothUnits[tooth] || 1, adjustments.repeats.get(tooth) || 1);
+        });
+      });
+      return {
+        ...product,
+        groups,
+        toothUnits,
+        excludedTeeth,
+      };
+    }
+
+    function toothTypeStyle(type) {
+      return {
+        zirc: 'linear-gradient(160deg, #4979b9, #255f9f)',
+        kl: 'linear-gradient(160deg, #997d68, #6e5748)',
+        vnr: 'linear-gradient(160deg, #d78672, #b65748)',
+        hon: 'linear-gradient(160deg, #7f8c6b, #52664f)',
+        inmau: 'linear-gradient(160deg, #4f9a8b, #2e746a)',
+        tam: 'linear-gradient(160deg, #b88d4f, #8c6634)',
+        multi: 'linear-gradient(135deg, #4979b9, #b65748 52%, #6e5748)',
+      }[type] || 'linear-gradient(160deg, #997d68, #6e5748)';
+    }
+
+    function renderBridgeFrames(rowKey, bridgeGroups) {
+      return bridgeGroups.map(item => {
+        const positions = item.group.teeth.map(toothPos).filter(pos => pos && pos.row === rowKey).sort((a, b) => a.index - b.index);
+        if (!positions.length) return '';
+        const firstBridge = item.product.groups.find(group => group.type === 'bridge');
+        const start = positions[0].index;
+        const end = positions[positions.length - 1].index;
+        const span = end - start + 1;
+        const left = `calc(${(start / 16) * 100}% - 3px)`;
+        const width = `calc(${(span / 16) * 100}% + 6px)`;
+        const barLeft = `calc(${(start / 16) * 100}% + 4px)`;
+        const barWidth = `calc(${(span / 16) * 100}% - 8px)`;
+        const delta = firstBridge === item.group ? item.product.unitDelta : 0;
+        const deltaHtml = delta ? `<div class="tooth-unit-delta ${delta > 0 ? 'extra' : 'missing'}">${htmlSafe(toothDeltaLabel(delta))}</div>` : '';
+        return `
+          <div class="tooth-bridge-frame ${rowKey}" style="left:${left};width:${width};"></div>
+          <div class="tooth-bridge-bar ${rowKey}" style="left:${barLeft};width:${barWidth};" title="${htmlSafe(item.product.name)}">${deltaHtml}</div>
+        `;
+      }).join('');
+    }
+
+    function renderToothRow(rowKey, toothMap, bridgeGroups) {
+      const row = TOOTH_ROWS[rowKey];
+      const bridgeHtml = renderBridgeFrames(rowKey, bridgeGroups);
+      const teethHtml = row.map(tooth => {
+        const entries = toothMap.get(String(tooth)) || [];
+        const active = entries.length > 0;
+        const type = entries.length > 1 ? 'multi' : (entries[0]?.product.type || '');
+        const full = entries.some(entry => entry.group.type === 'full') ? ' full' : '';
+        const unitCount = entries.reduce((max, entry) => Math.max(max, Number(entry.product.toothUnits?.[String(tooth)] || 1)), 1);
+        const unitHtml = active && unitCount > 1 ? `<span class="tooth-unit-count">x${unitCount}</span>` : '';
+        const title = active
+          ? entries.map(entry => `${entry.product.name} (${entry.group.raw})`).join(' | ')
+          : '';
+        return `<div class="tooth-chip ${rowKey}${active ? ` active ${type}${full}` : ''}" title="${htmlSafe(title)}"><span>${tooth}</span>${unitHtml}</div>`;
+      }).join('');
+      return `
+        <div class="tooth-row-wrap">
+          <div class="tooth-bridge-layer">${bridgeHtml}</div>
+          <div class="tooth-row">${teethHtml}</div>
+        </div>
+      `;
+    }
+
+    function renderToothChartSection(order) {
+      const products = annotateToothProducts(getToothChartProducts(order));
+      const originalText = cleanDisplayText(order?.phuc_hinh);
+      if (!products.length) {
+        return `<div class="tooth-chart-section">
+          <div class="tooth-chart-title"><span>Phục hình</span></div>
+          <div class="tooth-original-text">${displayHtml(originalText || '—')}</div>
+        </div>`;
+      }
+
+      const toothMap = new Map();
+      const productBridgeGroups = [];
+      const usedTypes = new Set();
+      products.forEach(product => {
+        usedTypes.add(product.type);
+        product.groups.forEach(group => {
+          if (group.type === 'bridge') productBridgeGroups.push({ product, group });
+          group.teeth.forEach(tooth => {
+            if (!toothPos(tooth)) return;
+            if (!toothMap.has(tooth)) toothMap.set(tooth, []);
+            toothMap.get(tooth).push({ product, group });
+          });
+        });
+      });
+
+      // Ghi chú sản xuất là nguồn ưu tiên cho ranh giới cầu lâm sàng;
+      // không có khai báo → fallback về pair-segments của KeyLab.
+      const clinicalBridges = parseClinicalBridges(order);
+      const bridgeGroups = clinicalBridges.length
+        ? clinicalBridges.map(br => {
+            const group = { type: 'bridge', teeth: br.teeth, raw: `${br.from}-${br.to}` };
+            return { product: { name: `Cầu R${br.from}-R${br.to}`, unitDelta: 0, groups: [group] }, group };
+          })
+        : productBridgeGroups;
+
+      if (Array.from(toothMap.values()).some(entries => entries.length > 1)) usedTypes.add('multi');
+      const legendHtml = Array.from(usedTypes).map(type => `
+        <span class="tooth-legend-item">
+          <span class="tooth-swatch" style="background:${toothTypeStyle(type)}"></span>
+          ${type === 'multi' ? 'Nhiều loại' : htmlSafe(filterLabel(type))}
+        </span>
+      `).join('');
+      const productHtml = products.map(product => {
+        const qty = product.qty ? ` · SL: ${product.qty}` : '';
+        const delta = product.unitDelta ? `<span class="tooth-delta-pill ${product.unitDelta > 0 ? 'extra' : 'missing'}">${htmlSafe(toothDeltaLabel(product.unitDelta))}</span>` : '';
+        const excluded = product.excludedTeeth?.length ? `<span class="tooth-note-pill">bỏ ${htmlSafe(product.excludedTeeth.map(t => 'R' + t).join(', '))}</span>` : '';
+        return `<span class="tooth-product-pill"><b>${htmlSafe(product.name)}</b>${qty}${excluded}${delta}</span>`;
+      }).join('');
+
+      return `<div class="tooth-chart-section">
+        <div class="tooth-chart-title">
+          <span>Sơ đồ răng</span>
+          <span class="tooth-chart-total">${Number(order?.sl) || 0} răng</span>
+        </div>
+        <div class="tooth-chart">
+          <span class="tooth-region tl">TRÊN P</span>
+          <span class="tooth-region tr">TRÊN T</span>
+          <span class="tooth-region bl">DƯỚI P</span>
+          <span class="tooth-region br">DƯỚI T</span>
+          ${renderToothRow('upper', toothMap, bridgeGroups)}
+          <div class="tooth-bite-line"></div>
+          ${renderToothRow('lower', toothMap, bridgeGroups)}
+        </div>
+        ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
+        ${productHtml ? `<div class="tooth-products">${productHtml}</div>` : ''}
+      </div>`;
+    }
+
     function phType(ph) {
       const qty = phBreakdown(ph, 0);
       if (qty.hon) return 'hon';
@@ -1731,6 +2366,7 @@
     let myRoom = null;
     let transferReader = null;
     let transferScannerActive = false;
+    let scannerMode = 'transfer';
     let activeDelayReports = new Map();
     let wipSelectedStage = 'all';
     let wipSelectedKtv = null;
@@ -2272,7 +2908,14 @@
       if (!order || !hasProductionInfo(order)) return '';
       const info = normalizeKeylabSxInfo(order.keylab_sx_info);
       const colors = listFromKeylab(info.colors);
-      const attrChips = renderProductionChips(info.attributes);
+      // Khi ghi chú sản xuất nhắc "in mẫu hàm" mà không có phụ kiện in mẫu sẵn → thêm 1 chip.
+      let attributesForChips = listFromKeylab(info.attributes);
+      const alreadyHasInMauPhuKien = attributesForChips.some(a =>
+        a?.label === 'phu_kien' && hasInMauHamText(a?.value || ''));
+      if (!alreadyHasInMauPhuKien && orderHasInMauHam(order)) {
+        attributesForChips = [...attributesForChips, { label: 'phu_kien', value: inMauJawInfo(order.phuc_hinh).label }];
+      }
+      const attrChips = renderProductionChips(attributesForChips);
       const instructionText = listFromKeylab(info.instructions)
         .map(item => [productionLabel(item?.label || ''), productionValue(item?.value || '')].filter(Boolean).join(': '))
         .filter(Boolean)
@@ -3973,17 +4616,119 @@
       }
     }
 
-    async function openTransferScanner() {
-      const target = getTransferTargetRoom();
-      if (!target) return;
+    function findOrderByScanValue(value) {
+      const code = String(value || '').trim();
+      if (!code) return null;
+      const key = code.toLowerCase();
+      return allOrders.find(o =>
+        String(o.ma_dh || '').trim().toLowerCase() === key ||
+        String(o.barcode_labo || '').trim().toLowerCase() === key
+      ) || wipOrderCache.get(code) || null;
+    }
+
+    function normalizeDetailOrder(payload) {
+      const order = payload?.order || {};
+      const stageRows = Array.isArray(payload?.stages) ? payload.stages : [];
+      const byStage = new Map();
+      stageRows.forEach(row => {
+        const index = Number(row.thu_tu || row.thu_tu_cong_doan || 0);
+        const name = row.cong_doan || row.ten_cong_doan || STAGE_NAMES[index - 1] || '';
+        if (!name) return;
+        byStage.set(name, row);
+      });
+      const stagesData = STAGE_NAMES.map(name => {
+        const row = byStage.get(name) || {};
+        const doneRaw = String(row.xac_nhan ?? row.xac_nhan_text ?? row.x ?? '').toLowerCase();
+        const done = row.x === true || row.xac_nhan === 1 || doneRaw.includes('có') || doneRaw.includes('co') || doneRaw.includes('xac');
+        return {
+          n: name,
+          k: row.ten_ktv || row.ktv || row.k || '',
+          x: !!done,
+          t: row.thoi_gian_hoan_thanh || row.tg || row.t || '',
+          sk: false,
+        };
+      });
+      return {
+        ma_dh: order.ma_dh || '',
+        benh_nhan: order.benh_nhan || '',
+        khach_hang: order.khach_hang || '',
+        phuc_hinh: order.phuc_hinh || '',
+        sl: Number(order.sl) || 0,
+        ghi_chu: order.ghi_chu || '',
+        current_stage: getCurrentStageFromStages(stagesData),
+        yc_ht: order.yc_hoan_thanh || '',
+        yc_giao: order.yc_giao || '',
+        nhan: order.nhap_luc || '',
+        loai_lenh: order.loai_lenh || '',
+        ghi_chu_sx: order.ghi_chu_sx || '',
+        keylab_sx_info: normalizeKeylabSxInfo(order.keylab_sx_info),
+        routed_to: order.routed_to || 'sap',
+        barcode_labo: order.barcode_labo || '',
+        active_thu_suon: false,
+        clinic_tags: [],
+        urgent: false,
+        stagesData,
+      };
+    }
+
+    async function fetchOrderDetailForModal(maDh) {
+      if (!maDh) return null;
+      const r = await fetch(`/api/orders/${encodeURIComponent(maDh)}`);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.order) return null;
+      return normalizeDetailOrder(data);
+    }
+
+    async function handleScannedLookup(code) {
+      const scanned = String(code || '').trim();
+      if (!scanned) return;
+      try {
+        let order = findOrderByScanValue(scanned);
+        if (!order) {
+          const r = await fetch(`/api/orders/by-barcode/${encodeURIComponent(scanned)}`);
+          const data = await r.json().catch(() => ({}));
+          if (r.ok && data.ok && data.order) {
+            const maDh = data.order.ma_dh || data.order.ma_dh_goc || scanned;
+            order = allOrders.find(o => o.ma_dh === maDh) || wipOrderCache.get(maDh) || null;
+            if (!order) order = await fetchOrderDetailForModal(maDh);
+          }
+        }
+        if (!order) {
+          const input = document.getElementById('searchInput');
+          if (input) input.value = scanned;
+          filterSearch = scanned;
+          const clear = document.getElementById('searchClear');
+          if (clear) clear.classList.add('visible');
+          renderCards();
+          showToast(`Khong tim thay don ${scanned}`, 'warn');
+          return;
+        }
+        closeActionMenu();
+        showOrderDetail(order);
+      } catch {
+        showToast('Loi ket noi khi tra barcode', 'warn');
+      }
+    }
+
+    async function openLookupScanner() {
+      await openTransferScanner('lookup');
+    }
+
+    async function openTransferScanner(mode = 'transfer') {
+      scannerMode = mode;
+      const target = scannerMode === 'transfer' ? getTransferTargetRoom() : null;
+      if (scannerMode === 'transfer' && !target) return;
       const modal = document.getElementById('transferScannerModal');
       const status = document.getElementById('transferScannerStatus');
       const title = document.getElementById('transferScannerTitle');
       if (!window.ZXing) {
         showToast('Không tải được thư viện quét barcode', 'warn');
+        scannerMode = 'transfer';
         return;
       }
-      if (title) title.textContent = `Quét barcode để chuyển qua ${roomLabel[target]}`;
+      if (title) title.textContent = scannerMode === 'transfer'
+        ? `Quét barcode để chuyển qua ${roomLabel[target]}`
+        : 'Quét barcode để mở chi tiết đơn';
       modal.classList.add('open');
       transferScannerActive = true;
       status.textContent = 'Đang khởi động camera...';
@@ -3997,8 +4742,10 @@
             if (!transferScannerActive) return;
             if (result) {
               const value = result.getText().trim();
+              const mode = scannerMode;
               closeTransferScanner();
-              await handleScannedTransfer(value);
+              if (mode === 'lookup') await handleScannedLookup(value);
+              else await handleScannedTransfer(value);
               return;
             }
             if (err && !(err instanceof ZXing.NotFoundException)) console.warn('ZXing:', err);
@@ -4018,6 +4765,7 @@
       transferScannerActive = false;
       if (transferReader) { try { transferReader.reset(); } catch (_) {} transferReader = null; }
       document.getElementById('transferScannerModal').classList.remove('open');
+      scannerMode = 'transfer';
     }
 
     function handleTransferScannerBackdrop(e) {
@@ -4119,10 +4867,7 @@
             <div style="font-size: 14px; font-weight: 600; color: #5d7d70;">${o.khach_hang || '—'}</div>
           </div>
 
-          <div style="margin-bottom: 14px;">
-            <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Phục hình</div>
-            <div style="font-size: 12px; color: var(--terracotta); font-weight: 600;">${displayHtml(o.phuc_hinh || '—')}</div>
-          </div>
+          ${renderToothChartSection(o)}
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
             <div style="flex: 1;">

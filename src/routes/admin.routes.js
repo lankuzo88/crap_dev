@@ -2,7 +2,7 @@
 const express = require('express');
 const path    = require('path');
 const router  = express.Router();
-const { requirePermission } = require('../middleware/auth');
+const { requirePermission, requireAdmin } = require('../middleware/auth');
 const { USERS, PERMISSIONS, normalizeUserCongDoan, isValidUserCongDoan, normalizePermissions, hashPassword } = require('../repositories/users.repo');
 const { saveUsers } = require('../repositories/users.repo');
 const { BASE_DIR } = require('../config/paths');
@@ -336,7 +336,11 @@ function buildDelayRiskOrders(db) {
     const dueAt = startAt ? chooseValidDueAt(row, startAt) : null;
     if (!startAt || !dueAt) continue;
 
-    const skip = getSkipStages(row.loai_lenh || '', row.ghi_chu || '');
+    const skip = getSkipStages(
+      row.loai_lenh || '',
+      row.ghi_chu || '',
+      `${row.phuc_hinh || ''} ${row.ghi_chu_sx || ''}`
+    );
     const stagesMap = parseStagesRaw(row.stages_raw);
     const stages = STAGE_NAMES.map((name, index) => {
       const s = stagesMap[index + 1] || {};
@@ -352,6 +356,13 @@ function buildDelayRiskOrders(db) {
     const total = activeStages.length;
     const done = activeStages.filter(stage => stage.x).length;
     if (!total || done >= total) continue;
+    const latestDoneIndex = stages.reduce((latest, stage, index) => (
+      !stage.sk && stage.x ? Math.max(latest, index) : latest
+    ), -1);
+    const currentStage = (
+      stages.find((stage, index) => !stage.sk && !stage.x && index > latestDoneIndex)?.n ||
+      'HOAN TAT'
+    );
 
     const doneDates = activeStages
       .filter(stage => stage.x)
@@ -371,7 +382,6 @@ function buildDelayRiskOrders(db) {
     const availableFromAnchorHours = hoursBetween(anchorAt, dueAt);
     const projectedLateHours = hoursBetween(dueAt, expectedFinishAt);
     const remainingModelHours = Math.max(0, hoursBetween(now, expectedFinishAt) || 0);
-    const currentStage = activeStages[done]?.n || activeStages[activeStages.length - 1]?.n || '';
     const elapsedHours = Math.max(0, hoursBetween(startAt, now) || 0);
     const totalAvailableHours = Math.max(0, hoursBetween(startAt, dueAt) || 0);
     const progressPct = Math.round((done / total) * 100);
@@ -737,6 +747,73 @@ router.get('/admin/api/monthly-stats', requirePermission('stats.view_monthly'), 
     log(`Monthly stats error: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// ── Clinic Tags ───────────────────────────────────────
+const clinicTags = require('../repositories/clinicTags.repo');
+
+function canEditClinicTags(req) {
+  const sess = req.session;
+  if (!sess || !sess.user) return false;
+  if (sess.role === 'admin') return true;
+  const { hasPermission } = require('../repositories/users.repo');
+  return hasPermission(sess.user, 'clinic_notes.edit');
+}
+
+// GET /admin/api/clinic-tags — list nha khoa + chips + label suggestions (admin only)
+router.get('/admin/api/clinic-tags', requireAdmin, (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      clinics: clinicTags.listClinicsWithCounts(),
+      labels:  clinicTags.listAllLabels(),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /admin/api/clinic-tags/:khach_hang — chips của 1 nha khoa
+router.get('/admin/api/clinic-tags/:khach_hang', (req, res, next) => {
+  const token = require('../services/session.service').getSessionToken(req);
+  const sess = require('../services/session.service').getSession(token);
+  if (!sess) return res.redirect('/login');
+  req.session = sess;
+  if (!canEditClinicTags(req)) return res.status(403).json({ ok: false, error: 'Permission denied' });
+  try {
+    res.json({ ok: true, tags: clinicTags.listTagsByClinic(req.params.khach_hang) });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /admin/api/clinic-tags — thêm chip
+router.post('/admin/api/clinic-tags', express.json(), (req, res, next) => {
+  const token = require('../services/session.service').getSessionToken(req);
+  const sess = require('../services/session.service').getSession(token);
+  if (!sess) return res.redirect('/login');
+  req.session = sess;
+  if (!canEditClinicTags(req)) return res.status(403).json({ ok: false, error: 'Permission denied' });
+  const { khach_hang, label } = req.body || {};
+  try {
+    const tag = clinicTags.addTag(khach_hang, label, sess.user);
+    log(`➕ clinic_tag added: "${label}" → "${khach_hang}" by ${sess.user}`);
+    res.json({ ok: true, tag });
+  } catch (err) {
+    if (err.code === 'DUPLICATE') return res.status(409).json({ ok: false, error: 'duplicate' });
+    if (err.code === 'INVALID') return res.status(400).json({ ok: false, error: err.message });
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// DELETE /admin/api/clinic-tags/:id — xoá chip (chỉ admin)
+router.delete('/admin/api/clinic-tags/:id', requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ ok: false, error: 'Invalid id' });
+  const deleted = clinicTags.deleteTag(id);
+  if (!deleted) return res.status(404).json({ ok: false, error: 'Tag not found' });
+  log(`🗑 clinic_tag id=${id} deleted by ${req.session.user}`);
+  res.json({ ok: true });
 });
 
 module.exports = router;

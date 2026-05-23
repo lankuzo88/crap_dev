@@ -1,10 +1,52 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c \":*)",
-      "Bash(pip3 install:*)",
-      "Bash(python3 -m pip install python-docx -q)",
-      "Bash(ls -d */)"
+      "Bash(rg *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(node --check *)",
+      "Bash(node -e *)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://127.0.0.1:3000*)",
+      "Bash(curl -s http://localhost:3000*)",
+      "Bash(pm2 status *)",
+      "Bash(pm2 describe *)",
+      "Bash(pm2 logs *)",
+      "Bash(pm2 restart *)",
+      "Bash(pm2 reload *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(Format-List *)",
+      "PowerShell(Format-Table *)"
+    ],
+    "deny": [
+      "Bash(git reset *)",
+      "Bash(git clean *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(rm *)",
+      "Bash(del *)",
+      "Bash(taskkill *)",
+      "Bash(kill *)",
+      "Bash(pkill *)",
+      "Bash(pm2 stop *)",
+      "Bash(pm2 delete *)",
+      "Bash(pm2 scale *)",
+      "Bash(pm2 save *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Move-Item *)",
+      "PowerShell(Stop-Process *)",
+      "PowerShell(Restart-Service *)",
+      "PowerShell(Stop-Service *)",
+      "PowerShell(Start-Service *)"
     ]
   }
 }

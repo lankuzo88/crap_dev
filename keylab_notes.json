@@ -1,355 +1,2166 @@
 {
-    "scraped_at":  "2026-05-18 23:49:32",
+    "scraped_at":  "2026-05-24 04:55:38",
     "source":  "keylab_sql",
     "procedure":  "dbo.tblDonHang_DonHangDaNhan_SelectAllByIDDonHang_SoPhieu",
-    "total":  69,
-    "matched":  69,
+    "total":  55,
+    "matched":  55,
     "errors":  0,
     "orders":  [
                    {
-                       "ma_dh":  "261505035-1",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "251307007-2",
-                       "ghi_chu_sx":  "Bảo hành hoàn tất - A Lân đã xem cùi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "251611006-4",
-                       "ghi_chu_sx":  "Làm lại hoàn tất - của bảo hành (nhận kèm 3R cũ)\r\nThiếu ĐHT mặt trong , đã lấy dấu lại \r\nAnh Lân đã xem",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "260405022-2",
-                       "ghi_chu_sx":  "Chỉnh lại dáng R \r\nAnh Lân đã trao đổi : kéo dài CC thêm 1mm",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "260605026-1",
-                       "ghi_chu_sx":  "Hoàn tất",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261205029-1",
-                       "ghi_chu_sx":  "Làm thêm hoàn tất\r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261505017-1",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã xem",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261605018",
-                       "ghi_chu_sx":  "Hoàn tất\r\nMy đã xem cùi. IN MẪU HÀM",
+                       "ma_dh":  "261605047-2",
+                       "ghi_chu_sx":  "KT xem giấy chỉ định kèm theo. CÓ HÌNH.\r\nA Lân đã xem.\r\nNhận R không có viên đá.\r\n16h chiều nay thứ 7 (23/5) sửa sứ xong --\u003e A Bửu\r\nLàm nền tạm gối sáp HT + HD để ghi tương quan làm hàm tháo lắp.\r\nA Bửu đã trao đổi: thử R Nhật trên dưới. ĐÃ HẸN\r\nGửi kèm 1R sứ, bsi chưa cho màu R tháo lắp, anh trao đổi giúp em nha.",
+                       "sx_info":  {
+                                       "ma_dh":  "261605047-2",
+                                       "colors":  [
+                                                      "Màu ban đầu: 2L2.5 kèm Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          },
+                                                          {
+                                                              "label":  "gui_labo_ngoai",
+                                                              "value":  "Lab Anh Bữu ( Thảo Vy)"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "23,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Sửa",
+                                                            "mau_rang":  "Màu ban đầu: 2L2.5 kèm Hình"
+                                                        },
+                                                        {
+                                                            "san_pham":  "Tháo lắp Răng Newace, Cosmo (Nhật )",
+                                                            "rang":  "HTren,HDuoi,",
+                                                            "so_luong":  "0",
+                                                            "loai_san_pham":  "Làm tiếp",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  2
                    },
                    {
-                       "ma_dh":  "261605025-1",
-                       "ghi_chu_sx":  "Đắp hoàn tất\r\nR11-21 lên khoảng 2 yem. R22 mặt trong mài lên khoảng 2 yem. R23 khểnh nhẹ. Phủ sứ mỏng gọn gọn.\r\nChỉ định TS: R nhỏ gọn, giảm hô. KHÔNG HẸN\r\nA Lân đã xem.",
+                       "ma_dh":  "261705028-1",
+                       "ghi_chu_sx":  "Làm thêm hoàn tất\r\nR14, 15 sống tuỷ\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm. A. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "261705028-1",
+                                       "colors":  [
+                                                      "3M2 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "14-16,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm thêm",
+                                                            "mau_rang":  "3M2 trong"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261605043",
-                       "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hay bán hàm ghi lại nha!",
+                       "ma_dh":  "262005045-1",
+                       "ghi_chu_sx":  "Thêm nhịp , hoàn tất phía gần hàm 4 tiếp xúc phía gần (CÓ HÌNH). Thêm mặt nhai R35. R12 đã gắn\r\nLàm thêm hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262005045-1",
+                                       "colors":  [
+                                                      "HT : 2L2.5 , HD : 2M3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Đã chốt với BS Sơn\r\nDấu phẩy: làm rời. \r\nDấu -: làm dính"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "35-36,45-47,",
+                                                            "so_luong":  "5",
+                                                            "loai_san_pham":  "Sửa",
+                                                            "mau_rang":  "HT : 2L2.5 , HD : 2M3"
+                                                        },
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "26,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm thêm",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  2
                    },
                    {
-                       "ma_dh":  "261705005",
-                       "ghi_chu_sx":  "Hoàn tất",
+                       "ma_dh":  "262205021",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm. A. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262205021",
+                                       "colors":  [
+                                                      "3M3 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "44-46,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M3 trong"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261705006",
-                       "ghi_chu_sx":  "Hoàn tất\r\nHoàn tất\r\nA Lân đã xem cùi : không đục lỗ",
-                       "keylab_rows":  2
-                   },
-                   {
-                       "ma_dh":  "261705009",
-                       "ghi_chu_sx":  "Hoàn tất - Làm rời",
+                       "ma_dh":  "262205022",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn.\r\nA Lân đã xem.",
+                       "sx_info":  {
+                                       "ma_dh":  "262205022",
+                                       "colors":  [
+                                                      "3M2 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "22-24,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2 trong"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261705011",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã xem",
+                       "ma_dh":  "262305039",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã trao đổi: KHÔNG CƯA ĐAI. Lên khớp\r\nĐỂ GIÁ KHỚP",
+                       "sx_info":  {
+                                       "ma_dh":  "262305039",
+                                       "colors":  [
+                                                      "Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính\r\n14-16"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "32-43,",
+                                                            "so_luong":  "5",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261705013",
-                       "ghi_chu_sx":  "Hoàn tất\r\nĐắp sứ giống như R bị tụt nướu\r\nA Lân đã trao đổi : cùi sống, dấu chạy R cối, đã báo BS -\u003e làm bình thường có thể gọt bỏ",
+                       "ma_dh":  "262005004-1",
+                       "ghi_chu_sx":  "Làm thêm hoàn tất\r\nĐổi phục hình từ kim loại sang zirco. Nhận 1R cũ\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262005004-1",
+                                       "colors":  [
+                                                      "Hình mới"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính \r\n15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "11,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm thêm",
+                                                            "mau_rang":  "Hình mới"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261705016",
-                       "ghi_chu_sx":  "Hoàn tất - 20 đv\r\nCầu 36-45 : 10đv , mất R41. Tựa R37\r\nAnh Lân đã trao đổi : Đắp lẹm dễ gắn",
+                       "ma_dh":  "262305003",
+                       "ghi_chu_sx":  "Hoàn tất. Gk của NK \r\nA. Lân đã trao đổi: Răng nam vuông, nướu hồng dễ gắn",
+                       "sx_info":  {
+                                       "ma_dh":  "262305003",
+                                       "colors":  [
+                                                      "3R2.5 che cùi"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Cercon HT",
+                                                            "rang":  "13-23,",
+                                                            "so_luong":  "6",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3R2.5 che cùi"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "262504008-2",
-                       "ghi_chu_sx":  "Đệm sứ CR 11-23 \r\nAnh Lân đã trao đổi : Thêm nhịp chỗ đánh dấu . Ép CC R23",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261205057-1",
-                       "ghi_chu_sx":  "Thử sườn \r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261205076-1",
-                       "ghi_chu_sx":  "Đắp hoàn tất\r\nChị My đã trao đổi : Thêm những chỗ bs đánh dấu. R21 không làm đưa ra theo cung R22 . Làm giảm hô tối đa . R dài hơn 22 xíu thôi . Có mẫu cũ của BN",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261505036-1",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261505036-2",
-                       "ghi_chu_sx":  "Làm thêm thử sườn\r\nA. Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705041",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "262304034-1",
-                       "ghi_chu_sx":  "Hoàn tất\r\nAnh Lân đã trao đổi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "260505069-3",
-                       "ghi_chu_sx":  "Thêm nhịp sát thạch cao.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "260905031-3",
-                       "ghi_chu_sx":  "Nứt sứ mặt trong đường giữa R11-21\r\nR11, 21 lép mặt (N)--\u003e đắp sứ để cong lồi R11, 21 1/2 rìa. Đắp nhịp R12-22\r\nKhớp cắn R24, 25 hở--\u003e thêm sứ. A. Lân đã xem\r\nBsi gửi HÌNH",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261505051-1",
-                       "ghi_chu_sx":  "Làm lại thử sườn. Nhận 7 sườn cũ\r\nDo sườn rất lỏng. Thiếu ĐHT R12, 22 nhiều\r\nChia lại cầu: (12-23) (13-14). A. Lân đã xem",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "240808062-2",
-                       "ghi_chu_sx":  "Bảo hành hoàn tất do bể sứ\r\nLàm thêm hoàn tất\r\nChú ý mài hở khớp. 2 cầu (12-22) và (23-25)\r\nA Lân đã xem cùi.",
-                       "keylab_rows":  2
-                   },
-                   {
-                       "ma_dh":  "261105035-2",
-                       "ghi_chu_sx":  "Sửa lại (bể sứ)\r\nA Lân đã trao đổi: kéo sứ ĐHT các R đánh dấu.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261405027-1",
-                       "ghi_chu_sx":  "Sửa màu (CÓ HÌNH)\r\nA Lân đã xem.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261505032-1",
-                       "ghi_chu_sx":  "Đắp hoàn tất\r\nĐè kín nhịp nhổ. Dáng đẹp gọn.\r\nChỉ định TS: R sống tuỷ làm dễ gắn. Dáng R6+7 làm bằng dàn R5. Làm đối đầu.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705026",
-                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705028",
-                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm. Còn làm HT \r\nAnh Lân đã xem",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705032",
-                       "ghi_chu_sx":  "Hoàn tất - A Lân đã xem cùi \r\nDáng đẹp gọn. Làm dễ gắn. Chú ý : ĐHT",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705033",
-                       "ghi_chu_sx":  "Hoàn tất - A Lân đã xem cùi \r\nLàm dễ gắn. R sống tuỷ. Chú ý : ĐHT. Đè kín nhịp",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805021",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi.",
-                       "keylab_rows":  2
-                   },
-                   {
-                       "ma_dh":  "261805040",
-                       "ghi_chu_sx":  "Hoàn tất\r\nĐè nhịp và tam giác nướu 1.5mm. Dáng R nhỏ gọn, chú ý khớp cắn.\r\nGẤP KHÔNG HẸN",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805042",
-                       "ghi_chu_sx":  "Hoàn tất\r\nĐHT dưới nướu bờ cong. Sườn mỏng tối đa.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805043",
-                       "ghi_chu_sx":  "Hoàn tất",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805044",
-                       "ghi_chu_sx":  "Hoàn tất\r\nĐừng để bị đục sứ nhé",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805010",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: cạo nhịp nhiều, đừng để hở nhịp (Bs phàn nàn), đặt tựa R13.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805012",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: nướu giả vùng hàm II. IN MẪU HÀM.\r\nGẤP KHÔNG HẸN",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805013",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi: IN MẪU HÀM.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805015",
+                       "ma_dh":  "262305010",
                        "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305010",
+                                       "colors":  [
+                                                      "4R1.5"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính. \r\nTháo lắp: Nhật --\u003e Composite Nhật\r\nKhông ghi che cùi -\u003e Không che cùi. \r\n15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "44-47,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "4R1.5"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805006",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "ma_dh":  "262305014",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.\r\nGẤP KHÔNG HẸN",
+                       "sx_info":  {
+                                       "ma_dh":  "262305014",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "22,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805008",
-                       "ghi_chu_sx":  "Hoàn tất. GK của NK\r\nA. Lân đã trao đổi: làm tròn cung, cho hở khớp. Nướu giả",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805011",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi: 2 đv mất R23. R24 KHÔNG LÀM DÁNG R23.\r\nKhông HĐ.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805016",
+                       "ma_dh":  "262305028",
                        "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305028",
+                                       "colors":  [
+                                                      "HT: A2 vita, HD: A3 vita."
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "26-27,37,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "HT: A2 vita, HD: A3 vita."
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805017",
-                       "ghi_chu_sx":  "Hoàn tất\r\nLàm đối xứng R32. Khớp cắn ngược\r\nA. Lân đã xem",
+                       "ma_dh":  "262305029",
+                       "ghi_chu_sx":  "Hoàn tất\r\nLàm 6R, không làm R25.\r\nMặt nhai KL.\r\nA Lân đã xem cùi: IN MẪU HÀM.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305029",
+                                       "colors":  [
+                                                      "Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11-26,",
+                                                            "so_luong":  "6",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "10411028-06",
-                       "ghi_chu_sx":  "Bảo hành hoàn tất\r\nAnh Lân đã xem",
+                       "ma_dh":  "263003006-4",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất\r\nKhông làm nướu giả. Làm ĐHT sứ dưới dày lên.\r\nSửa\r\nThêm sứ mặt nhai R22 23\r\nA Lân đã trao đổi.\r\nBN khó, có sửa nhiều lần.",
+                       "sx_info":  {
+                                       "ma_dh":  "263003006-4",
+                                       "colors":  [
+                                                      "Theo màu HTren kèm Hình, che cùi hết."
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính \r\n15-17"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "13,31-41,32-33,42-43,44-45,",
+                                                            "so_luong":  "9",
+                                                            "loai_san_pham":  "Bảo hành",
+                                                            "mau_rang":  "Theo màu HTren kèm Hình, che cùi hết."
+                                                        },
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "22,23-25,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Sửa",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "260601001-1",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "260601001-1",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "27,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Bảo hành",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261405017-1",
-                       "ghi_chu_sx":  "Đắp lại R31 bị nứt. Có Video. A. Lân đã xem\r\n12H NGÀY 18/05 XONG SỨ --\u003eA. TÀI\r\nGửi kèm 2 ron bi lớn + Gói kỹ 8 sứ\r\nCó video\r\n09H NGÀY 19/05 XONG KHUNG --\u003e A BỬU\r\nThử răng\r\nCó video. Nhận VR 8R\r\nGói kỹ 8 sứ",
-                       "keylab_rows":  3
+                       "ma_dh":  "262005009-1",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem: IN MẪU HÀM.",
+                       "sx_info":  {
+                                       "ma_dh":  "262005009-1",
+                                       "colors":  [
+                                                      "Hình (2 cùi giả Zir HT)"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zolid",
+                                                            "rang":  "21-22,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình (2 cùi giả Zir HT)"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261405020-1",
+                       "ma_dh":  "262005013-1",
+                       "ghi_chu_sx":  "Hoàn tất. Làm rời\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262005013-1",
+                                       "colors":  [
+                                                      "Cổ 4M2; CC 4M1"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11,21,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Cổ 4M2; CC 4M1"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305001",
+                       "ghi_chu_sx":  "Hoàn tất\r\nChốt ngắn sứ KL. Chú ý khớp cắn gia cố sườn, R38 không tạo múi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305001",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "24-25,33-38,",
+                                                            "so_luong":  "8",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305004",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305004",
+                                       "colors":  [
+                                                      "3M2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "phu_kien",
+                                                              "value":  "Cùi giả - R: 14,15,21,22,24, - SL: 5"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "15-26,",
+                                                            "so_luong":  "11",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2"
+                                                        },
+                                                        {
+                                                            "san_pham":  "Cùi giả",
+                                                            "rang":  "14,15,21,22,24,",
+                                                            "so_luong":  "5",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "262305005",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305005",
+                                       "colors":  [
+                                                      "A3 không che cùi"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Veneer sứ Ziconia (Cut Back)",
+                                                            "rang":  "41-44,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3 không che cùi"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305006",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305006",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "16,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305012",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305012",
+                                       "colors":  [
+                                                      "3R2.5 kèm Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "phu_kien",
+                                                              "value":  "Cùi giả - R: 11, - SL: 1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Cùi giả",
+                                                            "rang":  "11,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        },
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3R2.5 kèm Hình"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "262305015",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305015",
+                                       "colors":  [
+                                                      "3M2 kèm hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ mới thường có hình"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "21,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2 kèm hình"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305016",
+                       "ghi_chu_sx":  "A. Lân đã xem\r\nChiều 23/5 , 17h10 bs gọi anh Lân báo đổi PH từ full -\u003e veneer sứ KL",
+                       "sx_info":  {
+                                       "ma_dh":  "262305016",
+                                       "colors":  [
+                                                      "3R2.5"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ mới thường có hình"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Veneer sứ kim loại thường (Cut Back)",
+                                                            "rang":  "25-26,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3R2.5"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305022",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262305022",
+                                       "colors":  [
+                                                      "4M2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Thời gian Bh sứ kim loại : Trước 26/02/2022 : 3 năm ; Từ 26/02/2022: 2 năm\r\nThời gian Bh sứ Zirco : Trước 26/06/2024 : 7 năm ; Từ 26/06/2024: 5 năm\r\nLÀM KHOÁ CHUYỂN cho tất cả các case IMPLANT\r\nCa Implant trên Mẫu thạch cao: a Tâm chỉ xem của BS Tâm trước khi đổ dấu"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "46,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "4M2"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305034",
+                       "ghi_chu_sx":  "Hoàn tất\r\nHoàn tất\r\nLàm cầu (23-28) 5R mất R26, (33-38)\r\nDấu NK đổ. Labo có đổ lại HD\r\nZalo nhóm: đắp lẹm lại\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305034",
+                                       "colors":  [
+                                                      "Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Khung: Vệ sinh sáp trước khi giao\r\nLuôn hỏi hình ca sứ mới. \r\nCùi giả sứ: cùi giả zirco\r\nAttachment: mặc định \"Attachment đơn\""
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Veneer sứ Ziconia (Cut Back)",
+                                                            "rang":  "23-25,33-36,",
+                                                            "so_luong":  "7",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình"
+                                                        },
+                                                        {
+                                                            "san_pham":  "Full Sứ Ziconia",
+                                                            "rang":  "27-28,37-38,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "262305042",
                        "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305042",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "46,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261405021-1",
+                       "ma_dh":  "262305043",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305043",
+                                       "colors":  [
+                                                      "2M2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "3"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "25-28,35-38,",
+                                                            "so_luong":  "8",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "2M2"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261905044-3",
+                       "ghi_chu_sx":  "R11-21 hở tam giác nướu. Cúc tam giác nướu   hở nhẹ. Cho R12 dài thêm 1/2 li\r\nCÓ HÌNH",
+                       "sx_info":  {
+                                       "ma_dh":  "261905044-3",
+                                       "colors":  [
+                                                      "A3 kèm hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính.  \r\nLàm lại cùi giả không ghi lí do: Gắn không được"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11-12,23-25,",
+                                                            "so_luong":  "5",
+                                                            "loai_san_pham":  "Sửa",
+                                                            "mau_rang":  "A3 kèm hình"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262205047-1",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262205047-1",
+                                       "colors":  [
+                                                      "A35"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi gì là làm dính.  \r\nLàm lại cùi giả không ghi lí do: Gắn không được"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "45,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A35"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261205057-2",
+                       "ghi_chu_sx":  "Làm lại thử sườn. Đã hẹn\r\nA. Lân đã trao đổi: làm trên dấu mới. Do bị bể\r\nCó nhận sườn cũ",
+                       "sx_info":  {
+                                       "ma_dh":  "261205057-2",
+                                       "colors":  [
+                                                      "Khoảng 3R1.5 , đắp sứ bs cho hình sau , R48 là cùi KL"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ Không KL: Sơ đồ 12-22 Làm Verneer hết\r\n18-19/// 09-11////11-13"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "45-48,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm lại",
+                                                            "mau_rang":  "Khoảng 3R1.5 , đắp sứ bs cho hình sau , R48 là cùi KL"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261805031-1",
                        "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "261805031-1",
+                                       "colors":  [
+                                                      "(3M2-)"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ Không KL: Sơ đồ 12-22 Làm Verneer hết\r\n18-19/// 09-11////11-13"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "37,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "(3M2-)"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805002",
-                       "ghi_chu_sx":  "Hoàn tất",
+                       "ma_dh":  "262305035",
+                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã trao đổi",
+                       "sx_info":  {
+                                       "ma_dh":  "262305035",
+                                       "colors":  [
+                                                      "3M2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ Không KL: Sơ đồ 12-22 Làm Verneer hết\r\n18-19/// 09-11////11-13"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "12-24,",
+                                                            "so_luong":  "6",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805003",
-                       "ghi_chu_sx":  "Hoàn tất",
+                       "ma_dh":  "262305036",
+                       "ghi_chu_sx":  "Thử sườn. Đã hẹn\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305036",
+                                       "colors":  [
+                                                      "3R1.5"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ Không KL: Sơ đồ 12-22 Làm Verneer hết\r\n18-19/// 09-11////11-13"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "44-47,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3R1.5"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805004",
-                       "ghi_chu_sx":  "Hoàn tất",
+                       "ma_dh":  "261805021-4",
+                       "ghi_chu_sx":  "Làm lại hoàn tất - lần 2\r\nMẫu cũ bị hở ĐHT phía trong R23 và trong gần R26. Nhờ lab làm kĩ. Màu răng giống cầu sứ cũ. Form răng giống cầu sứ cũ (sau khi chỉnh). Nhịp cầu hình yên ngựa. Thêm tiếp xúc phía gần R23\r\nAnh Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "261805021-4",
+                                       "colors":  [
+                                                      "Hình (đã gửi ngày 18/5)"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "23-26,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm lại",
+                                                            "mau_rang":  "Hình (đã gửi ngày 18/5)"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805005",
-                       "ghi_chu_sx":  "Hoàn tất\r\nHoàn tất\r\nLàm cầu (25-27). Mài răng đẹp\r\nA. Lân đã xem",
+                       "ma_dh":  "262305041-1",
+                       "ghi_chu_sx":  "Hoàn tất - DDBIO \r\nLàm đối xứng R21, hở kẽ R12",
+                       "sx_info":  {
+                                       "ma_dh":  "262305041-1",
+                                       "colors":  [
+                                                      "Hình c My so , cùi zir"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "phu_kien",
+                                                              "value":  "In Mẫu Toàn Hàm - R: HTren, - SL: 1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Veneer sứ Ziconia (Cut Back)",
+                                                            "rang":  "11,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình c My so , cùi zir"
+                                                        },
+                                                        {
+                                                            "san_pham":  "In Mẫu Toàn Hàm",
+                                                            "rang":  "HTren,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  2
                    },
                    {
-                       "ma_dh":  "261805009",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA. Lân đã xem",
+                       "ma_dh":  "262205036",
+                       "ghi_chu_sx":  "Hoàn tất\r\nChú ý: mài hở khớp.",
+                       "sx_info":  {
+                                       "ma_dh":  "262205036",
+                                       "colors":  [
+                                                      "A2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "18-10\r\n12-14"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "44-45,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A2"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805020",
+                       "ma_dh":  "262305055",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐÃ HẸN",
+                       "sx_info":  {
+                                       "ma_dh":  "262305055",
+                                       "colors":  [
+                                                      "Màu A3 cổ A3.5, bs ghi : che màu cùi KL"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "3"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Từ 13/7/24: Zirco --\u003e Zirco diamond"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "17,26,45,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Màu A3 cổ A3.5, bs ghi : che màu cùi KL"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262205038",
+                       "ghi_chu_sx":  "Hoàn tất\r\nVói R26, 17. KT xem giấy chỉ định kèm theo (2 tờ).\r\nCSM của lab sáng hơn NK -\u003e vàng, xám nhẹ hơn 4R15. Che hết cùi R trừ R16 vì R đã chữa tuỷ và trám composite.\r\nKC sâu, trụ R hơi yếu, R mòn mặt trong. Form R gọn, cụp rìa cắn vào. Nhịp R cửa: nướu giả mỏng, gọn nhẹ. Nhịp R17 và 26: sườn hở khớp nhiều -\u003e đắp sứ dày, hở khớp nhẹ 0.5ly. ĐHT ngoài sâu 1-1.5ly.\r\nA Lân đã xem cùi: IN MẪU HÀM.\r\nBN là nam lớn tuổi.. ĐÃ HẸN.\r\nTrưa 23/5 A Lân đã trao đổi: chia lại cầu. Nâng khớp, gia cố sườn, nướu hồng mỏng nếu có đắp.",
+                       "sx_info":  {
+                                       "ma_dh":  "262205038",
+                                       "colors":  [
+                                                      "Cổ: (4R15+), Thân: 4R15, CSM của lab sáng hơn NK -\u003e vàng, xám nhẹ hơn 4R15. Che hết cùi R trừ R16 vì R đã chữa tuỷ và trám composite."
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Sứ không KL - Răng cửa  che cùi hết, còn răng cối thì bsi ghi chỉ định che thì che, không thì thôi \r\n10-12"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "14-23,15-17,24-26,",
+                                                            "so_luong":  "13",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Cổ: (4R15+), Thân: 4R15, CSM của lab sáng hơn NK -\u003e vàng, xám nhẹ hơn 4R15. Che hết cùi R trừ R16 vì R đã chữa tuỷ và trám composite."
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "01605061-1",
+                       "ghi_chu_sx":  "Bảo hành hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "01605061-1",
+                                       "colors":  [
+                                                      "RM"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "12-14"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Full sứ Cercon  ( Ngưng sx 01/08/24)",
+                                                            "rang":  "26,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Bảo hành",
+                                                            "mau_rang":  "RM"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "261905047-1",
+                       "ghi_chu_sx":  "Đắp hoàn tất\r\nCó Video thử sườn",
+                       "sx_info":  {
+                                       "ma_dh":  "261905047-1",
+                                       "colors":  [
+                                                      "A3.5 kèm hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS TÙNG DẶN A TRỌNG: Tất cả các ca toàn hàm Trên + Dưới không cắn sáp : làm GS cho thử trước xong mới tiến hành làm sườn"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "44-48,",
+                                                            "so_luong":  "5",
+                                                            "loai_san_pham":  "Làm tiếp",
+                                                            "mau_rang":  "A3.5 kèm hình"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262205020",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. R33,35,43,44 sống tuỷ. Chỉnh cợm.\r\nA Lân đã xem cùi.\r\nA Lân đã trao đổi: LDL\r\nSáng 23/5: nhận dấu mới -\u003e A Lân đã xem.",
+                       "sx_info":  {
+                                       "ma_dh":  "262205020",
+                                       "colors":  [
+                                                      "3M2 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "36-45,",
+                                                            "so_luong":  "11",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2 trong"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305030",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm.\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305030",
+                                       "colors":  [
+                                                      "3M1 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "35-36,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M1 trong"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305031",
+                       "ghi_chu_sx":  "Hoàn tất\r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm.\r\nA Lân đã xem cùi.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305031",
+                                       "colors":  [
+                                                      "3M2 trong"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi che cùi-\u003e CHE CÙI. \r\nDáng răng gọn đều đẹp, chú ý ĐHT, khớp cắn. Đắp lẹm"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "27,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "3M2 trong"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305032",
+                       "ghi_chu_sx":  "Hoàn tất. Không hàm đối\r\nMặt nhai mỏng\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305032",
+                                       "colors":  [
+                                                      "A2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "10-14"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "46,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A2"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305033",
+                       "ghi_chu_sx":  "Hoàn tất. Không hàm đối\r\nDág răng ngắn nhỏ gọn, không hô\r\nA. Lân đã xem",
+                       "sx_info":  {
+                                       "ma_dh":  "262305033",
+                                       "colors":  [
+                                                      "2L1.5"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "10-14"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11-21,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "2L1.5"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305047",
+                       "ghi_chu_sx":  "Hoàn tất\r\nR12 RỜI.\r\nChú ý: ép hô R11-21, CC R11-21 không dài hơn R22.",
+                       "sx_info":  {
+                                       "ma_dh":  "262305047",
+                                       "colors":  [
+                                                      "Cổ: A35, Thân: A3."
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "18-10\r\n12-14"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "11-21,12,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Cổ: A35, Thân: A3."
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305054",
                        "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262305054",
+                                       "colors":  [
+                                                      "Hình + video"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS TÙNG DẶN A TRỌNG: Tất cả các ca toàn hàm Trên + Dưới không cắn sáp : làm GS cho thử trước xong mới tiến hành làm sườn"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Chrome - Cobalt",
+                                                            "rang":  "32-42,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Hình + video"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805025",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi: đục lỗ.",
-                       "keylab_rows":  2
-                   },
-                   {
-                       "ma_dh":  "261805039",
-                       "ghi_chu_sx":  "Thử thô",
+                       "ma_dh":  "262205044",
+                       "ghi_chu_sx":  "Hoàn tất\r\nR27 nếu không đủ sứ mặt nhai thì làm KL mặt nhai -\u003e note lại dùm em\r\nAnh Lân đã xem \r\nKT báo mặt nhai KL",
+                       "sx_info":  {
+                                       "ma_dh":  "262205044",
+                                       "colors":  [
+                                                      "C3 kèm hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS Linh: Không ghi che cùi-\u003e Không che cùi"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "23-27,35-37,",
+                                                            "so_luong":  "8",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "C3 kèm hình"
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  1
                    },
                    {
-                       "ma_dh":  "261805046",
-                       "ghi_chu_sx":  "Hoàn tất \r\n4R sứ rời 12,11,21,22 (tạo cảm giác cho R nhỏ lại). Cầu 5R (13-17). R thật, R sống tuỷ. CÓ HÌNH CHỤP KC. \r\nA Lân đã xem cùi",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805026",
-                       "ghi_chu_sx":  "Hoàn tất\r\nR sống tuỷ. R17 mặt nhai KL. Đắp lẹm chỉnh cộm. \r\nCái màu răng của khách nó nâu nâu v á. Làm cái màu na ná cái màu cùi á. Mà đừng sáng quá nha.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805027",
-                       "ghi_chu_sx":  "Hoàn tất\r\nDáng đẹp gọn. Chú ý: ĐHT.",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805037",
-                       "ghi_chu_sx":  "Hoàn tất\r\nGiảm hô tối đa. R thon gọn.\r\nCS1",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261805038",
-                       "ghi_chu_sx":  "Hoàn tất\r\nGiảm hô tối đa. Tròn cung. R thon gọn.\r\nCS1",
-                       "keylab_rows":  1
-                   },
-                   {
-                       "ma_dh":  "261705030",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã xem cùi : IN MẪU HÀM. Làm cùi giả xong -\u003e IN MẪU\r\nLàm sườn xong - đợi VR TL rồi đắp sứ + bổ sung thời gian đi A Bửu sau\r\nThử R\r\nGửi kèm A Bửu 11R sứ + 1 cùi giả R12 (gói kỹ giúp em)",
-                       "keylab_rows":  3
-                   },
-                   {
-                       "ma_dh":  "261705034",
-                       "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hàm hay bán hàm ghi lại giúp em ạ",
-                       "keylab_rows":  2
-                   },
-                   {
-                       "ma_dh":  "261705036",
+                       "ma_dh":  "262305051",
                        "ghi_chu_sx":  "Hoàn tất\r\nIn toàn hàm hay bán hàm note lại dùm em",
+                       "sx_info":  {
+                                       "ma_dh":  "262305051",
+                                       "colors":  [
+                                                      "2M2"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "phu_kien",
+                                                              "value":  "In Mẫu Toàn Hàm - R: HTren,HDuoi, - SL: 2"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Ghi Full không ghi loại sứ =\u003e Full KL"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "25,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "2M2"
+                                                        },
+                                                        {
+                                                            "san_pham":  "In Mẫu Toàn Hàm",
+                                                            "rang":  "HTren,HDuoi,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  2
                    },
                    {
-                       "ma_dh":  "261805019",
-                       "ghi_chu_sx":  "Hoàn tất\r\nA Lân đã trao đổi. ĐÃ HẸN",
+                       "ma_dh":  "260204042-2",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "260204042-2",
+                                       "colors":  [
+                                                      "Giữa A1 và A2 , R zir : che cùi . Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "khay_lay_dau",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "so_khay_lay_dau",
+                                                              "value":  "1"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS TÙNG DẶN A TRỌNG: Tất cả các ca toàn hàm Trên + Dưới không cắn sáp : làm GS cho thử trước xong mới tiến hành làm sườn"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Zircornia",
+                                                            "rang":  "11,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "Giữa A1 và A2 , R zir : che cùi . Hình"
+                                                        },
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "25,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  ""
+                                                        }
+                                                    ]
+                                   },
                        "keylab_rows":  2
+                   },
+                   {
+                       "ma_dh":  "262304033-2",
+                       "ghi_chu_sx":  "Chị My đã qua NK so màu",
+                       "sx_info":  {
+                                       "ma_dh":  "262304033-2",
+                                       "colors":  [
+                                                      "Màu ban đầu : RM kèm Hình"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS TÙNG DẶN A TRỌNG: Tất cả các ca toàn hàm Trên + Dưới không cắn sáp : làm GS cho thử trước xong mới tiến hành làm sườn"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "12-21,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Sửa",
+                                                            "mau_rang":  "Màu ban đầu : RM kèm Hình"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305052",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262305052",
+                                       "colors":  [
+                                                      "A4"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS TÙNG DẶN A TRỌNG: Tất cả các ca toàn hàm Trên + Dưới không cắn sáp : làm GS cho thử trước xong mới tiến hành làm sườn"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "35,",
+                                                            "so_luong":  "1",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A4"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305046",
+                       "ghi_chu_sx":  "Hoàn tất",
+                       "sx_info":  {
+                                       "ma_dh":  "262305046",
+                                       "colors":  [
+                                                      "A3"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "BS Linh: Không ghi che cùi-\u003e Không che cùi"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "32-33,",
+                                                            "so_luong":  "2",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A3"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262205041-1",
+                       "ghi_chu_sx":  "Đắp hoàn tất - anh Lân đã xem\r\nKéo sứ chồm nhẹ ĐHT mặt N hàm dưới \r\nChỉ định lúc TS : Sườn mỏng tối đa",
+                       "sx_info":  {
+                                       "ma_dh":  "262205041-1",
+                                       "colors":  [
+                                                      "HT : 3L2.5 , HD : 3M2.5 (A.Lân báo L 3M2+)"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi loại sứ: sứ kim loại\r\nKhông ghi màu: thử sườn \r\nBS Trang: giấy ghi Màu \u0026 màu: giữa màu này và màu kia"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ kim loại thường",
+                                                            "rang":  "24,35-37,",
+                                                            "so_luong":  "4",
+                                                            "loai_san_pham":  "Làm tiếp",
+                                                            "mau_rang":  "HT : 3L2.5 , HD : 3M2.5 (A.Lân báo L 3M2+)"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
+                   },
+                   {
+                       "ma_dh":  "262305048",
+                       "ghi_chu_sx":  "Hoàn tất\r\nĐHT dưới nướu, bờ cong. Sườn mỏng tối đa",
+                       "sx_info":  {
+                                       "ma_dh":  "262305048",
+                                       "colors":  [
+                                                      "A2 vita"
+                                                  ],
+                                       "attributes":  [
+                                                          {
+                                                              "label":  "sap_can",
+                                                              "value":  "co"
+                                                          },
+                                                          {
+                                                              "label":  "ham_doi",
+                                                              "value":  "co"
+                                                          }
+                                                      ],
+                                       "instructions":  [
+                                                            {
+                                                                "label":  "trao_doi_bac_si",
+                                                                "value":  "Không ghi loại sứ: sứ kim loại\r\nKhông ghi màu: thử sườn \r\nBS Trang: giấy ghi Màu \u0026 màu: giữa màu này và màu kia"
+                                                            }
+                                                        ],
+                                       "products":  [
+                                                        {
+                                                            "san_pham":  "Răng sứ Titanium",
+                                                            "rang":  "16,27,46,",
+                                                            "so_luong":  "3",
+                                                            "loai_san_pham":  "Làm mới",
+                                                            "mau_rang":  "A2 vita"
+                                                        }
+                                                    ]
+                                   },
+                       "keylab_rows":  1
                    }
                ]
 }

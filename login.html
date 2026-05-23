@@ -147,6 +147,34 @@
       color: var(--text-muted);
     }
 
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: -2px 0 18px;
+      color: var(--text-light);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .remember-row input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--terracotta);
+      flex: 0 0 auto;
+    }
+
+    .remember-row label {
+      display: block;
+      margin: 0;
+      color: var(--text-light);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      cursor: pointer;
+    }
+
     /* ── SUBMIT ── */
     .btn-login {
       width: 100%;
@@ -228,6 +256,10 @@
           autocomplete="current-password"
           required
         >
+      </div>
+      <div class="remember-row">
+        <input id="remember" name="remember" type="checkbox" value="1">
+        <label for="remember">Ghi nhớ đăng nhập</label>
       </div>
       <button class="btn-login" type="submit">Đăng nhập</button>
     </form>

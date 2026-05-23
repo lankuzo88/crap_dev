@@ -3,14 +3,15 @@ module.exports = {
     name: 'asia-lab-server',
     script: 'server.js',
     cwd: 'C:\\Users\\Administrator\\Desktop\\crap_dev',
-    instances: 4,
+    instances: 2,
     exec_mode: 'cluster',
     autorestart: true,
     watch: false,
     max_memory_restart: '500M',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3000,
+      TZ: 'Asia/Ho_Chi_Minh'
     },
     error_file: 'logs/pm2-error.log',
     out_file: 'logs/pm2-out.log',
@@ -39,6 +40,7 @@ module.exports = {
     env: {
       PYTHONIOENCODING: 'utf-8',
       PLAYWRIGHT_BROWSERS_PATH: 'C:\\Users\\Administrator\\AppData\\Local\\ms-playwright',
+      TZ: 'Asia/Ho_Chi_Minh'
     }
   }]
 };

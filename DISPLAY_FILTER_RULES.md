@@ -54,7 +54,7 @@ Thứ tự công đoạn chuẩn:
 Quy tắc bỏ qua công đoạn:
 
 - `Sửa`: bỏ `CBM`, `SÁP/Cadcam`, `SƯỜN`; bắt đầu từ `ĐẮP`, rồi `MÀI`.
-- `Làm tiếp`: bỏ `CBM`, `SÁP/Cadcam`; bắt đầu từ `SƯỜN`, rồi `ĐẮP`, `MÀI`.
+- `Làm tiếp`: bỏ `CBM`, `SÁP/Cadcam`, `SƯỜN`; bắt đầu từ `ĐẮP`, rồi `MÀI`.
 - `Làm mới`: đi đủ quy trình chuẩn.
 - `Làm lại`: đi như `Làm mới`.
 - `Bảo hành`: đi như `Làm mới`.

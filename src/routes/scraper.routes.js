@@ -2,15 +2,8 @@
 const express = require('express');
 const path    = require('path');
 const router  = express.Router();
-const { spawn } = require('child_process');
 const { requireAuth, requirePermission } = require('../middleware/auth');
-const {
-  getScrapeJob, getKeylabJob, getScrapeQueue,
-  spawnScraper, findLatestExcel, checkKeylabHealth, spawnKeylabExport, PYTHON,
-} = require('../services/scraper.service');
-const { BASE_DIR, EXCEL_DIR } = require('../config/paths');
-
-const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
+const { getScrapeJob, getKeylabJob, getScrapeQueue } = require('../services/scraper.service');
 
 router.get('/scrape-status', requireAuth, (req, res) => {
   const job = getScrapeJob();
@@ -23,52 +16,32 @@ router.get('/api/auto-scrape/status', requireAuth, (req, res) => {
     enabled: true,
     running: job.running,
     currentFile: job.file,
-    nextRun: '10 phút',
-    mode: '24/7',
+    nextRun: 'progress 10 phut; KeyLab SQL export 60 phut',
+    mode: '24/7 + hourly KeyLab SQL export',
     queue: getScrapeQueue().length,
   });
 });
 
 router.post('/api/auto-scrape/run', requirePermission('admin.upload_excel'), (req, res) => {
-  const job = getScrapeJob();
-  if (job.running) return res.json({ ok: false, error: 'Scraper đang chạy: ' + job.file });
-  const latest = findLatestExcel();
-  if (!latest) return res.json({ ok: false, error: 'Không tìm thấy file Excel' });
-  log(`🔄 Manual auto-scrape: ${latest.name}`);
-  spawnScraper(latest.path);
-  res.json({ ok: true, file: latest.name });
+  res.status(410).json({
+    ok: false,
+    error: 'Manual auto-scrape is disabled. Use Upload Excel or the hourly auto exporter.',
+  });
 });
 
 router.get('/keylab-status', requireAuth, (req, res) => {
   res.json(getKeylabJob());
 });
 
-router.get('/keylab-health', requireAuth, async (req, res) => {
-  try {
-    const result = await checkKeylabHealth();
-    res.json(result);
-  } catch (err) {
-    res.json({ ok: false, message: err.message });
-  }
+router.get('/keylab-health', requireAuth, (req, res) => {
+  res.json({ ok: true, message: 'KeyLab SQL export is managed by the hourly auto exporter.' });
 });
 
-router.post('/keylab-export-now', requirePermission('admin.keylab_export'), async (req, res) => {
-  const job = getKeylabJob();
-  if (job.running) return res.status(409).json({ ok: false, message: 'Đang chạy rồi, vui lòng đợi...' });
-
-  try {
-    const healthCheck = await checkKeylabHealth();
-    if (!healthCheck.ok) {
-      log(`⚠ Pre-flight check failed: ${healthCheck.message}`);
-      return res.status(503).json({ ok: false, message: healthCheck.message });
-    }
-    log(`✓ Pre-flight check passed: ${healthCheck.message}`);
-  } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Không thể kiểm tra KeyLab SQL export' });
-  }
-
-  spawnKeylabExport();
-  res.json({ ok: true, message: 'Đang xuất Excel từ KeyLab SQL...' });
+router.post('/keylab-export-now', requirePermission('admin.keylab_export'), (req, res) => {
+  res.status(410).json({
+    ok: false,
+    message: 'Manual KeyLab refresh is disabled. KeyLab SQL export runs automatically every hour.',
+  });
 });
 
 router.get('/keylab-export-status', requireAuth, (req, res) => {

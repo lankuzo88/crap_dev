@@ -359,12 +359,25 @@ XLSX.writeFile(wb, out, { bookType: 'xlsx' });
     }
 }
 
+function Get-VietnamNow {
+    try {
+        $tz = [TimeZoneInfo]::FindSystemTimeZoneById("SE Asia Standard Time")
+    } catch {
+        try {
+            $tz = [TimeZoneInfo]::FindSystemTimeZoneById("Asia/Ho_Chi_Minh")
+        } catch {
+            return (Get-Date).ToUniversalTime().AddHours(7)
+        }
+    }
+    return [TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $tz)
+}
+
 Load-DotEnv -Path (Join-Path $BaseDir ".env")
 if (-not (Test-Path -LiteralPath $ExcelDir)) {
     New-Item -ItemType Directory -Path $ExcelDir | Out-Null
 }
 if (-not $OutFile) {
-    $name = (Get-Date).ToString("ddMMyyyy_HHmmss") + "_sql.xlsx"
+    $name = (Get-VietnamNow).ToString("ddMMyyyy_HHmmss") + "_sql.xlsx"
     $OutFile = Join-Path $ExcelDir $name
 }
 

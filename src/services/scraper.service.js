@@ -30,11 +30,15 @@ const manualKeyLabExports = new Set();
 
 const KEYLAB_FILE_RE = /^\d{8}_\d+\.(xls|xlsx|xlsm)$/i;
 const KEYLAB_STATE_FILE = pathMod.join(BASE_DIR, 'keylab_state.json');
+const SCRAPE_LOCK_FILE = pathMod.join(BASE_DIR, 'scrape_pipeline.lock');
+const SCRAPE_LOCK_TTL_MS = 45 * 60 * 1000;
 
 // Cache reset callback — injected by orders.repo to break circular dep
 let _resetCache  = () => {};
 let _closeDB     = () => {};
 let _autoClose   = () => {};
+let _currentLock = null;
+let _queueRetryTimer = null;
 
 function setResetCallback(fn)     { _resetCache = fn; }
 function setCloseDBCallback(fn)   { _closeDB = fn; }
@@ -44,6 +48,68 @@ function getScrapeJob()     { return scrapeJob; }
 function getKeylabJob()     { return keylabExportJob; }
 function getScrapeQueue()   { return scrapeQueue; }
 function getWebUploadFiles(){ return webUploadFiles; }
+
+function readScrapeLock() {
+  try {
+    return JSON.parse(fsNode.readFileSync(SCRAPE_LOCK_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function clearStaleScrapeLock() {
+  const lock = readScrapeLock();
+  if (!lock?.startedAt) return false;
+  const age = Date.now() - new Date(lock.startedAt).getTime();
+  if (Number.isFinite(age) && age > SCRAPE_LOCK_TTL_MS) {
+    try {
+      fsNode.unlinkSync(SCRAPE_LOCK_FILE);
+      log(`Removed stale scrape lock: ${lock.owner || 'unknown'} ${lock.file || ''}`);
+      return true;
+    } catch {}
+  }
+  return false;
+}
+
+function acquireScrapeLock(owner, file) {
+  const token = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const payload = {
+    token,
+    owner,
+    file,
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+  };
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      fsNode.writeFileSync(SCRAPE_LOCK_FILE, JSON.stringify(payload, null, 2), { flag: 'wx' });
+      return payload;
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+      if (!clearStaleScrapeLock()) return null;
+    }
+  }
+  return null;
+}
+
+function releaseScrapeLock(lock) {
+  if (!lock) return;
+  const current = readScrapeLock();
+  if (current?.token !== lock.token) return;
+  try { fsNode.unlinkSync(SCRAPE_LOCK_FILE); } catch {}
+}
+
+function scheduleQueueRetry(delayMs = 30000) {
+  if (_queueRetryTimer || scrapeJob.running || scrapeQueue.length === 0) return;
+  _queueRetryTimer = setTimeout(() => {
+    _queueRetryTimer = null;
+    if (!scrapeJob.running && scrapeQueue.length > 0) {
+      const next = scrapeQueue.shift();
+      spawnScraper(next);
+    }
+  }, delayMs);
+}
 
 function findLatestExcel() {
   try {
@@ -60,6 +126,8 @@ function findLatestExcel() {
 function finishScraper(code) {
   scrapeJob.running = false;
   scrapeJob.exitCode = code;
+  releaseScrapeLock(_currentLock);
+  _currentLock = null;
   _resetCache();
   _autoClose();
   _closeDB();
@@ -72,9 +140,29 @@ function finishScraper(code) {
 }
 
 function spawnScraper(filePath) {
+  const filename = pathMod.basename(filePath);
+  const lock = acquireScrapeLock('web-upload', filename);
+  if (!lock) {
+    const active = readScrapeLock();
+    scrapeJob = {
+      running: false,
+      file: filename,
+      log: [`Scrape pipeline busy: ${active?.owner || 'unknown'} ${active?.file || ''}`],
+      exitCode: null,
+      startedAt: new Date().toISOString(),
+      progress: { done: 0, failed: 0, total: 0 },
+    };
+    if (!scrapeQueue.some(f => pathMod.basename(f) === filename)) {
+      scrapeQueue.unshift(filePath);
+    }
+    scheduleQueueRetry();
+    log(`Scrape queued because pipeline lock is busy: ${filename}`);
+    return false;
+  }
+  _currentLock = lock;
   scrapeJob = {
     running: true,
-    file: pathMod.basename(filePath),
+    file: filename,
     log: [],
     exitCode: null,
     startedAt: new Date().toISOString(),
@@ -112,12 +200,15 @@ function spawnScraper(filePath) {
     scrapeJob.running = false;
     scrapeJob.exitCode = -1;
     scrapeJob.log.push(`[spawn error] ${err.message}`);
+    releaseScrapeLock(_currentLock);
+    _currentLock = null;
     log(`❌ Scraper spawn error: ${err.message}`);
   });
   proc.on('close', code => {
     log(`🏁 Scraper done: ${scrapeJob.file}, exit=${code}`);
     finishScraper(code);
   });
+  return true;
 }
 
 function queueOrScrape(filePath) {
@@ -128,7 +219,8 @@ function queueOrScrape(filePath) {
       log(`📋 Xếp hàng: ${filename} (hàng chờ: ${scrapeQueue.length})`);
     }
   } else {
-    spawnScraper(filePath);
+    const started = spawnScraper(filePath);
+    if (!started) scheduleQueueRetry();
   }
 }
 

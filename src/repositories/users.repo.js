@@ -26,10 +26,11 @@ const PERMISSIONS = [
   'admin.keylab_export',
   'analytics.view',
   'munger.view',
+  'feedback.submit',
 ];
 const ROLE_DEFAULT_PERMISSIONS = {
   admin: ['*'],
-  user: ['orders.view_pending', 'error_reports.submit', 'error_reports.view_own', 'delay_reports.view_active'],
+  user: ['orders.view_pending', 'error_reports.submit', 'error_reports.view_own', 'delay_reports.view_active', 'feedback.submit'],
 };
 const USER_CONG_DOAN_LEGACY_MAP = {
   '': '',

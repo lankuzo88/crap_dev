@@ -33,7 +33,9 @@
         "orders.view_pending",
         "error_reports.submit",
         "error_reports.view_own",
-        "delay_reports.view_active"
+        "delay_reports.view_active",
+        "feedback.submit",
+        "delay_reports.submit"
       ]
     },
     {
@@ -48,7 +50,8 @@
         "error_reports.review",
         "delay_reports.view_active",
         "delay_reports.review",
-        "stats.view_daily"
+        "stats.view_daily",
+        "feedback.submit"
       ]
     },
     {
@@ -60,7 +63,8 @@
         "orders.view_pending",
         "error_reports.submit",
         "error_reports.view_own",
-        "delay_reports.view_active"
+        "delay_reports.view_active",
+        "feedback.submit"
       ]
     },
     {
@@ -84,10 +88,10 @@
         "orders.view_pending",
         "delay_reports.submit",
         "delay_reports.view_active",
-        "stats.view_daily",
         "orders.route",
         "error_reports.submit",
-        "error_reports.view_own"
+        "error_reports.view_own",
+        "stats.view_daily"
       ]
     },
     {
@@ -98,7 +102,8 @@
       "permissions": [
         "orders.view_pending",
         "delay_reports.submit",
-        "delay_reports.view_active"
+        "delay_reports.view_active",
+        "feedback.submit"
       ]
     },
     {
@@ -110,7 +115,8 @@
         "orders.view_pending",
         "error_reports.submit",
         "error_reports.view_own",
-        "delay_reports.view_active"
+        "delay_reports.view_active",
+        "feedback.submit"
       ]
     },
     {
@@ -122,7 +128,8 @@
         "orders.view_pending",
         "error_reports.submit",
         "error_reports.view_own",
-        "delay_reports.view_active"
+        "delay_reports.view_active",
+        "delay_reports.submit"
       ]
     },
     {
@@ -134,20 +141,8 @@
         "orders.view_pending",
         "error_reports.submit",
         "error_reports.view_own",
-        "delay_reports.view_active"
-      ]
-    },
-    {
-      "username": "tandat",
-      "passwordHash": "$2b$10$GbRwWQfsTvenKlkVZ6IugejT1nY3QfAiu8DrpZRwMqWyjmhplOdqe",
-      "role": "user",
-      "cong_doan": "sườn",
-      "permissions": [
-        "orders.view_pending",
-        "error_reports.submit",
-        "error_reports.view_own",
         "delay_reports.view_active",
-        "delay_reports.submit"
+        "feedback.submit"
       ]
     },
     {

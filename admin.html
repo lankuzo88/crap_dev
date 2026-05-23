@@ -117,6 +117,16 @@
       width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; font-family: inherit; outline: none;
     }
     .ec-form-grid input:focus, .ec-form-grid select:focus { border-color: #1976d2; }
+    .ft-form-grid { display: grid; grid-template-columns: 1fr 190px 1.5fr auto; gap: 10px; align-items: flex-end; }
+    .ft-form-grid label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 4px; letter-spacing: .4px; }
+    .ft-form-grid input, .ft-form-grid select {
+      width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; font-family: inherit; outline: none;
+    }
+    .ft-form-grid input:focus, .ft-form-grid select:focus { border-color: #1976d2; }
+    .ft-row-grid { display: grid; grid-template-columns: 1.1fr 180px 1.5fr auto; gap: 8px; align-items: center; }
+    .ft-row-grid input, .ft-row-grid select {
+      width: 100%; padding: 7px 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; font-family: inherit;
+    }
 
     .stage-block { margin-bottom: 16px; }
     .stage-label {
@@ -422,11 +432,14 @@
 <div class="tabs-bar">
   <button class="tab-btn active" onclick="switchTab('reports', this)" id="tabReports">📋 Báo lỗi kỹ thuật <span class="badge" id="pendingBadge" style="display:none">0</span></button>
   <button class="tab-btn" onclick="switchTab('errorcodes', this)">🏷️ Mã lỗi</button>
+  <button class="tab-btn" onclick="switchTab('feedbacktypes', this)">📝 Loại phản hồi</button>
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
+  <button class="tab-btn" onclick="switchTab('clinic-notes', this)">🏥 Lưu ý nha khoa</button>
   <button class="tab-btn" onclick="switchTab('delay-risk', this)">🚨 Nguy cơ trễ</button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
   <button class="tab-btn" onclick="switchTab('backup', this)">💾 Sao lưu</button>
   <button class="tab-btn" onclick="location.href='/delay-reports'">⏱ Báo trễ tiến độ <span class="badge" id="delayPendingBadge" style="display:none">0</span></button>
+  <button class="tab-btn" onclick="location.href='/feedback'">📝 Phản Hồi Nha Khoa</button>
 </div>
 
 <!-- Alert (global) -->
@@ -531,6 +544,36 @@
 <!-- ══════════════════════════════════════════
      TAB 3: BÁO CÁO LỖI
 ══════════════════════════════════════════ -->
+<div id="tab-feedbacktypes" class="tab-panel">
+
+  <div class="section">
+    <h2>➕ Thêm loại phản hồi</h2>
+    <form onsubmit="createFeedbackType(event)">
+      <div class="ft-form-grid">
+        <div>
+          <label for="ft_name">Tên loại</label>
+          <input type="text" id="ft_name" placeholder="VD: Khen màu đẹp / đúng shade" required>
+        </div>
+        <div>
+          <label for="ft_category">Nhóm</label>
+          <select id="ft_category" required></select>
+        </div>
+        <div>
+          <label for="ft_description">Mô tả</label>
+          <input type="text" id="ft_description" placeholder="Mô tả ngắn để người nhập hiểu đúng">
+        </div>
+        <button type="submit" class="btn btn-primary">Thêm</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>📝 Danh sách loại phản hồi</h2>
+    <div id="feedbackTypeList"><div class="empty-state">Đang tải...</div></div>
+  </div>
+
+</div><!-- /tab-feedbacktypes -->
+
 <div id="tab-reports" class="tab-panel active">
 
   <!-- Stats -->
@@ -579,6 +622,33 @@
 <!-- ══════════════════════════════════════════
      TAB 4: NGUY CƠ TRỄ
 ══════════════════════════════════════════ -->
+<div id="tab-clinic-notes" class="tab-panel">
+  <div style="display:flex;gap:16px;min-height:300px;">
+    <!-- LEFT: search + list nha khoa -->
+    <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;">
+      <input id="cn-search" type="text" placeholder="Tìm nha khoa..." oninput="filterClinicList()"
+        style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;">
+      <div id="cn-clinic-list" style="flex:1;max-height:calc(100vh - 240px);overflow-y:auto;border:1px solid #ddd;border-radius:6px;background:#fafafa;"></div>
+    </div>
+    <!-- RIGHT: chip pane -->
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+      <div id="cn-pane-header" style="font-size:14px;font-weight:700;color:#333;min-height:22px;">Chọn nha khoa bên trái để bắt đầu</div>
+      <div id="cn-add-row" style="display:none;position:relative;">
+        <input id="cn-new-label" type="text" maxlength="60" autocomplete="off"
+          placeholder="Gõ chip rồi Enter (tối đa 60 ký tự)…"
+          oninput="renderSuggestions()"
+          onfocus="renderSuggestions()"
+          onblur="hideSuggestions()"
+          onkeydown="handleSuggestKey(event)"
+          style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;box-sizing:border-box;">
+        <div id="cn-suggest" style="position:absolute;top:100%;left:0;right:0;margin-top:4px;border:1px solid #ddd;border-radius:6px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:260px;overflow-y:auto;z-index:50;display:none;"></div>
+      </div>
+      <div id="cn-msg" style="font-size:12px;color:#888;min-height:16px;"></div>
+      <div id="cn-tag-list" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;align-content:flex-start;"></div>
+    </div>
+  </div>
+</div><!-- /tab-clinic-notes -->
+
 <div id="tab-delay-risk" class="tab-panel">
 
   <div class="section">
@@ -811,6 +881,8 @@
     ['admin.keylab_export', 'Xuất KeyLab'],
     ['analytics.view', 'Analytics'],
     ['munger.view', 'Munger'],
+    ['feedback.submit', 'Tạo feedback nha khoa'],
+    ['clinic_notes.edit', 'Sửa lưu ý nha khoa'],
   ];
   let userPermissions = {};
 
@@ -822,6 +894,8 @@
     btn.classList.add('active');
     if (name === 'reports' && !reportsLoaded) { reportsLoaded = true; loadReportStats(); loadReportMonthlyStats(); loadReports(); }
     if (name === 'errorcodes') loadErrorCodes();
+    if (name === 'feedbacktypes') loadFeedbackTypesAdmin();
+    if (name === 'clinic-notes') loadClinicNotes();
     if (name === 'delay-risk' && !delayRiskData) loadDelayRiskOrders();
     if (name === 'system') refreshAllStats();
     if (name === 'backup') initBackupTab();
@@ -1079,6 +1153,110 @@
   }
 
   // ── ERROR REPORTS ─────────────────────────────
+  // ── FEEDBACK TYPES ───────────────────────────────
+  const FEEDBACK_CATEGORY_OPTS = [
+    ['tot', 'Phản hồi tốt'],
+    ['chat_luong', 'Vấn đề chất lượng'],
+    ['tien_do_dich_vu', 'Tiến độ / dịch vụ'],
+    ['thong_tin_phu_kien', 'Thông tin / phụ kiện'],
+    ['khac', 'Khác'],
+  ];
+
+  function feedbackCategoryOptions(selected = '') {
+    return FEEDBACK_CATEGORY_OPTS.map(([value, label]) =>
+      `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`
+    ).join('');
+  }
+
+  async function loadFeedbackTypesAdmin() {
+    const categorySelect = document.getElementById('ft_category');
+    if (categorySelect && !categorySelect.children.length) {
+      categorySelect.innerHTML = feedbackCategoryOptions('tot');
+    }
+    const el = document.getElementById('feedbackTypeList');
+    if (!el) return;
+    el.innerHTML = '<div class="empty-state">Đang tải...</div>';
+    try {
+      const r = await fetch('/api/feedback/types');
+      const d = await r.json();
+      if (!d.ok || !d.data.length) {
+        el.innerHTML = '<div class="empty-state">Chưa có loại phản hồi nào. Thêm loại ở phía trên.</div>';
+        return;
+      }
+      let html = `<table class="data-table">
+        <thead><tr><th>Tên loại</th><th>Nhóm</th><th>Mô tả</th><th>Hành động</th></tr></thead><tbody>`;
+      d.data.forEach(item => {
+        html += `<tr>
+          <td colspan="4">
+            <div class="ft-row-grid">
+              <input id="ft-name-${item.id}" value="${esc(item.name || '')}">
+              <select id="ft-cat-${item.id}">${feedbackCategoryOptions(item.category)}</select>
+              <input id="ft-desc-${item.id}" value="${esc(item.description || '')}" placeholder="Mô tả ngắn">
+              <div class="actions">
+                <button class="btn btn-secondary" onclick="updateFeedbackType(${item.id})">Lưu</button>
+                <button class="btn btn-danger" onclick="deleteFeedbackType(${item.id})">Xóa</button>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    } catch(e) {
+      el.innerHTML = '<div class="empty-state" style="color:#c00">Lỗi tải loại phản hồi</div>';
+    }
+  }
+
+  async function createFeedbackType(e) {
+    e.preventDefault();
+    const name = document.getElementById('ft_name').value.trim();
+    const category = document.getElementById('ft_category').value;
+    const description = document.getElementById('ft_description').value.trim();
+    if (!name || !category) { showAlert('Vui lòng nhập tên loại và nhóm', 'error'); return; }
+    try {
+      const res = await fetch('/api/feedback/types', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, category, description }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.ok) { showAlert(d.error || 'Lỗi thêm loại phản hồi', 'error'); return; }
+      showAlert(`✅ Đã thêm loại phản hồi: ${name}`, 'success');
+      e.target.reset();
+      document.getElementById('ft_category').innerHTML = feedbackCategoryOptions('tot');
+      loadFeedbackTypesAdmin();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
+
+  async function updateFeedbackType(id) {
+    const name = document.getElementById(`ft-name-${id}`).value.trim();
+    const category = document.getElementById(`ft-cat-${id}`).value;
+    const description = document.getElementById(`ft-desc-${id}`).value.trim();
+    if (!name || !category) { showAlert('Tên loại và nhóm không được để trống', 'error'); return; }
+    try {
+      const res = await fetch(`/api/feedback/types/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, category, description }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.ok) { showAlert(d.error || 'Lỗi cập nhật loại phản hồi', 'error'); loadFeedbackTypesAdmin(); return; }
+      showAlert('✅ Đã cập nhật loại phản hồi', 'success');
+      loadFeedbackTypesAdmin();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
+
+  async function deleteFeedbackType(id) {
+    if (!confirm('Xóa loại phản hồi này khỏi danh sách đang dùng?')) return;
+    try {
+      const res = await fetch(`/api/feedback/types/${id}`, { method: 'DELETE' });
+      const d = await res.json();
+      if (!res.ok || !d.ok) { showAlert(d.error || 'Lỗi xóa loại phản hồi', 'error'); return; }
+      showAlert('✅ Đã xóa loại phản hồi', 'success');
+      loadFeedbackTypesAdmin();
+    } catch(err) { showAlert('Lỗi: ' + err.message, 'error'); }
+  }
+
   const STAGE_CLASS_MAP = {
     'CBM':'st-CBM','sáp':'st-sap','CAD/CAM':'st-cadcam','sườn':'st-suon','đắp':'st-dap','mài':'st-mai'
   };
@@ -1506,6 +1684,249 @@
     const onTime = Math.round((order.similar_on_time_rate || 0) * 100);
     return `Trễ ${fmtNumber(late)}% · kịp ${fmtNumber(onTime)}% · n=${fmtNumber(order.benchmark?.n || 0)}`;
   }
+
+  // ── Clinic Notes tab ──────────────────────────────────
+  let _cnClinics = [];
+  let _cnSelected = null;
+  let _cnAllLabels = [];    // [{label, count}] toàn hệ thống — cho autocomplete
+  let _cnCurrentTags = [];  // chips của nha khoa đang chọn
+  let _cnSuggestIdx = -1;   // index đang highlight trong suggestion list
+
+  async function loadClinicNotes() {
+    try {
+      const res = await fetch('/admin/api/clinic-tags');
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || 'Lỗi tải danh sách');
+      _cnClinics = d.clinics || [];
+      _cnAllLabels = d.labels || [];
+      renderClinicList();
+    } catch (err) {
+      document.getElementById('cn-clinic-list').innerHTML = `<div style="padding:12px;color:#c00;font-size:13px;">${err.message}</div>`;
+    }
+  }
+
+  function filterClinicList() {
+    const q = (document.getElementById('cn-search')?.value || '').toLowerCase().trim();
+    renderClinicList(q);
+  }
+
+  function renderClinicList(q = '') {
+    const el = document.getElementById('cn-clinic-list');
+    if (!el) return;
+    const filtered = q ? _cnClinics.filter(c => c.khach_hang.toLowerCase().includes(q)) : _cnClinics;
+    if (!filtered.length) { el.innerHTML = '<div style="padding:12px;color:#888;font-size:13px;">Không có nha khoa</div>'; return; }
+    el.innerHTML = filtered.map(c => `
+      <div data-kh="${escAdmin(c.khach_hang)}" onclick="selectClinic(this.dataset.kh)"
+        style="padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer;background:${_cnSelected===c.khach_hang?'#e3f0ff':'transparent'};transition:background .15s;">
+        <div style="font-size:13px;font-weight:600;color:#222;">${escAdmin(c.khach_hang)}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;">${c.order_count} đơn · ${c.tag_count} chip</div>
+      </div>`).join('');
+  }
+
+  async function selectClinic(kh) {
+    _cnSelected = kh;
+    hideSuggestions();
+    renderClinicList(document.getElementById('cn-search')?.value?.toLowerCase() || '');
+    document.getElementById('cn-pane-header').textContent = kh;
+    document.getElementById('cn-add-row').style.display = 'block';
+    document.getElementById('cn-msg').textContent = '';
+    const input = document.getElementById('cn-new-label');
+    if (input) input.value = '';
+    await refreshClinicTags(kh);
+    input?.focus();
+  }
+
+  async function refreshClinicTags(kh) {
+    const el = document.getElementById('cn-tag-list');
+    if (!el) return;
+    try {
+      const res = await fetch(`/admin/api/clinic-tags/${encodeURIComponent(kh)}`);
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || 'Lỗi');
+      _cnCurrentTags = d.tags || [];
+      renderClinicTagList(_cnCurrentTags);
+    } catch (err) {
+      el.innerHTML = `<span style="color:#c00;font-size:12px;">${err.message}</span>`;
+    }
+  }
+
+  // ── Autocomplete suggestions ─────────────────────────
+  function getSuggestions() {
+    const q = (document.getElementById('cn-new-label')?.value || '').trim().toLowerCase();
+    if (!q || !_cnSelected) return [];
+    const used = new Set(_cnCurrentTags.map(t => t.label));
+    return _cnAllLabels
+      .filter(l => l.label.toLowerCase().includes(q) && !used.has(l.label))
+      .slice(0, 8);
+  }
+
+  function renderSuggestions() {
+    const wrap = document.getElementById('cn-suggest');
+    if (!wrap) return;
+    const matches = getSuggestions();
+    if (!matches.length) { hideSuggestions(); return; }
+    if (_cnSuggestIdx >= matches.length) _cnSuggestIdx = -1;
+    wrap.innerHTML = matches.map((l, i) => `
+      <div data-label="${escAdmin(l.label)}"
+        onmousedown="event.preventDefault()"
+        onclick="pickSuggestion(this.dataset.label)"
+        onmouseover="_cnSuggestIdx=${i};paintSuggestHighlight()"
+        style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #eee;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;background:${i===_cnSuggestIdx?'#e3f0ff':'#fff'};">
+        <span style="color:#222;">${escAdmin(l.label)}</span>
+        <span style="color:#999;font-size:11px;flex-shrink:0;">${l.count}×</span>
+      </div>`).join('');
+    wrap.style.display = 'block';
+  }
+
+  function paintSuggestHighlight() {
+    const wrap = document.getElementById('cn-suggest');
+    if (!wrap) return;
+    [...wrap.children].forEach((el, i) => {
+      el.style.background = i === _cnSuggestIdx ? '#e3f0ff' : '#fff';
+    });
+  }
+
+  function pickSuggestion(label) {
+    const input = document.getElementById('cn-new-label');
+    if (input) input.value = label;
+    hideSuggestions();
+    addClinicTag();
+  }
+
+  function hideSuggestions() {
+    _cnSuggestIdx = -1;
+    const wrap = document.getElementById('cn-suggest');
+    if (wrap) { wrap.style.display = 'none'; wrap.innerHTML = ''; }
+  }
+
+  function handleSuggestKey(e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const matches = getSuggestions();
+      if (!matches.length) return;
+      e.preventDefault();
+      if (e.key === 'ArrowDown') {
+        _cnSuggestIdx = _cnSuggestIdx >= matches.length - 1 ? 0 : _cnSuggestIdx + 1;
+      } else {
+        _cnSuggestIdx = _cnSuggestIdx <= 0 ? matches.length - 1 : _cnSuggestIdx - 1;
+      }
+      renderSuggestions();
+    } else if (e.key === 'Escape') {
+      hideSuggestions();
+    } else if (e.key === 'Enter') {
+      const matches = getSuggestions();
+      if (matches.length && _cnSuggestIdx >= 0) {
+        e.preventDefault();
+        pickSuggestion(matches[_cnSuggestIdx].label);
+      } else {
+        addClinicTag();
+      }
+    }
+  }
+
+  function chipHTML(t) {
+    return `<span data-tag-id="${t.id}" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid rgba(196,131,111,.35);background:rgba(196,131,111,.08);border-radius:6px;font-size:13px;font-weight:600;color:#333;">
+      ${escAdmin(t.label)}
+      <button type="button" onclick="deleteClinicTag(${t.id}, this)"
+        style="background:none;border:0;cursor:pointer;color:#c00;font-size:14px;line-height:1;padding:0 2px;"
+        title="Xoá chip">×</button>
+    </span>`;
+  }
+
+  function renderEmptyTagHint() {
+    const el = document.getElementById('cn-tag-list');
+    if (el) el.innerHTML = '<span class="cn-empty" style="color:#aaa;font-size:13px;">Chưa có chip — gõ chip ở ô trên rồi Enter.</span>';
+  }
+
+  function renderClinicTagList(tags) {
+    const el = document.getElementById('cn-tag-list');
+    if (!el) return;
+    if (!tags.length) { renderEmptyTagHint(); return; }
+    el.innerHTML = tags.map(chipHTML).join('');
+  }
+
+  async function addClinicTag() {
+    const input = document.getElementById('cn-new-label');
+    const label = (input?.value || '').trim();
+    const msg = document.getElementById('cn-msg');
+    if (!label) { input?.focus(); return; }
+    if (!_cnSelected) { msg.textContent = 'Chọn nha khoa trước.'; return; }
+    const kh = _cnSelected;
+    // Optimistic: clear input ngay, giữ focus, chèn chip placeholder
+    input.value = '';
+    msg.textContent = '';
+    input.focus();
+    const tagList = document.getElementById('cn-tag-list');
+    if (tagList?.querySelector('.cn-empty')) tagList.innerHTML = '';
+    const tempEl = document.createElement('span');
+    tempEl.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px dashed rgba(196,131,111,.6);background:rgba(196,131,111,.04);border-radius:6px;font-size:13px;font-weight:600;color:#888;opacity:.65;';
+    tempEl.textContent = label + ' …';
+    tagList?.appendChild(tempEl);
+    try {
+      const res = await fetch('/admin/api/clinic-tags', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ khach_hang: kh, label }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        tempEl.remove();
+        if (tagList && !tagList.children.length) renderEmptyTagHint();
+        if (kh === _cnSelected) { input.value = label; input.select(); }
+        msg.textContent = d.error === 'duplicate' ? 'Chip này đã tồn tại.' : (d.error || 'Lỗi thêm chip.');
+        return;
+      }
+      // Success: thay placeholder bằng chip thật (chỉ khi vẫn ở đúng nha khoa)
+      if (kh === _cnSelected && d.tag) {
+        tempEl.outerHTML = chipHTML(d.tag);
+        _cnCurrentTags.push(d.tag);
+      } else {
+        tempEl.remove();
+      }
+      // Cập nhật label cache cho autocomplete
+      const lbl = _cnAllLabels.find(l => l.label === label);
+      if (lbl) lbl.count++;
+      else _cnAllLabels.push({ label, count: 1 });
+      _cnAllLabels.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+      hideSuggestions();
+      const clinic = _cnClinics.find(c => c.khach_hang === kh);
+      if (clinic) clinic.tag_count = (clinic.tag_count || 0) + 1;
+      renderClinicList(document.getElementById('cn-search')?.value?.toLowerCase() || '');
+      if (kh === _cnSelected) input.focus();
+    } catch (err) {
+      tempEl.remove();
+      if (tagList && !tagList.children.length) renderEmptyTagHint();
+      if (kh === _cnSelected) { input.value = label; input.select(); }
+      msg.textContent = `Lỗi: ${err.message}`;
+    }
+  }
+
+  async function deleteClinicTag(id, btn) {
+    if (!confirm('Xoá chip này?')) return;
+    try {
+      const res = await fetch(`/admin/api/clinic-tags/${id}`, { method: 'DELETE' });
+      const d = await res.json();
+      if (!res.ok) { alert(d.error || 'Lỗi xoá'); return; }
+      btn.closest('span').remove();
+      const tag = _cnCurrentTags.find(t => t.id === id);
+      _cnCurrentTags = _cnCurrentTags.filter(t => t.id !== id);
+      if (tag) {
+        const lbl = _cnAllLabels.find(l => l.label === tag.label);
+        if (lbl) {
+          lbl.count--;
+          if (lbl.count <= 0) _cnAllLabels = _cnAllLabels.filter(l => l !== lbl);
+        }
+      }
+      const clinic = _cnClinics.find(c => c.khach_hang === _cnSelected);
+      if (clinic && clinic.tag_count > 0) clinic.tag_count--;
+      renderClinicList(document.getElementById('cn-search')?.value?.toLowerCase() || '');
+      const tagList = document.getElementById('cn-tag-list');
+      if (tagList && !tagList.children.length) renderEmptyTagHint();
+    } catch (err) { alert(`Lỗi: ${err.message}`); }
+  }
+
+  function escAdmin(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+  // ── /Clinic Notes tab ──────────────────────────────────
 
   async function loadDelayRiskOrders() {
     const body = document.getElementById('delayRiskBody');

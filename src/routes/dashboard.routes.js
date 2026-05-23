@@ -56,6 +56,15 @@ router.get('/mobile', requireAuth, (req, res) => {
   else res.redirect('/');
 });
 
+router.get(['/feedback', '/feedback.html'], requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  const feedbackFile = path.join(BASE_DIR, 'feedback.html');
+  if (fs.existsSync(feedbackFile)) res.sendFile(feedbackFile);
+  else res.status(404).send('<h2>Không tìm thấy feedback.html</h2>');
+});
+
 router.get(['/analytics', '/analytics.html'], requirePermission('analytics.view'), (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
