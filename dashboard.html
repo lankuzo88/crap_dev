@@ -1956,6 +1956,87 @@ function parseKeylabSxInfoDesk(raw) {
 }
 const KEYLAB_INSTRUCTION_KEYS = ['chi_dinh', 'noi_dung_khac', 'trao_doi_bac_si'];
 const KEYLAB_INSTRUCTION_LABELS_DESK = { chi_dinh: 'Chỉ định', noi_dung_khac: 'Nội dung khác', trao_doi_bac_si: 'Trao đổi bác sĩ' };
+
+const KEYLAB_PRODUCTION_LABELS_DESK = {
+  sap_can: 'Sáp cắn', gia_khop: 'Giá khớp', khay_lay_dau: 'Khay lấy dấu', so_khay_lay_dau: 'Khay lấy dấu',
+  ham_doi: 'Hàm đối', tren_nuou: 'Trên nướu', ngang_nuou: 'Ngang nướu', duoi_nuou: 'Dưới nướu',
+  bo_vai: 'Bờ vai', khac: 'Khác', phu_kien: 'Phụ kiện', gui_labo_ngoai: 'Gửi labo ngoài',
+  chi_dinh: 'Chỉ định', noi_dung_khac: 'Nội dung khác', trao_doi_bac_si: 'Trao đổi bác sĩ',
+};
+function listFromKeylabDesk(v) { return Array.isArray(v) ? v.filter(Boolean) : []; }
+function productionLabelDesk(l) { return KEYLAB_PRODUCTION_LABELS_DESK[l] || l || ''; }
+function productionValueDesk(v) { return String(v || '').trim().toLowerCase() === 'co' ? 'Có' : v; }
+function renderProductionChipsDesk(items) {
+  const list = listFromKeylabDesk(items);
+  const trayCountItem = list.find(item => item?.label === 'so_khay_lay_dau' && cleanDisplayText(item?.value));
+  const hasTrayFlag = list.some(item => item?.label === 'khay_lay_dau' && cleanDisplayText(item?.value));
+  return list.map(item => {
+    const label = item?.label || '';
+    const value = item?.value || '';
+    if (!value) return '';
+    if (label === 'so_khay_lay_dau' && hasTrayFlag) return '';
+    const shownValue = productionValueDesk(value);
+    const labelText = productionLabelDesk(label);
+    const trayCount = label === 'khay_lay_dau' ? cleanDisplayText(trayCountItem?.value) : '';
+    const text = String(value).trim().toLowerCase() === 'co'
+      ? (trayCount ? `${labelText}: ${trayCount}` : labelText)
+      : `${labelText}: ${shownValue}`;
+    return `<span style="display:inline-block;padding:3px 9px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:11px;color:var(--text);">${displayHtml(text)}</span>`;
+  }).join('');
+}
+function hasInMauHamTextDesk(text) {
+  const n = normalizePhText(text);
+  return n.includes('in mau ham') || (n.includes('in mau') && n.includes('ham')) ||
+         (n.includes('in ban') && n.includes('ham')) || (n.includes('in toan') && n.includes('ham'));
+}
+function orderHasInMauHamDesk(o) {
+  return hasInMauHamTextDesk(o?.ph) || hasInMauHamTextDesk(o?.ghi_chu_sx);
+}
+function inMauJawInfoDesk(ph) {
+  let upper = false, lower = false;
+  const codes = String(ph || '').match(/\b(\d{2})\b/g) || [];
+  for (const code of codes) {
+    const pos = toothPos(code);
+    if (!pos) continue;
+    if (pos.row === 'upper') upper = true;
+    else if (pos.row === 'lower') lower = true;
+  }
+  const both = upper && lower;
+  let label = 'In mẫu hàm';
+  if (both) label = 'In mẫu hàm trên+dưới';
+  else if (upper) label = 'In mẫu hàm trên';
+  else if (lower) label = 'In mẫu hàm dưới';
+  return { count: both ? 2 : 1, label };
+}
+function buildProductionInfoBlockDesk(o) {
+  if (!o) return '';
+  const info = parseKeylabSxInfoDesk(o.keylab_sx_info);
+  const colors = listFromKeylabDesk(info.colors);
+  let attrs = listFromKeylabDesk(info.attributes);
+  const alreadyHasInMauPhuKien = attrs.some(a => a?.label === 'phu_kien' && hasInMauHamTextDesk(a?.value || ''));
+  if (!alreadyHasInMauPhuKien && orderHasInMauHamDesk(o)) {
+    attrs = [...attrs, { label: 'phu_kien', value: inMauJawInfoDesk(o.ph).label }];
+  }
+  const attrChips = renderProductionChipsDesk(attrs);
+  const note = cleanDisplayText(o.ghi_chu_sx);
+  if (!colors.length && !attrChips && !note) return '';
+  const subTitleStyle = 'font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;';
+  const chipRowStyle = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;';
+  return `
+    <div style="border:1px solid var(--border2);border-radius:7px;padding:10px 12px;margin-bottom:10px;background:var(--surface2);">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">Thông tin sản xuất</div>
+      ${colors.length ? `
+        <div style="${subTitleStyle}">Màu sắc</div>
+        <div style="${chipRowStyle}">${colors.map(c => `<span style="display:inline-block;padding:3px 9px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:11px;color:var(--text);">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+      ${attrChips ? `
+        <div style="${subTitleStyle}">Phụ kiện đi kèm</div>
+        <div style="${chipRowStyle}">${attrChips}</div>` : ''}
+      ${note ? `
+        <div style="${subTitleStyle}">Ghi chú sản xuất</div>
+        <div style="font-size:12px;color:var(--text2);white-space:pre-wrap;">${escapeHtml(note)}</div>` : ''}
+    </div>`;
+}
+
 function buildLuyYBlock(o) {
   const info = parseKeylabSxInfoDesk(o.keylab_sx_info);
   const instrItems = Array.isArray(info.instructions) ? info.instructions : [];
@@ -2027,11 +2108,13 @@ function openModal(id) {
       ${o.yc_ht ? `<div class="info-box"><div class="info-label">Y/C HOÀN THÀNH</div><div class="info-val amber">${completeText}</div></div>` : ''}
       ${o.gc ? `<div class="info-box" style="grid-column:span 2"><div class="info-label">GHI CHÚ</div><div class="info-val" style="color:var(--text2)">${displayHtml(o.gc)}</div></div>` : ''}
     </div>` : '';
+  const productionInfoBlock = buildProductionInfoBlockDesk(o);
   const luyYGrid = buildLuyYBlock(o);
   document.getElementById('MB').innerHTML = `
     ${qtyDeliveryGrid}
     ${excelGrid}
     ${renderToothChartSection(o)}
+    ${productionInfoBlock}
     ${luyYGrid}
     <div class="info-grid">
       <div class="info-box"><div class="info-label">TIẾN ĐỘ</div><div class="info-val ${o.pct===100?'green':o.pct>0?'amber':''}">${o.done}/${o.total||5} · ${o.pct}%</div></div>
