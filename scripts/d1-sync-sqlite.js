@@ -20,9 +20,11 @@ const directionArg = getArg('direction', 'auto').toLowerCase();
 const loop = hasArg('loop');
 const dryRun = hasArg('dry-run');
 const replaceTarget = hasArg('replace');
+const forceFull = hasArg('full');
 const intervalSec = Math.max(10, Number(getArg('interval', '60')) || 60);
 const batchRows = Math.max(1, Number(getArg('batch-rows', '100')) || 100);
 const fetchRows = Math.max(1, Number(getArg('fetch-rows', '500')) || 500);
+const fullSyncHours = Math.max(1, Number(getArg('full-sync-hours', '24')) || 24);
 const tableArg = getArg('tables', '');
 const excludeArg = getArg('exclude', '');
 
@@ -45,6 +47,64 @@ const BASE_TABLE_ORDER = [
   'feedbacks',
   'sessions',
 ];
+
+// Per-table sync strategy. Tables not listed default to 'full' (safe fallback).
+// 'incremental' requires a monotonic watermark column.
+const TABLE_CONFIG = {
+  don_hang:               { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  tien_do:                { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  tien_do_history:        { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  ktv_daily_stats:        { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  ktv_daily_type_stats:   { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  ktv_monthly_stats:      { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  ktv_monthly_type_stats: { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  feedbacks:              { mode: 'incremental', col: 'updated_at',   type: 'text' },
+  import_log:             { mode: 'incremental', col: 'id',           type: 'int'  },
+  // Small / static / no-watermark tables: full sync each cycle is cheap.
+  analytics_daily:        { mode: 'full' },
+  clinic_tags:            { mode: 'full' },
+  delay_reports:          { mode: 'full' },
+  error_codes:            { mode: 'full' },
+  error_reports:          { mode: 'full' },
+  feedback_types:         { mode: 'full' },
+  ktv_performance:        { mode: 'full' },
+  sessions:               { mode: 'full' },
+};
+
+const STATE_PATH = path.join(path.dirname(DB_PATH), '.d1-sync-state.json');
+
+function loadState() {
+  try {
+    if (fs.existsSync(STATE_PATH)) {
+      const raw = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+      if (raw && typeof raw === 'object') {
+        return {
+          version: raw.version || 1,
+          last_full_sync_at: raw.last_full_sync_at || null,
+          tables: raw.tables && typeof raw.tables === 'object' ? raw.tables : {},
+        };
+      }
+    }
+  } catch (err) {
+    log(`state file unreadable, treating as empty: ${err.message}`);
+  }
+  return { version: 1, last_full_sync_at: null, tables: {} };
+}
+
+function saveState(state) {
+  if (dryRun) { log(`[dry-run] would save state to ${STATE_PATH}`); return; }
+  const tmp = `${STATE_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2), 'utf8');
+  fs.renameSync(tmp, STATE_PATH);
+}
+
+function isFullSyncDue(state) {
+  if (forceFull || replaceTarget) return true;
+  if (!state.last_full_sync_at) return true;
+  const ageMs = Date.now() - new Date(state.last_full_sync_at).getTime();
+  if (!Number.isFinite(ageMs) || ageMs < 0) return true;
+  return ageMs > fullSyncHours * 3600 * 1000;
+}
 
 function log(message) {
   console.log(`[${new Date().toISOString()}] ${message}`);
@@ -142,10 +202,47 @@ function replaceSqliteDb(tmpPath) {
 }
 
 async function ensureD1Schema(db, tables) {
-  const rows = getSqliteSchema(db, tables);
+  // Triggers là local concern (auto-bump updated_at). D1 không cần — payload đẩy lên
+  // đã có updated_at sẵn từ trigger fire ở SQLite. Bỏ ra để tránh "already exists".
+  const rows = getSqliteSchema(db, tables).filter(row => row.type !== 'trigger');
   for (const row of rows) {
     if (dryRun) log(`[dry-run] D1 schema ${row.type} ${row.name}`);
     else await queryD1Async(makeSchemaSqlIdempotent(row.sql));
+  }
+  await ensureD1ColumnDrift(db, tables);
+}
+
+// CREATE TABLE IF NOT EXISTS không cập nhật cột cho table đã tồn tại trên D1.
+// Khi local thêm cột (vd updated_at vào tien_do_history), D1 vẫn schema cũ và INSERT
+// payload mới sẽ fail. Đối chiếu PRAGMA table_info hai bên, ALTER ADD COLUMN cho cột thiếu.
+async function ensureD1ColumnDrift(db, tables) {
+  for (const table of tables) {
+    let d1Info;
+    try {
+      const res = await queryD1Async(`PRAGMA table_info(${quoteIdent(table)})`);
+      d1Info = res.results || [];
+    } catch (err) {
+      log(`column drift check skipped for ${table}: ${err.message}`);
+      continue;
+    }
+    if (!d1Info.length) continue; // CREATE TABLE ở trên sẽ lo phần này
+    const d1Cols = new Set(d1Info.map(r => r.name));
+    const localInfo = db.prepare(`PRAGMA table_info(${quoteIdent(table)})`).all();
+    for (const col of localInfo) {
+      if (d1Cols.has(col.name)) continue;
+      // SQLite ALTER cấm DEFAULT là expression. Bỏ DEFAULT cho an toàn; row mới
+      // từ sync sẽ điền giá trị từ payload, row cũ trên D1 nhận NULL.
+      const alterSql = `ALTER TABLE ${quoteIdent(table)} ADD COLUMN ${quoteIdent(col.name)} ${col.type || 'TEXT'}`;
+      if (dryRun) log(`[dry-run] D1 ${alterSql}`);
+      else {
+        try {
+          await queryD1Async(alterSql);
+          log(`D1 added column ${table}.${col.name}`);
+        } catch (err) {
+          if (!/duplicate column/i.test(err.message)) throw err;
+        }
+      }
+    }
   }
 }
 
@@ -226,6 +323,62 @@ async function copySqliteToD1(db, table) {
   log(`push ${table}: ${copied}/${total}`);
 }
 
+// Returns { newWatermark, copied, total, fullSyncedTo } where fullSyncedTo is set
+// when the table was full-synced (caller uses it to refresh state watermark).
+async function copyIncrementalToD1(db, table, cfg, tableState) {
+  const columns = getSqliteColumns(db, table);
+  if (!columns.includes(cfg.col)) {
+    log(`⚠ ${table}: missing watermark column "${cfg.col}", falling back to full sync`);
+    await copySqliteToD1(db, table);
+    const fallbackMax = db.prepare(`SELECT MAX(${quoteIdent(cfg.col)}) AS m FROM ${quoteIdent(table)}`).get();
+    return { newWatermark: fallbackMax?.m ?? null, copied: -1, fullSyncedTo: fallbackMax?.m ?? null };
+  }
+
+  // Capture current max as the upper bound (point-in-time consistency).
+  // Any row updated AFTER this snapshot will be picked up in the next cycle.
+  const upperRow = db.prepare(`SELECT MAX(${quoteIdent(cfg.col)}) AS m FROM ${quoteIdent(table)}`).get();
+  const currentMax = upperRow?.m ?? null;
+  if (currentMax === null || currentMax === undefined) {
+    log(`push ${table}: empty table, watermark unchanged`);
+    return { newWatermark: tableState?.watermark ?? null, copied: 0 };
+  }
+
+  const lastWatermark = tableState?.watermark ?? null;
+  // First sync (no saved watermark) → push everything up to currentMax.
+  // Subsequent syncs → push only rows in (lastWatermark, currentMax].
+  let where;
+  let params;
+  if (lastWatermark === null || lastWatermark === undefined) {
+    where = `WHERE ${quoteIdent(cfg.col)} <= ?`;
+    params = [currentMax];
+  } else {
+    where = `WHERE ${quoteIdent(cfg.col)} > ? AND ${quoteIdent(cfg.col)} <= ?`;
+    params = [lastWatermark, currentMax];
+  }
+
+  const select = db.prepare(
+    `SELECT ${columns.map(quoteIdent).join(', ')} FROM ${quoteIdent(table)} ${where}`
+  );
+  let batch = [];
+  let copied = 0;
+  for (const row of select.iterate(...params)) {
+    batch.push(row);
+    if (batch.length >= batchRows) {
+      await insertRowsToD1(table, columns, batch);
+      copied += batch.length;
+      batch = [];
+    }
+  }
+  if (batch.length) {
+    await insertRowsToD1(table, columns, batch);
+    copied += batch.length;
+  }
+
+  const fromLabel = lastWatermark === null ? 'beginning' : String(lastWatermark);
+  log(`push ${table}: +${copied} (${cfg.col} ${fromLabel} → ${currentMax})`);
+  return { newWatermark: currentMax, copied };
+}
+
 async function fetchD1Rows(table, columns, offset) {
   const sql = `SELECT ${columns.map(quoteIdent).join(', ')} FROM ${quoteIdent(table)} LIMIT ${fetchRows} OFFSET ${offset}`;
   const result = await queryD1Async(sql);
@@ -279,13 +432,44 @@ async function syncOnce() {
   const started = Date.now();
   if (direction === 'push') {
     const db = openSqlite(true);
+    const state = loadState();
+    const doFull = isFullSyncDue(state);
     try {
       const tables = getSqliteTables(db);
-      log(`sync start: SQLite -> D1 (${tables.length} tables)`);
+      const reason = forceFull ? '--full'
+        : replaceTarget ? '--replace'
+        : !state.last_full_sync_at ? 'no prior full sync'
+        : `${fullSyncHours}h elapsed`;
+      log(`sync start: SQLite -> D1 (${tables.length} tables, mode=${doFull ? `FULL (${reason})` : 'INCREMENTAL'})`);
       await ensureD1Schema(db, tables);
       if (replaceTarget) await clearD1Tables(tables);
-      else log('push mode: upsert without clearing D1; use --replace for full target replacement');
-      for (const table of tables) await copySqliteToD1(db, table);
+
+      let totalCopied = 0;
+      for (const table of tables) {
+        const cfg = TABLE_CONFIG[table] || { mode: 'full' };
+        if (doFull || cfg.mode === 'full') {
+          await copySqliteToD1(db, table);
+          // After full sync, advance watermark for incremental tables so next
+          // cycle starts from the correct point.
+          if (cfg.mode === 'incremental') {
+            const cols = getSqliteColumns(db, table);
+            if (cols.includes(cfg.col)) {
+              const max = db.prepare(`SELECT MAX(${quoteIdent(cfg.col)}) AS m FROM ${quoteIdent(table)}`).get();
+              state.tables[table] = { watermark: max?.m ?? null, col: cfg.col, mode: 'incremental' };
+            }
+          }
+        } else {
+          const { newWatermark, copied } = await copyIncrementalToD1(db, table, cfg, state.tables[table]);
+          if (!dryRun) {
+            state.tables[table] = { watermark: newWatermark, col: cfg.col, mode: 'incremental' };
+          }
+          if (Number.isFinite(copied)) totalCopied += copied;
+        }
+      }
+
+      if (doFull) state.last_full_sync_at = new Date().toISOString();
+      saveState(state);
+      log(`push summary: ${doFull ? 'full sync' : `incremental, ~${totalCopied} rows pushed`}`);
     } finally {
       db.close();
     }

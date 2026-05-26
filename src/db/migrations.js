@@ -120,7 +120,7 @@ function initRoutedToColumn() {
 
   const { getDefaultRoom } = require('../utils/phucHinh');
   const rows = db.prepare('SELECT ma_dh, phuc_hinh, routed_to FROM don_hang').all();
-  const upd = db.prepare('UPDATE don_hang SET routed_to = ? WHERE ma_dh = ?');
+  const upd = db.prepare("UPDATE don_hang SET routed_to = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?");
   const tx = db.transaction(items => {
     for (const row of items) {
       const target = getDefaultRoom(row.phuc_hinh);
@@ -700,4 +700,53 @@ function initFeedbackTables() {
   log('✅ Feedback tables initialized');
 }
 
-module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+function initUpdatedAtTriggers() {
+  const db = getDB();
+  if (!db) { log('⚠ initUpdatedAtTriggers: DB not available'); return; }
+
+  // tien_do_history append-only nhưng đôi khi UPDATE billing_month → cần cột updated_at
+  // để incremental sync nhận biết. ALTER ADD COLUMN với DEFAULT là expression sẽ set
+  // cùng giá trị cho mọi row hiện có (1 lần re-sync sau migration là chấp nhận được).
+  if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='tien_do_history'").get()
+      && !hasColumn(db, 'tien_do_history', 'updated_at')) {
+    // SQLite ALTER TABLE không cho DEFAULT là expression (datetime('now') non-constant).
+    // Thêm cột NULL trước, backfill bằng UPDATE sau. Cluster mode race → catch duplicate.
+    try {
+      db.exec('ALTER TABLE tien_do_history ADD COLUMN updated_at TEXT');
+      log('✅ Added tien_do_history.updated_at (column)');
+    } catch (err) {
+      if (!/duplicate column/i.test(err.message)) throw err;
+    }
+    const filled = db.prepare("UPDATE tien_do_history SET updated_at = datetime('now','localtime') WHERE updated_at IS NULL").run();
+    if (filled.changes > 0) log(`✅ Backfilled tien_do_history.updated_at (${filled.changes} rows)`);
+  }
+
+  // Trigger AFTER UPDATE: nếu caller không tự bump updated_at thì trigger bump.
+  // WHEN NEW.updated_at IS OLD.updated_at: chỉ fire khi giá trị không đổi → không
+  // gây recursion (inner UPDATE set giá trị mới, lần fire trong sẽ thấy NEW != OLD).
+  const tables = [
+    'don_hang', 'tien_do', 'tien_do_history',
+    'ktv_daily_stats', 'ktv_daily_type_stats',
+    'ktv_monthly_stats', 'ktv_monthly_type_stats',
+    'feedbacks',
+  ];
+  let created = 0;
+  for (const table of tables) {
+    if (!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(table)) continue;
+    if (!hasColumn(db, table, 'updated_at')) continue;
+    const triggerName = `trg_${table}_touch_updated_at`;
+    db.exec(`
+      CREATE TRIGGER IF NOT EXISTS ${triggerName}
+      AFTER UPDATE ON ${table}
+      FOR EACH ROW
+      WHEN NEW.updated_at IS OLD.updated_at
+      BEGIN
+        UPDATE ${table} SET updated_at = datetime('now','localtime') WHERE rowid = NEW.rowid;
+      END;
+    `);
+    created += 1;
+  }
+  log(`✅ updated_at triggers initialized (${created} tables)`);
+}
+
+module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable, initUpdatedAtTriggers, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

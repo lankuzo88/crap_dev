@@ -92,4 +92,5 @@ sessions.json
 keylab_state.json
 labo_config.json
 scraper_errors.json
+.d1-sync-state.json
 RAC/

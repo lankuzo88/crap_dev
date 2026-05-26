@@ -7,7 +7,7 @@ const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const { loadUsers } = require('./src/repositories/users.repo');
 const { loadSessions } = require('./src/services/session.service');
-const { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable } = require('./src/db/migrations');
+const { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable, initUpdatedAtTriggers } = require('./src/db/migrations');
 const { startImageCleanupSchedule } = require('./src/services/image.service');
 const { startWALCheckpoint } = require('./src/db/index');
 const { getData, findLatest } = require('./src/repositories/orders.repo');
@@ -26,6 +26,7 @@ initKeylabNotesRouting();
 initMonthlyStatsTables();
 initFeedbackTables();
 initClinicTagsTable();
+initUpdatedAtTriggers();
 startImageCleanupSchedule();
 
 app.listen(PORT, '127.0.0.1', () => {

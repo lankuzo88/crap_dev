@@ -134,7 +134,7 @@ router.post('/api/orders/route', requireAuth, express.json(), (req, res) => {
       return res.json({ ok: true, order: { ma_dh, routed_to: target_room }, noop: true });
     }
 
-    db.prepare('UPDATE don_hang SET routed_to = ? WHERE ma_dh = ?').run(target_room, ma_dh);
+    db.prepare("UPDATE don_hang SET routed_to = ?, updated_at = datetime('now','localtime') WHERE ma_dh = ?").run(target_room, ma_dh);
     log(`[Route] ${req.session.user} chuyển ${ma_dh}: ${prev} -> ${target_room}`);
     res.json({ ok: true, order: { ma_dh, routed_to: target_room, prev } });
   } catch (err) {

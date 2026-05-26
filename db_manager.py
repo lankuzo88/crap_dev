@@ -208,7 +208,7 @@ def init_db():
     for row in rows:
         target = default_room_for(row["phuc_hinh"])
         if (row["routed_to"] or '') != target:
-            conn.execute("UPDATE don_hang SET routed_to=? WHERE ma_dh=?", (target, row["ma_dh"]))
+            conn.execute("UPDATE don_hang SET routed_to=?, updated_at=datetime('now','localtime') WHERE ma_dh=?", (target, row["ma_dh"]))
     route_existing_production_notes(conn)
     sync_keylab_notes(conn)
     conn.commit()
@@ -218,7 +218,7 @@ def route_existing_production_notes(conn: sqlite3.Connection):
     rows = conn.execute("SELECT ma_dh, ghi_chu_sx, routed_to FROM don_hang WHERE COALESCE(ghi_chu_sx, '') <> ''").fetchall()
     for row in rows:
         if has_in_mau_ham(row["ghi_chu_sx"]) and str(row["routed_to"] or "") not in ("zirco", "both"):
-            conn.execute("UPDATE don_hang SET routed_to='zirco' WHERE ma_dh=?", (row["ma_dh"],))
+            conn.execute("UPDATE don_hang SET routed_to='zirco', updated_at=datetime('now','localtime') WHERE ma_dh=?", (row["ma_dh"],))
 
 def sync_keylab_notes(conn: sqlite3.Connection):
     if not KEYLAB_NOTES_PATH.exists():
