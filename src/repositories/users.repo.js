@@ -27,6 +27,7 @@ const PERMISSIONS = [
   'analytics.view',
   'munger.view',
   'feedback.submit',
+  'clinic_notes.edit',
 ];
 const ROLE_DEFAULT_PERMISSIONS = {
   admin: ['*'],

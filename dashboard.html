@@ -1035,12 +1035,14 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
         <div class="d-nl" id="d-nl-wip" onclick="dSw('wip',this)" style="display:none;"><span class="ico">WIP</span> WIP công đoạn</div>
+        <a href="/wip-live" class="d-nl" id="d-nl-wiplive" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📡</span> WIP live</a>
         <a href="/admin" class="d-nl" id="d-nl-admin" style="text-decoration:none;color:inherit;display:none;"><span class="ico">🛠</span> Admin Dashboard</a>
         <a href="/analytics" class="d-nl" id="d-nl-analytics" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📈</span> Analytics</a>
         <a href="/feedback" class="d-nl" id="d-nl-feedback" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📝</span> Phản hồi nha khoa<span class="feedback-alert-dot" id="d-feedback-dot" aria-hidden="true"></span></a>
         <a href="/munger" class="d-nl" id="d-nl-munger" style="text-decoration:none;color:inherit;display:none;"><span class="ico">⚖️</span> Munger</a>
         <a href="/delay-reports" class="d-nl" id="d-nl-delayreports" style="text-decoration:none;color:inherit;display:none;"><span class="ico">⏱</span> Báo trễ tiến độ</a>
         <a href="/bao-tre" class="d-nl" id="d-nl-baotre" style="text-decoration:none;color:inherit;display:none;"><span class="ico">⏱</span> Gửi báo trễ</a>
+        <a href="/bao-loi" class="d-nl" id="d-nl-baoloi" style="text-decoration:none;color:inherit;display:none;"><span class="ico">⚠</span> Gửi báo lỗi</a>
       </div>
       <div class="d-funnel">
         <div class="d-f-title">TIẾN ĐỘ CÔNG ĐOẠN</div>
@@ -1327,12 +1329,12 @@ function parseExcelFormat(orders) {
     }
     let lastTg = ''; stages.forEach(s => { if (s.t) lastTg = s.t; });
     const currentStage = o.current_stage || getCurrentStageFromStages(stages);
-    const ph = (o.ph || '').replace(/\|/g,' | ');
+    const ph = cleanDisplayText((o.ph || '').replace(/\|/g,' | '));
     const rang = ph.match(/R[aă]ng?:\s*([^,\)]+)/)?.[1]?.trim() || '';
     return {
       id:       o.ma_dh,
       tai_khoan:o.tk || 'lanhn',
-      ph:       ph.split('|')[0].trim(),
+      ph:       cleanDisplayText(ph.split('|')[0].trim()),
       sl:       o.sl || 0,
       rang:     rang,
       lk:       lk,
@@ -1342,19 +1344,19 @@ function parseExcelFormat(orders) {
       done,
       total,
       active_thu_suon: !!o.active_thu_suon,
-      curKtv,
+      curKtv:   cleanDisplayText(curKtv),
       lastTg,
       allPh:    ph,
-      bn:       o.bn || '',
-      kh:       o.kh || '',
+      bn:       cleanDisplayText(o.bn || ''),
+      kh:       cleanDisplayText(o.kh || ''),
       nhan:     o.nhan || '',
       yc_ht:    o.yc_ht || '',
       yc_giao:  o.yc_giao || '',
       routed_to:o.routed_to || 'sap',
-      ghi_chu_sx:o.ghi_chu_sx || '',
+      ghi_chu_sx: cleanDisplayText(o.ghi_chu_sx || ''),
       keylab_sx_info: o.keylab_sx_info || null,
       clinic_tags: Array.isArray(o.clinic_tags) ? o.clinic_tags : [],
-      gc,
+      gc:       cleanDisplayText(gc),
     };
   });
 }
@@ -1703,7 +1705,7 @@ function getDesktopPhText(o) {
   return cleanDisplayText(o?.allPh || o?.ph || '');
 }
 function getToothChartProducts(o) {
-  const info = parseKeylabSxInfoDesk(o?.keylab_sx_info);
+  const info = parseKeylabSxInfo(o?.keylab_sx_info);
   const sxProducts = Array.isArray(info.products) ? info.products : [];
   const adjustments = parseProductionToothAdjustments(getProductionToothNote(o));
   const phProducts = splitPhParts(getDesktopPhText(o)).map((part, index) => {
@@ -1753,7 +1755,7 @@ function toothUnitModeLabel(product) {
   return `${mode} ${product.unitCount || product.fdiCount || 0} răng`;
 }
 function getProductionToothNote(o) {
-  const info = parseKeylabSxInfoDesk(o?.keylab_sx_info);
+  const info = parseKeylabSxInfo(o?.keylab_sx_info);
   const instructionText = Array.isArray(info.instructions)
     ? info.instructions.map(item => [item?.label || '', item?.value || ''].filter(Boolean).join(': ')).join('\n')
     : '';
@@ -2171,8 +2173,8 @@ function calcStats() {
 let _deskCurrentUser = null;
 function canEditClinicTagsDesk() {
   if (!_deskCurrentUser) return false;
-  if (_deskCurrentUser.role === 'admin') return true;
-  return (_deskCurrentUser.permissions || []).includes('clinic_notes.edit');
+  const perms = _deskCurrentUser.permissions || [];
+  return perms.includes('*') || perms.includes('clinic_notes.edit');
 }
 async function promptAddClinicTagDesk(khach_hang, ma_dh, btn) {
   const label = (prompt(`Thêm chip cho "${khach_hang}":`) || '').trim();
@@ -2195,7 +2197,7 @@ async function promptAddClinicTagDesk(khach_hang, ma_dh, btn) {
     });
   } catch (err) { alert(`Lỗi: ${err.message}`); }
 }
-function parseKeylabSxInfoDesk(raw) {
+function parseKeylabSxInfo(raw) {
   if (!raw) return {};
   if (typeof raw === 'object') return raw;
   try { return JSON.parse(raw) || {}; } catch { return {}; }
@@ -2256,7 +2258,7 @@ function inMauJawInfoDesk(ph) {
 }
 function buildProductionInfoBlockDesk(o) {
   if (!o) return '';
-  const info = parseKeylabSxInfoDesk(o.keylab_sx_info);
+  const info = parseKeylabSxInfo(o.keylab_sx_info);
   const colors = listFromKeylabDesk(info.colors);
   let attrs = listFromKeylabDesk(info.attributes);
   const alreadyHasInMauPhuKien = attrs.some(a => a?.label === 'phu_kien' && hasInMauHamTextDesk(a?.value || ''));
@@ -2284,7 +2286,7 @@ function buildProductionInfoBlockDesk(o) {
 }
 
 function buildLuyYBlock(o) {
-  const info = parseKeylabSxInfoDesk(o.keylab_sx_info);
+  const info = parseKeylabSxInfo(o.keylab_sx_info);
   const instrItems = Array.isArray(info.instructions) ? info.instructions : [];
   const instrText = instrItems
     .map(item => {
@@ -4184,9 +4186,11 @@ async function initUserContext() {
       const analyticsLink = document.getElementById('d-nl-analytics');
       if (analyticsLink) analyticsLink.style.display = '';
     }
-    const feedbackLink = document.getElementById('d-nl-feedback');
-    if (feedbackLink) feedbackLink.style.display = '';
-    updateFeedbackAlert();
+    if (hasPerm('feedback.submit')) {
+      const feedbackLink = document.getElementById('d-nl-feedback');
+      if (feedbackLink) feedbackLink.style.display = '';
+      updateFeedbackAlert();
+    }
     if (hasPerm('munger.view')) {
       const mungerLink = document.getElementById('d-nl-munger');
       if (mungerLink) mungerLink.style.display = '';
@@ -4194,6 +4198,8 @@ async function initUserContext() {
     if (canViewWipPanel()) {
       const wipLink = document.getElementById('d-nl-wip');
       if (wipLink) wipLink.style.display = '';
+      const wipLiveLink = document.getElementById('d-nl-wiplive');
+      if (wipLiveLink) wipLiveLink.style.display = '';
     }
     if (hasPerm('delay_reports.review')) {
       const delayReportsLink = document.getElementById('d-nl-delayreports');
@@ -4205,6 +4211,10 @@ async function initUserContext() {
     if (hasPerm('delay_reports.submit')) {
       const delayLink = document.getElementById('d-nl-baotre');
       if (delayLink) delayLink.style.display = '';
+    }
+    if (hasPerm('error_reports.submit')) {
+      const errorLink = document.getElementById('d-nl-baoloi');
+      if (errorLink) errorLink.style.display = '';
     }
   } catch {}
 }
@@ -4238,8 +4248,18 @@ async function loadUserPendingOrders() {
     if (!r.ok) return;
     const data = await r.json();
     if (data.ok) {
-      USER_PENDING_ORDERS = data.orders;
-      ORDERS = data.orders || [];
+      // Clean Excel/Vietnamese artifacts (_x000d_, x00d, …) trên các text field
+      const cleaned = (data.orders || []).map(o => ({
+        ...o,
+        bn: cleanDisplayText(o.bn || ''),
+        kh: cleanDisplayText(o.kh || ''),
+        ph: cleanDisplayText(o.ph || ''),
+        gc: cleanDisplayText(o.gc || ''),
+        ghi_chu_sx: cleanDisplayText(o.ghi_chu_sx || ''),
+        curKtv: cleanDisplayText(o.curKtv || ''),
+      }));
+      USER_PENDING_ORDERS = cleaned;
+      ORDERS = cleaned;
       showDashboardLayout();
       updateUI();
       loadActiveDelayReports().then(() => {

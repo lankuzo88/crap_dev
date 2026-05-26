@@ -4,6 +4,7 @@ const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const { classifyPhucHinh } = require('../utils/phucHinh');
+const { stagesGroupConcatSql } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -40,11 +41,7 @@ router.get('/api/orders', requireAuth, (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB chưa khởi tạo. Chạy: python db_manager.py import-all' });
   const { ma_dh_goc, loai_lenh, tai_khoan, limit = 100, offset = 0 } = req.query;
   let sql = `
-    SELECT d.*, GROUP_CONCAT(
-      t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-      COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-      ';;'
-    ) AS stages_raw
+    SELECT d.*, ${stagesGroupConcatSql('t')}
     FROM don_hang d LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh WHERE 1=1
   `;
   const params = [];

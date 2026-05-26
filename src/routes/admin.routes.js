@@ -8,7 +8,7 @@ const { saveUsers } = require('../repositories/users.repo');
 const { BASE_DIR } = require('../config/paths');
 const { getDB } = require('../db/index');
 const { refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType } = require('../db/migrations');
-const { STAGE_NAMES, getSkipStages, getActiveMaDhList } = require('../repositories/orders.repo');
+const { STAGE_NAMES, getSkipStages, getActiveMaDhList, normalizeRuleText: normalizeText, stagesGroupConcatSql } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -191,14 +191,6 @@ function rateAtOrBelow(values, threshold) {
   return count / values.length;
 }
 
-function normalizeText(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 function isStageDone(stage) {
   const status = normalizeText(stage.xac_nhan || stage.x || '');
   if (status === 'co' || status.includes('xac nhan')) return true;
@@ -303,11 +295,7 @@ function loadCurrentOrdersForRisk(db) {
   const rows = db.prepare(`
     SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao, d.khach_hang, d.benh_nhan,
            d.phuc_hinh, d.sl, d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.routed_to,
-           GROUP_CONCAT(
-             t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-             COALESCE(t.xac_nhan,'Chua')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-             ';;'
-           ) AS stages_raw
+           ${stagesGroupConcatSql('t')}
     FROM don_hang d
     LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
     ${where}
@@ -530,7 +518,7 @@ router.get('/admin/api/production-stats', requirePermission('stats.view_producti
 
     const days = buildProductionDaysFromRows(rows);
     const wantedDates = new Set(days.map(d => d.date));
-    const stageOrder = ['CBM', 'SÁP/Cadcam', 'SƯỜN', 'ĐẮP', 'MÀI'];
+    const stageOrder = STAGE_NAMES;
     const dayStats = () => Object.fromEntries(days.map(d => [d.date, { qty: 0, orders: 0, entries: [], types: newTypeStats() }]));
     const totals = {
       qty: 0,
@@ -752,14 +740,6 @@ router.get('/admin/api/monthly-stats', requirePermission('stats.view_monthly'), 
 // ── Clinic Tags ───────────────────────────────────────
 const clinicTags = require('../repositories/clinicTags.repo');
 
-function canEditClinicTags(req) {
-  const sess = req.session;
-  if (!sess || !sess.user) return false;
-  if (sess.role === 'admin') return true;
-  const { hasPermission } = require('../repositories/users.repo');
-  return hasPermission(sess.user, 'clinic_notes.edit');
-}
-
 // GET /admin/api/clinic-tags — list nha khoa + chips + label suggestions (admin only)
 router.get('/admin/api/clinic-tags', requireAdmin, (req, res) => {
   try {
@@ -774,12 +754,7 @@ router.get('/admin/api/clinic-tags', requireAdmin, (req, res) => {
 });
 
 // GET /admin/api/clinic-tags/:khach_hang — chips của 1 nha khoa
-router.get('/admin/api/clinic-tags/:khach_hang', (req, res, next) => {
-  const token = require('../services/session.service').getSessionToken(req);
-  const sess = require('../services/session.service').getSession(token);
-  if (!sess) return res.redirect('/login');
-  req.session = sess;
-  if (!canEditClinicTags(req)) return res.status(403).json({ ok: false, error: 'Permission denied' });
+router.get('/admin/api/clinic-tags/:khach_hang', requirePermission('clinic_notes.edit'), (req, res) => {
   try {
     res.json({ ok: true, tags: clinicTags.listTagsByClinic(req.params.khach_hang) });
   } catch (err) {
@@ -788,16 +763,11 @@ router.get('/admin/api/clinic-tags/:khach_hang', (req, res, next) => {
 });
 
 // POST /admin/api/clinic-tags — thêm chip
-router.post('/admin/api/clinic-tags', express.json(), (req, res, next) => {
-  const token = require('../services/session.service').getSessionToken(req);
-  const sess = require('../services/session.service').getSession(token);
-  if (!sess) return res.redirect('/login');
-  req.session = sess;
-  if (!canEditClinicTags(req)) return res.status(403).json({ ok: false, error: 'Permission denied' });
+router.post('/admin/api/clinic-tags', express.json(), requirePermission('clinic_notes.edit'), (req, res) => {
   const { khach_hang, label } = req.body || {};
   try {
-    const tag = clinicTags.addTag(khach_hang, label, sess.user);
-    log(`➕ clinic_tag added: "${label}" → "${khach_hang}" by ${sess.user}`);
+    const tag = clinicTags.addTag(khach_hang, label, req.session.user);
+    log(`➕ clinic_tag added: "${label}" → "${khach_hang}" by ${req.session.user}`);
     res.json({ ok: true, tag });
   } catch (err) {
     if (err.code === 'DUPLICATE') return res.status(409).json({ ok: false, error: 'duplicate' });

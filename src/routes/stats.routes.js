@@ -5,16 +5,9 @@ const { requireAuth } = require('../middleware/auth');
 const { USERS, hasPermission } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
 const { queryD1BatchAsync } = require('../db/d1-http-sync');
-const { getActiveMaDhList, getSkipStages, isThuSuonNote, STAGE_NAMES } = require('../repositories/orders.repo');
+const { getActiveMaDhList, getSkipStages, isThuSuonNote, STAGE_NAMES, normalizeRuleText: normalizeText } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
-
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
 
 function classifyPhucHinhPart(text) {
   const raw = String(text || '').toLowerCase();

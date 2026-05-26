@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const { USERS } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
 const {
-  STAGE_NAMES, getSkipStages, isThuSuonNote, userCongDoanToDB, getActiveMaDhList,
+  STAGE_NAMES, getSkipStages, isThuSuonNote, userCongDoanToDB, getActiveMaDhList, stagesGroupConcatSql,
 } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
@@ -107,11 +107,7 @@ router.get('/api/user/pending-orders', requireAuth, (req, res) => {
       SELECT DISTINCT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
              d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.routed_to,
-             GROUP_CONCAT(
-               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-               ';;'
-             ) AS stages_raw
+             ${stagesGroupConcatSql('t')}
       FROM tien_do t
       JOIN don_hang d ON t.ma_dh = d.ma_dh
       WHERE d.ma_dh IN (${phPending})

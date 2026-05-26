@@ -83,7 +83,7 @@ router.get(['/analytics', '/analytics.html'], requirePermission('analytics.view'
   else res.status(404).send('<h2>Không tìm thấy analytics.html</h2>');
 });
 
-router.get('/data.json', requireAuth, async (req, res) => {
+router.get('/data.json', requirePermission('orders.view_all'), async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
   try {

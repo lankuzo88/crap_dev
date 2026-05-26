@@ -1849,6 +1849,9 @@
         <a id="m-munger-btn" class="menu-item admin-only" href="/munger">
           <span class="menu-icon">⚖️</span><span>Munger Dashboard</span>
         </a>
+        <a id="m-analytics-btn" class="menu-item admin-only" href="/analytics">
+          <span class="menu-icon">📈</span><span>Analytics</span>
+        </a>
         <a id="m-feedback-btn" class="menu-item" href="/feedback">
           <span class="menu-icon">📝</span><span>Phản hồi nha khoa</span><span class="feedback-alert-dot" id="m-feedback-dot" aria-hidden="true"></span>
         </a>
@@ -1952,7 +1955,7 @@
       return current?.n || 'HOÀN TẤT';
     }
 
-    function normalizeKeylabSxInfo(info) {
+    function parseKeylabSxInfo(info) {
       if (!info) return {};
       if (typeof info === 'string') {
         try { return JSON.parse(info) || {}; } catch { return {}; }
@@ -1967,18 +1970,18 @@
         : false;
       return {
         ma_dh:         o.ma_dh,
-        benh_nhan:     o.bn || '',
-        khach_hang:    o.kh || '',
-        phuc_hinh:     o.ph || '',
+        benh_nhan:     cleanDisplayText(o.bn || ''),
+        khach_hang:    cleanDisplayText(o.kh || ''),
+        phuc_hinh:     cleanDisplayText(o.ph || ''),
         sl:            o.sl || 0,
-        ghi_chu:       o.gc || '',
+        ghi_chu:       cleanDisplayText(o.gc || ''),
         current_stage,
         yc_ht:         o.yc_ht || '',
         yc_giao:       o.yc_giao || '',
         nhan:          o.nhan || '',
         loai_lenh:     o.lk || '',
-        ghi_chu_sx:    o.ghi_chu_sx || '',
-        keylab_sx_info: normalizeKeylabSxInfo(o.keylab_sx_info),
+        ghi_chu_sx:    cleanDisplayText(o.ghi_chu_sx || ''),
+        keylab_sx_info: parseKeylabSxInfo(o.keylab_sx_info),
         routed_to:     o.routed_to || 'sap',
         active_thu_suon: !!o.active_thu_suon,
         clinic_tags:   Array.isArray(o.clinic_tags) ? o.clinic_tags : [],
@@ -2230,7 +2233,7 @@
     }
 
     function getToothChartProducts(order) {
-      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      const info = parseKeylabSxInfo(order?.keylab_sx_info);
       const sxProducts = Array.isArray(info.products) ? info.products : [];
       const adjustments = parseProductionToothAdjustments(getProductionToothNote(order));
       const phProducts = splitPhParts(order?.phuc_hinh).map((part, index) => {
@@ -2299,7 +2302,7 @@
     }
 
     function getProductionToothNote(order) {
-      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      const info = parseKeylabSxInfo(order?.keylab_sx_info);
       const instructionText = listFromKeylab(info.instructions)
         .map(item => [item?.label || '', item?.value || ''].filter(Boolean).join(': '))
         .join('\n');
@@ -3022,7 +3025,7 @@
     }
 
     function hasProductionInfo(order) {
-      const info = normalizeKeylabSxInfo(order?.keylab_sx_info);
+      const info = parseKeylabSxInfo(order?.keylab_sx_info);
       return !!(
         cleanDisplayText(order?.ghi_chu_sx) ||
         listFromKeylab(info.colors).length ||
@@ -3087,8 +3090,8 @@
 
     function canEditClinicTags() {
       if (!currentUser) return false;
-      if (currentUser.role === 'admin') return true;
-      return (currentUser.permissions || []).includes('clinic_notes.edit');
+      const perms = currentUser.permissions || [];
+      return perms.includes('*') || perms.includes('clinic_notes.edit');
     }
 
     async function promptAddClinicTag(khach_hang, ma_dh, btn) {
@@ -3120,7 +3123,7 @@
 
     function renderInlineProductionInfo(order) {
       if (!order || !hasProductionInfo(order)) return '';
-      const info = normalizeKeylabSxInfo(order.keylab_sx_info);
+      const info = parseKeylabSxInfo(order.keylab_sx_info);
       const colors = listFromKeylab(info.colors);
       // Khi ghi chú sản xuất nhắc "in mẫu hàm" mà không có phụ kiện in mẫu sẵn → thêm 1 chip.
       let attributesForChips = listFromKeylab(info.attributes);
@@ -5170,7 +5173,7 @@
         nhan: order.nhap_luc || '',
         loai_lenh: order.loai_lenh || '',
         ghi_chu_sx: order.ghi_chu_sx || '',
-        keylab_sx_info: normalizeKeylabSxInfo(order.keylab_sx_info),
+        keylab_sx_info: parseKeylabSxInfo(order.keylab_sx_info),
         routed_to: order.routed_to || 'sap',
         barcode_labo: order.barcode_labo || '',
         active_thu_suon: false,
@@ -5515,6 +5518,10 @@
         if (hasPerm('munger.view')) {
           const mungerBtn = document.getElementById('m-munger-btn');
           if (mungerBtn) mungerBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('analytics.view')) {
+          const analyticsBtn = document.getElementById('m-analytics-btn');
+          if (analyticsBtn) analyticsBtn.classList.add('admin-visible');
         }
         if (canViewWipPanel()) {
           const wipBtn = document.getElementById('m-wip-btn');

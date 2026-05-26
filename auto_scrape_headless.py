@@ -25,7 +25,8 @@ except Exception:
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 INTERVAL_MINUTES = 10
-KEYLAB_EXPORT_INTERVAL_MINUTES = 60
+KEYLAB_EXPORT_INTERVAL_MINUTES = 15
+EXCEL_RETENTION_DAYS = 60  # Excel/ cleanup: xoá file cũ hơn N ngày mỗi cycle
 
 BASE_DIR = Path(__file__).parent
 EXCEL_DIR = BASE_DIR / "Excel"
@@ -155,8 +156,16 @@ def load_config():
         return {}
 
 
+def _atomic_write_json(path: Path, payload: dict):
+    """Write JSON atomically: tmp file + rename. Avoids half-written corrupt files
+    if process is killed mid-write (Windows: rename is atomic on same volume)."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+
 def save_config(cfg: dict):
-    CONFIG_PATH.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    _atomic_write_json(CONFIG_PATH, cfg)
 
 
 def get_last_run_file():
@@ -218,7 +227,7 @@ def load_keylab_export_state():
 
 
 def save_keylab_export_state(state: dict):
-    KEYLAB_STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    _atomic_write_json(KEYLAB_STATE_PATH, state)
 
 
 def next_keylab_export_path(state: dict):
@@ -249,7 +258,7 @@ def export_keylab_sql_if_due():
 
     state = load_keylab_export_state()
     out_file = next_keylab_export_path(state)
-    log.info(f"Hourly KeyLab SQL export due; exporting to {out_file.name}")
+    log.info(f"KeyLab SQL export due ({KEYLAB_EXPORT_INTERVAL_MINUTES} min); exporting to {out_file.name}")
 
     try:
         result = subprocess.run(
@@ -331,9 +340,41 @@ def scrape_excel(file_path: Path) -> bool:
         return False
 
 
+def cleanup_old_excel_files():
+    """Xoá file Excel/ cũ hơn EXCEL_RETENTION_DAYS. Giữ last_run_file để khỏi mất state."""
+    try:
+        if not EXCEL_DIR.exists():
+            return
+        cutoff = time.time() - EXCEL_RETENTION_DAYS * 86400
+        keep = set()
+        last_run = get_last_run_file()
+        if last_run:
+            keep.add(last_run.resolve())
+        deleted = 0
+        for f in EXCEL_DIR.iterdir():
+            if not f.is_file():
+                continue
+            if f.suffix.lower() not in (".xlsx", ".xls", ".xlsm"):
+                continue
+            try:
+                if f.resolve() in keep:
+                    continue
+                if f.stat().st_mtime >= cutoff:
+                    continue
+                f.unlink()
+                deleted += 1
+            except Exception as exc:
+                log.warning(f"cleanup_old_excel: cannot delete {f.name}: {exc}")
+        if deleted:
+            log.info(f"Excel cleanup: removed {deleted} files older than {EXCEL_RETENTION_DAYS} days")
+    except Exception as exc:
+        log.error(f"cleanup_old_excel failed: {exc}")
+
+
 def main():
     log.info("=== Auto-Scrape Headless start ===")
     log.info(f"Schedule: progress check every {INTERVAL_MINUTES} min, KeyLab SQL export every {KEYLAB_EXPORT_INTERVAL_MINUTES} min, 24/7")
+    cleanup_old_excel_files()
     log.info("Keylab UI notes scraping is disabled; KeyLab SQL notes sync runs inside run_scrape.py.")
 
     while True:
@@ -359,7 +400,7 @@ def main():
 
                 is_new_file = last_run is None or newest.resolve() != last_run.resolve()
                 if exported_file:
-                    log.info("Hourly KeyLab SQL export completed; scraping exported file and syncing SQL notes.")
+                    log.info("KeyLab SQL export completed; scraping exported file and syncing SQL notes.")
                 elif is_new_file:
                     log.info("New file detected; scraping web progress.")
                 else:

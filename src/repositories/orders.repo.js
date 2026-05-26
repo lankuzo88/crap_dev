@@ -39,6 +39,17 @@ const SKIP_STAGES = {
 
 const MADH_COL_HINTS = ['mã đh', 'mã_dh', 'ma_dh', 'mã đơn', 'madh', 'order_id'];
 
+// SQL fragment: aggregate stages của 1 order thành chuỗi "thu_tu|cong_doan|ktv|xac_nhan|thoi_gian"
+// nối bằng ';;'. Caller chỉ cần GROUP BY d.ma_dh hoặc tương đương. alias = bảng tien_do.
+function stagesGroupConcatSql(alias = 't') {
+  const a = alias;
+  return `GROUP_CONCAT(
+    ${a}.thu_tu||'|'||${a}.cong_doan||'|'||COALESCE(${a}.ten_ktv,'')||'|'||
+    COALESCE(${a}.xac_nhan,'Chưa')||'|'||COALESCE(${a}.thoi_gian_hoan_thanh,''),
+    ';;'
+  ) AS stages_raw`;
+}
+
 function normalizeRuleText(value) {
   return String(value || '')
     .toLowerCase()
@@ -325,11 +336,7 @@ function dashboardRowsSql(whereSql = '') {
       SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
              d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
              d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
-             GROUP_CONCAT(
-               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-               ';;'
-             ) AS stages_raw
+             ${stagesGroupConcatSql('t')}
       FROM don_hang d
       LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
       ${whereSql}
@@ -544,6 +551,8 @@ module.exports = {
   CD_TO_DB,
   SKIP_STAGES,
   MADH_COL_HINTS,
+  normalizeRuleText,
+  stagesGroupConcatSql,
   getSkipStages,
   isThuSuonNote,
   userCongDoanToDB,
