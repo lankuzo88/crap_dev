@@ -1,0 +1,1834 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>WIP Live · Graph View</title>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #181b21;
+    --ink: #f3efe8;
+    --ink-soft: #9aa0aa;
+    --terracotta: #d97757;
+    --line: #2a2e36;
+    --shadow: 0 8px 28px rgba(0,0,0,.45);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  header {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    z-index: 10;
+  }
+  .back {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #22262e; color: var(--ink); text-decoration: none;
+    font-size: 18px; border: 1px solid var(--line);
+  }
+  .back:active { background: var(--line); }
+  .title { flex: 1; min-width: 0; }
+  .title h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: .2px; }
+  .title small { color: var(--ink-soft); font-size: 11px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .pill {
+    font-size: 11px; padding: 6px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: #22262e; color: var(--ink-soft);
+    cursor: pointer; user-select: none;
+  }
+  .pill.active { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
+  .pill.loading { opacity: .5; pointer-events: none; }
+
+  .legend {
+    flex: 0 0 auto;
+    display: flex; flex-wrap: wrap; gap: 8px 14px;
+    max-height: 0;
+    padding: 0 14px;
+    background: var(--panel);
+    border-bottom: 0 solid transparent;
+    font-size: 11px; color: var(--ink-soft);
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: max-height .22s ease, padding .22s ease, opacity .16s ease, transform .22s ease, border-width .22s ease;
+  }
+  body.controls-visible .legend {
+    max-height: 74px;
+    padding: 8px 14px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--line);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  .chip-bar {
+    flex: 0 0 auto;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    max-height: 0;
+    padding: 0 14px;
+    background: var(--panel);
+    border-bottom: 0 solid transparent;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: max-height .22s ease, padding .22s ease, opacity .16s ease, transform .22s ease, border-width .22s ease;
+  }
+  body.controls-visible .chip-bar {
+    max-height: 92px;
+    padding: 8px 14px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--line);
+    overflow-x: auto;
+    overflow-y: hidden;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .fchip {
+    flex: 0 0 auto;
+    font-size: 12px; line-height: 1;
+    padding: 8px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: #22262e;
+    color: var(--ink); cursor: pointer; user-select: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .fchip:active { transform: scale(.97); }
+  .fchip.active { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
+  .fchip .count {
+    font-size: 11px; padding: 2px 6px; border-radius: 999px;
+    background: rgba(255,255,255,.10); color: inherit;
+  }
+  .fchip.active .count { background: rgba(255,255,255,.22); }
+  .controls-peek {
+    position: fixed;
+    top: 58px; right: 10px;
+    z-index: 12;
+    height: 30px; min-width: 42px;
+    border: 1px solid rgba(217,119,87,.42);
+    border-radius: 999px;
+    background: rgba(24,27,33,.88);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+    font-size: 16px; line-height: 1;
+    cursor: pointer;
+    transition: background .16s ease, border-color .16s ease, transform .16s ease;
+  }
+  .controls-peek:active { transform: scale(.96); }
+  body.controls-visible .controls-peek {
+    background: var(--terracotta);
+    border-color: var(--terracotta);
+    color: #fff;
+  }
+
+  #graph {
+    flex: 1 1 auto;
+    width: 100%; min-height: 0;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(217,119,87,.07), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(168,85,247,.07), transparent 45%),
+      var(--bg);
+    position: relative;
+  }
+  div.vis-tooltip {
+    background: #0a0c10 !important;
+    color: #f3efe8 !important;
+    border: 1px solid #2a2e36 !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    font: 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.6) !important;
+    max-width: 260px;
+    white-space: normal !important;
+  }
+  div.vis-tooltip b { color: #ffd9b3; }
+
+  .hud {
+    position: absolute; left: 10px; bottom: 10px;
+    background: rgba(24,27,33,.92);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 10px; font-size: 11px; color: var(--ink-soft);
+    box-shadow: var(--shadow);
+    z-index: 5; line-height: 1.5;
+    max-width: calc(100vw - 30px);
+  }
+  .hud b { color: var(--ink); }
+
+  .err-overlay {
+    position: absolute; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(15,17,21,.92);
+    z-index: 6; text-align: center; padding: 20px;
+  }
+  .err-overlay.show { display: flex; }
+  .err-overlay .box {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px 22px; max-width: 320px;
+    box-shadow: var(--shadow);
+  }
+  .err-overlay .box b { color: #f87171; }
+  .err-overlay .box .msg { font-size: 12px; color: var(--ink-soft); margin: 8px 0 12px; }
+  .err-overlay .box button {
+    background: var(--terracotta); color: #fff; border: none;
+    padding: 8px 16px; border-radius: 999px; font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* ─── Order bottom-sheet ─── */
+  .sheet-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.55);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 20;
+  }
+  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .order-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    max-height: 78vh;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -12px 40px rgba(0,0,0,.55);
+    transform: translateY(105%);
+    transition: transform .32s cubic-bezier(.2,.9,.3,1);
+    z-index: 21;
+    display: flex; flex-direction: column;
+    will-change: transform;
+  }
+  .order-sheet.open { transform: translateY(0); }
+  .order-sheet.minimized {
+    transform: translateY(calc(100% - 56px));
+  }
+
+  .sheet-handle {
+    flex: 0 0 auto;
+    width: 40px; height: 4px;
+    background: #3a3f48;
+    border-radius: 2px;
+    margin: 8px auto 6px;
+    touch-action: none;
+  }
+
+  .sheet-header {
+    flex: 0 0 auto;
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 4px 16px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sheet-title {
+    flex: 1; min-width: 0;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    line-height: 1.35;
+  }
+  .sheet-title .ma-dh { font-family: ui-monospace, Menlo, monospace; }
+  .sheet-title .tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+    background: rgba(239,68,68,.18); color: #fca5a5;
+    border: 1px solid rgba(239,68,68,.35);
+    margin-left: 6px; vertical-align: 2px;
+  }
+  .sheet-close {
+    flex: 0 0 auto;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #22262e; color: var(--ink-soft);
+    border: 1px solid var(--line);
+    font-size: 14px; line-height: 1;
+    cursor: pointer;
+  }
+  .sheet-close:active { background: var(--line); }
+
+  .sheet-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 4px;
+    font-size: 13px; color: var(--ink);
+    line-height: 1.55;
+  }
+  .sheet-body .row { display: flex; gap: 8px; flex-wrap: wrap; color: var(--ink-soft); margin: 2px 0; }
+  .sheet-body .row b { color: var(--ink); font-weight: 600; }
+  .sheet-body .row .sep { color: #3a3f48; }
+  .sheet-body .pin {
+    display: inline-block; font-size: 11px;
+    padding: 3px 8px; border-radius: 999px;
+    background: rgba(217,119,87,.18); color: #fca78a;
+    border: 1px solid rgba(217,119,87,.35);
+    margin-top: 4px;
+  }
+
+  .sheet-actions {
+    flex: 0 0 auto;
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line);
+  }
+  .play-btn {
+    width: 100%; padding: 14px 16px;
+    border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #d97757 0%, #b85c3a 100%);
+    color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; user-select: none;
+    box-shadow: 0 6px 16px rgba(217,119,87,.30);
+    transition: transform .12s ease, background .15s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255,255,255,.25);
+  }
+  .play-btn:active {
+    transform: scale(.97);
+    background: linear-gradient(135deg, #b85c3a 0%, #8f3f24 100%);
+  }
+  .play-btn.playing {
+    background: #2a2e36; color: var(--ink-soft);
+    box-shadow: none;
+  }
+
+  /* ─── Timeline trong modal ─── */
+  .tl-wrap {
+    margin: 14px 0 4px;
+    padding: 12px 4px 8px;
+    background: #11141a;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    padding: 0 8px;
+  }
+  .tl-rail {
+    position: absolute;
+    left: 8%; right: 8%; top: 22px; height: 2px;
+    background: #2a2e36;
+    border-radius: 1px;
+    z-index: 0;
+  }
+  .tl-rail-fill {
+    position: absolute;
+    left: 8%; top: 22px; height: 2px;
+    background: linear-gradient(90deg, #d97757, #f59e0b);
+    border-radius: 1px;
+    z-index: 1;
+    transition: width .4s ease;
+  }
+  .tl-stage {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; min-width: 0;
+    padding: 0 2px;
+  }
+  .tl-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: #1a1d22; color: var(--ink-soft);
+    border: 2px solid #2a2e36;
+    box-shadow: 0 0 0 3px var(--panel);  /* "cover" rail behind dot */
+    transition: transform .15s ease;
+  }
+  .tl-stage.done .tl-dot      { background: var(--c, #10b981); color: #fff; border-color: var(--c, #10b981); }
+  .tl-stage.current .tl-dot   { background: var(--c, #d97757); color: #fff; border-color: #fff;
+                                box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px rgba(217,119,87,.25);
+                                animation: tlPulse 1.4s ease-in-out infinite; }
+  .tl-stage.skip .tl-dot      { background: transparent; color: #4a4f57; border-style: dashed; }
+  @keyframes tlPulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px rgba(217,119,87,.25); }
+    50%      { box-shadow: 0 0 0 3px var(--panel), 0 0 0 10px rgba(217,119,87,.05); }
+  }
+  .tl-name {
+    font-size: 10px; font-weight: 600; color: var(--ink);
+    text-align: center; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .tl-stage.skip .tl-name { color: #4a4f57; text-decoration: line-through; }
+  .tl-meta {
+    font-size: 9px; color: var(--ink-soft);
+    text-align: center; line-height: 1.2;
+    min-height: 22px;
+  }
+  .tl-meta .ktv { color: #fcd9c1; font-weight: 600; display: block; }
+  .tl-meta .ts  { display: block; opacity: .75; }
+  .tl-stage.current .tl-meta .ktv { color: #fff; }
+  .tl-summary {
+    margin-top: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 4px;
+    font-size: 11px; color: var(--ink-soft);
+  }
+  .tl-summary b { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/mobile" title="Quay lại">←</a>
+  <div class="title">
+    <h1>WIP Live · Graph</h1>
+    <small id="subtitle">Đang tải dữ liệu live…</small>
+  </div>
+  <div class="header-actions">
+    <button class="pill" id="pillReload" title="Tải lại">↻</button>
+    <button class="pill active" id="pillPhysics">Physics</button>
+    <button class="pill" id="pillFit">Fit</button>
+  </div>
+</header>
+
+<button class="controls-peek" id="controlsPeek" type="button" aria-label="Hiện bộ lọc">···</button>
+
+<div class="legend">
+  <span><i class="dot" style="background:#a855f7"></i>SÁP</span>
+  <span><i class="dot" style="background:#06b6d4"></i>CADCAM</span>
+  <span><i class="dot" style="background:#64748b"></i>SƯỜN KL</span>
+  <span><i class="dot" style="background:#f59e0b"></i>SƯỜN ZIRCO</span>
+  <span><i class="dot" style="background:#f97316"></i>ĐẮP</span>
+  <span><i class="dot" style="background:#10b981"></i>MÀI</span>
+  <span><i class="dot" style="background:#3b82f6"></i>CBM</span>
+</div>
+
+<div class="chip-bar" id="chipBar">
+  <button class="fchip active" data-dfilter="all" id="chip-all">Tất cả <span class="count" id="cnt-all">0</span></button>
+  <button class="fchip" data-dfilter="alert" id="chip-alert">&#9888; Cảnh báo <span class="count" id="cnt-alert">0</span></button>
+  <button class="fchip" data-dfilter="in_today" id="chip-in-today">📥 <span id="lbl-in-today">Vào hôm nay</span> <span class="count" id="cnt-in-today">0</span></button>
+  <button class="fchip" data-dfilter="out_today" id="chip-out-today">📤 <span id="lbl-out-today">Ra hôm nay</span> <span class="count" id="cnt-out-today">0</span></button>
+  <button class="fchip" data-dfilter="out_tomorrow" id="chip-out-tomorrow">📤 <span id="lbl-out-tomorrow">Ngày mai</span> <span class="count" id="cnt-out-tomorrow">0</span></button>
+  <button class="fchip" data-dfilter="out_day3" id="chip-out-day3">📤 <span id="lbl-out-day3">Ngày kia</span> <span class="count" id="cnt-out-day3">0</span></button>
+</div>
+
+<div id="graph">
+  <div class="hud">
+    <div><b>Cuộn</b> để zoom · <b>Kéo</b> nền để pan</div>
+    <div><b>Bấm</b> node để highlight · <b>Bấm nền</b> để bỏ chọn</div>
+    <div id="hudCount" style="margin-top:4px;border-top:1px solid #d9c9b8;padding-top:4px"></div>
+  </div>
+  <div class="err-overlay" id="errOverlay">
+    <div class="box">
+      <b>Không tải được dữ liệu</b>
+      <div class="msg" id="errMsg"></div>
+      <button id="errRetry">Thử lại</button>
+    </div>
+  </div>
+  <!-- flowOverlay SVG được tạo dynamically trong setupFlowSvg() — vis-network wipe các inline child của #graph -->
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="order-sheet" id="orderSheet" aria-hidden="true" role="dialog">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="sheetTitle">—</div>
+    <button class="sheet-close" id="sheetClose" type="button" aria-label="Đóng">✕</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+  <div class="sheet-actions">
+    <button class="play-btn" id="playBtn" type="button">▶ Phát lại luồng</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ─── Constants ───
+  // SÁP và CADCAM là 2 phòng song song (nghiệp vụ): order qua một trong hai dựa trên routed_to.
+  // DB lưu stagesData[1] = 'SÁP/Cadcam' (unified) → split visual theo routed_to:
+  //   routed_to='sap'|'none'|undefined → SÁP (đắp sáp tay)
+  //   routed_to='zirco'|'both'          → CADCAM (mill CNC / route ưu tiên CADCAM)
+  // SƯỜN cũng split theo routed_to (cùng quy luật):
+  //   routed_to='sap'|'none'|undefined → SƯỜN KL    (đúc khung kim loại)
+  //   routed_to='zirco'|'both'          → SƯỜN ZIRCO (mill khung zirconia CNC)
+  const STAGES = [
+    { id: 'st:CBM',    label: 'CBM',    color: '#3b82f6' },
+    { id: 'st:SÁP',    label: 'SÁP',    color: '#a855f7' },
+    { id: 'st:CADCAM', label: 'CADCAM', color: '#06b6d4' },  // cyan để phân biệt SÁP
+    { id: 'st:SƯỜN KL',    label: 'SƯỜN KL',    color: '#64748b' },
+    { id: 'st:SƯỜN ZIRCO', label: 'SƯỜN ZIRCO', color: '#f59e0b' },
+    { id: 'st:ĐẮP',    label: 'ĐẮP',    color: '#f97316' },
+    { id: 'st:MÀI',    label: 'MÀI',    color: '#10b981' },
+  ];
+  const VISUAL_STAGE_LABELS = new Set(STAGES.map(s => s.label));
+  const CANONICAL_STAGE_LABELS = new Set(['CBM', 'SÁP', 'CADCAM', 'SƯỜN', 'ĐẮP', 'MÀI']);
+  const STAGE_BY_KEY = new Map([
+    ['cbm', 'CBM'],
+    ['sap', 'SÁP'],
+    ['cadcam', 'CADCAM'],
+    ['suon', 'SƯỜN'],
+    ['suon_kl', 'SƯỜN KL'],
+    ['suon_zirco', 'SƯỜN ZIRCO'],
+    ['dap', 'ĐẮP'],
+    ['mai', 'MÀI'],
+    ['done', 'HOÀN TẤT'],
+  ]);
+
+  // Quyết định stage visual cho order khi DB stage là 'SÁP/Cadcam' (unified)
+  function effectiveStageFor(canonicalStage, routedTo, order){
+    const routed = String(routedTo || '').toLowerCase();
+    if (canonicalStage === 'SÁP' && (routed === 'zirco' || routed === 'both')) {
+      return 'CADCAM';
+    }
+    if (canonicalStage === 'SƯỜN') {
+      return suonVisualStageFor(order);
+    }
+    return canonicalStage;
+  }
+
+  function routeBranch(routedTo){
+    const routed = String(routedTo || '').toLowerCase();
+    if (routed === 'zirco' || routed === 'both') return 'CADCAM';
+    return 'SÁP';
+  }
+
+  function branchNotTaken(routedTo){
+    const branch = routeBranch(routedTo);
+    if (branch === 'CADCAM') return 'SÁP';
+    if (branch === 'SÁP') return 'CADCAM';
+    return '';
+  }
+
+  function isPlaceholderKtv(name){
+    if (/^[-—–_.\s]+$/.test(String(name || ''))) return true;
+    const key = textKey(name);
+    return !key || key === '-' || key === '--' || key === 'n/a' || key === 'na' ||
+      key === 'none' || key === 'null' || key === 'unknown' || key === 'chua nhan';
+  }
+
+  function stageDataFor(order, canonicalStage){
+    const stages = Array.isArray(order && order.stagesData) ? order.stagesData : [];
+    return stages.find(s => normalizeStage(s && s.n) === canonicalStage) || null;
+  }
+
+  function suonVisualStageFor(order){
+    // Quyết định theo routed_to (cùng quy luật với SÁP↔CADCAM) để đảm bảo
+    // material → branch nhất quán, không phụ thuộc vào việc đã có KTV hay chưa.
+    const routed = String((order && (order._routedTo || order.routed_to)) || '').toLowerCase();
+    if (routed === 'zirco' || routed === 'both') return 'SƯỜN ZIRCO';
+    return 'SƯỜN KL';
+  }
+
+  function suonBranchNotTaken(order){
+    const branch = suonVisualStageFor(order);
+    if (branch === 'SƯỜN KL') return 'SƯỜN ZIRCO';
+    if (branch === 'SƯỜN ZIRCO') return 'SƯỜN KL';
+    return '';
+  }
+
+  function buildVisualStageMap(order){
+    const routed = order && (order._routedTo || order.routed_to);
+    const stagesMap = new Map();
+    (order && order.stagesData || []).forEach(s => {
+      const canonical = normalizeStage(s && s.n);
+      if (!canonical) return;
+      stagesMap.set(effectiveStageFor(canonical, routed, order), s);
+    });
+    if (suonVisualStageFor(order) === 'SƯỜN ZIRCO') {
+      const suon = stageDataFor(order, 'SƯỜN');
+      const cadcam = stageDataFor(order, 'SÁP') || stageDataFor(order, 'CADCAM');
+      if (suon) {
+        stagesMap.set('SƯỜN ZIRCO', {
+          ...suon,
+          k: cadcam && !isPlaceholderKtv(cadcam.k) ? cadcam.k : suon.k,
+          t: suon.t || (cadcam && cadcam.t) || '',
+        });
+      }
+    }
+    return stagesMap;
+  }
+
+  function textKey(s){
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function stageKey(stage){
+    const k = textKey(stage);
+    if (!k) return '';
+    // 'cadcam' đứng riêng phải match TRƯỚC 'sap' (vì 'sap/cadcam' chứa cả 2 substring)
+    // 'sap/cadcam' (DB unified) → 'sap' để map về SÁP canonical, split sang CADCAM bằng routed_to
+    if (k === 'cadcam' || k === 'cad/cam' || k === 'cad cam') return 'cadcam';
+    if (k.includes('suon') && (k.includes('zirco') || k.includes('zir'))) return 'suon_zirco';
+    if (k.includes('suon') && (k.includes('kim loai') || /\bkl\b/.test(k))) return 'suon_kl';
+    if (k.includes('sap')) return 'sap';  // 'sap', 'sap/cadcam', etc → sap
+    if (k.includes('suon')) return 'suon';
+    if (k.includes('dap')) return 'dap';
+    if (k.includes('mai')) return 'mai';
+    if (k.includes('cbm')) return 'cbm';
+    if (k.includes('hoan tat') || k.includes('hoan thanh')) return 'done';
+    return k;
+  }
+
+  function normalizeStage(stage){
+    const key = stageKey(stage);
+    return STAGE_BY_KEY.get(key) || '';
+  }
+
+  function deriveCurrentStage(o){
+    const direct = normalizeStage(o && o.current_stage);
+    if (direct) return direct;
+    const stages = Array.isArray(o && o.stagesData) ? o.stagesData : [];
+    let latestDone = -1;
+    stages.forEach((s, i) => {
+      if (!s || s.sk || !s.x) return;
+      latestDone = Math.max(latestDone, i);
+    });
+    const current = stages.find((s, i) => s && !s.sk && !s.x && i > latestDone);
+    return normalizeStage(current && current.n);
+  }
+
+  function normalizeWipLiveOrder(o){
+    const stage = deriveCurrentStage(o);
+    const ycGiao = (o && (o.yc_giao || o.yc_ht)) || '';
+    const routed = (o && o.routed_to) || '';
+    const effective = effectiveStageFor(stage, routed, o);
+    const inDate = (o && o.received_date) || parseDateKey(o && (o.nhap_luc || o.nhan));
+    return {
+      ...o,
+      current_stage: stage,         // canonical (vd 'SÁP'/'SƯỜN'), khớp CANONICAL_STAGE_LABELS để filter
+      _effectiveStage: effective,    // visual ('SÁP' hoặc 'CADCAM'), để connect graph node
+      _routedTo: routed,
+      ma_dh: o && o.ma_dh ? String(o.ma_dh) : '',
+      sl: Number(o && o.sl) || 0,
+      yc_giao: ycGiao,
+      yc_ht: (o && (o.yc_ht || o.yc_giao)) || '',
+      phuc_hinh: (o && o.phuc_hinh) || '',
+      khach_hang: (o && o.khach_hang) || '',
+      benh_nhan: (o && o.benh_nhan) || '',
+      nhan: (o && o.nhan) || '',
+      _inDate:  inDate || '',
+      _outDate: parseDateKey(ycGiao),
+    };
+  }
+
+  function stageIdFor(stage){
+    const label = VISUAL_STAGE_LABELS.has(stage) ? stage : (normalizeStage(stage) || stage);
+    return 'st:' + label;
+  }
+
+  const MAT_COLORS = {
+    zirc:   '#3b82f6',
+    kl:     '#94a3b8',
+    cercon: '#a855f7',
+    other:  '#cbd5e1',
+  };
+  const URGENT_COLOR = '#ef4444';
+  const WIP_WORK_START_H = 8;
+  const WIP_WORK_END_H = 21;
+  const WIP_RISK_COLOR = {
+    normal: null,
+    warn: '#eab308',
+    alert: '#ea580c',
+    danger: '#991b1b',
+  };
+
+  // Rút gọn tên nha khoa cho label trên graph (bỏ prefix "Nha khoa"/"Nk", cắt nếu quá dài)
+  function shortClinic(name){
+    let s = String(name || '').trim();
+    s = s.replace(/^(nha\s*khoa|nk)\s+/i, '');
+    if (s.length > 22) s = s.slice(0, 21) + '…';
+    return s;
+  }
+
+  function classifyMaterial(phucHinh){
+    const s = (phucHinh || '').toLowerCase();
+    if (s.includes('cercon')) return 'cercon';
+    if (s.includes('zirconia') || s.includes('zir')) return 'zirc';
+    if (s.includes('kim loại') || s.includes('kim loai') || s.includes('metal') || s.includes('pfm')) return 'kl';
+    return 'other';
+  }
+
+  function isUrgentOrder(o){
+    return !!(o.urgent || o.delay_report || /GẤP|gấp|GAP/i.test(o.nhan || ''));
+  }
+
+  function hexToRgba(hex, alpha){
+    const m = String(hex || '').match(/^#([0-9a-f]{6})$/i);
+    if (!m) return `rgba(234,88,12,${alpha})`;
+    const r = parseInt(m[1].slice(0,2), 16);
+    const g = parseInt(m[1].slice(2,4), 16);
+    const b = parseInt(m[1].slice(4,6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function wipWorkingMinutesSince(startMs, nowMs){
+    if (startMs == null) return null;
+    if (nowMs <= startMs) return 0;
+    let total = 0;
+    let cursor = startMs;
+    while (cursor < nowMs) {
+      const d = new Date(cursor);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), WIP_WORK_START_H, 0, 0, 0).getTime();
+      const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), WIP_WORK_END_H, 0, 0, 0).getTime();
+      const segStart = Math.max(cursor, dayStart);
+      const segEnd = Math.min(nowMs, dayEnd);
+      if (segEnd > segStart) total += segEnd - segStart;
+      cursor = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0, 0).getTime();
+    }
+    return Math.floor(total / 60000);
+  }
+
+  function wipStageWorkingAge(o){
+    if (!o || o.current_stage === 'HOÀN TẤT') return null;
+    const started = o.current_stage_started_at;
+    if (typeof started !== 'number' || started <= 0) return null;
+    return wipWorkingMinutesSince(started, Date.now());
+  }
+
+  function p75ForStage(stage){
+    const direct = WIP_LIVE_STAGE_P75 && WIP_LIVE_STAGE_P75[stage];
+    if (direct && direct.p75 > 0) return direct.p75;
+    if (stage === 'SÁP' || stage === 'CADCAM') {
+      const sapCadcam = WIP_LIVE_STAGE_P75 && WIP_LIVE_STAGE_P75['SÁP/Cadcam'];
+      if (sapCadcam && sapCadcam.p75 > 0) return sapCadcam.p75;
+    }
+    return null;
+  }
+
+  function computeWipRisk(o){
+    const age = wipStageWorkingAge(o);
+    if (age == null) return 'normal';
+    const p75 = p75ForStage(o && o.current_stage);
+    if (p75 == null) {
+      if (age >= 2880) return 'danger';
+      if (age >= 1440) return 'alert';
+      if (age >= 720) return 'warn';
+      return 'normal';
+    }
+    if (age >= 3 * p75) return 'danger';
+    if (age >= 2 * p75) return 'alert';
+    if (age >= p75) return 'warn';
+    return 'normal';
+  }
+
+  function orderWipRisk(o){
+    return o && o._wipRisk ? o._wipRisk : computeWipRisk(o);
+  }
+
+  function escHtml(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ─── Mutable state ───
+  let ORDERS = [];
+  let serverToday = '';   // yyyy-mm-dd từ data.today (VN tz, do server tính)
+  let tomorrowKey = '';   // today + 1 (yyyy-mm-dd)
+  let dayAfterKey = '';   // today + 2 (yyyy-mm-dd)
+  let activeDateFilter = 'all';
+  let WIP_LIVE_STAGE_P75 = {};
+  let alertPulseRaf = null;
+  let originals = new Map();
+  let edgeOriginals = new Map();
+
+  // ─── Date helpers (port từ stats.routes.js parseDateKey để parse yc_giao thành yyyy-mm-dd) ───
+  function pad2(n){ return String(n).padStart(2, '0'); }
+  function parseDateKey(value){
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    // ISO first: yyyy-mm-dd[ T...]
+    let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+    // VN format: dd/mm/yyyy[ hh:mm]
+    m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return `${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;
+    return '';
+  }
+  function addDaysToKey(key, days){
+    // key dạng yyyy-mm-dd. Dùng UTC để tránh DST/timezone drift khi cộng ngày.
+    const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '';
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    d.setUTCDate(d.getUTCDate() + days);
+    return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth()+1)}-${pad2(d.getUTCDate())}`;
+  }
+  function fmtVN(key){
+    // yyyy-mm-dd → dd/mm cho label chip (gọn, đỡ chiếm chỗ)
+    const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? `${m[3]}/${m[2]}` : key;
+  }
+  function matchFilter(o, f){
+    if (f === 'all') return true;
+    if (f === 'alert') return orderWipRisk(o) !== 'normal';
+    if (f === 'in_today')     return o._inDate  === serverToday;
+    if (f === 'out_today')    return o._outDate === serverToday;
+    if (f === 'out_tomorrow') return o._outDate === tomorrowKey;
+    if (f === 'out_day3')     return o._outDate === dayAfterKey;
+    return true;
+  }
+  function recomputeChipLabels(orders){
+    document.getElementById('lbl-in-today').textContent     = serverToday  ? 'Vào hôm nay (' + fmtVN(serverToday)  + ')' : 'Vào hôm nay';
+    document.getElementById('lbl-out-today').textContent    = serverToday  ? 'Ra hôm nay ('  + fmtVN(serverToday)  + ')' : 'Ra hôm nay';
+    document.getElementById('lbl-out-tomorrow').textContent = tomorrowKey  ? 'Ngày mai ('    + fmtVN(tomorrowKey)  + ')' : 'Ngày mai';
+    document.getElementById('lbl-out-day3').textContent     = dayAfterKey  ? 'Ngày kia ('    + fmtVN(dayAfterKey)  + ')' : 'Ngày kia';
+    document.getElementById('cnt-all').textContent          = orders.length;
+    document.getElementById('cnt-alert').textContent        = orders.filter(o => matchFilter(o, 'alert')).length;
+    document.getElementById('cnt-in-today').textContent     = orders.filter(o => matchFilter(o, 'in_today')).length;
+    document.getElementById('cnt-out-today').textContent    = orders.filter(o => matchFilter(o, 'out_today')).length;
+    document.getElementById('cnt-out-tomorrow').textContent = orders.filter(o => matchFilter(o, 'out_tomorrow')).length;
+    document.getElementById('cnt-out-day3').textContent     = orders.filter(o => matchFilter(o, 'out_day3')).length;
+  }
+
+  // ─── Build graph nodes ───
+  // Hex → rgba(...,alpha) cho glow ring quanh station
+  function hexGlow(hex, alpha){
+    const m = String(hex || '').match(/^#?([0-9a-f]{6})$/i);
+    if (!m) return hex;
+    const r = parseInt(m[1].slice(0,2), 16);
+    const g = parseInt(m[1].slice(2,4), 16);
+    const b = parseInt(m[1].slice(4,6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function buildStageNodes(){
+    const R = 360;  // tăng từ 260 → giãn cách công đoạn
+    return STAGES.map((st, i) => {
+      const angle = (i / STAGES.length) * Math.PI * 2 - Math.PI/2;
+      return {
+        id: st.id,
+        label: st.label,
+        kind: 'stage',
+        shape: 'ellipse',
+        size: 48,
+        // Min size để station LUÔN to hơn order rõ rệt, không bị auto-shrink khi label ngắn
+        widthConstraint: { minimum: 112 },
+        heightConstraint: { minimum: 40, valign: 'middle' },
+        margin: { top: 10, right: 16, bottom: 10, left: 16 },
+        color: { background: st.color, border: '#ffffff', highlight: { background: st.color, border: '#ffffff' } },
+        // Font lớn + stroke đen để đọc trên mọi màu nền + zoom-out
+        font: { color: '#fff', size: 16, face: 'inherit', strokeWidth: 3, strokeColor: 'rgba(0,0,0,.65)', multi: false },
+        borderWidth: 3,
+        shadow: { enabled: true, color: hexGlow(st.color, 0.75), size: 29, x: 0, y: 0 },
+        fixed: { x: true, y: true },
+        x: Math.cos(angle) * R,
+        y: Math.sin(angle) * R,
+        title: makeStageTipElement(st.label),
+      };
+    });
+  }
+
+  // Tooltip phải là HTMLElement — vis-network 9.x không auto-parse HTML string
+  function makeTipElement(o, sl, urgent){
+    const el = document.createElement('div');
+    const tags = [];
+    if (o.urgent || urgent) tags.push('<b style="color:#fca5a5">⚡ GẤP</b>');
+    if (o.delay_report) tags.push('<b style="color:#fca5a5">TRỄ</b>');
+    if (o.nhan && !/GẤP|gấp|GAP/i.test(o.nhan)) tags.push(escHtml(o.nhan));
+    const lines = ['<b>' + escHtml(o.ma_dh) + '</b>'];
+    if (o.khach_hang) lines.push(escHtml(o.khach_hang));
+    if (o.benh_nhan)  lines.push('BN: ' + escHtml(o.benh_nhan));
+    lines.push((o.phuc_hinh ? escHtml(o.phuc_hinh) + ' · ' : '') + '<b>' + sl + '</b> răng');
+    if (o._effectiveStage || o.current_stage) {
+      const stageMap = buildVisualStageMap(o);
+      const currentVisual = o._effectiveStage || o.current_stage;
+      const currentData = stageMap.get(currentVisual);
+      const ktv = currentData && !isPlaceholderKtv(currentData.k) ? ' · ' + currentData.k : '';
+      lines.push('Đang ở: ' + escHtml(currentVisual + ktv));
+    }
+    lines.push('Giao: ' + escHtml(o.yc_giao || '—'));
+    if (o.routed_to || o._routedTo) lines.push('Route: ' + escHtml(String(o._routedTo || o.routed_to).toUpperCase()));
+    if (tags.length) lines.push(tags.join(' · '));
+    el.innerHTML = lines.join('<br>');
+    return el;
+  }
+
+  function makeStageTipElement(stLabel){
+    const el = document.createElement('div');
+    el.innerHTML = '<b>' + escHtml(stLabel) + '</b><br>Cụm công đoạn';
+    return el;
+  }
+
+  function buildOrderNodes(orders){
+    const nodes = [];
+    const edges = [];
+    orders.forEach(o => {
+      // Dùng _effectiveStage (đã split SÁP/CADCAM theo routed_to). Fallback về current_stage.
+      const stageId = stageIdFor(o._effectiveStage || o.current_stage);
+      const sl = Math.max(1, Number(o.sl) || 1);
+      const size = 14 + Math.sqrt(sl) * 5;
+      const urgent = isUrgentOrder(o);
+      const mat = classifyMaterial(o.phuc_hinh);
+      const fill = urgent ? URGENT_COLOR : (MAT_COLORS[mat] || MAT_COLORS.other);
+      const risk = orderWipRisk(o);
+      o._wipRisk = risk;
+
+      nodes.push({
+        id: 'o:' + o.ma_dh,
+        label: shortClinic(o.khach_hang) || o.ma_dh,
+        kind: 'order',
+        shape: 'dot',
+        size,
+        color: {
+          background: fill,
+          border: urgent ? '#fca5a5' : '#0f1115',
+          highlight: { background: fill, border: '#fff' },
+        },
+        borderWidth: urgent ? 3 : 2,
+        font: { color: '#f3efe8', size: 10, face: 'inherit', strokeWidth: 2, strokeColor: 'rgba(0,0,0,.85)' },
+        title: makeTipElement(o, sl, urgent),
+        _stageId: stageId,
+        _urgent: urgent,
+        _risk: risk,
+        _baseSize: size,
+      });
+
+      edges.push({
+        id: 'e:' + o.ma_dh,
+        from: 'o:' + o.ma_dh,
+        to: stageId,
+        color: { color: urgent ? 'rgba(239,68,68,.85)' : 'rgba(180,180,200,.30)' },
+        width: urgent ? 2.6 : 1.3,
+        smooth: { type: 'continuous' },
+      });
+    });
+    return { nodes, edges };
+  }
+
+  // ─── DataSets + Network (init với stage nodes, order nodes thêm sau khi fetch) ───
+  if (!window.vis || !vis.DataSet || !vis.Network) {
+    document.getElementById('subtitle').textContent = 'Lỗi: không tải được thư viện graph';
+    document.getElementById('errMsg').textContent = 'Không tải được vis-network. Kiểm tra kết nối internet/CDN trên thiết bị này.';
+    document.getElementById('errOverlay').classList.add('show');
+    return;
+  }
+
+  const nodesDS = new vis.DataSet(buildStageNodes());
+  const edgesDS = new vis.DataSet([]);
+
+  const network = new vis.Network(
+    document.getElementById('graph'),
+    { nodes: nodesDS, edges: edgesDS },
+    {
+      autoResize: true,
+      interaction: { hover: true, tooltipDelay: 120, zoomView: true, dragView: true, navigationButtons: false },
+      physics: {
+        enabled: true,
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based: {
+          gravitationalConstant: -120,
+          centralGravity: 0.004,
+          springLength: 168,
+          springConstant: 0.09,
+          damping: 0.6,
+          avoidOverlap: 0.95,
+        },
+        stabilization: { enabled: true, iterations: 220, updateInterval: 25 },
+        minVelocity: 0.6,
+      },
+      nodes: { shape: 'dot', shadow: { enabled: true, color: 'rgba(0,0,0,0.12)', size: 6, x: 0, y: 2 } },
+      edges: { smooth: { type: 'continuous' }, hoverWidth: 0, selectionWidth: 1 },
+    }
+  );
+
+  // ─── Highlight ───
+  function rebuildHighlightCache(){
+    originals = new Map();
+    edgeOriginals = new Map();
+    nodesDS.forEach(n => {
+      originals.set(n.id, {
+        bg: n.color.background,
+        border: n.color.border,
+        borderWidth: n.borderWidth,
+        size: n.size,
+        shadow: n.shadow || baseNodeShadow(),
+        fontColor: n.font.color,
+        fontStroke: n.font.strokeColor,
+      });
+    });
+    edgesDS.forEach(e => edgeOriginals.set(e.id, { color: e.color.color, width: e.width }));
+  }
+
+  function dimColor(hex){
+    if (!hex) return 'rgba(180,170,160,.18)';
+    if (hex.startsWith('rgba')) return hex.replace(/rgba\(([^)]+),\s*[\d.]+\)/, 'rgba($1,.10)');
+    const m = hex.match(/^#([0-9a-f]{6})$/i);
+    if (!m) return 'rgba(180,170,160,.18)';
+    const r = parseInt(m[1].slice(0,2),16), g = parseInt(m[1].slice(2,4),16), b = parseInt(m[1].slice(4,6),16);
+    return `rgba(${r},${g},${b},.16)`;
+  }
+
+  function clearHighlight(){
+    const updates = [];
+    nodesDS.forEach(n => {
+      const o = originals.get(n.id);
+      if (!o) return;
+      updates.push({
+        id: n.id,
+        color: { background: o.bg, border: o.border },
+        borderWidth: o.borderWidth,
+        size: o.size,
+        shadow: o.shadow,
+        font: { color: o.fontColor, strokeColor: o.fontStroke, size: n.font.size, face: 'inherit', strokeWidth: 2 },
+        opacity: 1,
+      });
+    });
+    nodesDS.update(updates);
+    const eUpdates = [];
+    edgesDS.forEach(e => {
+      const o = edgeOriginals.get(e.id);
+      if (!o) return;
+      eUpdates.push({ id: e.id, color: { color: o.color }, width: o.width });
+    });
+    edgesDS.update(eUpdates);
+  }
+
+  function highlight(nodeId){
+    const connectedNodes = new Set([nodeId, ...network.getConnectedNodes(nodeId)]);
+    const connectedEdges = new Set(network.getConnectedEdges(nodeId));
+    const nodeUpdates = [];
+    nodesDS.forEach(n => {
+      const o = originals.get(n.id);
+      if (!o) return;
+      if (connectedNodes.has(n.id)) {
+        nodeUpdates.push({
+          id: n.id,
+          color: { background: o.bg, border: n.id === nodeId ? '#1f2937' : o.border },
+          borderWidth: n.id === nodeId ? 4 : o.borderWidth,
+          size: o.size,
+          shadow: o.shadow,
+          opacity: 1,
+          font: { color: o.fontColor, strokeColor: o.fontStroke, size: n.font.size, face: 'inherit', strokeWidth: 2 },
+        });
+      } else {
+        nodeUpdates.push({
+          id: n.id,
+          color: { background: dimColor(o.bg), border: 'rgba(120,125,135,.25)' },
+          borderWidth: 1,
+          size: o.size,
+          shadow: { enabled: false },
+          opacity: 0.35,
+          font: { color: 'rgba(200,200,210,.30)', strokeColor: 'rgba(0,0,0,.4)', size: n.font.size, face: 'inherit', strokeWidth: 1 },
+        });
+      }
+    });
+    nodesDS.update(nodeUpdates);
+    const edgeUpdates = [];
+    edgesDS.forEach(e => {
+      const o = edgeOriginals.get(e.id);
+      if (!o) return;
+      if (connectedEdges.has(e.id)) {
+        edgeUpdates.push({ id: e.id, color: { color: o.color }, width: Math.max(2, o.width + 1) });
+      } else {
+        edgeUpdates.push({ id: e.id, color: { color: 'rgba(120,90,70,.06)' }, width: 0.5 });
+      }
+    });
+    edgesDS.update(edgeUpdates);
+  }
+
+  function baseNodeShadow(){
+    return { enabled: true, color: 'rgba(0,0,0,0.12)', size: 6, x: 0, y: 2 };
+  }
+
+  function stopAlertPulse(){
+    if (alertPulseRaf) {
+      cancelAnimationFrame(alertPulseRaf);
+      alertPulseRaf = null;
+    }
+    const updates = [];
+    nodesDS.forEach(n => {
+      if (n.kind !== 'order' || !n._risk || n._risk === 'normal') return;
+      const o = originals.get(n.id);
+      if (!o) return;
+      updates.push({
+        id: n.id,
+        size: o.size,
+        color: { background: o.bg, border: o.border },
+        borderWidth: o.borderWidth,
+        shadow: o.shadow,
+      });
+    });
+    if (updates.length) nodesDS.update(updates);
+  }
+
+  function startAlertPulse(){
+    stopAlertPulse();
+    if (activeDateFilter !== 'alert') return;
+    const tick = ts => {
+      if (activeDateFilter !== 'alert') {
+        stopAlertPulse();
+        return;
+      }
+      const wave = (Math.sin(ts / 520) + 1) / 2;
+      const updates = [];
+      nodesDS.forEach(n => {
+        if (n.kind !== 'order' || n.hidden || !n._risk || n._risk === 'normal') return;
+        const o = originals.get(n.id);
+        if (!o) return;
+        const color = WIP_RISK_COLOR[n._risk] || WIP_RISK_COLOR.alert;
+        updates.push({
+          id: n.id,
+          size: o.size + 0.5 + wave * 0.9,
+          color: { background: o.bg, border: color },
+          borderWidth: o.borderWidth + 0.5 + wave * 0.8,
+          shadow: {
+            enabled: true,
+            color: hexToRgba(color, 0.22 + wave * 0.16),
+            size: 8 + wave * 5,
+            x: 0,
+            y: 0,
+          },
+        });
+      });
+      if (updates.length) nodesDS.update(updates);
+      alertPulseRaf = requestAnimationFrame(tick);
+    };
+    alertPulseRaf = requestAnimationFrame(tick);
+  }
+
+  network.on('click', params => {
+    if (params.nodes && params.nodes.length > 0) {
+      const nid = params.nodes[0];
+      highlight(nid);
+      // Chỉ mở modal khi click order node ('o:...'), không mở khi click stage
+      if (typeof nid === 'string' && nid.startsWith('o:')) {
+        const maDh = nid.slice(2);
+        const order = ORDERS.find(o => o.ma_dh === maDh);
+        if (order) openOrderSheet(order);
+      }
+    } else {
+      clearHighlight();
+      closeOrderSheet();
+    }
+  });
+
+  // ─── Order bottom-sheet (Phase 1: shell + open/close; Phase 2: timeline body) ───
+  let activeOrder = null;
+  const sheet         = document.getElementById('orderSheet');
+  const sheetBackdrop = document.getElementById('sheetBackdrop');
+  const sheetTitle    = document.getElementById('sheetTitle');
+  const sheetBody     = document.getElementById('sheetBody');
+  const sheetClose    = document.getElementById('sheetClose');
+  const playBtn       = document.getElementById('playBtn');
+
+  function openOrderSheet(order){
+    activeOrder = order;
+    const urgent = isUrgentOrder(order);
+    sheetTitle.innerHTML =
+      '<span class="ma-dh">' + escHtml(order.ma_dh) + '</span>' +
+      (urgent ? '<span class="tag">⚡ GẤP</span>' : '') +
+      (order.delay_report ? '<span class="tag">TRỄ</span>' : '');
+    renderOrderBody(order);
+    sheet.classList.add('open');
+    sheet.classList.remove('minimized');
+    sheetBackdrop.classList.add('open');
+    sheet.setAttribute('aria-hidden', 'false');
+  }
+  function closeOrderSheet(){
+    activeOrder = null;
+    sheet.classList.remove('open', 'minimized');
+    sheetBackdrop.classList.remove('open');
+    sheet.setAttribute('aria-hidden', 'true');
+    stopFlowAnimation();  // forward-declare, defined Phase 3
+  }
+  function fmtAgeMinutes(m){
+    if (m == null) return '';
+    if (m < 60) return m + ' phút';
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem ? (h + 'h' + rem) : (h + 'h');
+  }
+  // yc_giao thường có format "dd/mm/yyyy hh:mm" → tách lấy phần hh:mm
+  function fmtStageTime(t){
+    if (!t) return '';
+    const m = String(t).match(/^(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(\d{1,2}:\d{2})/);
+    if (m) return m[2] + ' · ' + m[1].split('/').slice(0,2).join('/');  // "09:00 · 25/05"
+    return String(t);
+  }
+
+  function buildTimelineHtml(o){
+    const stagesMap = buildVisualStageMap(o);
+    const skippedBranch = branchNotTaken(o._routedTo || o.routed_to);
+    const skippedSuonBranch = suonBranchNotTaken(o);
+    const effectiveCurrent = o._effectiveStage || o.current_stage;
+
+    const cellStates = STAGES.map(st => {
+      const s = stagesMap.get(st.label);
+      const skip = st.label === skippedBranch || st.label === skippedSuonBranch || !!(s && s.sk);
+      const done = !!(s && s.x);
+      const current = !skip && !done && effectiveCurrent === st.label;
+      const cls = skip ? 'skip' : done ? 'done' : current ? 'current' : 'pending';
+      const icon = skip ? '—' : done ? '✓' : current ? '⏳' : '○';
+      const ktv = (s && s.k) ? escHtml(s.k) : '';
+      const ts  = done ? fmtStageTime(s && s.t) : (current ? fmtAgeMinutes(o.current_stage_age_minutes) : '');
+      const meta = (ktv || ts)
+        ? '<div class="tl-meta">' + (ktv ? '<span class="ktv">' + ktv + '</span>' : '') +
+          (ts ? '<span class="ts">' + escHtml(ts) + '</span>' : '') + '</div>'
+        : '<div class="tl-meta"></div>';
+      return {
+        cls,
+        skip,
+        done,
+        html: (
+        '<div class="tl-stage ' + cls + '" style="--c:' + st.color + '" data-stage="' + escHtml(st.label) + '">' +
+          '<div class="tl-dot">' + icon + '</div>' +
+          '<div class="tl-name">' + escHtml(st.label) + '</div>' +
+          meta +
+        '</div>'
+        )
+      };
+    });
+    const cells = cellStates.map(c => c.html).join('');
+
+    // Progress bar fill: kéo tới dot cuối cùng đã hoàn tất trên timeline 6 trạm.
+    const active = cellStates.filter(c => !c.skip);
+    const doneCount = cellStates.filter(c => c.done && !c.skip).length;
+    const total = active.length || 1;
+    const lastDoneIdx = cellStates.reduce((last, c, i) => (c.done && !c.skip ? i : last), -1);
+    const stepPct = 84 / Math.max(1, STAGES.length - 1);
+    const fillPct = lastDoneIdx < 0 ? 0 : Math.min(84, lastDoneIdx * stepPct);
+
+    return (
+      '<div class="tl-wrap">' +
+        '<div class="tl-track">' +
+          '<div class="tl-rail"></div>' +
+          '<div class="tl-rail-fill" style="width:' + fillPct + '%"></div>' +
+          cells +
+        '</div>' +
+        '<div class="tl-summary">' +
+          '<span>Tiến độ: <b>' + doneCount + '/' + total + '</b> công đoạn</span>' +
+          '<span>Routed to: <b>' + escHtml((o.routed_to || '—').toUpperCase()) + '</b></span>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderOrderBody(o){
+    const lines = [];
+    if (o.khach_hang) lines.push('<div class="row"><b>' + escHtml(o.khach_hang) + '</b></div>');
+    if (o.benh_nhan)  lines.push('<div class="row">BN: <b>' + escHtml(o.benh_nhan) + '</b></div>');
+    const matSL = (o.phuc_hinh ? escHtml(o.phuc_hinh) + ' · ' : '') + '<b>' + (Number(o.sl)||0) + '</b> răng';
+    lines.push('<div class="row">' + matSL + '</div>');
+    lines.push('<div class="row">📥 Vào ' + escHtml(o._inDate || '—') + ' <span class="sep">·</span> 📤 Giao ' + escHtml(o.yc_giao || '—') + '</div>');
+    if (o.current_stage) {
+      const age = (o.current_stage_age_minutes != null) ? ' · ' + fmtAgeMinutes(o.current_stage_age_minutes) : '';
+      lines.push('<div class="pin">📍 Đang ở: ' + escHtml(o._effectiveStage || o.current_stage) + age + '</div>');
+    }
+    lines.push(buildTimelineHtml(o));
+    sheetBody.innerHTML = lines.join('');
+  }
+
+  sheetClose.addEventListener('click', closeOrderSheet);
+  sheetBackdrop.addEventListener('click', closeOrderSheet);
+  playBtn.addEventListener('click', () => {
+    console.log('[WIP-LIVE] playBtn clicked. flowState=', !!flowState, 'activeOrder=', activeOrder && activeOrder.ma_dh);
+    try {
+      if (flowState) stopFlowAnimation();
+      else if (activeOrder) playFlowAnimation(activeOrder);
+      else console.warn('[WIP-LIVE] playBtn: không có activeOrder để play');
+    } catch (e) {
+      console.error('[WIP-LIVE] playFlowAnimation THROW:', e);
+      alert('Lỗi play: ' + (e && e.message ? e.message : e));
+    }
+  });
+
+  // Drag-to-close trên handle (mobile gesture)
+  (function attachDragClose(){
+    const handle = document.getElementById('sheetHandle');
+    if (!handle) return;
+    let startY = null, deltaY = 0, dragging = false;
+    handle.addEventListener('pointerdown', e => {
+      startY = e.clientY; deltaY = 0; dragging = true;
+      handle.setPointerCapture(e.pointerId);
+      sheet.style.transition = 'none';
+    });
+    handle.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      deltaY = Math.max(0, e.clientY - startY);  // chỉ kéo xuống
+      sheet.style.transform = 'translateY(' + deltaY + 'px)';
+    });
+    function endDrag(){
+      if (!dragging) return;
+      dragging = false;
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      if (deltaY > 80) closeOrderSheet();
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  })();
+
+  // ─── Phase 3: Flow animation trên graph chính ───
+  let flowState = null;  // null khi không play; { rafId, onStop } khi đang play
+
+  function getNodeDOMPos(id){
+    const positions = network.getPositions([id]);
+    const can = positions && positions[id];
+    if (!can) return null;
+    return network.canvasToDOM(can);
+  }
+
+  function buildFlowWaypoints(order){
+    const stagesMap = buildVisualStageMap(order);
+    const parallelNotTaken = branchNotTaken(order._routedTo || order.routed_to);
+    const suonNotTaken = suonBranchNotTaken(order);
+
+    const startDom = network.canvasToDOM({ x: 0, y: 0 });
+    if (!startDom) return null;
+    const waypoints = [{ pos: startDom, type: 'start', label: 'Vào' }];
+    const effectiveCurrent = order._effectiveStage || order.current_stage;
+    for (const st of STAGES) {
+      const pos = getNodeDOMPos(st.id);
+      if (!pos) continue;
+      // Parallel branch không đi qua → skip visual (lướt qua mờ)
+      if (parallelNotTaken && st.label === parallelNotTaken) {
+        waypoints.push({ pos, type: 'skip', label: st.label, color: st.color, ktv: '', t: '' });
+        continue;
+      }
+      if (suonNotTaken && st.label === suonNotTaken) {
+        waypoints.push({ pos, type: 'skip', label: st.label, color: st.color, ktv: '', t: '' });
+        continue;
+      }
+      const s = stagesMap.get(st.label);
+      const skip = !!(s && s.sk);
+      const done = !!(s && s.x);
+      const isCurrent = !skip && !done && effectiveCurrent === st.label;
+      const type = skip ? 'skip' : done ? 'done' : isCurrent ? 'current' : 'pending';
+      waypoints.push({
+        pos, type, label: st.label, color: st.color,
+        ktv: (s && s.k) || '', t: (s && s.t) || '',
+      });
+      if (type === 'current' || type === 'pending') break;
+    }
+    return waypoints.length >= 2 ? waypoints : null;
+  }
+
+  function dimGraphForFlow(orderId){
+    const keepIds = new Set([orderId, ...STAGES.map(s => s.id)]);
+    const nUp = [];
+    nodesDS.forEach(n => {
+      const orig = originals.get(n.id);
+      if (!orig) return;
+      if (keepIds.has(n.id)) {
+        nUp.push({
+          id: n.id, opacity: 1,
+          color: { background: orig.bg, border: n.id === orderId ? '#fff' : orig.border },
+          borderWidth: n.id === orderId ? 4 : orig.borderWidth,
+        });
+      } else {
+        nUp.push({
+          id: n.id, opacity: 0.06,
+          color: { background: dimColor(orig.bg), border: 'rgba(120,125,135,.10)' },
+          borderWidth: 1,
+        });
+      }
+    });
+    nodesDS.update(nUp);
+    const eUp = [];
+    edgesDS.forEach(e => eUp.push({ id: e.id, color: { color: 'rgba(120,90,70,.04)' }, width: 0.5 }));
+    edgesDS.update(eUp);
+  }
+
+  function setupFlowSvg(){
+    const graph = document.getElementById('graph');
+    if (!graph) throw new Error('#graph container không tồn tại');
+    // vis-network wipe inline children → tạo SVG dynamically nếu chưa có.
+    // Phải dùng createElementNS với SVG namespace, không phải createElement.
+    let svg = document.getElementById('flowOverlay');
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = 'flowOverlay';
+      svg.setAttribute('class', 'flow-overlay');
+      svg.style.position = 'absolute';
+      svg.style.top = '0';
+      svg.style.left = '0';
+      svg.style.right = '0';
+      svg.style.bottom = '0';
+      svg.style.pointerEvents = 'none';
+      svg.style.zIndex = '4';
+      graph.appendChild(svg);
+      console.log('[WIP-LIVE] flowOverlay SVG created dynamically');
+    }
+    const rect = graph.getBoundingClientRect();
+    svg.setAttribute('width', rect.width);
+    svg.setAttribute('height', rect.height);
+    svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
+    svg.innerHTML =
+      '<defs>' +
+        '<filter id="glowFilter" x="-100%" y="-100%" width="300%" height="300%">' +
+          '<feGaussianBlur stdDeviation="6" result="b" />' +
+          '<feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>' +
+        '</filter>' +
+        '<radialGradient id="ghostGrad" cx="50%" cy="50%" r="50%">' +
+          '<stop offset="0%" stop-color="#fff" stop-opacity="1" />' +
+          '<stop offset="60%" stop-color="#ffd9b3" stop-opacity="1" />' +
+          '<stop offset="100%" stop-color="#d97757" stop-opacity="1" />' +
+        '</radialGradient>' +
+      '</defs>' +
+      '<path id="flowTrail" d="" fill="none" stroke="#d97757" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="6 5" opacity="0" />' +
+      '<circle id="flowGlow" r="26" fill="#d97757" filter="url(#glowFilter)" opacity="0" />' +
+      '<circle id="flowGhost" r="13" fill="url(#ghostGrad)" stroke="#fff" stroke-width="2.5" opacity="0" />' +
+      '<text id="flowLabel" font-size="12" font-weight="700" fill="#fff" text-anchor="middle" opacity="0" style="paint-order:stroke;stroke:rgba(0,0,0,.7);stroke-width:3.5px"></text>';
+    svg.style.display = 'block';
+    return svg;
+  }
+
+  function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+
+  // Port từ stats.routes.js parseDateTime — chấp nhận dd/mm/yyyy[ hh:mm] và yyyy-mm-dd[ hh:mm]
+  function parseDateTimeClient(value){
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (m) {
+      const d = new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+      return Number.isNaN(d.getTime()) ? null : d.getTime();
+    }
+    m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (m) {
+      const d = new Date(+m[1], +m[2]-1, +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+      return Number.isNaN(d.getTime()) ? null : d.getTime();
+    }
+    return null;
+  }
+
+  // Tính thời gian (phút) đơn nằm tại mỗi waypoint (segment i = từ waypoint[i] đến waypoint[i+1])
+  // segmentDurations[i] = số phút đơn "ở" stage thứ (i+1) trong path
+  function computeSegmentDurations(order, waypoints){
+    const segs = [];
+    let prevTs = parseDateTimeClient(order.received_date) || parseDateTimeClient(order.nhap_luc);
+    const nowTs = Date.now();
+    for (let i = 1; i < waypoints.length; i++) {
+      const wp = waypoints[i];
+      if (wp.type === 'skip') { segs.push(0); continue; }
+      if (wp.type === 'current') {
+        segs.push(Math.max(0, Number(order.current_stage_age_minutes) || 0));
+        continue;
+      }
+      if (wp.type === 'pending') { segs.push(0); continue; }
+      // done
+      const ts = parseDateTimeClient(wp.t);
+      if (ts && prevTs && ts >= prevTs) {
+        segs.push((ts - prevTs) / 60000);
+        prevTs = ts;
+      } else if (ts) {
+        segs.push(0); prevTs = ts;
+      } else {
+        segs.push(0);
+      }
+    }
+    return segs;
+  }
+
+  // Map raw minutes → segment time (ms). Loop tổng = TOTAL_CYCLE_MS.
+  // Dùng sqrt(max(FLOOR, minutes)) để chấn áp segment quá dài (vd đơn nằm 2 ngày ở SÁP) +
+  // đảm bảo segment ngắn nhất vẫn nhìn được (FLOOR=30 phút).
+  function computeSegmentMs(segMinutes, totalMs){
+    const FLOOR_MIN = 30;
+    const MIN_MS = 220;  // segment ngắn nhất ≥ 220ms để mắt theo kịp
+    const weights = segMinutes.map(m => Math.sqrt(Math.max(FLOOR_MIN, m || 0)));
+    const totalW = weights.reduce((a,b) => a+b, 0) || 1;
+    const raw = weights.map(w => (w / totalW) * totalMs);
+    // Áp dụng MIN_MS floor + re-normalize để tổng vẫn ≈ totalMs
+    let scaled = raw.map(ms => Math.max(MIN_MS, ms));
+    const scaledTotal = scaled.reduce((a,b) => a+b, 0);
+    const k = totalMs / scaledTotal;
+    return scaled.map(ms => ms * k);
+  }
+
+  function playFlowAnimation(order){
+    stopFlowAnimation();  // cancel previous
+    const orderId = 'o:' + order.ma_dh;
+
+    // Sanity check: network phải sẵn sàng (SVG sẽ được tạo trong setupFlowSvg)
+    if (!network) throw new Error('network chưa init');
+
+    const waypoints = buildFlowWaypoints(order);
+    if (!waypoints || waypoints.length < 2) {
+      throw new Error('Không build được waypoints (waypoints=' + (waypoints ? waypoints.length : 'null') + '). Stage nodes có thể chưa render trên graph — thử bấm Fit rồi play lại.');
+    }
+    console.log('[WIP-LIVE] play start. waypoints len=', waypoints.length);
+
+    setupFlowSvg();
+    dimGraphForFlow(orderId);
+    sheet.classList.add('minimized');
+    playBtn.classList.add('playing');
+    playBtn.textContent = '⏹ Dừng';
+
+    const glow  = document.getElementById('flowGlow');
+    const ghost = document.getElementById('flowGhost');
+    const trail = document.getElementById('flowTrail');
+    const lbl   = document.getElementById('flowLabel');
+
+    const TOTAL_CYCLE_MS = 3000;  // 3s/vòng (user spec)
+    const start = waypoints[0].pos;
+
+    // Tính thời gian thật mỗi stage + map sang segment ms (weighted bằng sqrt)
+    const segMinutes = computeSegmentDurations(order, waypoints);
+    const segMs = computeSegmentMs(segMinutes, TOTAL_CYCLE_MS);
+
+    let segIdx = 0;
+    let segStart = performance.now();
+    let trailD = 'M ' + start.x + ' ' + start.y;
+    let lastShownStageIdx = -1;
+    glow.setAttribute('cx',  start.x); glow.setAttribute('cy',  start.y);
+    ghost.setAttribute('cx', start.x); ghost.setAttribute('cy', start.y);
+
+    console.log('[WIP-LIVE] flow play:', {
+      order: order.ma_dh,
+      waypoints: waypoints.map(w => ({ type: w.type, label: w.label, x: Math.round(w.pos.x), y: Math.round(w.pos.y) })),
+      stageMinutes: segMinutes.map((m, i) => ({
+        to: waypoints[i + 1] && waypoints[i + 1].label,
+        type: waypoints[i + 1] && waypoints[i + 1].type,
+        minutes: Math.round(m),
+        animMs: Math.round(segMs[i]),
+      })),
+      totalMs: Math.round(segMs.reduce((a,b)=>a+b, 0)),
+    });
+    const d0 = Math.hypot(waypoints[1].pos.x - start.x, waypoints[1].pos.y - start.y);
+    if (d0 < 30) console.warn('[WIP-LIVE] flow: khoảng cách đầu chỉ ' + d0.toFixed(0) + 'px — bấm Fit để zoom in.');
+
+    function showStageLabel(wp){
+      if (wp.type === 'done' && wp.ktv) {
+        lbl.textContent = wp.ktv + (wp.t ? ' · ' + fmtStageTime(wp.t) : '');
+      } else if (wp.type === 'current') {
+        const ageStr = fmtAgeMinutes(order.current_stage_age_minutes);
+        lbl.textContent = '⏳ ' + (wp.label || '') + (ageStr ? ' · ' + ageStr : '');
+      } else if (wp.type === 'skip') {
+        lbl.textContent = '— ' + (wp.label || '') + ' (skip)';
+      } else {
+        lbl.textContent = wp.label || '';
+      }
+      lbl.setAttribute('x', wp.pos.x);
+      lbl.setAttribute('y', wp.pos.y - 38);
+      lbl.setAttribute('opacity', 0.95);
+    }
+
+    function tick(now){
+      if (!flowState) return;
+      const elapsed = now - segStart;
+      const segDur = segMs[segIdx] || 220;
+      const t = Math.min(1, elapsed / segDur);
+
+      const from = waypoints[segIdx].pos;
+      const to   = waypoints[segIdx + 1].pos;
+      const toType = waypoints[segIdx + 1].type;
+      const e = easeInOutCubic(t);
+      const cx = from.x + (to.x - from.x) * e;
+      const cy = from.y + (to.y - from.y) * e;
+
+      // Breathing pulse liên tục — ghost luôn "sống" kể cả segment chậm (vd 1.8s ở SÁP)
+      const breath = 1 + 0.22 * Math.sin(now / 240);
+      glow.setAttribute('cx', cx);  glow.setAttribute('cy', cy);
+      ghost.setAttribute('cx', cx); ghost.setAttribute('cy', cy);
+      glow.setAttribute('r', 26 * breath);
+      ghost.setAttribute('r', 13 * (1 + 0.12 * Math.sin(now / 200)));
+      glow.setAttribute('opacity', toType === 'skip' ? 0.35 : 0.85);
+      ghost.setAttribute('opacity', toType === 'skip' ? 0.55 : 1);
+
+      trail.setAttribute('d', trailD + ' L ' + cx + ' ' + cy);
+      trail.setAttribute('opacity', 0.7);
+
+      // Hiện label khi vào nửa cuối segment (đang "đến" stage tiếp theo)
+      if (t > 0.55 && lastShownStageIdx !== segIdx) {
+        showStageLabel(waypoints[segIdx + 1]);
+        lastShownStageIdx = segIdx;
+      }
+
+      // Segment kết thúc → next hoặc loop về start
+      if (t >= 1) {
+        trailD += ' L ' + to.x + ' ' + to.y;
+        if (segIdx + 1 >= waypoints.length - 1) {
+          // Hoàn tất 1 vòng → reset, lặp
+          trailD = 'M ' + start.x + ' ' + start.y;
+          segIdx = 0;
+          lastShownStageIdx = -1;
+          lbl.setAttribute('opacity', 0);
+          glow.setAttribute('cx',  start.x); glow.setAttribute('cy',  start.y);
+          ghost.setAttribute('cx', start.x); ghost.setAttribute('cy', start.y);
+        } else {
+          segIdx++;
+        }
+        segStart = now;
+      }
+
+      flowState.rafId = requestAnimationFrame(tick);
+    }
+
+    // Disable pan/zoom trong lúc play để pixel position không lệch
+    network.setOptions({ interaction: { dragView: false, zoomView: false } });
+
+    flowState = {
+      rafId: requestAnimationFrame(tick),
+      onStop: () => {
+        const svg = document.getElementById('flowOverlay');
+        svg.style.display = 'none';
+        svg.innerHTML = '';
+        sheet.classList.remove('minimized');
+        playBtn.classList.remove('playing');
+        playBtn.textContent = '▶ Phát lại luồng';
+        network.setOptions({ interaction: { dragView: true, zoomView: true } });
+        // Restore highlight: nếu sheet còn mở, highlight order; nếu không, clear
+        if (activeOrder) highlight('o:' + activeOrder.ma_dh);
+        else clearHighlight();
+      },
+    };
+  }
+
+  function stopFlowAnimation(){
+    if (!flowState) return;
+    cancelAnimationFrame(flowState.rafId);
+    const fn = flowState.onStop;
+    flowState = null;
+    if (fn) fn();
+  }
+
+  // ─── Chip filter ───
+  function applyDateFilter(f){
+    activeDateFilter = f;
+    stopAlertPulse();
+    document.querySelectorAll('#chipBar .fchip').forEach(el => {
+      el.classList.toggle('active', el.dataset.dfilter === f);
+    });
+    network.unselectAll();
+    clearHighlight();
+
+    const nodeUpdates = [];
+    const edgeUpdates = [];
+    ORDERS.forEach(o => {
+      const show = matchFilter(o, f);
+      nodeUpdates.push({ id: 'o:' + o.ma_dh, hidden: !show });
+      edgeUpdates.push({ id: 'e:' + o.ma_dh, hidden: !show });
+    });
+    if (nodeUpdates.length) nodesDS.update(nodeUpdates);
+    if (edgeUpdates.length) edgesDS.update(edgeUpdates);
+
+    const visibleOrders = ORDERS.filter(o => matchFilter(o, f));
+    const visibleSL = visibleOrders.reduce((s,o)=> s + (Number(o.sl)||0), 0);
+    const LABELS = {
+      all: 'Tất cả',
+      alert: 'Cảnh báo',
+      in_today: 'Vào hôm nay',
+      out_today: 'Ra hôm nay',
+      out_tomorrow: 'Ra ngày mai',
+      out_day3: 'Ra ngày kia',
+    };
+    const label = LABELS[f] || f;
+    document.getElementById('subtitle').textContent =
+      `${label} · ${visibleOrders.length}/${ORDERS.length} đơn · ${visibleSL} răng`;
+    startAlertPulse();
+  }
+
+  document.querySelectorAll('#chipBar .fchip').forEach(el => {
+    el.addEventListener('click', () => applyDateFilter(el.dataset.dfilter));
+  });
+
+  function resizeGraphAfterControlsToggle(){
+    window.setTimeout(() => {
+      if (network && typeof network.redraw === 'function') network.redraw();
+    }, 260);
+  }
+  function setControlsVisible(show){
+    document.body.classList.toggle('controls-visible', show);
+    if (controlsPeek) {
+      controlsPeek.setAttribute('aria-expanded', show ? 'true' : 'false');
+      controlsPeek.setAttribute('aria-label', show ? 'Ẩn bộ lọc' : 'Hiện bộ lọc');
+    }
+    resizeGraphAfterControlsToggle();
+  }
+  function toggleControls(){
+    setControlsVisible(!document.body.classList.contains('controls-visible'));
+  }
+  const controlsPeek = document.getElementById('controlsPeek');
+  if (controlsPeek) {
+    controlsPeek.setAttribute('aria-expanded', 'false');
+    controlsPeek.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleControls();
+    });
+  }
+
+  // ─── Diagnostic HUD ───
+  function updateDiagnostic(){
+    const orderNodes = nodesDS.get().filter(n => n.kind === 'order').length;
+    const stageNodes = nodesDS.get().filter(n => n.kind === 'stage').length;
+    const perStage = {};
+    nodesDS.get().filter(n => n.kind === 'order').forEach(n => {
+      const st = (n._stageId || '').replace('st:', '') || '(none)';
+      perStage[st] = (perStage[st] || 0) + 1;
+    });
+    const lossCheck = orderNodes === ORDERS.length
+      ? `✓ ${orderNodes}/${ORDERS.length} đơn render đủ`
+      : `✗ LỆCH: ${orderNodes}/${ORDERS.length} (mất ${ORDERS.length - orderNodes})`;
+    const hud = document.getElementById('hudCount');
+    if (hud) {
+      hud.innerHTML =
+        `<b>${lossCheck}</b><br>` +
+        `Stage: ${stageNodes} · Edge: ${edgesDS.length}<br>` +
+        Object.entries(perStage).map(([s,n]) => `${s}: <b>${n}</b>`).join(' · ');
+    }
+    console.log('[WIP-LIVE]', { orderNodes, stageNodes, perStage, totalFromAPI: ORDERS.length });
+  }
+
+  // ─── Render orders (replace order nodes/edges, giữ stage nodes cố định) ───
+  function renderOrders(orders){
+    // Cancel flow animation nếu đang chạy — ghost dot reference node sắp bị remove
+    stopFlowAnimation();
+    stopAlertPulse();
+    // Đóng sheet nếu order đang xem không còn trong dataset mới
+    if (activeOrder) {
+      const stillExists = orders.some(o => o.ma_dh === activeOrder.ma_dh);
+      if (!stillExists) closeOrderSheet();
+    }
+    ORDERS = orders;
+
+    // Remove old order nodes + all order edges
+    const oldOrderIds = nodesDS.get({ filter: n => n.kind === 'order' }).map(n => n.id);
+    if (oldOrderIds.length) nodesDS.remove(oldOrderIds);
+    const oldEdgeIds = edgesDS.getIds();
+    if (oldEdgeIds.length) edgesDS.remove(oldEdgeIds);
+
+    // Add new
+    const built = buildOrderNodes(orders);
+    if (built.nodes.length) nodesDS.add(built.nodes);
+    if (built.edges.length) edgesDS.add(built.edges);
+
+    rebuildHighlightCache();
+    recomputeChipLabels(orders);
+    applyDateFilter(activeDateFilter);
+    updateDiagnostic();
+  }
+
+  // ─── Fetch /api/stats/wip ───
+  async function loadOrders(){
+    const pill = document.getElementById('pillReload');
+    const sub  = document.getElementById('subtitle');
+    const err  = document.getElementById('errOverlay');
+    if (pill) pill.classList.add('loading');
+    if (err) err.classList.remove('show');
+
+    console.log('[WIP-LIVE] load start');
+    sub.textContent = '① Gọi /api/stats/wip…';
+
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 15000);
+
+    try {
+      const res = await fetch('/api/stats/wip?t=' + Date.now(), {
+        credentials: 'same-origin',
+        signal: ctrl.signal,
+      });
+      clearTimeout(timeoutId);
+      const ct = res.headers.get('content-type') || '';
+      console.log('[WIP-LIVE] HTTP', res.status, 'content-type:', ct);
+      sub.textContent = '② Đọc response (HTTP ' + res.status + ')…';
+
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        try { const j = await res.json(); if (j && j.error) msg += ' — ' + j.error; } catch (_) {
+          try { const t = await res.text(); if (t) msg += ' — ' + t.slice(0, 120); } catch (__) {}
+        }
+        throw new Error(msg);
+      }
+
+      if (!ct.includes('application/json')) {
+        const text = await res.text();
+        throw new Error('Response không phải JSON (ct=' + ct + '). Có thể session hết hạn → bị redirect login. Đầu response: ' + text.slice(0, 120));
+      }
+
+      const data = await res.json();
+      console.log('[WIP-LIVE] data summary:', {
+        ok: data.ok,
+        received: data.received && data.received.orders && data.received.orders.length,
+        carryover: data.carryover && data.carryover.orders && data.carryover.orders.length,
+      });
+
+      if (!data.ok) throw new Error(data.error || 'API trả ok=false');
+
+      // Wire ngày hôm nay từ server (VN tz). Fallback: local nếu API thiếu.
+      serverToday = parseDateKey(data.today) || (function(){
+        const d = new Date();
+        return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      })();
+      tomorrowKey = addDaysToKey(serverToday, 1);
+      dayAfterKey = addDaysToKey(serverToday, 2);
+      console.log('[WIP-LIVE] today/tomorrow/day3:', serverToday, tomorrowKey, dayAfterKey);
+
+      sub.textContent = '③ Xử lý dữ liệu…';
+      WIP_LIVE_STAGE_P75 = data.stage_p75 || {};
+      const received  = (data.received  && data.received.orders)  || [];
+      const carryover = (data.carryover && data.carryover.orders) || [];
+      const allRaw = received.concat(carryover);
+      const normalized = allRaw.map(normalizeWipLiveOrder);
+      const valid = normalized.filter(o => o.ma_dh && CANONICAL_STAGE_LABELS.has(o.current_stage));
+      const droppedStages = {};
+      normalized.forEach(o => {
+        if (!CANONICAL_STAGE_LABELS.has(o.current_stage)) {
+          const k = o.current_stage || '(empty)';
+          droppedStages[k] = (droppedStages[k] || 0) + 1;
+        }
+      });
+      console.log('[WIP-LIVE] kept', valid.length, 'of', allRaw.length, 'dropped by stage:', droppedStages);
+
+      if (!valid.length && allRaw.length) {
+        console.warn('[WIP-LIVE] API returned orders but none are active WIP nodes after normalization', droppedStages);
+      }
+
+      sub.textContent = '④ Render ' + valid.length + ' đơn…';
+      renderOrders(valid);
+      console.log('[WIP-LIVE] render done');
+    } catch (e) {
+      clearTimeout(timeoutId);
+      console.error('[WIP-LIVE] load failed:', e);
+      const msg = (e && e.name === 'AbortError')
+        ? 'Timeout 15s — server không trả'
+        : ((e && e.message) || String(e));
+      sub.textContent = 'Lỗi: ' + msg;
+      const errMsg = document.getElementById('errMsg');
+      if (errMsg) errMsg.textContent = msg;
+      if (err) err.classList.add('show');
+    } finally {
+      if (pill) pill.classList.remove('loading');
+    }
+  }
+
+  // ─── Pill handlers ───
+  const pillReload = document.getElementById('pillReload');
+  if (pillReload) pillReload.addEventListener('click', loadOrders);
+  const errRetry = document.getElementById('errRetry');
+  if (errRetry) errRetry.addEventListener('click', loadOrders);
+
+  const pillPhysics = document.getElementById('pillPhysics');
+  if (pillPhysics) {
+    pillPhysics.addEventListener('click', () => {
+      const on = pillPhysics.classList.toggle('active');
+      network.setOptions({ physics: { enabled: on } });
+      pillPhysics.textContent = on ? 'Physics' : 'Tĩnh';
+    });
+  }
+  const pillFit = document.getElementById('pillFit');
+  if (pillFit) {
+    pillFit.addEventListener('click', () => {
+      network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+    });
+  }
+
+  network.on('stabilizationIterationsDone', () => {
+    network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
+  });
+
+  // ─── Init ───
+  loadOrders();
+})();
+</script>
+</body>
+</html>

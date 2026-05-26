@@ -5,7 +5,7 @@ const path     = require('path');
 const multer   = require('multer');
 const router   = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
-const { getData, resetCache, findLatest } = require('../repositories/orders.repo');
+const { getDataAsync, resetCache, findLatest } = require('../repositories/orders.repo');
 const { closeDB, getDB } = require('../db/index');
 const { queueOrScrape } = require('../services/scraper.service');
 const { webUploadFiles } = require('../services/scraper.service');
@@ -56,6 +56,15 @@ router.get('/mobile', requireAuth, (req, res) => {
   else res.redirect('/');
 });
 
+router.get(['/wip-live', '/wip_graph_live.html'], requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  const file = path.join(BASE_DIR, 'wip_graph_live.html');
+  if (fs.existsSync(file)) res.sendFile(file);
+  else res.status(404).send('<h2>Không tìm thấy wip_graph_live.html</h2>');
+});
+
 router.get(['/feedback', '/feedback.html'], requireAuth, (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -74,11 +83,11 @@ router.get(['/analytics', '/analytics.html'], requirePermission('analytics.view'
   else res.status(404).send('<h2>Không tìm thấy analytics.html</h2>');
 });
 
-router.get('/data.json', requireAuth, (req, res) => {
+router.get('/data.json', requireAuth, async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache');
   try {
-    const data = getData();
+    const data = await getDataAsync();
     if (!data.orders.length) {
       return res.status(404).json({
         error: 'Không tìm thấy dữ liệu',
@@ -91,12 +100,12 @@ router.get('/data.json', requireAuth, (req, res) => {
   }
 });
 
-router.get('/reload', requireAuth, (req, res) => {
+router.get('/reload', requireAuth, async (req, res) => {
   resetCache();
   closeDB();
   try {
     initKeylabNotesRouting();
-    const data = getData(true);
+    const data = await getDataAsync(true);
     res.json({ ok: true, orders: data.orders.length, source: data.source });
   } catch (e) {
     res.status(500).json({ error: e.message });

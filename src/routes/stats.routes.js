@@ -4,6 +4,7 @@ const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { USERS, hasPermission } = require('../repositories/users.repo');
 const { getDB } = require('../db/index');
+const { queryD1BatchAsync } = require('../db/d1-http-sync');
 const { getActiveMaDhList, getSkipStages, isThuSuonNote, STAGE_NAMES } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
@@ -315,17 +316,7 @@ let stageP75Cache = null;
 let stageP75CacheTime = 0;
 const STAGE_P75_TTL = 30 * 60 * 1000;
 
-function computeStageP75(db) {
-  if (stageP75Cache && Date.now() - stageP75CacheTime < STAGE_P75_TTL) return stageP75Cache;
-  const rows = db.prepare(`
-    SELECT ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh, ngay_nhan
-    FROM tien_do_history
-    WHERE xac_nhan = 'Có'
-      AND thoi_gian_hoan_thanh IS NOT NULL AND thoi_gian_hoan_thanh != ''
-      AND completion_date >= date('now', '-30 days')
-    ORDER BY ma_dh, thu_tu
-  `).all();
-
+function computeStageP75FromRows(rows) {
   const byMa = new Map();
   for (const r of rows) {
     if (!byMa.has(r.ma_dh)) byMa.set(r.ma_dh, []);
@@ -356,6 +347,21 @@ function computeStageP75(db) {
     const idx = Math.max(0, Math.min(arr.length - 1, Math.floor(arr.length * 0.75)));
     result[stage] = { p50: arr[Math.floor(arr.length * 0.5)] || 0, p75: arr[idx] || 0, n: arr.length };
   }
+  return result;
+}
+
+function computeStageP75(db) {
+  if (stageP75Cache && Date.now() - stageP75CacheTime < STAGE_P75_TTL) return stageP75Cache;
+  const rows = db.prepare(`
+    SELECT ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh, ngay_nhan
+    FROM tien_do_history
+    WHERE xac_nhan = 'Có'
+      AND thoi_gian_hoan_thanh IS NOT NULL AND thoi_gian_hoan_thanh != ''
+      AND completion_date >= date('now', '-30 days')
+    ORDER BY ma_dh, thu_tu
+  `).all();
+
+  const result = computeStageP75FromRows(rows);
   stageP75Cache = result;
   stageP75CacheTime = Date.now();
   return result;
@@ -507,6 +513,192 @@ function loadWipOrders(db, whereSql, params, todayKey) {
   return rows.map(row => buildWipOrder(row, stagesByOrder, todayKey));
 }
 
+function joinedWipSql(whereSql) {
+  return `
+    SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao, d.khach_hang, d.benh_nhan,
+           d.phuc_hinh, d.sl, d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.routed_to,
+           t.thu_tu AS stage_thu_tu,
+           t.cong_doan AS stage_cong_doan,
+           t.ten_ktv AS stage_ten_ktv,
+           t.xac_nhan AS stage_xac_nhan,
+           t.thoi_gian_hoan_thanh AS stage_thoi_gian_hoan_thanh
+    FROM don_hang d
+    LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+    ${whereSql}
+    ORDER BY d.yc_giao ASC, d.yc_hoan_thanh ASC, d.nhap_luc ASC, d.ma_dh ASC, t.thu_tu ASC
+  `;
+}
+
+function buildWipOrdersFromJoinedRows(joinedRows, todayKey) {
+  const ordersById = new Map();
+  const stagesByOrder = new Map();
+
+  for (const row of joinedRows || []) {
+    if (!ordersById.has(row.ma_dh)) {
+      ordersById.set(row.ma_dh, {
+        ma_dh: row.ma_dh,
+        nhap_luc: row.nhap_luc,
+        yc_hoan_thanh: row.yc_hoan_thanh,
+        yc_giao: row.yc_giao,
+        khach_hang: row.khach_hang,
+        benh_nhan: row.benh_nhan,
+        phuc_hinh: row.phuc_hinh,
+        sl: row.sl,
+        loai_lenh: row.loai_lenh,
+        ghi_chu: row.ghi_chu,
+        ghi_chu_sx: row.ghi_chu_sx,
+        routed_to: row.routed_to,
+      });
+    }
+    if (row.stage_thu_tu != null || row.stage_cong_doan != null) {
+      if (!stagesByOrder.has(row.ma_dh)) stagesByOrder.set(row.ma_dh, []);
+      stagesByOrder.get(row.ma_dh).push({
+        thu_tu: row.stage_thu_tu,
+        cong_doan: row.stage_cong_doan,
+        ten_ktv: row.stage_ten_ktv,
+        xac_nhan: row.stage_xac_nhan,
+        thoi_gian_hoan_thanh: row.stage_thoi_gian_hoan_thanh,
+      });
+    }
+  }
+
+  return Array.from(ordersById.values()).map(row => buildWipOrder(row, stagesByOrder, todayKey));
+}
+
+function buildWipPayload({ dateKey, todayKey, activeSource, activeSet, rawReceived, carryoverOrders, stageP75, throughput }) {
+  const now = Date.now();
+  const isAbandonedOrder = order => {
+    if (order.current_stage === 'HOÀN TẤT') return false;
+    if (activeSet.has(order.ma_dh)) return false;
+    const anyDone = (order.stagesData || []).some(s => s.x && !s.sk);
+    if (anyDone) return false;
+    const giaoTime = parseDateTime(order.yc_giao);
+    if (giaoTime != null && giaoTime > now) return false;
+    return true;
+  };
+
+  const abandonedReceived = rawReceived.filter(isAbandonedOrder);
+  const receivedOrders = rawReceived.filter(order => !isAbandonedOrder(order));
+  const todayWip = receivedOrders.filter(order => order.current_stage !== 'HOÀN TẤT');
+  const completedToday = receivedOrders.filter(order => order.current_stage === 'HOÀN TẤT');
+  const wipOrdersAll = [...todayWip, ...carryoverOrders];
+
+  const kpis = {
+    throughput,
+    deadline:    computeDeadlineKPI(wipOrdersAll),
+    bottleneck:  computeBottleneckKPI(wipOrdersAll, stageP75),
+    balance:     computeBalanceKPI(wipOrdersAll),
+  };
+
+  return {
+    ok: true,
+    date: dateKey,
+    today: todayKey,
+    active_source: activeSource,
+    kpis,
+    stage_p75: stageP75,
+    abandoned: {
+      orders: abandonedReceived,
+      total_orders: abandonedReceived.length,
+      total_qty: abandonedReceived.reduce((sum, order) => sum + (Number(order.sl) || 0), 0),
+    },
+    received: {
+      orders: receivedOrders,
+      summary: summarizeWipOrders(receivedOrders),
+      total_orders: receivedOrders.length,
+      total_qty: receivedOrders.reduce((sum, order) => sum + (Number(order.sl) || 0), 0),
+      wip_orders: todayWip.length,
+      wip_qty: todayWip.reduce((sum, order) => sum + (Number(order.sl) || 0), 0),
+      completed_orders: completedToday.length,
+      completed_qty: completedToday.reduce((sum, order) => sum + (Number(order.sl) || 0), 0),
+    },
+    carryover: {
+      orders: carryoverOrders,
+      summary: summarizeWipOrders(carryoverOrders),
+      total_orders: carryoverOrders.length,
+      total_qty: carryoverOrders.reduce((sum, order) => sum + (Number(order.sl) || 0), 0),
+    },
+  };
+}
+
+async function loadD1WipPayload({ dateKey, todayKey, isoLike, viLike, active, activeSet, activeSource }) {
+  const queries = [];
+  const add = (key, sql, params = []) => queries.push({ key, sql, params });
+
+  add('received', joinedWipSql('WHERE d.nhap_luc LIKE ? OR d.nhap_luc LIKE ?'), [isoLike, viLike]);
+
+  if (active && active.ids.length) {
+    const placeholders = active.ids.map(() => '?').join(',');
+    add('carryover', joinedWipSql(`WHERE d.ma_dh IN (${placeholders})`), active.ids);
+  }
+
+  const needsStageP75 = !(stageP75Cache && Date.now() - stageP75CacheTime < STAGE_P75_TTL);
+  if (needsStageP75) {
+    add('stageP75', `
+      SELECT ma_dh, thu_tu, cong_doan, thoi_gian_hoan_thanh, ngay_nhan
+      FROM tien_do_history
+      WHERE xac_nhan = 'Có'
+        AND thoi_gian_hoan_thanh IS NOT NULL AND thoi_gian_hoan_thanh != ''
+        AND completion_date >= date('now', '-30 days')
+      ORDER BY ma_dh, thu_tu
+    `);
+  }
+
+  add('receivedCount', 'SELECT COUNT(*) AS n FROM don_hang WHERE nhap_luc LIKE ? OR nhap_luc LIKE ?', [isoLike, viLike]);
+  add('completedToday', 'SELECT COALESCE(SUM(orders_completed), 0) AS n FROM ktv_daily_stats WHERE completion_date = ?', [todayKey]);
+  add('avg7day', `
+    SELECT AVG(daily_total) AS avg FROM (
+      SELECT completion_date, SUM(orders_completed) AS daily_total
+      FROM ktv_daily_stats
+      WHERE completion_date >= date(?, '-7 days') AND completion_date < ?
+      GROUP BY completion_date
+    )
+  `, [todayKey, todayKey]);
+
+  const started = Date.now();
+  const results = await queryD1BatchAsync(queries);
+  const byKey = new Map();
+  queries.forEach((query, index) => byKey.set(query.key, results[index] || { results: [] }));
+
+  let stageP75 = stageP75Cache || {};
+  if (needsStageP75) {
+    stageP75 = computeStageP75FromRows(byKey.get('stageP75')?.results || []);
+    stageP75Cache = stageP75;
+    stageP75CacheTime = Date.now();
+  }
+
+  const rawReceived = buildWipOrdersFromJoinedRows(byKey.get('received')?.results || [], todayKey)
+    .map(order => keepActiveThuSuonOrder(order, activeSet));
+
+  const carryoverOrders = buildWipOrdersFromJoinedRows(byKey.get('carryover')?.results || [], todayKey)
+    .map(order => keepActiveThuSuonOrder(order, activeSet))
+    .filter(order => order.current_stage !== 'HOÀN TẤT' && order.received_date && order.received_date < dateKey);
+
+  const received = Number(byKey.get('receivedCount')?.results?.[0]?.n || 0);
+  const completedToday = Number(byKey.get('completedToday')?.results?.[0]?.n || 0);
+  const avg7day = Math.round(Number(byKey.get('avg7day')?.results?.[0]?.avg || 0));
+  const throughput = {
+    received_today: received,
+    completed_today: completedToday,
+    net_today: received - completedToday,
+    avg_7day: avg7day,
+    delta_pct: avg7day > 0 ? Math.round((completedToday - avg7day) / avg7day * 100) : null,
+  };
+
+  const payload = buildWipPayload({
+    dateKey,
+    todayKey,
+    activeSource,
+    activeSet,
+    rawReceived,
+    carryoverOrders,
+    stageP75,
+    throughput,
+  });
+  payload.d1_timing_ms = Date.now() - started;
+  return payload;
+}
+
 router.get('/api/stats/daily', requireAuth, (req, res) => {
   const sess     = req.session;
   const userInfo = USERS[sess.user];
@@ -564,7 +756,7 @@ router.get('/api/stats/daily', requireAuth, (req, res) => {
   }
 });
 
-router.get('/api/stats/wip', requireAuth, (req, res) => {
+router.get('/api/stats/wip', requireAuth, async (req, res) => {
   const sess = req.session;
   const userInfo = USERS[sess.user];
   if (!userInfo || !hasPermission(sess.user, 'stats.view_wip')) {
@@ -586,6 +778,19 @@ router.get('/api/stats/wip', requireAuth, (req, res) => {
     const active = getActiveMaDhList();
     const activeSet = new Set(active?.ids || []);
     let activeSource = active?.src || null;
+
+    if (db.backend === 'd1') {
+      const payload = await loadD1WipPayload({
+        dateKey,
+        todayKey,
+        isoLike,
+        viLike,
+        active,
+        activeSet,
+        activeSource,
+      });
+      return res.json(payload);
+    }
 
     const rawReceived = loadWipOrders(
       db,

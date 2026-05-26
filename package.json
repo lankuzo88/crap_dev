@@ -1,7 +1,11 @@
 {
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js"
+    "check": "node --check server.js",
+    "d1:sync": "node scripts/d1-sync-sqlite.js",
+    "d1:sync:auto": "node scripts/d1-sync-sqlite.js --direction=auto",
+    "d1:sync:push": "node scripts/d1-sync-sqlite.js --direction=push",
+    "d1:sync:pull": "node scripts/d1-sync-sqlite.js --direction=pull"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",

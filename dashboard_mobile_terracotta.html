@@ -396,7 +396,7 @@
       position: absolute;
       left: 8px;
       right: 8px;
-      top: 138px;
+      top: 8px;
       z-index: 3;
       display: flex;
       align-items: flex-start;
@@ -454,6 +454,11 @@
       background: rgba(255, 255, 255, 0.88);
       pointer-events: none;
       box-shadow: 0 8px 18px rgba(88, 56, 43, 0.07);
+    }
+
+    .wip-map-shell.is-graph .wip-kpi-bar,
+    .wip-map-shell.is-graph .wip-map-legend {
+      display: none;
     }
 
     .wip-map-legend span {
@@ -1648,10 +1653,183 @@
     .card-stage-label { font-size: 11px; }
     .empty-state p { font-size: 15px; }
     /* ── STATS HEADER ─────────────────────────── */
+
+    /* ══════════════════ DARK MODE ══════════════════ */
+    body.theme-dark {
+      --bg-primary: #1a1f2c;
+      --bg-card: #222938;
+      --border-card: #2f3850;
+      --terracotta-light: #fbbf24;
+      --terracotta: #fbbf24;
+      --rust-dark: #f59e0b;
+      --urgent: #f87171;
+      --text-primary: #e3e3e3;
+      --text-muted: #8a8a8a;
+      --text-light: #5a6175;
+      color-scheme: dark;
+    }
+    body.theme-dark { background: var(--bg-primary); color: var(--text-primary); }
+
+    /* Search bar / menu */
+    body.theme-dark .search-bar { background: var(--bg-card); border-bottom-color: var(--border-card); }
+    body.theme-dark .search-scan-btn { background: rgba(251,191,36,.1); border-color: var(--terracotta); color: var(--terracotta); }
+    body.theme-dark .menu-trigger { border-color: var(--terracotta); color: var(--terracotta); }
+    body.theme-dark .menu-panel { background: var(--bg-card); border-color: var(--border-card); box-shadow: 0 16px 32px rgba(0,0,0,.5); }
+    body.theme-dark .menu-item:active { background: rgba(251,191,36,.12); }
+    body.theme-dark .menu-icon { color: var(--terracotta); }
+
+    /* WIP panel */
+    body.theme-dark .wip-panel { background: var(--bg-primary); }
+    body.theme-dark .wip-header { background: var(--bg-card); border-bottom-color: var(--border-card); box-shadow: 0 8px 18px rgba(0,0,0,.4); }
+    body.theme-dark .wip-back { background: var(--bg-card); border-color: var(--terracotta); color: var(--terracotta); }
+
+    /* WIP map shell + canvas overlays */
+    body.theme-dark .wip-map-shell { background: var(--bg-primary); }
+    body.theme-dark .wip-kpi { background: var(--bg-card); border-color: var(--border-card); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+    body.theme-dark .wip-kpi-label { color: var(--text-muted); }
+    body.theme-dark .wip-kpi-value { color: var(--text-primary); }
+    body.theme-dark .wip-kpi-meta { color: var(--text-muted); }
+    body.theme-dark .wip-kpi.is-ok .wip-kpi-value { color: #10b981; }
+    body.theme-dark .wip-kpi.is-danger .wip-kpi-value { color: #f87171; }
+
+    body.theme-dark .wip-map-btn { background: transparent; border-color: var(--border-card); color: var(--text-muted); box-shadow: none; }
+    body.theme-dark .wip-map-btn.active { background: var(--terracotta); border-color: var(--terracotta); color: #1a1f2c; box-shadow: 0 0 14px rgba(251,191,36,.25); }
+    body.theme-dark .wip-map-legend { background: rgba(34,41,56,.88); border-color: var(--border-card); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+    body.theme-dark .wip-map-legend span { color: var(--text-muted); }
+
+    /* WIP overview / summary / stage cards with glow */
+    body.theme-dark .wip-overview-item { background: var(--bg-card); border-color: var(--border-card); }
+    body.theme-dark .wip-overview-item.alert { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.32); }
+    body.theme-dark .wip-overview-value { color: var(--text-primary); }
+    body.theme-dark .wip-overview-label, body.theme-dark .wip-overview-meta { color: var(--text-muted); }
+    body.theme-dark .wip-stage-card { background: var(--bg-card); border-color: var(--border-card); border-left-color: var(--terracotta); color: var(--text-primary); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+    body.theme-dark .wip-stage-card.active { background: var(--bg-card); border-color: var(--terracotta); box-shadow: inset 0 0 0 1px rgba(251,191,36,.4), 0 0 18px rgba(251,191,36,.18); }
+    body.theme-dark .wip-stage-count { color: var(--terracotta); text-shadow: 0 0 10px rgba(251,191,36,.45); }
+    body.theme-dark .wip-stage-meta { color: var(--text-muted); }
+    body.theme-dark .wip-stage-buckets .bk { background: rgba(255,255,255,.04); }
+    body.theme-dark .wip-stage-buckets .bk-lt2 { color: #94a3b8; }
+    body.theme-dark .wip-stage-buckets .bk-lt8 { color: #cbd5e1; }
+    body.theme-dark .wip-stage-buckets .bk-lt24 { color: #fb923c; background: rgba(251,146,60,.14); }
+    body.theme-dark .wip-stage-buckets .bk-gt24 { color: #f87171; background: rgba(248,113,113,.14); }
+    body.theme-dark .wip-stage-buckets .bk-lt24.is-zero, body.theme-dark .wip-stage-buckets .bk-gt24.is-zero { background: rgba(255,255,255,.04); }
+
+    /* KTV chips (outline → fill) */
+    body.theme-dark .wip-ktv-summary { background: var(--bg-card); border-color: var(--border-card); }
+    body.theme-dark .wip-ktv-summary-label { color: var(--text-muted); }
+    body.theme-dark .wip-ktv-chip { background: transparent; border-color: var(--border-card); color: var(--text-muted); }
+    body.theme-dark .wip-ktv-chip.active { background: var(--terracotta); border-color: var(--terracotta); color: #1a1f2c; }
+    body.theme-dark .wip-ktv-chip .ktv-count { background: rgba(255,255,255,.06); color: var(--terracotta); }
+    body.theme-dark .wip-ktv-chip.active .ktv-count { background: rgba(0,0,0,.22); color: #1a1f2c; }
+    body.theme-dark .wip-ktv-chip.wip-ktv-unclaimed { border-color: rgba(248,113,113,.4); color: #f87171; }
+    body.theme-dark .wip-ktv-chip.wip-ktv-unclaimed .ktv-count { background: rgba(248,113,113,.12); color: #f87171; }
+    body.theme-dark .wip-ktv-chip.wip-ktv-unclaimed.active { background: #f87171; border-color: #f87171; color: #1a1f2c; }
+    body.theme-dark .wip-ktv-chip.wip-ktv-clear { color: var(--text-muted); }
+
+    /* WIP order list */
+    body.theme-dark .wip-order-card { background: var(--bg-card); border-color: var(--border-card); border-left-color: var(--terracotta); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+    body.theme-dark .wip-order-code { color: var(--terracotta); }
+    body.theme-dark .wip-order-customer, body.theme-dark .wip-order-patient { color: var(--text-primary); }
+    body.theme-dark .wip-order-qty, body.theme-dark .wip-order-stage, body.theme-dark .wip-order-deadline { color: var(--text-muted); }
+    body.theme-dark .wip-order-ph { color: var(--terracotta); }
+    body.theme-dark .wip-list-title { color: var(--text-primary); }
+    body.theme-dark .wip-list-meta { color: var(--text-muted); }
+
+    /* Filter bar, filter summary */
+    body.theme-dark .filter-bar { background: var(--bg-card); border-bottom-color: var(--border-card); }
+    body.theme-dark .fchip { background: transparent; border-color: var(--border-card); color: var(--text-muted); }
+    body.theme-dark .fchip.active { background: var(--terracotta); border-color: var(--terracotta); color: #1a1f2c; }
+    body.theme-dark .filter-summary { background: var(--bg-card); border-bottom-color: var(--border-card); box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+    body.theme-dark .delay-banner { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.32); color: #f87171; }
+    body.theme-dark .summary-pill { background: var(--bg-card); border-color: var(--border-card); color: var(--text-primary); }
+    body.theme-dark .summary-date { color: var(--terracotta); }
+    body.theme-dark .summary-count { color: var(--text-muted); }
+    body.theme-dark .summary-empty { color: var(--text-muted); }
+
+    /* Day modal */
+    body.theme-dark #dayModalOverlay { background: rgba(0,0,0,.72); }
+    body.theme-dark .day-order-row { background: var(--bg-card); border-color: var(--border-card); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 18px rgba(0,0,0,.4); }
+    body.theme-dark .day-order-row::before { background: linear-gradient(180deg, var(--terracotta), var(--terracotta-light)); }
+    body.theme-dark .day-order-row:active { border-color: var(--terracotta); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 4px 9px rgba(0,0,0,.5); }
+    body.theme-dark .day-order-code { color: var(--text-primary); }
+    body.theme-dark .day-order-sub { color: var(--text-primary); }
+    body.theme-dark .day-order-stage { background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.3); color: var(--terracotta); box-shadow: none; }
+    body.theme-dark .day-order-meta { color: var(--text-primary); }
+    body.theme-dark .day-group-sep { background: linear-gradient(90deg, transparent, rgba(251,191,36,.45), transparent); }
+
+    /* Time-group headers + cards (main list) */
+    body.theme-dark .time-group-header.morning, body.theme-dark .time-group-header.noon, body.theme-dark .time-group-header.afternoon, body.theme-dark .time-group-header.evening, body.theme-dark .time-group-header.urgent, body.theme-dark .time-group-header.default {
+      background: var(--bg-card); border-left-color: var(--terracotta);
+    }
+    body.theme-dark .tg-time { color: var(--terracotta); }
+    body.theme-dark .tg-date, body.theme-dark .tg-count { color: var(--text-primary); }
+    body.theme-dark .card {
+      background: var(--bg-card);
+      border-color: var(--border-card);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 8px 20px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+    }
+    body.theme-dark .card.morning, body.theme-dark .card.noon { border-left-color: var(--terracotta); }
+    body.theme-dark .card.afternoon { border-left-color: var(--terracotta); }
+    body.theme-dark .card.evening { border-left-color: var(--rust-dark); }
+    body.theme-dark .card.urgent { border-left-color: var(--urgent); }
+    body.theme-dark .card:active { box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 4px 10px rgba(0,0,0,.4); }
+    body.theme-dark .order-code { color: var(--text-primary); }
+    body.theme-dark .card-customer, body.theme-dark .card-prosthesis, body.theme-dark .card-sl { color: var(--text-primary); }
+    body.theme-dark .card-bottom { border-top-color: var(--border-card); }
+    body.theme-dark .card-stage-label { color: var(--text-primary); }
+    body.theme-dark .badge-urgent { background: rgba(248,113,113,.18); color: var(--urgent); border-color: var(--urgent); }
+
+    /* Modal & production section */
+    body.theme-dark #modalOverlay { background: rgba(0,0,0,.72); }
+    body.theme-dark .production-section { background: var(--bg-card); border-color: var(--border-card); }
+    body.theme-dark .production-section-title, body.theme-dark .production-subtitle { color: var(--text-muted); }
+    body.theme-dark .production-chip { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.28); color: var(--text-primary); }
+    body.theme-dark .production-preview { color: var(--text-primary); }
+    body.theme-dark .production-more { color: var(--terracotta); }
+
+    /* ─── Tooth chart ─── */
+    body.theme-dark .tooth-chart-section { background: var(--bg-card); border-color: var(--border-card); }
+    body.theme-dark .tooth-chart-title { color: var(--text-muted); }
+    body.theme-dark .tooth-chart-total { color: var(--terracotta); }
+    body.theme-dark .tooth-chart {
+      background: #161a26;
+      border-color: rgba(255,255,255,.05);
+      background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    body.theme-dark .tooth-chart::before { background: rgba(255,255,255,.14); }
+    body.theme-dark .tooth-region { background: rgba(34,41,56,.85); border-color: rgba(255,255,255,.06); color: var(--text-muted); }
+    body.theme-dark .tooth-chip { background: #252d42; color: var(--text-light); box-shadow: inset 0 -1px 0 rgba(0,0,0,.3); }
+    body.theme-dark .tooth-chip.active { box-shadow: 0 0 14px #22d3ee, 0 3px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.2); outline: 1px solid rgba(34,211,238,.55); outline-offset: -1px; }
+    body.theme-dark .tooth-chip.full { outline: 2px solid #22d3ee; outline-offset: -2px; }
+    body.theme-dark .tooth-bite-line { border-top-color: rgba(255,255,255,.08); }
+    body.theme-dark .tooth-bridge-frame { border-color: var(--terracotta); }
+    body.theme-dark .tooth-bridge-bar { background: linear-gradient(180deg, #c8a05a, #8b6a30); }
+    body.theme-dark .tooth-unit-delta.extra, body.theme-dark .tooth-delta-pill.extra { background: #f87171; }
+    body.theme-dark .tooth-unit-delta.missing, body.theme-dark .tooth-delta-pill.missing { background: #10b981; }
+    body.theme-dark .tooth-unit-count { background: #3b82f6; border-color: rgba(255,255,255,.18); }
+    body.theme-dark .tooth-legend-item, body.theme-dark .tooth-product-pill { background: var(--bg-card); border-color: var(--border-card); color: var(--text-primary); }
+    body.theme-dark .tooth-product-pill b { color: var(--terracotta); }
+    body.theme-dark .tooth-note-pill { background: rgba(255,255,255,.06); color: var(--text-primary); }
+    body.theme-dark .tooth-original-text { color: var(--terracotta); }
+
+    /* Stage pips (timeline) with pulse on current */
+    body.theme-dark .stage-pip { background: var(--border-card); }
+    body.theme-dark .stage-pip.done .pip-fill { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,.7), 0 0 14px rgba(16,185,129,.4); }
+    body.theme-dark .stage-pip.current .pip-fill { background: var(--terracotta); animation: darkPipPulse 1.5s ease-in-out infinite; }
+    @keyframes darkPipPulse { 0%,100% { box-shadow: 0 0 6px rgba(251,191,36,.5); } 50% { box-shadow: 0 0 14px rgba(251,191,36,.9); } }
+
+    /* FAB / toast / scanner */
+    body.theme-dark .fab { background: var(--terracotta); color: #1a1f2c; }
+    body.theme-dark .toast { background: #1f5137; }
+    body.theme-dark .toast.warn { background: var(--urgent); color: #1a1f2c; }
+    body.theme-dark .scanner-viewport { box-shadow: 0 0 0 2px var(--terracotta); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.2/umd/index.min.js"></script>
 </head>
 <body>
+  <script>
+    try { if (localStorage.getItem('m-theme') === 'dark') document.body.classList.add('theme-dark'); } catch(e) {}
+  </script>
   <!-- Header -->
   <!-- Search Bar -->
   <div class="search-bar">
@@ -1674,9 +1852,15 @@
         <a id="m-feedback-btn" class="menu-item" href="/feedback">
           <span class="menu-icon">📝</span><span>Phản hồi nha khoa</span><span class="feedback-alert-dot" id="m-feedback-dot" aria-hidden="true"></span>
         </a>
+        <button id="m-theme-toggle" class="menu-item" type="button" onclick="mToggleTheme()">
+          <span class="menu-icon">🌙</span><span id="m-theme-toggle-label">Giao diện tối</span>
+        </button>
         <button id="m-wip-btn" class="menu-item admin-only" type="button" onclick="openWipPanel()">
           <span class="menu-icon">WIP</span><span>WIP công đoạn</span>
         </button>
+        <a id="m-wiplive-btn" class="menu-item admin-only" href="/wip-live">
+          <span class="menu-icon">🟢</span><span>Live</span>
+        </a>
         <a id="m-delayreports-btn" class="menu-item danger admin-only" href="/delay-reports">
           <span class="menu-icon">⏱</span><span>Báo trễ tiến độ</span>
         </a>
@@ -2494,12 +2678,17 @@
           const res = await fetch('/data.json');
           const json = await res.json();
           allOrders = (json.orders || []).map(adaptOrder);
-          await loadActiveDelayReports();
-          applyDelayReports();
           updateCounts();
           renderDelayBanner();
           renderCards();
           refreshWipIfOpen();
+          loadActiveDelayReports().then(() => {
+            applyDelayReports();
+            updateCounts();
+            renderDelayBanner();
+            renderCards();
+            refreshWipIfOpen();
+          }).catch(() => {});
         }
       } catch (e) {
         console.error('Lỗi fetch data:', e);
@@ -2747,6 +2936,31 @@
       menu.classList.remove('open');
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
     }
+
+    function mToggleTheme() {
+      const dark = document.body.classList.toggle('theme-dark');
+      try { localStorage.setItem('m-theme', dark ? 'dark' : 'light'); } catch(e) {}
+      const lbl = document.getElementById('m-theme-toggle-label');
+      const btn = document.getElementById('m-theme-toggle');
+      if (lbl) lbl.textContent = dark ? 'Giao diện sáng' : 'Giao diện tối';
+      if (btn) {
+        const icon = btn.querySelector('.menu-icon');
+        if (icon) icon.textContent = dark ? '☀️' : '🌙';
+      }
+      // Repaint WIP canvas if loaded; animation loop picks new colors next frame when panel open
+      if (typeof mDrawWipMap === 'function' && typeof M_WIP_MAP !== 'undefined' && M_WIP_MAP && M_WIP_MAP.ctx) {
+        try { mDrawWipMap(performance.now()); } catch(e) {}
+      }
+      closeActionMenu();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.body.classList.contains('theme-dark')) {
+        const lbl = document.getElementById('m-theme-toggle-label');
+        const btn = document.getElementById('m-theme-toggle');
+        if (lbl) lbl.textContent = 'Giao diện sáng';
+        if (btn) { const ic = btn.querySelector('.menu-icon'); if (ic) ic.textContent = '☀️'; }
+      }
+    });
 
     function canViewWipPanel() {
       return hasPerm('stats.view_wip');
@@ -3512,20 +3726,16 @@
 
     function mBuildWipMapLayout(mode = M_WIP_MAP.layoutMode || 'compact') {
       const canvas = M_WIP_MAP.canvas;
-      const cachedW = M_WIP_MAP.rect && M_WIP_MAP.rect.width;
-      const width = cachedW || (canvas ? canvas.getBoundingClientRect().width : window.innerWidth);
-      const useTwoCols = width >= 560;
-      const compact = mode === 'compact';
-      const cols = useTwoCols ? 2 : 1;
-      const margin = 28;
-      const gapX = 22;
-      const gapY = compact ? 10 : 18;
-      const top = 24;
-      const stageW = useTwoCols ? 260 : 330;
-      const stageMinH = compact ? 132 : 208;
+      const width = (M_WIP_MAP.rect && M_WIP_MAP.rect.width) || (canvas ? canvas.getBoundingClientRect().width : window.innerWidth);
+      const wide = width >= 560;
       const orders = mWipMapOrders();
+      const worldW = wide ? 980 : 760;
+      const center = { x: worldW / 2, y: wide ? 330 : 360 };
+      const stageRadius = wide ? 270 : 235;
+      const stageAngles = [-95, -25, 40, 112, 188];
       const stages = [];
-      const colHeights = Array(cols).fill(top);
+      let maxY = center.y + stageRadius + 220;
+
       M_WIP_MAP.layoutMode = mode;
       M_WIP_MAP.textCache.clear();
       M_WIP_MAP.riskStamp = Date.now();
@@ -3536,35 +3746,10 @@
       }
 
       STAGE_NAMES.forEach((stage, idx) => {
+        const angle = stageAngles[idx] * Math.PI / 180;
+        const cx = center.x + Math.cos(angle) * stageRadius;
+        const cy = center.y + Math.sin(angle) * stageRadius;
         const stageOrders = orders.filter(o => o.current_stage === stage);
-        const laneMap = new Map();
-        for (const order of stageOrders) {
-          const laneName = order._wipKtv || M_WIP_UNCLAIMED;
-          if (!laneMap.has(laneName)) laneMap.set(laneName, []);
-          laneMap.get(laneName).push(order);
-        }
-        const laneNames = [...laneMap.keys()].sort((a, b) => {
-          if (a === M_WIP_UNCLAIMED) return -1;
-          if (b === M_WIP_UNCLAIMED) return 1;
-          return laneMap.get(b).length - laneMap.get(a).length || a.localeCompare(b, 'vi');
-        });
-        const col = useTwoCols ? idx % 2 : 0;
-        const x = margin + col * (stageW + gapX);
-        const y = colHeights[col];
-        let laneY = y + 78;
-        const lanes = laneNames.map(name => {
-          const laneOrders = laneMap.get(name);
-          const cardsPerRow = useTwoCols ? 2 : 2;
-          const rows = Math.max(1, Math.ceil(laneOrders.length / cardsPerRow));
-          const laneH = 34 + rows * 64 + 8;
-          const lane = { name, orders: laneOrders, x: x + 10, y: laneY, w: stageW - 20, h: laneH, cardsPerRow };
-          laneY += laneH + 10;
-          return lane;
-        });
-        const dotCols = Math.max(7, Math.floor((stageW - 32) / 24));
-        const dotRows = Math.ceil(Math.min(stageOrders.length, 140) / dotCols);
-        const compactStageH = 106 + Math.max(34, dotRows * 21 + 18);
-        const stageH = compact ? Math.max(stageMinH, compactStageH) : Math.max(stageMinH, laneY - y + 10);
         let alertCount = 0;
         let dangerCount = 0;
         let unclaimedCount = 0;
@@ -3575,26 +3760,50 @@
           if (!o._wipKtv) unclaimedCount++;
           qtySum += Number(o.sl) || 0;
         }
+
+        const nodes = [];
+        const rings = [66, 96, 128, 164, 202, 244, 290];
+        const start = angle + Math.PI * 0.72;
+        stageOrders.forEach((order, i) => {
+          const ring = rings[Math.min(rings.length - 1, Math.floor(i / 11))];
+          const slot = i % 11;
+          const spread = Math.PI * 1.2;
+          const nodeAngle = start + (slot / Math.max(1, 10)) * spread + Math.floor(i / 11) * 0.22;
+          const x = cx + Math.cos(nodeAngle) * ring;
+          const y = cy + Math.sin(nodeAngle) * ring;
+          const radius = 9 + Math.min(7, Math.sqrt(Math.max(1, Number(order.sl) || 1)) * 1.5);
+          nodes.push({ order, x, y, r: radius });
+          maxY = Math.max(maxY, y + radius + 160);
+        });
+
         stages.push({
           stage,
           orders: stageOrders,
-          lanes,
+          nodes,
           alerts: alertCount,
           dangers: dangerCount,
           unclaimed: unclaimedCount,
           qty: qtySum,
-          x,
-          y,
-          w: stageW,
-          h: stageH,
+          x: cx,
+          y: cy,
+          r: wide ? 50 : 46,
           color: STAGE_COLORS[stage] || '#c4836f',
         });
-        colHeights[col] = y + stageH + gapY;
       });
 
-      M_WIP_MAP.worldW = margin * 2 + cols * stageW + (cols - 1) * gapX;
-      M_WIP_MAP.worldH = Math.max(...colHeights) + 76;
-      M_WIP_MAP.layout = { stages, orders, cols };
+      const received = wipStatsData?.received || {};
+      const carryover = wipStatsData?.carryover || {};
+      const totalWipOrders = (received.wip_orders || 0) + (carryover.total_orders || 0);
+      const totalWipQty = (received.wip_qty || 0) + (carryover.total_qty || 0);
+      const graphStats = [
+        { label: 'Nhận hôm nay', value: received.total_orders || 0, meta: `${received.total_qty || 0} răng`, x: center.x - 236, y: 74, color: '#c4836f' },
+        { label: 'Đang ôm', value: totalWipOrders, meta: `${totalWipQty} răng`, x: center.x, y: 52, color: '#2d2724' },
+        { label: 'Tồn qua ngày', value: carryover.total_orders || 0, meta: `${carryover.total_qty || 0} răng`, x: center.x + 236, y: 74, color: '#991b1b' },
+      ];
+
+      M_WIP_MAP.worldW = worldW;
+      M_WIP_MAP.worldH = Math.max(wide ? 980 : 1060, maxY);
+      M_WIP_MAP.layout = { stages, orders, center, graphStats, cols: wide ? 2 : 1 };
       return M_WIP_MAP.layout;
     }
 
@@ -3602,7 +3811,7 @@
       const content = document.getElementById('wipContent');
       if (!content) return null;
       if (!document.getElementById('wipCanvas')) {
-        content.className = 'wip-content wip-map-shell';
+        content.className = 'wip-content wip-map-shell is-graph';
         content.innerHTML = `
           <canvas id="wipCanvas"></canvas>
           <div class="wip-kpi-bar" id="wipKpiBar">
@@ -3839,8 +4048,8 @@
       if (!canvas) return { panX, panY };
       const rect = M_WIP_MAP.rect;
       const safeX = 24;
-      const topSafe = 180;
-      const bottomSafe = 54;
+      const topSafe = 54;
+      const bottomSafe = 28;
       const scaledW = M_WIP_MAP.worldW * scale;
       const scaledH = M_WIP_MAP.worldH * scale;
       let nextX = panX;
@@ -3939,8 +4148,8 @@
       if (!canvas) return;
       mWipEnsureLayoutMode('compact');
       const rect = M_WIP_MAP.rect;
-      const scale = mWipClamp(Math.min((rect.width - 18) / M_WIP_MAP.worldW, (rect.height - 220) / M_WIP_MAP.worldH), M_WIP_MAP.minScale, 0.9);
-      mWipSetCamera(scale, Math.max(8, (rect.width - M_WIP_MAP.worldW * scale) / 2), 184, immediate);
+      const scale = mWipClamp(Math.min((rect.width - 18) / M_WIP_MAP.worldW, (rect.height - 92) / M_WIP_MAP.worldH), M_WIP_MAP.minScale, 0.9);
+      mWipSetCamera(scale, Math.max(8, (rect.width - M_WIP_MAP.worldW * scale) / 2), 64, immediate);
       M_WIP_MAP.needsFit = false;
     }
 
@@ -3982,8 +4191,8 @@
       const s = detailLayout.stages.find(x => x.stage === stage);
       if (!s) return;
       const rect = M_WIP_MAP.rect;
-      const scale = mWipClamp(Math.min(1.18, (rect.width - 28) / s.w), M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
-      mWipSetCamera(scale, rect.width / 2 - (s.x + s.w / 2) * scale, 188 - s.y * scale);
+      const scale = mWipClamp(Math.min(1.45, (rect.width - 28) / 360), M_WIP_MAP.minScale, M_WIP_MAP.maxScale);
+      mWipSetCamera(scale, rect.width / 2 - s.x * scale, 92 - s.y * scale);
       M_WIP_MAP.needsFit = false;
     }
 
@@ -4026,6 +4235,110 @@
       ctx.closePath();
     }
 
+    function _mWipTheme() {
+      const dark = document.body.classList.contains('theme-dark');
+      if (dark) return {
+        dark: true,
+        mapBg: '#1a1f2c',
+        gridLine: 'rgba(255,255,255,.04)',
+        centerHalo: 'rgba(96,165,250,.05)',
+        statBg: 'rgba(34,41,56,.92)',
+        statBorder: 'rgba(255,255,255,.08)',
+        centerBg: 'rgba(34,41,56,.96)',
+        centerBorder: 'rgba(255,255,255,.12)',
+        centerLabel: '#8a8a8a',
+        centerValue: '#e3e3e3',
+        centerOkMeta: '#94a3b8',
+        centerDangerMeta: '#f87171',
+        centerShadow: 'rgba(0,0,0,.5)',
+        pillBg: 'rgba(34,41,56,.92)',
+        pillBorder: 'rgba(255,255,255,.08)',
+        pillLabel: '#8a8a8a',
+        pillValue: '#e3e3e3',
+        pillMeta: '#8a8a8a',
+        stageBg: '#222938',
+        stageBorder: 'rgba(255,255,255,.08)',
+        stageTitle: '#e3e3e3',
+        stageMeta: '#8a8a8a',
+        stageEmpty: '#5a6175',
+        stageShadow: 'rgba(0,0,0,.4)',
+        overviewBg: 'rgba(255,255,255,.03)',
+        overviewUnmatched: 'rgba(148,163,184,.18)',
+        overviewUnclaimedStroke: '#5a6175',
+        overviewDangerOutline: 'rgba(255,255,255,.18)',
+        overviewDotAlpha: 0.55,
+        laneBg: 'rgba(42,49,66,.65)',
+        laneBgUnclaimed: 'rgba(74,82,112,.18)',
+        laneBorder: 'rgba(255,255,255,.06)',
+        laneBorderUnclaimed: 'rgba(100,116,139,.3)',
+        laneTitle: '#e3e3e3',
+        laneTitleUnclaimed: '#8a8a8a',
+        cardBg: '#2a3142',
+        cardBorder: 'rgba(255,255,255,.08)',
+        cardText: '#e3e3e3',
+        cardSub: '#8a8a8a',
+        cardMeta: '#5a6175',
+        badgeText: '#1a1f2c',
+        nodeBg: '#2a3142',
+        nodeUnclaimedStroke: '#94a3b8',
+        labelBg: 'rgba(34,41,56,.94)',
+        labelBorder: 'rgba(255,255,255,.08)',
+        labelSub: '#8a8a8a',
+        labelMeta: '#5a6175',
+        glow: true,
+      };
+      return {
+        dark: false,
+        mapBg: '#f7f2ee',
+        gridLine: 'rgba(196,131,111,.08)',
+        centerHalo: 'rgba(196,131,111,.06)',
+        statBg: 'rgba(255,255,255,.9)',
+        statBorder: 'rgba(196,131,111,.22)',
+        centerBg: 'rgba(255,255,255,.96)',
+        centerBorder: 'rgba(196,131,111,.28)',
+        centerLabel: '#6b625d',
+        centerValue: '#2d2724',
+        centerOkMeta: '#64748b',
+        centerDangerMeta: '#991b1b',
+        centerShadow: 'rgba(88,56,43,.16)',
+        pillBg: 'rgba(255,255,255,.92)',
+        pillBorder: 'rgba(196,131,111,.22)',
+        pillLabel: '#6b625d',
+        pillValue: '#2d2724',
+        pillMeta: '#8a817b',
+        stageBg: '#fffaf7',
+        stageBorder: 'rgba(196,131,111,.24)',
+        stageTitle: '#2d2724',
+        stageMeta: '#7a716b',
+        stageEmpty: '#9a918b',
+        stageShadow: 'rgba(88,56,43,.14)',
+        overviewBg: 'rgba(196,131,111,.08)',
+        overviewUnmatched: 'rgba(148,163,184,.22)',
+        overviewUnclaimedStroke: '#64748b',
+        overviewDangerOutline: 'rgba(0,0,0,.35)',
+        overviewDotAlpha: 1,
+        laneBg: 'rgba(255,255,255,.76)',
+        laneBgUnclaimed: 'rgba(148,163,184,.12)',
+        laneBorder: 'rgba(196,131,111,.16)',
+        laneBorderUnclaimed: 'rgba(100,116,139,.24)',
+        laneTitle: '#2d2724',
+        laneTitleUnclaimed: '#64748b',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(196,131,111,.24)',
+        cardText: '#2d2724',
+        cardSub: '#6b625d',
+        cardMeta: '#8a817b',
+        badgeText: '#fff',
+        nodeBg: '#ffffff',
+        nodeUnclaimedStroke: '#64748b',
+        labelBg: 'rgba(255,255,255,.94)',
+        labelBorder: 'rgba(196,131,111,.2)',
+        labelSub: '#6b625d',
+        labelMeta: '#8a817b',
+        glow: false,
+      };
+    }
+
     function mCanvasText(ctx, text, x, y, maxW, font, color, align = 'left') {
       ctx.font = font;
       ctx.fillStyle = color;
@@ -4064,7 +4377,7 @@
       const dpr = M_WIP_MAP.dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
-      ctx.fillStyle = '#f7f2ee';
+      ctx.fillStyle = _mWipTheme().mapBg;
       ctx.fillRect(0, 0, rect.width, rect.height);
       ctx.save();
       ctx.translate(M_WIP_MAP.panX, M_WIP_MAP.panY);
@@ -4075,99 +4388,290 @@
     }
 
     function mDrawWipWorld(ctx, layout, now) {
-      const received = wipStatsData?.received || {};
-      const carryover = wipStatsData?.carryover || {};
-      const totalWipOrders = (received.wip_orders || 0) + (carryover.total_orders || 0);
-      const totalWipQty = (received.wip_qty || 0) + (carryover.total_qty || 0);
-      let alertCount = 0;
-      let dangerCount = 0;
-      let unclaimedCount = 0;
-      for (const o of layout.orders) {
-        const r = o._wipRisk || mWipOrderRisk(o);
-        if (r !== 'normal') alertCount++;
-        if (r === 'danger') dangerCount++;
-        const k = '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
-        if (!k) unclaimedCount++;
-      }
-      const pulse = 0.55 + Math.sin(now / 520) * 0.18;
-      const blink = M_WIP_MAP.pointers.size ? 0.22 : 0.35 + Math.max(0, Math.sin(now / 620)) * 0.65;
+      const pulse = 0.55 + Math.sin(now / 620) * 0.18;
       const z = M_WIP_MAP.scale;
+      const theme = _mWipTheme();
 
-      ctx.strokeStyle = 'rgba(196,131,111,.12)';
+      mDrawGraphBackdrop(ctx, layout, theme);
+      for (const stat of layout.graphStats || []) mDrawGraphStat(ctx, stat, theme);
+      for (const stage of layout.stages) mDrawGraphLink(ctx, layout.center, stage, stage.color);
+      mDrawGraphCenter(ctx, layout, theme);
+      for (const stage of layout.stages) mDrawGraphStage(ctx, stage, z, theme);
+      for (const stage of layout.stages) {
+        for (const node of stage.nodes) mDrawGraphOrderNode(ctx, node, stage, z, pulse, theme);
+      }
+    }
+
+    function mDrawGraphBackdrop(ctx, layout, theme) {
+      theme = theme || _mWipTheme();
+      ctx.save();
+      ctx.strokeStyle = theme.gridLine;
       ctx.lineWidth = 1;
-      for (let y = 0; y <= M_WIP_MAP.worldH; y += 72) {
+      for (let x = 40; x <= M_WIP_MAP.worldW; x += 88) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, M_WIP_MAP.worldH);
+        ctx.stroke();
+      }
+      for (let y = 40; y <= M_WIP_MAP.worldH; y += 88) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(M_WIP_MAP.worldW, y);
         ctx.stroke();
       }
-
-      for (const stage of layout.stages) mDrawMobileStage(ctx, stage, z, pulse, blink);
+      ctx.fillStyle = theme.centerHalo;
+      ctx.beginPath();
+      ctx.arc(layout.center.x, layout.center.y, 320, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    function mDrawSummaryPill(ctx, x, y, w, label, value, meta, accent = '#c4836f') {
-      mRoundRect(ctx, x, y, w, 66, 8);
-      ctx.fillStyle = 'rgba(255,255,255,.92)';
+    function mDrawGraphLink(ctx, a, b, color) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2 - 18;
+      ctx.quadraticCurveTo(mx, my, b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function mDrawGraphStat(ctx, stat, theme) {
+      theme = theme || _mWipTheme();
+      ctx.save();
+      mRoundRect(ctx, stat.x - 88, stat.y - 34, 176, 68, 18);
+      ctx.fillStyle = theme.statBg;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(196,131,111,.22)';
+      ctx.strokeStyle = theme.statBorder;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.fillStyle = stat.color;
+      ctx.beginPath();
+      ctx.arc(stat.x - 62, stat.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+      mCanvasText(ctx, stat.label, stat.x - 44, stat.y - 8, 102, '850 12px Inter', theme.centerLabel);
+      mCanvasText(ctx, String(stat.value), stat.x - 44, stat.y + 18, 58, '850 24px Inter', theme.centerValue);
+      mCanvasText(ctx, stat.meta, stat.x + 78, stat.y + 16, 66, '800 11px Inter', theme.pillMeta, 'right');
+      ctx.restore();
+    }
+
+    function mDrawGraphCenter(ctx, layout, theme) {
+      theme = theme || _mWipTheme();
+      const total = layout.orders.length;
+      const risky = layout.orders.filter(o => mWipOrderRisk(o) !== 'normal').length;
+      ctx.save();
+      ctx.shadowColor = theme.centerShadow;
+      ctx.shadowBlur = 22;
+      mRoundRect(ctx, layout.center.x - 88, layout.center.y - 48, 176, 96, 22);
+      ctx.fillStyle = theme.centerBg;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = theme.centerBorder;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      mCanvasText(ctx, 'WIP hôm nay', layout.center.x, layout.center.y - 16, 140, '850 15px Inter', theme.centerLabel, 'center');
+      mCanvasText(ctx, `${total} đơn`, layout.center.x, layout.center.y + 14, 140, '850 30px Inter', theme.centerValue, 'center');
+      mCanvasText(ctx, risky ? `${risky} cần chú ý` : 'Luồng đang ổn', layout.center.x, layout.center.y + 36, 132, '800 12px Inter', risky ? theme.centerDangerMeta : theme.centerOkMeta, 'center');
+      ctx.restore();
+    }
+
+    function mDrawGraphStage(ctx, stage, z, theme) {
+      theme = theme || _mWipTheme();
+      const matchCount = stage.orders.filter(mWipOrderMatchesFilter).length;
+      const dimStage = M_WIP_MAP.filter !== 'all' && matchCount === 0;
+      ctx.save();
+      ctx.globalAlpha = dimStage ? 0.32 : 1;
+      ctx.shadowColor = theme.dark ? stage.color : theme.stageShadow;
+      ctx.shadowBlur = theme.dark ? 22 : 18;
+      ctx.beginPath();
+      ctx.arc(stage.x, stage.y, stage.r, 0, Math.PI * 2);
+      ctx.fillStyle = theme.stageBg;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = stage.dangers ? 4 : stage.alerts ? 3 : 2;
+      ctx.strokeStyle = stage.dangers ? (theme.dark ? '#f87171' : '#991b1b') : stage.alerts ? (theme.dark ? '#fb923c' : '#ea580c') : stage.color;
+      ctx.stroke();
+      ctx.fillStyle = stage.color;
+      ctx.beginPath();
+      ctx.arc(stage.x, stage.y - stage.r + 13, 7, 0, Math.PI * 2);
+      ctx.fill();
+      M_WIP_MAP.hitItems.push({ type: 'stage', stage: stage.stage, x: stage.x - stage.r, y: stage.y - stage.r, w: stage.r * 2, h: stage.r * 2 });
+      mCanvasText(ctx, mWipStageLabel(stage.stage), stage.x, stage.y - 5, stage.r * 1.55, '850 14px Inter', theme.stageTitle, 'center');
+      mCanvasText(ctx, `${stage.orders.length}`, stage.x, stage.y + 22, stage.r * 1.35, '850 28px Inter', stage.color, 'center');
+      if (z >= 0.64) mCanvasText(ctx, `${stage.qty} răng`, stage.x, stage.y + 39, stage.r * 1.55, '800 10px Inter', theme.stageMeta, 'center');
+      if (stage.unclaimed) mDrawGraphMiniBadge(ctx, stage.x + stage.r - 16, stage.y - stage.r + 18, String(stage.unclaimed), theme.dark ? '#94a3b8' : '#64748b', theme);
+      ctx.restore();
+    }
+
+    function mDrawGraphMiniBadge(ctx, x, y, text, color, theme) {
+      theme = theme || _mWipTheme();
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      mCanvasText(ctx, text, x, y + 4, 20, '850 10px Inter', theme.badgeText, 'center');
+      ctx.restore();
+    }
+
+    function mDrawGraphOrderNode(ctx, node, stage, z, pulse, theme) {
+      theme = theme || _mWipTheme();
+      const o = node.order;
+      const risk = mWipOrderRisk(o);
+      const match = mWipOrderMatchesFilter(o);
+      const ktv = '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
+      const riskColor = M_WIP_RISK_COLOR[risk] || stage.color;
+      const deadline = o._wipDeadlineMin;
+      const r = node.r + (risk === 'danger' ? pulse * 2 : risk === 'alert' ? pulse : 0);
+
+      ctx.save();
+      ctx.globalAlpha = match ? 1 : 0.16;
+      ctx.strokeStyle = riskColor;
+      ctx.lineWidth = risk === 'normal' ? 1 : 2.2;
+      ctx.globalAlpha *= 0.22;
+      ctx.beginPath();
+      ctx.moveTo(stage.x, stage.y);
+      ctx.lineTo(node.x, node.y);
+      ctx.stroke();
+      ctx.globalAlpha = match ? 1 : 0.16;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = risk === 'normal' ? theme.nodeBg : M_WIP_RISK_BG[risk];
+      ctx.fill();
+      ctx.strokeStyle = riskColor;
+      ctx.stroke();
+      ctx.fillStyle = riskColor;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, Math.max(3.5, r * 0.36), 0, Math.PI * 2);
+      ctx.fill();
+      if (!ktv) {
+        ctx.strokeStyle = theme.nodeUnclaimedStroke;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (deadline != null && deadline <= 240) {
+        ctx.fillStyle = theme.dark ? '#f87171' : '#991b1b';
+        ctx.beginPath();
+        ctx.arc(node.x + r * 0.72, node.y - r * 0.72, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      M_WIP_MAP.hitItems.push({ type: 'order', id: o.ma_dh, x: node.x - r - 8, y: node.y - r - 8, w: (r + 8) * 2, h: (r + 8) * 2, order: o });
+      if (z >= 0.9 || M_WIP_MAP.hover?.id === o.ma_dh) mDrawGraphOrderLabel(ctx, o, node, r, riskColor, z, theme);
+      ctx.restore();
+    }
+
+    function mDrawGraphOrderLabel(ctx, o, node, r, color, z, theme) {
+      theme = theme || _mWipTheme();
+      const age = formatAgeShort(mWipStageWorkingAge(o));
+      const labelW = z >= 1.18 ? 118 : 82;
+      const labelH = z >= 1.18 ? 48 : 28;
+      const x = node.x + r + 8;
+      const y = node.y - labelH / 2;
+      ctx.save();
+      mRoundRect(ctx, x, y, labelW, labelH, 7);
+      ctx.fillStyle = theme.labelBg;
+      ctx.fill();
+      ctx.strokeStyle = theme.labelBorder;
+      ctx.stroke();
+      mCanvasText(ctx, o.ma_dh || '---', x + 8, y + 16, labelW - 16, '850 10px Inter', color);
+      if (z >= 1.18) {
+        mCanvasText(ctx, o.khach_hang || '---', x + 8, y + 31, labelW - 16, '800 9px Inter', theme.labelSub);
+        mCanvasText(ctx, `SL ${Number(o.sl) || 0}${age ? ' · ' + age : ''}`, x + 8, y + 43, labelW - 16, '800 8.5px Inter', theme.labelMeta);
+      }
+      ctx.restore();
+    }
+
+    function mDrawSummaryPill(ctx, x, y, w, label, value, meta, accent, theme) {
+      theme = theme || _mWipTheme();
+      if (!accent) accent = theme.dark ? '#fbbf24' : '#c4836f';
+      mRoundRect(ctx, x, y, w, 66, 8);
+      ctx.fillStyle = theme.pillBg;
+      ctx.fill();
+      ctx.strokeStyle = theme.pillBorder;
       ctx.stroke();
       ctx.fillStyle = accent;
       ctx.fillRect(x, y, 5, 66);
-      mCanvasText(ctx, label, x + 14, y + 21, w - 24, '800 13px Inter', '#6b625d');
-      mCanvasText(ctx, value, x + 14, y + 47, w - 84, '850 25px Inter', '#2d2724');
-      mCanvasText(ctx, meta, x + w - 10, y + 45, 72, '800 11px Inter', '#8a817b', 'right');
+      mCanvasText(ctx, label, x + 14, y + 21, w - 24, '800 13px Inter', theme.pillLabel);
+      mCanvasText(ctx, value, x + 14, y + 47, w - 84, '850 25px Inter', theme.pillValue);
+      mCanvasText(ctx, meta, x + w - 10, y + 45, 72, '800 11px Inter', theme.pillMeta, 'right');
     }
 
-    function mDrawMobileStage(ctx, stage, z, pulse, blink) {
+    function mDrawMobileStage(ctx, stage, z, pulse, blink, theme) {
+      theme = theme || _mWipTheme();
       const filteredOrders = stage.orders.filter(mWipOrderMatchesFilter);
       const dimStage = M_WIP_MAP.filter !== 'all' && filteredOrders.length === 0;
       ctx.save();
       ctx.globalAlpha = dimStage ? 0.28 : 1;
       mRoundRect(ctx, stage.x, stage.y, stage.w, stage.h, 10);
-      ctx.fillStyle = '#fffaf7';
+      ctx.fillStyle = theme.stageBg;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(196,131,111,.24)';
+      ctx.strokeStyle = theme.stageBorder;
       ctx.lineWidth = 1.4;
       ctx.stroke();
-      ctx.fillStyle = stage.color;
-      ctx.fillRect(stage.x, stage.y, 7, stage.h);
+      if (theme.dark) {
+        ctx.save();
+        ctx.shadowColor = stage.color;
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = stage.color;
+        ctx.fillRect(stage.x, stage.y, 7, stage.h);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = stage.color;
+        ctx.fillRect(stage.x, stage.y, 7, stage.h);
+      }
 
       M_WIP_MAP.hitItems.push({ type: 'stage', stage: stage.stage, x: stage.x, y: stage.y, w: stage.w, h: 76 });
-      mCanvasText(ctx, mWipStageLabel(stage.stage), stage.x + 18, stage.y + 29, stage.w - 112, '850 19px Inter', '#2d2724');
-      mCanvasText(ctx, `${stage.orders.length}`, stage.x + stage.w - 16, stage.y + 31, 76, '850 24px Inter', stage.color, 'right');
-      mCanvasText(ctx, `${stage.qty} răng · ${stage.lanes.length || 1} lane`, stage.x + 18, stage.y + 55, stage.w - 36, '800 12px Inter', '#7a716b');
+      mCanvasText(ctx, mWipStageLabel(stage.stage), stage.x + 18, stage.y + 29, stage.w - 112, '850 19px Inter', theme.stageTitle);
+      if (theme.dark) {
+        ctx.save();
+        ctx.shadowColor = stage.color;
+        ctx.shadowBlur = 10;
+        mCanvasText(ctx, `${stage.orders.length}`, stage.x + stage.w - 16, stage.y + 31, 76, '850 24px Inter', stage.color, 'right');
+        ctx.restore();
+      } else {
+        mCanvasText(ctx, `${stage.orders.length}`, stage.x + stage.w - 16, stage.y + 31, 76, '850 24px Inter', stage.color, 'right');
+      }
+      mCanvasText(ctx, `${stage.qty} răng · ${stage.lanes.length || 1} lane`, stage.x + 18, stage.y + 55, stage.w - 36, '800 12px Inter', theme.stageMeta);
       if (stage.alerts) {
         const badgeColor = stage.dangers ? M_WIP_RISK_COLOR.danger : M_WIP_RISK_COLOR.warn;
-        mDrawMobileBadge(ctx, stage.x + 18, stage.y + 64, `${stage.alerts} cảnh báo`, badgeColor, 0);
+        mDrawMobileBadge(ctx, stage.x + 18, stage.y + 64, `${stage.alerts} cảnh báo`, badgeColor, 0, theme);
       }
-      if (stage.unclaimed) mDrawMobileBadge(ctx, stage.x + stage.w - 112, stage.y + 64, `${stage.unclaimed} chờ`, '#64748b', 0);
+      if (stage.unclaimed) mDrawMobileBadge(ctx, stage.x + stage.w - 112, stage.y + 64, `${stage.unclaimed} chờ`, theme.dark ? '#94a3b8' : '#64748b', 0, theme);
 
       if (z < 0.72) {
-        mDrawMobileStageOverview(ctx, stage, pulse, blink);
+        mDrawMobileStageOverview(ctx, stage, pulse, blink, theme);
       } else {
-        for (const lane of stage.lanes) mDrawMobileLane(ctx, lane, z, pulse, blink, stage.color);
-        if (!stage.lanes.length) mCanvasText(ctx, 'Không có đơn đang chờ', stage.x + 18, stage.y + 122, stage.w - 36, '800 13px Inter', '#9a918b');
+        for (const lane of stage.lanes) mDrawMobileLane(ctx, lane, z, pulse, blink, stage.color, theme);
+        if (!stage.lanes.length) mCanvasText(ctx, 'Không có đơn đang chờ', stage.x + 18, stage.y + 122, stage.w - 36, '800 13px Inter', theme.stageEmpty);
       }
       ctx.restore();
     }
 
-    function mDrawMobileBadge(ctx, x, y, text, color, blink) {
+    function mDrawMobileBadge(ctx, x, y, text, color, blink, theme) {
+      theme = theme || _mWipTheme();
       ctx.save();
       mRoundRect(ctx, x, y, 94, 22, 11);
       ctx.fillStyle = color;
       if (blink) ctx.globalAlpha *= mWipClamp(0.35 + blink * 0.65, 0.35, 1);
       ctx.fill();
-      mCanvasText(ctx, text, x + 47, y + 15, 82, '850 10px Inter', '#fff', 'center');
+      mCanvasText(ctx, text, x + 47, y + 15, 82, '850 10px Inter', theme.badgeText, 'center');
       ctx.restore();
     }
 
-    function mDrawMobileStageOverview(ctx, stage, pulse, blink) {
+    function mDrawMobileStageOverview(ctx, stage, pulse, blink, theme) {
+      theme = theme || _mWipTheme();
       const x = stage.x + 16;
       const y = stage.y + 102;
       const w = stage.w - 32;
       const h = Math.max(76, stage.h - 124);
       mRoundRect(ctx, x, y, w, h, 8);
-      ctx.fillStyle = 'rgba(196,131,111,.08)';
+      ctx.fillStyle = theme.overviewBg;
       ctx.fill();
       const orders = stage.orders.slice(0, 140);
       const cols = Math.max(7, Math.floor(w / 24));
@@ -4180,33 +4684,37 @@
         const cy = y + 18 + Math.floor(i / cols) * 21;
         if (cy > y + h - 10) return;
         const dotR = radiusByRisk[risk] || r;
+        ctx.save();
+        if (theme.dark && risk === 'normal' && match) ctx.globalAlpha *= theme.overviewDotAlpha;
         ctx.beginPath();
         ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
         ctx.fillStyle = !match
-          ? 'rgba(148,163,184,.22)'
+          ? theme.overviewUnmatched
           : (M_WIP_RISK_COLOR[risk] || stage.color);
         ctx.fill();
         if (match && risk === 'danger') {
           ctx.lineWidth = 1.2;
-          ctx.strokeStyle = 'rgba(0,0,0,.35)';
+          ctx.strokeStyle = theme.overviewDangerOutline;
           ctx.stroke();
         }
         const ktv = '_wipKtv' in o ? o._wipKtv : ktvForOrder(o);
         if (!ktv) {
-          ctx.strokeStyle = '#64748b';
+          ctx.strokeStyle = theme.overviewUnclaimedStroke;
           ctx.lineWidth = 2;
           ctx.stroke();
         }
+        ctx.restore();
       });
     }
 
-    function mDrawMobileLane(ctx, lane, z, pulse, blink, stageColor) {
+    function mDrawMobileLane(ctx, lane, z, pulse, blink, stageColor, theme) {
+      theme = theme || _mWipTheme();
       mRoundRect(ctx, lane.x, lane.y, lane.w, lane.h, 8);
-      ctx.fillStyle = lane.name === M_WIP_UNCLAIMED ? 'rgba(148,163,184,.12)' : 'rgba(255,255,255,.76)';
+      ctx.fillStyle = lane.name === M_WIP_UNCLAIMED ? theme.laneBgUnclaimed : theme.laneBg;
       ctx.fill();
-      ctx.strokeStyle = lane.name === M_WIP_UNCLAIMED ? 'rgba(100,116,139,.24)' : 'rgba(196,131,111,.16)';
+      ctx.strokeStyle = lane.name === M_WIP_UNCLAIMED ? theme.laneBorderUnclaimed : theme.laneBorder;
       ctx.stroke();
-      mCanvasText(ctx, lane.name, lane.x + 10, lane.y + 22, lane.w - 70, '850 12px Inter', lane.name === M_WIP_UNCLAIMED ? '#64748b' : '#2d2724');
+      mCanvasText(ctx, lane.name, lane.x + 10, lane.y + 22, lane.w - 70, '850 12px Inter', lane.name === M_WIP_UNCLAIMED ? theme.laneTitleUnclaimed : theme.laneTitle);
       mCanvasText(ctx, `${lane.orders.length}`, lane.x + lane.w - 10, lane.y + 22, 36, '850 15px Inter', stageColor, 'right');
 
       const gap = 8;
@@ -4217,20 +4725,21 @@
         const row = Math.floor(idx / lane.cardsPerRow);
         const x = lane.x + 10 + col * (cardW + gap);
         const y = lane.y + 34 + row * (cardH + 6);
-        mDrawMobileCard(ctx, o, x, y, cardW, cardH, z, pulse, blink, stageColor);
+        mDrawMobileCard(ctx, o, x, y, cardW, cardH, z, pulse, blink, stageColor, theme);
       });
     }
 
-    function mDrawMobileCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor) {
+    function mDrawMobileCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor, theme) {
+      theme = theme || _mWipTheme();
       const risk = mWipOrderRisk(o);
       const match = mWipOrderMatchesFilter(o);
       const riskColor = M_WIP_RISK_COLOR[risk] || stageColor;
       ctx.save();
       ctx.globalAlpha = match ? 1 : 0.18;
       mRoundRect(ctx, x, y, w, h, 7);
-      ctx.fillStyle = M_WIP_RISK_BG[risk] || '#ffffff';
+      ctx.fillStyle = risk === 'normal' ? theme.cardBg : (M_WIP_RISK_BG[risk] || theme.cardBg);
       ctx.fill();
-      ctx.strokeStyle = risk === 'normal' ? 'rgba(196,131,111,.24)' : riskColor;
+      ctx.strokeStyle = risk === 'normal' ? theme.cardBorder : riskColor;
       ctx.lineWidth = 1.1;
       ctx.stroke();
       ctx.fillStyle = risk === 'normal' ? stageColor : riskColor;
@@ -4243,13 +4752,13 @@
         ctx.restore();
       }
       M_WIP_MAP.hitItems.push({ type: 'order', id: o.ma_dh, x, y, w, h, order: o });
-      mCanvasText(ctx, o.ma_dh || '---', x + 11, y + 17, w - 18, '850 11px Inter', '#2d2724');
-      if (z >= 0.92) mCanvasText(ctx, o.khach_hang || '---', x + 11, y + 33, w - 18, '800 9px Inter', '#6b625d');
+      mCanvasText(ctx, o.ma_dh || '---', x + 11, y + 17, w - 18, '850 11px Inter', theme.cardText);
+      if (z >= 0.92) mCanvasText(ctx, o.khach_hang || '---', x + 11, y + 33, w - 18, '800 9px Inter', theme.cardSub);
       if (z >= 1.22) {
         const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '---';
-        mCanvasText(ctx, `${patient} · SL ${Number(o.sl) || 0}`, x + 11, y + 49, w - 18, '800 8.5px Inter', '#8a817b');
+        mCanvasText(ctx, `${patient} · SL ${Number(o.sl) || 0}`, x + 11, y + 49, w - 18, '800 8.5px Inter', theme.cardMeta);
       } else {
-        mCanvasText(ctx, `SL ${Number(o.sl) || 0}`, x + w - 8, y + h - 9, 34, '850 9px Inter', '#8a817b', 'right');
+        mCanvasText(ctx, `SL ${Number(o.sl) || 0}`, x + w - 8, y + h - 9, 34, '850 9px Inter', theme.cardMeta, 'right');
       }
       ctx.restore();
     }
@@ -5010,6 +5519,8 @@
         if (canViewWipPanel()) {
           const wipBtn = document.getElementById('m-wip-btn');
           if (wipBtn) wipBtn.classList.add('admin-visible');
+          const wipLiveBtn = document.getElementById('m-wiplive-btn');
+          if (wipLiveBtn) wipLiveBtn.classList.add('admin-visible');
         }
         if (hasPerm('delay_reports.review')) {
           const delayReportsBtn = document.getElementById('m-delayreports-btn');

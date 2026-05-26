@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { requireAuth, requireAdmin, requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
+const { queryD1Async } = require('../db/d1-http-sync');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -159,7 +160,7 @@ router.get('/api/feedbacks/stats', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
-router.get('/api/feedbacks', requireAuth, (req, res) => {
+router.get('/api/feedbacks', requireAuth, async (req, res) => {
   try {
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
@@ -174,7 +175,9 @@ router.get('/api/feedbacks', requireAuth, (req, res) => {
     sql += ' ORDER BY f.created_at DESC';
     const limit = Math.min(Number(req.query.limit) || 50, 200);
     sql += ` LIMIT ${limit}`;
-    const rows = db.prepare(sql).all(...params);
+    const rows = db.backend === 'd1'
+      ? (await queryD1Async(sql, params)).results || []
+      : db.prepare(sql).all(...params);
     res.json({ ok: true, data: rows });
   } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });

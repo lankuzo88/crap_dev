@@ -4,6 +4,7 @@ const path    = require('path');
 const router  = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
+const { queryD1Async } = require('../db/d1-http-sync');
 const { USERS, normalizeUserCongDoan, hasPermission } = require('../repositories/users.repo');
 const { uploadImage, parseImageRefs, stringifyImageRefs, deleteErrorImage, REPORT_IMAGE_LIMIT } = require('../services/image.service');
 const { BASE_DIR } = require('../config/paths');
@@ -156,20 +157,23 @@ router.post('/api/delay-reports', requireAuth, requireDelayReporter, (req, res) 
   });
 });
 
-router.get('/api/delay-reports/active', requireAuth, (req, res) => {
+router.get('/api/delay-reports/active', requireAuth, async (req, res) => {
   try {
     const canReview = hasPermission(req.session.user, 'delay_reports.review');
     const canView = hasPermission(req.session.user, 'delay_reports.view_active') || canReview;
     if (!canView) return res.json({ ok: true, data: [] });
     const db = getDB();
     if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
-    const rows = db.prepare(`
+    const sql = `
       SELECT dr.*, d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl
       FROM delay_reports dr
       LEFT JOIN don_hang d ON d.ma_dh = dr.ma_dh
       WHERE dr.trang_thai IN ('pending', 'confirmed')
       ORDER BY dr.submitted_at DESC
-    `).all();
+    `;
+    const rows = db.backend === 'd1'
+      ? (await queryD1Async(sql)).results || []
+      : db.prepare(sql).all();
     const data = canReview
       ? rows.map(mapDelayReport)
       : rows.map(row => ({ ma_dh: row.ma_dh, trang_thai: row.trang_thai || 'pending' }));

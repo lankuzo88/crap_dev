@@ -3,6 +3,7 @@ const fs   = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 const { getDB, dbHasData } = require('../db/index');
+const { queryD1BatchAsync } = require('../db/d1-http-sync');
 const { FILE_SACH_DIR, DATA_DIR, EXCEL_DIR } = require('../config/paths');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
@@ -44,6 +45,11 @@ function normalizeRuleText(value) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function isConfirmedStageText(value) {
+  const normalized = normalizeRuleText(value);
+  return normalized === 'co' || normalized === 'xac nhan';
 }
 
 function hasThuSuonMarker(value) {
@@ -190,7 +196,7 @@ function readExcel(filePath) {
       if (!ma || ma === 'Mã ĐH') continue;
       const cd  = str(row[j.cd]);
       const ktv = str(row[j.ktv]).replace(/^-$/, '');
-      const xn  = str(row[j.xn]) === 'Có';
+      const xn  = isConfirmedStageText(str(row[j.xn]));
       const tg  = parseDate(row[j.tg]).replace(/^-$/, '');
       const lk  = str(row[j.lk]);
       const tk  = str(row[j.tk]);
@@ -214,7 +220,7 @@ function readJsonScraper(filePath) {
     if (!ma) continue;
     const cd  = str(row.cong_doan);
     const ktv = str(row.ten_ktv);
-    const xn  = str(row.xac_nhan) === 'Có';
+    const xn  = isConfirmedStageText(str(row.xac_nhan));
     const tg  = str(row.thoi_gian_hoan_thanh).replace(/^-$/, '');
     const lk  = str(row.loai_lenh || row.raw_row_text?.split(',').pop()?.trim() || '');
     const tk  = str(row.tai_khoan_cao || row.tai_khoan || '');
@@ -314,48 +320,27 @@ function getActiveMaDhList() {
   return null;
 }
 
-// ── getDataFromDB ─────────────────────────────────────
-function getDataFromDB() {
-  const db = getDB();
-  const active = getActiveMaDhList();
+function dashboardRowsSql(whereSql = '') {
+  return `
+      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
+             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
+             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
+             GROUP_CONCAT(
+               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
+               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
+               ';;'
+             ) AS stages_raw
+      FROM don_hang d
+      LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
+      ${whereSql}
+      GROUP BY d.ma_dh
+      ORDER BY d.yc_giao ASC, d.nhap_luc ASC
+    `;
+}
+
+function buildDashboardOrdersFromRows(rows, active) {
   const activeSet = new Set(active?.ids || []);
   const hasActiveList = activeSet.size > 0;
-  let rows;
-  if (active && active.ids.length > 0) {
-    const ph = active.ids.map(() => '?').join(',');
-    rows = db.prepare(`
-      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
-             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
-             GROUP_CONCAT(
-               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-               ';;'
-             ) AS stages_raw
-      FROM don_hang d
-      LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
-      WHERE d.ma_dh IN (${ph})
-      GROUP BY d.ma_dh
-      ORDER BY d.yc_giao ASC, d.nhap_luc ASC
-    `).all(...active.ids);
-  } else {
-    log('⚠ Không tìm được file active, hiển thị toàn bộ DB');
-    rows = db.prepare(`
-      SELECT d.ma_dh, d.nhap_luc, d.yc_hoan_thanh, d.yc_giao,
-             d.khach_hang, d.benh_nhan, d.phuc_hinh, d.sl,
-             d.loai_lenh, d.ghi_chu, d.ghi_chu_sx, d.keylab_sx_info, d.trang_thai, d.tai_khoan_cao, d.routed_to,
-             GROUP_CONCAT(
-               t.thu_tu||'|'||t.cong_doan||'|'||COALESCE(t.ten_ktv,'')||'|'||
-               COALESCE(t.xac_nhan,'Chưa')||'|'||COALESCE(t.thoi_gian_hoan_thanh,''),
-               ';;'
-             ) AS stages_raw
-      FROM don_hang d
-      LEFT JOIN tien_do t ON t.ma_dh = d.ma_dh
-      GROUP BY d.ma_dh
-      ORDER BY d.yc_giao ASC, d.nhap_luc ASC
-    `).all();
-  }
-
   const orders = [];
   for (const row of rows) {
     const lk   = row.loai_lenh || '';
@@ -368,7 +353,7 @@ function getDataFromDB() {
       if (p.length >= 5) {
         const thu_tu = parseInt(p[0]);
         if (!isNaN(thu_tu)) {
-          stagesMap[thu_tu] = { n: p[1], k: p[2], x: p[3] === 'Có' || p[3] === 'xác nhận', t: p[4] };
+          stagesMap[thu_tu] = { n: p[1], k: p[2], x: isConfirmedStageText(p[3]), t: p[4] };
         }
       }
     }
@@ -409,7 +394,24 @@ function getDataFromDB() {
     return (a.yc_giao || '').localeCompare(b.yc_giao || '');
   });
 
-  return { source: { db: 'labo_data.db', active: active?.src || null }, orders };
+  return orders;
+}
+
+// ── getDataFromDB ─────────────────────────────────────
+function getDataFromDB() {
+  const db = getDB();
+  const active = getActiveMaDhList();
+  let rows;
+  if (active && active.ids.length > 0) {
+    const ph = active.ids.map(() => '?').join(',');
+    rows = db.prepare(dashboardRowsSql(`WHERE d.ma_dh IN (${ph})`)).all(...active.ids);
+  } else {
+    log('⚠ Không tìm được file active, hiển thị toàn bộ DB');
+    rows = db.prepare(dashboardRowsSql()).all();
+  }
+
+  const orders = buildDashboardOrdersFromRows(rows, active);
+  return { source: { db: db.backend === 'd1' ? 'cloudflare-d1' : 'labo_data.db', active: active?.src || null }, orders };
 }
 
 // ── Cache + getData ───────────────────────────────────
@@ -452,22 +454,65 @@ function injectClinicTags(orders) {
     const { getAllTagsMap } = require('./clinicTags.repo');
     const map = getAllTagsMap();
     if (!map || !map.size) return orders;
-    return orders.map(o => ({ ...o, clinic_tags: map.get(o.kh || '') || [] }));
+    return applyClinicTags(orders, map);
   } catch { return orders; }
+}
+
+function buildClinicTagsMap(rows) {
+  const map = new Map();
+  for (const row of rows || []) {
+    if (!map.has(row.khach_hang)) map.set(row.khach_hang, []);
+    map.get(row.khach_hang).push(row.label);
+  }
+  return map;
+}
+
+function applyClinicTags(orders, map) {
+  if (!map || !map.size) return orders;
+  return orders.map(o => ({ ...o, clinic_tags: map.get(o.kh || '') || [] }));
+}
+
+async function getDataAsync(forceReload = false) {
+  const db = getDB();
+  if (!db || db.backend !== 'd1') return getData(forceReload);
+
+  const age = Date.now() - cacheTime;
+  const key = 'd1';
+  if (!forceReload && cache && cacheKey === key && age < TTL) return cache;
+
+  const active = getActiveMaDhList();
+  const params = active?.ids?.length ? active.ids : [];
+  const whereSql = params.length ? `WHERE d.ma_dh IN (${params.map(() => '?').join(',')})` : '';
+  if (!params.length) log('⚠ Không tìm được file active, hiển thị toàn bộ DB');
+
+  const started = Date.now();
+  const [orderResult, tagResult] = await queryD1BatchAsync([
+    { sql: dashboardRowsSql(whereSql), params },
+    { sql: 'SELECT khach_hang, label FROM clinic_tags ORDER BY created_at ASC' },
+  ]);
+
+  const tagsMap = buildClinicTagsMap(tagResult?.results || []);
+  const orders = applyClinicTags(buildDashboardOrdersFromRows(orderResult?.results || [], active), tagsMap);
+  cache = { source: { db: 'cloudflare-d1', active: active?.src || null }, orders };
+  cacheKey = key; cacheTime = Date.now();
+  log(`✓ ${orders.length} đơn (D1 batch ${cacheTime - started}ms)`);
+  return cache;
 }
 
 function getData(forceReload = false) {
   if (dbHasData()) {
+    const db = getDB();
     const age = Date.now() - cacheTime;
-    const key = 'sqlite';
+    const isD1 = db?.backend === 'd1';
+    const key = isD1 ? 'd1' : 'sqlite';
     if (!forceReload && cache && cacheKey === key && age < TTL) return cache;
     try {
       const raw = getDataFromDB();
       cache = { ...raw, orders: injectClinicTags(raw.orders) };
       cacheKey = key; cacheTime = Date.now();
-      log(`✓ ${cache.orders.length} đơn (SQLite)`);
+      log(`✓ ${cache.orders.length} đơn (${isD1 ? 'D1' : 'SQLite'})`);
       return cache;
-    } catch (e) { log(`⚠ SQLite read error: ${e.message} — fallback to files`); }
+    } catch (e) { log(`⚠ ${isD1 ? 'D1' : 'SQLite'} read error: ${e.message} — fallback to files`); }
   }
 
   const excelFile = findLatest(FILE_SACH_DIR, ['.xlsx', '.xls', '.xlsm']);
@@ -508,6 +553,7 @@ module.exports = {
   buildOrders,
   getActiveMaDhList,
   getDataFromDB,
+  getDataAsync,
   getData,
   resetCache,
   autoCloseCompletedDelayReports,

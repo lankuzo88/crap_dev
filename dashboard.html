@@ -675,13 +675,242 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   .d-sum-grid{gap:12px;}
 }
 
+/* ══════════════════ DARK MODE (DESKTOP) ══════════════════ */
+@media(min-width:769px){
+  body.theme-dark{
+    --bg:#1a1f2c;
+    --surface:#222938;
+    --surface2:#2a3142;
+    --border:#2f3850;
+    --border2:#252d42;
+    --border-card:#2f3850;
+    --amber:#fbbf24;--amber-s:rgba(251,191,36,.12);--amber-d:#f59e0b;
+    --red:#f87171;--red-s:rgba(248,113,113,.12);
+    --green:#10b981;--green-s:rgba(16,185,129,.12);
+    --blue:#60a5fa;--blue-s:rgba(96,165,250,.12);
+    --purple:#a78bfa;--purple-s:rgba(167,139,250,.12);
+    --orange:#fb923c;--orange-s:rgba(251,146,60,.12);
+    --text:#e3e3e3;--text2:#8a8a8a;--text3:#5a6175;
+    --terracotta-light:#60a5fa;--terracotta:#60a5fa;--rust-dark:#3b82f6;--urgent:#f87171;
+    --stage-cbm:#60a5fa;--stage-sap:#a78bfa;--stage-suon:#fbbf24;--stage-dap:#fb923c;--stage-mai:#f87171;
+    --glass-bg:rgba(34,41,56,.6);--glass-border:rgba(255,255,255,.06);
+    --tooth-active-glow:#22d3ee;
+    color-scheme:dark;
+  }
+  body.theme-dark{background:var(--bg);color:var(--text);}
+  body.theme-dark .d-layout{background:var(--bg);}
+  body.theme-dark .d-main{background:var(--bg);}
+
+  /* Top action buttons */
+  body.theme-dark .d-action-btn{background:var(--surface);border-color:var(--border);color:var(--text2);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  body.theme-dark .d-action-btn:hover{color:var(--amber);border-color:var(--amber);}
+
+  /* Sidebar / topbar / statusbar */
+  body.theme-dark .d-sidebar{background:var(--surface);border-right-color:var(--border);box-shadow:none;}
+  body.theme-dark .d-brand{border-bottom-color:var(--border);}
+  body.theme-dark .d-ico{background:var(--amber);color:#1a1f2c;}
+  body.theme-dark .d-name{color:var(--amber);}
+  body.theme-dark .d-live,body.theme-dark .d-kpis,body.theme-dark .d-funnel{border-color:var(--border);}
+  body.theme-dark .d-topbar{background:var(--surface);border-bottom-color:var(--border);}
+  body.theme-dark .d-tb-title{color:var(--text);}
+  body.theme-dark .d-statusbar{background:var(--surface);border-top-color:var(--border);color:var(--text2);}
+
+  /* KPI tiles */
+  body.theme-dark .d-kpi{background:var(--surface2);border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  body.theme-dark .d-kpi:hover{border-color:var(--amber);}
+  body.theme-dark .d-kpi.sua,body.theme-dark .d-kpi.lai{background:var(--surface2);border-color:var(--border);}
+
+  /* Nav links */
+  body.theme-dark .d-nl{color:var(--text2);}
+  body.theme-dark .d-nl:hover{background:rgba(255,255,255,.04);color:var(--text);}
+  body.theme-dark .d-nl.active{background:var(--amber);color:#1a1f2c;}
+  body.theme-dark .d-nl-badge{background:rgba(255,255,255,.08);color:inherit;}
+  body.theme-dark .d-nl.active .d-nl-badge{background:rgba(0,0,0,.22);color:#1a1f2c;}
+
+  /* Chips / search */
+  body.theme-dark .d-chip{background:transparent;border-color:var(--border);color:var(--text2);}
+  body.theme-dark .d-chip:hover{border-color:var(--amber);color:var(--amber);}
+  body.theme-dark .d-chip.active{background:var(--amber);border-color:var(--amber);color:#1a1f2c;}
+  body.theme-dark .d-sbox{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .d-sbox input{color:var(--text);}
+  body.theme-dark .d-sbox input::placeholder{color:var(--text3);}
+
+  /* Order cards (Orders tab) */
+  body.theme-dark .d-order-card{background:var(--surface);color:var(--text);border-color:var(--border);border-left-color:var(--amber);box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  body.theme-dark .d-order-card:hover{border-color:var(--amber);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.45);}
+  body.theme-dark .d-order-card.urgent{border-left-color:var(--urgent);background:var(--surface);border-color:var(--border);}
+  body.theme-dark .d-card-id,body.theme-dark .d-card-sub,body.theme-dark .d-card-note,body.theme-dark .d-card-qty-l,body.theme-dark .d-card-meta{color:var(--text2);}
+  body.theme-dark .d-card-name{color:var(--text);}
+  body.theme-dark .d-card-qty-n{color:var(--text);}
+  body.theme-dark .d-card-qty{border-color:rgba(255,255,255,.08);}
+  body.theme-dark .pip-pend{background:var(--border2);}
+  body.theme-dark .d-clinic-chip{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:#a5d4ff;}
+
+  /* Time group / summary pill / banner */
+  body.theme-dark .d-time-pill{background:var(--surface);border-color:var(--border);border-left-color:var(--amber);color:var(--amber);}
+  body.theme-dark .d-time-pill.urgent{color:var(--red);border-left-color:var(--red);}
+  body.theme-dark .d-time-count{background:var(--surface);border-color:var(--border);color:var(--text2);}
+  body.theme-dark .d-time-line{background:var(--border);}
+  body.theme-dark .d-summary-pill{background:var(--surface);border-color:var(--border);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  body.theme-dark .d-summary-date{color:var(--amber);}
+  body.theme-dark .d-summary-count{color:var(--text2);}
+  body.theme-dark .delay-banner{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.32);color:var(--red);}
+
+  /* Modal */
+  body.theme-dark .overlay{background:rgba(0,0,0,.72);backdrop-filter:blur(6px);}
+  body.theme-dark .modal{background:var(--surface);border-color:var(--border);box-shadow:0 24px 60px rgba(0,0,0,.6);}
+  body.theme-dark .m-header,body.theme-dark .m-footer{border-color:var(--border);}
+  body.theme-dark .m-id{color:var(--amber);}
+  body.theme-dark .m-ph{color:var(--text);}
+  body.theme-dark .m-close-btn{background:var(--surface2);border-color:var(--border);color:var(--text2);}
+  body.theme-dark .m-close-btn:hover{border-color:var(--amber);color:var(--amber);}
+  body.theme-dark .info-box{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .info-label{color:var(--text3);}
+  body.theme-dark .info-val{color:var(--text);}
+
+  /* Stage timeline (in modal) with pulse on current */
+  body.theme-dark .st-lbl{color:var(--text3);}
+  body.theme-dark .st-done{background:rgba(16,185,129,.14);color:var(--green);border-color:rgba(16,185,129,.4);}
+  body.theme-dark .st-cur{background:rgba(251,191,36,.14);color:var(--amber);border-color:rgba(251,191,36,.5);position:relative;animation:darkStCurPulse 1.8s ease-in-out infinite;}
+  body.theme-dark .st-pend{background:var(--surface2);color:var(--text3);border-color:var(--border);}
+  body.theme-dark .st-skip{background:rgba(74,82,112,.12);color:var(--text3);border-color:rgba(74,82,112,.5);}
+  body.theme-dark .st-name{color:var(--text3);}
+  body.theme-dark .st-ktv{color:var(--text2);}
+  body.theme-dark .st-time{color:var(--text3);}
+
+  /* Pipeline pane */
+  body.theme-dark .d-pipe-left{background:var(--surface);border-color:var(--border);}
+  body.theme-dark .d-pipe-hdr{background:var(--surface2);border-color:var(--border);color:var(--text3);}
+  body.theme-dark .d-pr{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .d-pr:hover{background:var(--surface);border-color:var(--amber);}
+  body.theme-dark .d-pf-item{background:var(--surface2);border-color:var(--border);}
+
+  /* ─── WIP công đoạn pane ─── */
+  body.theme-dark .d-wip-overview-item{background:var(--surface);border-color:var(--border);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  body.theme-dark .d-wip-overview-item.alert{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.32);}
+  body.theme-dark .d-wip-overview-value{color:var(--text);}
+  body.theme-dark .d-wip-overview-label,body.theme-dark .d-wip-overview-meta{color:var(--text2);}
+
+  /* Stage cards with neon glow */
+  body.theme-dark .d-wip-stage-card{background:var(--surface);border-color:var(--border);border-left-color:var(--amber);color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  body.theme-dark .d-wip-stage-card:hover{border-color:var(--amber);box-shadow:0 4px 18px rgba(251,191,36,.22);}
+  body.theme-dark .d-wip-stage-card.active{background:var(--surface2);border-color:var(--amber);box-shadow:inset 0 0 0 1px rgba(251,191,36,.4),0 0 20px rgba(251,191,36,.18);}
+  body.theme-dark .d-wip-stage-name{color:var(--text);}
+  body.theme-dark .d-wip-stage-count{color:var(--amber);text-shadow:0 0 12px rgba(251,191,36,.45);}
+  body.theme-dark .d-wip-stage-meta{color:var(--text2);}
+  body.theme-dark .d-wip-stage-buckets .bk{background:rgba(255,255,255,.04);}
+  body.theme-dark .d-wip-stage-buckets .bk-lt2{color:#94a3b8;}
+  body.theme-dark .d-wip-stage-buckets .bk-lt8{color:#cbd5e1;}
+  body.theme-dark .d-wip-stage-buckets .bk-lt24{color:#fb923c;background:rgba(251,146,60,.14);}
+  body.theme-dark .d-wip-stage-buckets .bk-gt24{color:#f87171;background:rgba(248,113,113,.14);}
+  body.theme-dark .d-wip-stage-buckets .bk-lt24.is-zero,body.theme-dark .d-wip-stage-buckets .bk-gt24.is-zero{background:rgba(255,255,255,.04);}
+
+  /* KTV filter chips (outline → fill on active) */
+  body.theme-dark .d-wip-ktv-summary{background:var(--surface);border-color:var(--border);}
+  body.theme-dark .d-wip-ktv-summary-label{color:var(--text2);}
+  body.theme-dark .d-wip-ktv-chip{background:transparent;border-color:var(--border);color:var(--text2);}
+  body.theme-dark .d-wip-ktv-chip:hover{border-color:var(--amber);color:var(--text);}
+  body.theme-dark .d-wip-ktv-chip.active{background:var(--amber);border-color:var(--amber);color:#1a1f2c;}
+  body.theme-dark .d-wip-ktv-chip .ktv-count{background:rgba(255,255,255,.06);color:var(--amber);}
+  body.theme-dark .d-wip-ktv-chip.active .ktv-count{background:rgba(0,0,0,.22);color:#1a1f2c;}
+  body.theme-dark .d-wip-ktv-chip.d-wip-ktv-unclaimed{border-color:rgba(248,113,113,.4);color:var(--red);}
+  body.theme-dark .d-wip-ktv-chip.d-wip-ktv-unclaimed .ktv-count{background:rgba(248,113,113,.12);color:var(--red);}
+  body.theme-dark .d-wip-ktv-chip.d-wip-ktv-unclaimed.active{background:var(--red);border-color:var(--red);color:#1a1f2c;}
+  body.theme-dark .d-wip-ktv-chip.d-wip-ktv-clear{color:var(--text3);}
+
+  /* WIP order list */
+  body.theme-dark .d-wip-order-card{background:var(--surface);border-color:var(--border);border-left-color:var(--amber);color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+  body.theme-dark .d-wip-order-card:hover{border-color:var(--amber);box-shadow:0 6px 18px rgba(0,0,0,.4);}
+  body.theme-dark .d-wip-order-code{color:var(--amber);}
+  body.theme-dark .d-wip-order-customer,body.theme-dark .d-wip-order-patient{color:var(--text);}
+  body.theme-dark .d-wip-order-qty,body.theme-dark .d-wip-order-stage,body.theme-dark .d-wip-order-deadline{color:var(--text2);}
+  body.theme-dark .d-wip-order-ph{color:var(--amber);}
+  body.theme-dark .d-wip-list-title{color:var(--text);}
+  body.theme-dark .d-wip-list-meta{color:var(--text2);}
+  body.theme-dark .d-wip-empty{color:var(--text2);}
+
+  /* WIP map canvas overlay UI (outline-style filter buttons) */
+  body.theme-dark .d-wip-map-shell{background:var(--bg);border-color:var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+  body.theme-dark .d-wip-map-titlebox{background:rgba(34,41,56,.92);border-color:var(--border);box-shadow:0 8px 22px rgba(0,0,0,.4);}
+  body.theme-dark .d-wip-map-title{color:var(--text);}
+  body.theme-dark .d-wip-map-status{color:var(--text2);}
+  body.theme-dark .d-wip-map-btn{background:transparent;border-color:var(--border);color:var(--text2);box-shadow:none;}
+  body.theme-dark .d-wip-map-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(251,191,36,.06);}
+  body.theme-dark .d-wip-map-btn.active{background:var(--amber);border-color:var(--amber);color:#1a1f2c;box-shadow:0 0 16px rgba(251,191,36,.25);}
+  body.theme-dark .d-wip-map-legend{background:rgba(34,41,56,.88);border-color:var(--border);box-shadow:0 8px 18px rgba(0,0,0,.3);}
+  body.theme-dark .d-wip-map-legend span{color:var(--text2);}
+
+  /* Summary pane */
+  body.theme-dark .d-kbig{background:var(--surface);border-color:var(--border);}
+  body.theme-dark .d-kbig-u{color:var(--text2);}
+  body.theme-dark .d-sum-panel{background:var(--surface);border-color:var(--border);}
+  body.theme-dark .d-sum-title{color:var(--text2);}
+  body.theme-dark .d-sum-title::after{background:var(--border);}
+  body.theme-dark .d-fr-wrap{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .d-fr-nm{color:var(--text);}
+  body.theme-dark .d-fr-meta{color:var(--text3);}
+  body.theme-dark .d-ktv-t tr{border-bottom-color:var(--border);}
+  body.theme-dark .d-ktv-nm{color:var(--text);}
+  body.theme-dark .d-ktv-st{color:var(--text3);}
+  body.theme-dark .d-ktv-cnt{color:var(--amber);}
+  body.theme-dark .d-lk-nm{color:var(--text2);}
+  body.theme-dark .d-lk-bw{background:var(--surface2);}
+  body.theme-dark .d-sf-bar,body.theme-dark .d-pf-bar,body.theme-dark .d-ktv-bar{background:var(--border);}
+
+  /* Sub-tabs */
+  body.theme-dark .d-sub-tabs{border-bottom-color:var(--border);}
+  body.theme-dark .d-sub-tab{color:var(--text3);}
+  body.theme-dark .d-sub-tab.active{color:var(--text);border-bottom-color:var(--amber);}
+  body.theme-dark .d-tng-col-hdr.in{background:rgba(251,191,36,.12);color:var(--amber);}
+  body.theme-dark .d-tng-col-hdr.out{background:rgba(16,185,129,.12);color:var(--green);}
+  body.theme-dark .d-tng-card{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .d-tng-card:hover{background:var(--surface);border-color:var(--amber);}
+  body.theme-dark .d-tng-bn,body.theme-dark .d-tng-kh{color:var(--text);}
+  body.theme-dark .d-tng-id,body.theme-dark .d-tng-pct,body.theme-dark .d-tng-ktv,body.theme-dark .d-tng-empty{color:var(--text2);}
+
+  /* ─── Tooth chart (modal) ─── */
+  body.theme-dark .tooth-chart-section{background:var(--surface2);border-color:var(--border);}
+  body.theme-dark .tooth-chart-title{color:var(--text2);}
+  body.theme-dark .tooth-chart-total{color:var(--amber);}
+  body.theme-dark .tooth-chart{background:#161a26;border-color:rgba(255,255,255,.05);background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:18px 18px;}
+  body.theme-dark .tooth-chart::before{background:rgba(255,255,255,.14);}
+  body.theme-dark .tooth-region{background:rgba(34,41,56,.85);border-color:rgba(255,255,255,.06);color:var(--text3);}
+  body.theme-dark .tooth-chip{background:#252d42;color:var(--text3);box-shadow:inset 0 -1px 0 rgba(0,0,0,.3);}
+  body.theme-dark .tooth-chip.active{box-shadow:0 0 14px var(--tooth-active-glow),0 3px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.2);outline:1px solid rgba(34,211,238,.55);outline-offset:-1px;}
+  body.theme-dark .tooth-chip.full{outline:2px solid var(--tooth-active-glow);outline-offset:-2px;}
+  body.theme-dark .tooth-bite-line{border-top-color:rgba(255,255,255,.08);}
+  body.theme-dark .tooth-legend-item,body.theme-dark .tooth-product-pill{background:var(--surface);border-color:var(--border);color:var(--text);}
+  body.theme-dark .tooth-product-pill b{color:var(--amber);}
+  body.theme-dark .tooth-note-pill{background:rgba(255,255,255,.06);color:var(--text2);}
+  body.theme-dark .tooth-delta-pill.extra{background:#f87171;}
+  body.theme-dark .tooth-delta-pill.missing{background:#10b981;}
+  body.theme-dark .tooth-unit-delta.extra{background:#f87171;}
+  body.theme-dark .tooth-unit-delta.missing{background:#10b981;}
+  body.theme-dark .tooth-unit-count{background:#3b82f6;border-color:rgba(255,255,255,.18);}
+  body.theme-dark .tooth-original-text{color:var(--text2);}
+
+  /* Scrollbar in dark */
+  body.theme-dark ::-webkit-scrollbar-track{background:var(--bg);}
+  body.theme-dark ::-webkit-scrollbar-thumb{background:var(--border);}
+}
+
+@keyframes darkStCurPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.45);}
+  50%{box-shadow:0 0 0 6px rgba(251,191,36,0);}
+}
+
 </style>
 </head>
 <body>
+<script>
+  // Apply saved theme before paint to avoid flash
+  try { if (localStorage.getItem('d-theme') === 'dark') document.body.classList.add('theme-dark'); } catch(e) {}
+</script>
 
 <div class="d-top-actions">
   <a id="d-admin-btn" class="d-action-btn" href="/admin" title="Admin Dashboard" style="display:none;">⚙️ Admin</a>
   <a id="d-upload-btn" class="d-action-btn" href="/upload" title="Upload Excel" style="display:none;">📤 Upload</a>
+  <button id="d-theme-toggle" class="d-action-btn" type="button" onclick="dToggleTheme()" title="Đổi giao diện sáng/tối" style="cursor:pointer;font-family:inherit;">🌙 Tối</button>
   <a class="d-action-btn" href="/logout" title="Đăng xuất">↩ Đăng xuất</a>
 </div>
 
@@ -926,6 +1155,23 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 
 <script>
+/* ═══════ THEME TOGGLE ═══════ */
+function dToggleTheme() {
+  const dark = document.body.classList.toggle('theme-dark');
+  try { localStorage.setItem('d-theme', dark ? 'dark' : 'light'); } catch(e) {}
+  const btn = document.getElementById('d-theme-toggle');
+  if (btn) btn.innerHTML = dark ? '☀️ Sáng' : '🌙 Tối';
+  // Repaint WIP canvas if loaded (animation loop picks it up next frame, but force one for inactive pane)
+  if (typeof dDrawWipMap === 'function' && typeof D_WIP_MAP !== 'undefined' && D_WIP_MAP && D_WIP_MAP.ctx) {
+    try { dDrawWipMap(performance.now()); } catch(e) {}
+  }
+}
+// Sync toggle button label on boot
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('d-theme-toggle');
+  if (btn && document.body.classList.contains('theme-dark')) btn.innerHTML = '☀️ Sáng';
+});
+
 /* ═══════ CONSTANTS ═══════ */
 const STAGE_NAMES = ['CBM','SÁP/Cadcam','SƯỜN','ĐẮP','MÀI'];
 const SCOL = {'CBM':'#2ed573','SÁP/Cadcam':'#3d9fff','SƯỜN':'#a55eea','ĐẮP':'#ff6b81','MÀI':'#f5a623'};
@@ -3149,6 +3395,82 @@ function dRoundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+function _dWipTheme() {
+  const dark = document.body.classList.contains('theme-dark');
+  if (dark) return {
+    dark: true,
+    mapBg: '#1a1f2c',
+    gridLine: 'rgba(255,255,255,.04)',
+    pillBg: 'rgba(34,41,56,.92)',
+    pillBorder: 'rgba(255,255,255,.08)',
+    pillLabel: '#8a8a8a',
+    pillValue: '#e3e3e3',
+    pillMeta: '#8a8a8a',
+    stageBg: '#222938',
+    stageBorder: 'rgba(255,255,255,.08)',
+    stageTitle: '#e3e3e3',
+    stageMeta: '#8a8a8a',
+    stageEmpty: '#5a6175',
+    overviewBg: 'rgba(255,255,255,.03)',
+    overviewDotAlpha: 0.42,
+    overviewUnmatched: 'rgba(148,163,184,.18)',
+    overviewUnclaimedStroke: '#5a6175',
+    laneBg: 'rgba(42,49,66,.65)',
+    laneBgUnclaimed: 'rgba(74,82,112,.18)',
+    laneBorder: 'rgba(255,255,255,.06)',
+    laneBorderUnclaimed: 'rgba(100,116,139,.3)',
+    laneTitle: '#e3e3e3',
+    laneTitleUnclaimed: '#8a8a8a',
+    cardBg: '#2a3142',
+    cardBgWarn: 'rgba(251,146,60,.16)',
+    cardBgDanger: 'rgba(248,113,113,.18)',
+    cardBorder: 'rgba(255,255,255,.08)',
+    cardBorderHover: '#fbbf24',
+    cardText: '#e3e3e3',
+    cardSub: '#8a8a8a',
+    cardMeta: '#5a6175',
+    riskDanger: '#f87171',
+    riskWarn: '#fb923c',
+    badgeText: '#1a1f2c',
+  };
+  return {
+    dark: false,
+    mapBg: '#f7f2ee',
+    gridLine: 'rgba(196,131,111,.14)',
+    pillBg: 'rgba(255,255,255,.92)',
+    pillBorder: 'rgba(196,131,111,.2)',
+    pillLabel: '#6b625d',
+    pillValue: '#2d2724',
+    pillMeta: '#8a817b',
+    stageBg: '#fffaf7',
+    stageBorder: 'rgba(196,131,111,.24)',
+    stageTitle: '#2d2724',
+    stageMeta: '#7a716b',
+    stageEmpty: '#9a918b',
+    overviewBg: 'rgba(196,131,111,.08)',
+    overviewDotAlpha: 1,
+    overviewUnmatched: 'rgba(148,163,184,.22)',
+    overviewUnclaimedStroke: '#64748b',
+    laneBg: 'rgba(255,255,255,.76)',
+    laneBgUnclaimed: 'rgba(148,163,184,.12)',
+    laneBorder: 'rgba(196,131,111,.16)',
+    laneBorderUnclaimed: 'rgba(100,116,139,.24)',
+    laneTitle: '#2d2724',
+    laneTitleUnclaimed: '#64748b',
+    cardBg: '#ffffff',
+    cardBgWarn: '#fff7ed',
+    cardBgDanger: '#fff1f0',
+    cardBorder: 'rgba(196,131,111,.24)',
+    cardBorderHover: '#2d2724',
+    cardText: '#2d2724',
+    cardSub: '#6b625d',
+    cardMeta: '#8a817b',
+    riskDanger: '#dc2626',
+    riskWarn: '#ea580c',
+    badgeText: '#fff',
+  };
+}
+
 function dCanvasText(ctx, text, x, y, maxW, font, color, align = 'left') {
   ctx.font = font;
   ctx.fillStyle = color;
@@ -3171,7 +3493,7 @@ function dDrawWipMap(now) {
   const dpr = D_WIP_MAP.dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, rect.width, rect.height);
-  ctx.fillStyle = '#f7f2ee';
+  ctx.fillStyle = _dWipTheme().mapBg;
   ctx.fillRect(0, 0, rect.width, rect.height);
 
   ctx.save();
@@ -3192,8 +3514,9 @@ function dDrawWipWorld(ctx, layout, now) {
   const pulse = 0.55 + Math.sin(now / 380) * 0.25;
   const blink = Math.sin(now / 180) > 0 ? 1 : 0.18;
   const z = D_WIP_MAP.scale;
+  const theme = _dWipTheme();
 
-  ctx.strokeStyle = 'rgba(196,131,111,.14)';
+  ctx.strokeStyle = theme.gridLine;
   ctx.lineWidth = 1;
   for (let x = 0; x <= D_WIP_MAP.worldW; x += 90) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, D_WIP_MAP.worldH); ctx.stroke();
@@ -3202,76 +3525,98 @@ function dDrawWipWorld(ctx, layout, now) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(D_WIP_MAP.worldW, y); ctx.stroke();
   }
 
-  dDrawSummaryPill(ctx, 70, 36, 260, 'Nhận hôm nay', `${received.total_orders || 0} đơn`, `${received.total_qty || 0} răng`);
-  dDrawSummaryPill(ctx, 350, 36, 260, 'Tổng đang ôm', `${totalWipOrders} đơn`, `${totalWipQty} răng`);
-  dDrawSummaryPill(ctx, 630, 36, 260, 'Tồn qua ngày', `${carryover.total_orders || 0} đơn`, `${carryover.total_qty || 0} răng`, '#dc2626');
-  dDrawSummaryPill(ctx, 910, 36, 260, 'Điểm cần chú ý', `${alertCount} đơn`, `${unclaimedCount} chờ nhận`, alertCount ? '#dc2626' : '#64748b');
+  dDrawSummaryPill(ctx, 70, 36, 260, 'Nhận hôm nay', `${received.total_orders || 0} đơn`, `${received.total_qty || 0} răng`, undefined, theme);
+  dDrawSummaryPill(ctx, 350, 36, 260, 'Tổng đang ôm', `${totalWipOrders} đơn`, `${totalWipQty} răng`, undefined, theme);
+  dDrawSummaryPill(ctx, 630, 36, 260, 'Tồn qua ngày', `${carryover.total_orders || 0} đơn`, `${carryover.total_qty || 0} răng`, theme.riskDanger, theme);
+  dDrawSummaryPill(ctx, 910, 36, 260, 'Điểm cần chú ý', `${alertCount} đơn`, `${unclaimedCount} chờ nhận`, alertCount ? theme.riskDanger : (theme.dark ? '#94a3b8' : '#64748b'), theme);
 
   for (const stage of layout.stages) {
-    dDrawStage(ctx, stage, z, pulse, blink);
+    dDrawStage(ctx, stage, z, pulse, blink, theme);
   }
 }
 
-function dDrawSummaryPill(ctx, x, y, w, label, value, meta, accent = '#f5a623') {
+function dDrawSummaryPill(ctx, x, y, w, label, value, meta, accent, theme) {
+  theme = theme || _dWipTheme();
+  if (!accent) accent = theme.dark ? '#fbbf24' : '#f5a623';
   dRoundRect(ctx, x, y, w, 76, 8);
-  ctx.fillStyle = 'rgba(255,255,255,.92)';
+  ctx.fillStyle = theme.pillBg;
   ctx.fill();
-  ctx.strokeStyle = 'rgba(196,131,111,.2)';
+  ctx.strokeStyle = theme.pillBorder;
   ctx.stroke();
   ctx.fillStyle = accent;
   ctx.fillRect(x, y, 5, 76);
-  dCanvasText(ctx, label, x + 18, y + 24, w - 32, '800 15px Inter', '#6b625d');
-  dCanvasText(ctx, value, x + 18, y + 54, w - 120, '850 30px Outfit', '#2d2724');
-  dCanvasText(ctx, meta, x + w - 14, y + 52, 100, '800 14px Inter', '#8a817b', 'right');
+  dCanvasText(ctx, label, x + 18, y + 24, w - 32, '800 15px Inter', theme.pillLabel);
+  dCanvasText(ctx, value, x + 18, y + 54, w - 120, '850 30px Outfit', theme.pillValue);
+  dCanvasText(ctx, meta, x + w - 14, y + 52, 100, '800 14px Inter', theme.pillMeta, 'right');
 }
 
-function dDrawStage(ctx, stage, z, pulse, blink) {
+function dDrawStage(ctx, stage, z, pulse, blink, theme) {
+  theme = theme || _dWipTheme();
   const filteredOrders = stage.orders.filter(dWipOrderMatchesMapFilter);
   const dimStage = D_WIP_MAP.filter !== 'all' && filteredOrders.length === 0;
   ctx.save();
   ctx.globalAlpha = dimStage ? 0.28 : 1;
   dRoundRect(ctx, stage.x, stage.y, stage.w, stage.h, 10);
-  ctx.fillStyle = '#fffaf7';
+  ctx.fillStyle = theme.stageBg;
   ctx.fill();
-  ctx.strokeStyle = 'rgba(196,131,111,.24)';
+  ctx.strokeStyle = theme.stageBorder;
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  ctx.fillStyle = stage.color;
-  ctx.fillRect(stage.x, stage.y, 7, stage.h);
+  if (theme.dark) {
+    ctx.save();
+    ctx.shadowColor = stage.color;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = stage.color;
+    ctx.fillRect(stage.x, stage.y, 7, stage.h);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = stage.color;
+    ctx.fillRect(stage.x, stage.y, 7, stage.h);
+  }
 
   D_WIP_MAP.hitItems.push({ type: 'stage', stage: stage.stage, x: stage.x, y: stage.y, w: stage.w, h: Math.min(stage.h, 126) });
-  dCanvasText(ctx, dWipStageLabel(stage.stage), stage.x + 20, stage.y + 34, stage.w - 130, '850 22px Inter', '#2d2724');
-  dCanvasText(ctx, `${stage.orders.length} đơn`, stage.x + stage.w - 20, stage.y + 34, 100, '850 24px Outfit', stage.color, 'right');
-  dCanvasText(ctx, `${stage.qty} răng · ${stage.lanes.length || 1} lane`, stage.x + 20, stage.y + 62, stage.w - 40, '800 13px Inter', '#7a716b');
-  if (stage.alerts) dDrawStageBadge(ctx, stage.x + 20, stage.y + 78, `${stage.alerts} cảnh báo`, '#dc2626', blink);
-  if (stage.unclaimed) dDrawStageBadge(ctx, stage.x + stage.w - 132, stage.y + 78, `${stage.unclaimed} chờ nhận`, '#64748b', 0);
+  dCanvasText(ctx, dWipStageLabel(stage.stage), stage.x + 20, stage.y + 34, stage.w - 130, '850 22px Inter', theme.stageTitle);
+  if (theme.dark) {
+    ctx.save();
+    ctx.shadowColor = stage.color;
+    ctx.shadowBlur = 10;
+    dCanvasText(ctx, `${stage.orders.length} đơn`, stage.x + stage.w - 20, stage.y + 34, 100, '850 24px Outfit', stage.color, 'right');
+    ctx.restore();
+  } else {
+    dCanvasText(ctx, `${stage.orders.length} đơn`, stage.x + stage.w - 20, stage.y + 34, 100, '850 24px Outfit', stage.color, 'right');
+  }
+  dCanvasText(ctx, `${stage.qty} răng · ${stage.lanes.length || 1} lane`, stage.x + 20, stage.y + 62, stage.w - 40, '800 13px Inter', theme.stageMeta);
+  if (stage.alerts) dDrawStageBadge(ctx, stage.x + 20, stage.y + 78, `${stage.alerts} cảnh báo`, theme.riskDanger, blink, theme);
+  if (stage.unclaimed) dDrawStageBadge(ctx, stage.x + stage.w - 132, stage.y + 78, `${stage.unclaimed} chờ nhận`, theme.dark ? '#94a3b8' : '#64748b', 0, theme);
 
   if (z < 0.48) {
-    dDrawStageOverview(ctx, stage, pulse, blink);
+    dDrawStageOverview(ctx, stage, pulse, blink, theme);
   } else {
-    for (const lane of stage.lanes) dDrawLane(ctx, lane, z, pulse, blink, stage.color);
-    if (!stage.lanes.length) dCanvasText(ctx, 'Không có đơn đang chờ', stage.x + 20, stage.y + 132, stage.w - 40, '800 15px Inter', '#9a918b');
+    for (const lane of stage.lanes) dDrawLane(ctx, lane, z, pulse, blink, stage.color, theme);
+    if (!stage.lanes.length) dCanvasText(ctx, 'Không có đơn đang chờ', stage.x + 20, stage.y + 132, stage.w - 40, '800 15px Inter', theme.stageEmpty);
   }
   ctx.restore();
 }
 
-function dDrawStageBadge(ctx, x, y, text, color, pulse) {
+function dDrawStageBadge(ctx, x, y, text, color, pulse, theme) {
+  theme = theme || _dWipTheme();
   ctx.save();
   dRoundRect(ctx, x, y, 112, 26, 13);
   ctx.fillStyle = color;
   if (pulse) ctx.globalAlpha *= dWipClamp(pulse + 0.25, 0.45, 1);
   ctx.fill();
-  dCanvasText(ctx, text, x + 56, y + 18, 96, '850 11px Inter', '#fff', 'center');
+  dCanvasText(ctx, text, x + 56, y + 18, 96, '850 11px Inter', theme.badgeText, 'center');
   ctx.restore();
 }
 
-function dDrawStageOverview(ctx, stage, pulse, blink) {
+function dDrawStageOverview(ctx, stage, pulse, blink, theme) {
+  theme = theme || _dWipTheme();
   const x = stage.x + 22;
   const y = stage.y + 128;
   const w = stage.w - 44;
   const h = Math.max(42, stage.h - 160);
   dRoundRect(ctx, x, y, w, h, 8);
-  ctx.fillStyle = 'rgba(196,131,111,.08)';
+  ctx.fillStyle = theme.overviewBg;
   ctx.fill();
   const orders = stage.orders.slice(0, 120);
   const cols = 12;
@@ -3285,13 +3630,15 @@ function dDrawStageOverview(ctx, stage, pulse, blink) {
     if (match && risk !== 'normal') {
       const isDanger = risk === 'danger';
       ctx.save();
-      ctx.globalAlpha = isDanger ? 0.18 + blink * 0.62 : 0.12 + blink * 0.44;
+      ctx.globalAlpha = (isDanger ? 0.18 + blink * 0.62 : 0.12 + blink * 0.44) * (theme.dark ? 0.7 : 1);
       ctx.beginPath();
       ctx.arc(cx, cy, isDanger ? 16 + pulse * 5 : 13 + pulse * 4, 0, Math.PI * 2);
-      ctx.fillStyle = isDanger ? '#dc2626' : '#ea580c';
+      ctx.fillStyle = isDanger ? theme.riskDanger : theme.riskWarn;
       ctx.fill();
       ctx.lineWidth = isDanger ? 3.2 : 2.4;
-      ctx.strokeStyle = isDanger ? `rgba(220,38,38,${0.42 + blink * 0.42})` : `rgba(234,88,12,${0.34 + blink * 0.34})`;
+      ctx.strokeStyle = isDanger
+        ? (theme.dark ? `rgba(248,113,113,${0.42 + blink * 0.42})` : `rgba(220,38,38,${0.42 + blink * 0.42})`)
+        : (theme.dark ? `rgba(251,146,60,${0.34 + blink * 0.34})` : `rgba(234,88,12,${0.34 + blink * 0.34})`);
       ctx.stroke();
       if (isDanger) {
         ctx.beginPath();
@@ -3299,31 +3646,35 @@ function dDrawStageOverview(ctx, stage, pulse, blink) {
         ctx.lineTo(cx + 14, cy);
         ctx.moveTo(cx, cy - 14);
         ctx.lineTo(cx, cy + 14);
-        ctx.strokeStyle = `rgba(220,38,38,${0.45 + blink * 0.45})`;
+        ctx.strokeStyle = theme.dark ? `rgba(248,113,113,${0.45 + blink * 0.45})` : `rgba(220,38,38,${0.45 + blink * 0.45})`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
       ctx.restore();
     }
+    ctx.save();
+    if (theme.dark && risk === 'normal' && match) ctx.globalAlpha *= 0.55;
     ctx.beginPath();
     ctx.arc(cx, cy, risk === 'danger' ? r + 2 + blink * 3 : risk === 'warn' ? r + blink * 2 : r, 0, Math.PI * 2);
-    ctx.fillStyle = !match ? 'rgba(148,163,184,.22)' : risk === 'danger' ? '#dc2626' : risk === 'warn' ? '#ea580c' : stage.color;
+    ctx.fillStyle = !match ? theme.overviewUnmatched : risk === 'danger' ? theme.riskDanger : risk === 'warn' ? theme.riskWarn : stage.color;
     ctx.fill();
     if (!dWipKtvForOrder(o)) {
-      ctx.strokeStyle = '#64748b';
+      ctx.strokeStyle = theme.overviewUnclaimedStroke;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+    ctx.restore();
   });
 }
 
-function dDrawLane(ctx, lane, z, pulse, blink, stageColor) {
+function dDrawLane(ctx, lane, z, pulse, blink, stageColor, theme) {
+  theme = theme || _dWipTheme();
   dRoundRect(ctx, lane.x, lane.y, lane.w, lane.h, 8);
-  ctx.fillStyle = lane.name === D_WIP_UNCLAIMED ? 'rgba(148,163,184,.12)' : 'rgba(255,255,255,.76)';
+  ctx.fillStyle = lane.name === D_WIP_UNCLAIMED ? theme.laneBgUnclaimed : theme.laneBg;
   ctx.fill();
-  ctx.strokeStyle = lane.name === D_WIP_UNCLAIMED ? 'rgba(100,116,139,.24)' : 'rgba(196,131,111,.16)';
+  ctx.strokeStyle = lane.name === D_WIP_UNCLAIMED ? theme.laneBorderUnclaimed : theme.laneBorder;
   ctx.stroke();
-  dCanvasText(ctx, lane.name, lane.x + 12, lane.y + 25, lane.w - 92, '850 13px Inter', lane.name === D_WIP_UNCLAIMED ? '#64748b' : '#2d2724');
+  dCanvasText(ctx, lane.name, lane.x + 12, lane.y + 25, lane.w - 92, '850 13px Inter', lane.name === D_WIP_UNCLAIMED ? theme.laneTitleUnclaimed : theme.laneTitle);
   dCanvasText(ctx, `${lane.orders.length}`, lane.x + lane.w - 14, lane.y + 25, 42, '850 16px Outfit', stageColor, 'right');
 
   const cardW = 104;
@@ -3333,23 +3684,24 @@ function dDrawLane(ctx, lane, z, pulse, blink, stageColor) {
     const row = Math.floor(idx / 3);
     const x = lane.x + 12 + col * (cardW + 10);
     const y = lane.y + 42 + row * (cardH + 8);
-    dDrawWipCard(ctx, o, x, y, cardW, cardH, z, pulse, blink, stageColor);
+    dDrawWipCard(ctx, o, x, y, cardW, cardH, z, pulse, blink, stageColor, theme);
   });
 }
 
-function dDrawWipCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor) {
+function dDrawWipCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor, theme) {
+  theme = theme || _dWipTheme();
   const risk = dWipOrderRisk(o);
   const match = dWipOrderMatchesMapFilter(o);
   const hover = D_WIP_MAP.hover?.type === 'order' && D_WIP_MAP.hover.id === o.ma_dh;
   ctx.save();
   ctx.globalAlpha = match ? 1 : 0.18;
   dRoundRect(ctx, x, y, w, h, 7);
-  ctx.fillStyle = risk === 'danger' ? '#fff1f0' : risk === 'warn' ? '#fff7ed' : '#ffffff';
+  ctx.fillStyle = risk === 'danger' ? theme.cardBgDanger : risk === 'warn' ? theme.cardBgWarn : theme.cardBg;
   ctx.fill();
-  ctx.strokeStyle = hover ? '#2d2724' : risk === 'danger' ? '#dc2626' : risk === 'warn' ? '#ea580c' : 'rgba(196,131,111,.24)';
+  ctx.strokeStyle = hover ? theme.cardBorderHover : risk === 'danger' ? theme.riskDanger : risk === 'warn' ? theme.riskWarn : theme.cardBorder;
   ctx.lineWidth = hover ? 2.2 : 1.1;
   ctx.stroke();
-  const barColor = risk === 'danger' ? '#dc2626' : risk === 'warn' ? '#ea580c' : stageColor;
+  const barColor = risk === 'danger' ? theme.riskDanger : risk === 'warn' ? theme.riskWarn : stageColor;
   ctx.fillStyle = barColor;
   ctx.fillRect(x, y, risk === 'normal' ? 5 : 7, h);
   if (risk !== 'normal') {
@@ -3361,25 +3713,27 @@ function dDrawWipCard(ctx, o, x, y, w, h, z, pulse, blink, stageColor) {
   }
 
   if (risk !== 'normal') {
-    ctx.strokeStyle = risk === 'danger' ? `rgba(220,38,38,${0.25 + pulse * 0.45})` : `rgba(234,88,12,${0.18 + pulse * 0.35})`;
+    ctx.strokeStyle = risk === 'danger'
+      ? (theme.dark ? `rgba(248,113,113,${0.25 + pulse * 0.45})` : `rgba(220,38,38,${0.25 + pulse * 0.45})`)
+      : (theme.dark ? `rgba(251,146,60,${0.18 + pulse * 0.35})` : `rgba(234,88,12,${0.18 + pulse * 0.35})`);
     ctx.lineWidth = 4;
     dRoundRect(ctx, x - 3, y - 3, w + 6, h + 6, 9);
     ctx.stroke();
   }
 
   D_WIP_MAP.hitItems.push({ type: 'order', id: o.ma_dh, x, y, w, h, order: o });
-  dCanvasText(ctx, o.ma_dh || '---', x + 12, y + 18, w - 18, '850 12px Outfit', '#2d2724');
-  if (z >= 0.72) dCanvasText(ctx, o.khach_hang || '---', x + 12, y + 34, w - 18, '800 10px Inter', '#6b625d');
+  dCanvasText(ctx, o.ma_dh || '---', x + 12, y + 18, w - 18, '850 12px Outfit', theme.cardText);
+  if (z >= 0.72) dCanvasText(ctx, o.khach_hang || '---', x + 12, y + 34, w - 18, '800 10px Inter', theme.cardSub);
   if (z >= 1.02) {
     const patient = o.benh_nhan && o.benh_nhan !== 'nan' ? o.benh_nhan : '---';
-    dCanvasText(ctx, `${patient} · SL ${Number(o.sl) || 0}`, x + 12, y + 48, w - 18, '800 9px Inter', '#8a817b');
+    dCanvasText(ctx, `${patient} · SL ${Number(o.sl) || 0}`, x + 12, y + 48, w - 18, '800 9px Inter', theme.cardMeta);
   } else {
-    dCanvasText(ctx, `SL ${Number(o.sl) || 0}`, x + w - 10, y + h - 10, 40, '850 10px Inter', '#8a817b', 'right');
+    dCanvasText(ctx, `SL ${Number(o.sl) || 0}`, x + w - 10, y + h - 10, 40, '850 10px Inter', theme.cardMeta, 'right');
   }
   if (z >= 1.45) {
     const age = formatAgeShort(dWipStageAgeMinutes(o));
     const deadline = fmtDate(o.yc_ht || o.yc_giao);
-    dCanvasText(ctx, `${age ? `ngâm ${age} · ` : ''}${deadline}`, x + 12, y + 64, w - 18, '800 9px Inter', risk === 'danger' ? '#dc2626' : '#6b625d');
+    dCanvasText(ctx, `${age ? `ngâm ${age} · ` : ''}${deadline}`, x + 12, y + 64, w - 18, '800 9px Inter', risk === 'danger' ? theme.riskDanger : theme.cardMeta);
   }
   ctx.restore();
 }
@@ -3754,10 +4108,12 @@ async function fetchData() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const raw = await res.json();
     ORDERS = parseJson(raw);
-    await loadActiveDelayReports();
-    applyDelayReports();
     showDashboardLayout();
     updateUI();
+    loadActiveDelayReports().then(() => {
+      applyDelayReports();
+      updateUI();
+    }).catch(() => {});
 
   } catch (err) {
     document.getElementById('bootTxt').textContent = '❌ ' + err.message + ' — thử lại sau 30s';
@@ -3783,9 +4139,11 @@ function startAutoRefresh() {
         if (!res.ok) return;
         const raw = await res.json();
         ORDERS = parseJson(raw);
-        await loadActiveDelayReports();
-        applyDelayReports();
         updateUI();
+        loadActiveDelayReports().then(() => {
+          applyDelayReports();
+          updateUI();
+        }).catch(() => {});
         const wipPane = document.getElementById('d-pane-wip');
         if (!IS_MOBILE && wipPane?.classList.contains('active')) await dRenderWipPanel(dWipSelectedStage, true);
       }
@@ -3882,10 +4240,12 @@ async function loadUserPendingOrders() {
     if (data.ok) {
       USER_PENDING_ORDERS = data.orders;
       ORDERS = data.orders || [];
-      await loadActiveDelayReports();
-      applyDelayReports();
       showDashboardLayout();
       updateUI();
+      loadActiveDelayReports().then(() => {
+        applyDelayReports();
+        updateUI();
+      }).catch(() => {});
     }
   } catch (e) {
     console.error('[User Orders]', e);
