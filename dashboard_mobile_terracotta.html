@@ -1411,6 +1411,15 @@
       outline: 2px solid rgba(196, 131, 111, 0.3);
       outline-offset: -2px;
     }
+    .tooth-chip.missing {
+      background: #a8a29e;
+      color: #fff;
+      transform: scale(1.04);
+      box-shadow: 0 2px 7px rgba(87,83,78,.2), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .tooth-chip.duplicate {
+      box-shadow: 0 0 0 2px rgba(182,87,72,.26), 0 3px 8px rgba(84,64,55,.18), inset 0 1px 0 rgba(255,255,255,.28);
+    }
     .tooth-bridge-layer {
       position: absolute;
       inset: -4px 0;
@@ -1835,7 +1844,7 @@
   <div class="search-bar">
     <span class="search-icon">🔍</span>
     <button class="search-scan-btn" type="button" onclick="openLookupScanner()" title="Quét barcode để mở đơn">▣</button>
-    <input id="searchInput" type="search" placeholder="Tìm mã đơn, bệnh nhân, nha khoa..." autocomplete="off">
+    <input id="searchInput" type="search" placeholder="Tìm mã đơn, BN, NK... (Enter: tìm trong DB)" autocomplete="off">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
     <div class="action-menu" id="actionMenu">
       <button class="menu-trigger" id="menuTrigger" onclick="toggleActionMenu(event)" aria-expanded="false" aria-controls="actionMenuPanel" title="Menu">☰</button>
@@ -2073,6 +2082,27 @@
     function orderHasInMauHam(o) {
       return hasInMauHamText(o?.phuc_hinh) || hasInMauHamText(o?.ghi_chu_sx);
     }
+    function isToothChartAccessory(text) {
+      const n = normalizePhText(text);
+      return (
+        hasInMauHamText(text) ||
+        n.includes('in mau') ||
+        n.includes('mau ham') ||
+        n.includes('cui gia') ||
+        n.includes('sap can') ||
+        n.includes('khay lay dau') ||
+        n.includes('lay dau') ||
+        n.includes('gia khop') ||
+        n.includes('ham doi') ||
+        n.includes('thanh bar') ||
+        /\bi\s*bar\b/.test(n) ||
+        /\bibar\b/.test(n) ||
+        /\bbar\b/.test(n) ||
+        n.includes('attachment') ||
+        n.includes('khop noi') ||
+        n.includes('ngat luc')
+      );
+    }
     // Đếm số hàm (trên/dưới) có răng phục hình → SL in mẫu cho ca lấy từ ghi chú.
     function inMauJawInfo(ph) {
       let upper = false, lower = false;
@@ -2106,6 +2136,7 @@
       const isTemporaryMaterial =
         n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
 
+      if (n.includes('mat dan') || n.includes('canh dan')) return 'vnr';
       if (hasInMauHamText(part) || n.includes('in mau') || n.includes('mau ham')) return 'inmau';
       if (isTemporaryMaterial) return 'tam';
       if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
@@ -2236,7 +2267,7 @@
       const info = parseKeylabSxInfo(order?.keylab_sx_info);
       const sxProducts = Array.isArray(info.products) ? info.products : [];
       const adjustments = parseProductionToothAdjustments(getProductionToothNote(order));
-      const phProducts = splitPhParts(order?.phuc_hinh).map((part, index) => {
+      const phProducts = splitPhParts(order?.phuc_hinh).filter(part => !isToothChartAccessory(part)).map((part, index) => {
         const rang = extractRangFromPart(part);
         const name = stripRangBlock(part) || cleanDisplayText(part);
         const sxMatch = sxProducts.find(item => (
@@ -2256,7 +2287,11 @@
 
       if (phProducts.length) return phProducts;
 
-      const products = sxProducts.map((item, index) => {
+      const products = sxProducts.filter(item => !isToothChartAccessory([
+        item?.san_pham || item?.product || '',
+        item?.loai_san_pham || '',
+        item?.rang || '',
+      ].join(' '))).map((item, index) => {
         const name = cleanDisplayText(item?.san_pham || item?.product || '');
         const rang = cleanDisplayText(item?.rang || '');
         const groups = parseToothGroups(rang);
@@ -2320,6 +2355,10 @@
       }
       const removeRe = /(?:bo|tru)\s+r?\s*(\d{2})/g;
       while ((m = removeRe.exec(normalized))) {
+        if (toothPos(m[1])) excluded.add(m[1]);
+      }
+      const missingRe = /(?:mat|thieu)\s+r?\s*(\d{2})/g;
+      while ((m = missingRe.exec(normalized))) {
         if (toothPos(m[1])) excluded.add(m[1]);
       }
       const repeatA = /\b([2-9])\s*(?:r|rang)\s*r?\s*(\d{2})\b/g;
@@ -2406,18 +2445,47 @@
       }[type] || 'linear-gradient(160deg, #997d68, #6e5748)';
     }
 
-    function renderBridgeFrames(rowKey, bridgeGroups) {
+    function buildToothRowSlots(rowKey, toothMap, products) {
+      const missingSet = new Set();
+      (products || []).forEach(product => {
+        (product.excludedTeeth || []).forEach(tooth => {
+          const pos = toothPos(tooth);
+          if (pos && pos.row === rowKey) missingSet.add(String(tooth));
+        });
+      });
+      const slots = [];
+      TOOTH_ROWS[rowKey].forEach(tooth => {
+        const key = String(tooth);
+        const entries = toothMap.get(key) || [];
+        const unitCount = entries.reduce((max, entry) => Math.max(max, Number(entry.product.toothUnits?.[key] || 1)), 1);
+        slots.push({ tooth: key, entries, missing: missingSet.has(key), duplicate: false });
+        for (let i = 2; i <= unitCount; i += 1) {
+          slots.push({ tooth: key, entries, missing: false, duplicate: true });
+        }
+      });
+      return slots;
+    }
+
+    function renderBridgeFrames(rowKey, bridgeGroups, rowSlots) {
+      const slotCount = Math.max(1, rowSlots.length);
+      const bounds = new Map();
+      rowSlots.forEach((slot, index) => {
+        const old = bounds.get(slot.tooth);
+        bounds.set(slot.tooth, { first: old ? old.first : index, last: index });
+      });
       return bridgeGroups.map(item => {
-        const positions = item.group.teeth.map(toothPos).filter(pos => pos && pos.row === rowKey).sort((a, b) => a.index - b.index);
+        const positions = item.group.teeth
+          .map(tooth => ({ tooth: String(tooth), pos: toothPos(tooth), bound: bounds.get(String(tooth)) }))
+          .filter(item => item.pos && item.pos.row === rowKey && item.bound);
         if (!positions.length) return '';
         const firstBridge = item.product.groups.find(group => group.type === 'bridge');
-        const start = positions[0].index;
-        const end = positions[positions.length - 1].index;
+        const start = Math.min(...positions.map(item => item.bound.first));
+        const end = Math.max(...positions.map(item => item.bound.last));
         const span = end - start + 1;
-        const left = `calc(${(start / 16) * 100}% - 3px)`;
-        const width = `calc(${(span / 16) * 100}% + 6px)`;
-        const barLeft = `calc(${(start / 16) * 100}% + 4px)`;
-        const barWidth = `calc(${(span / 16) * 100}% - 8px)`;
+        const left = `calc(${(start / slotCount) * 100}% - 3px)`;
+        const width = `calc(${(span / slotCount) * 100}% + 6px)`;
+        const barLeft = `calc(${(start / slotCount) * 100}% + 4px)`;
+        const barWidth = `calc(${(span / slotCount) * 100}% - 8px)`;
         const delta = firstBridge === item.group ? item.product.unitDelta : 0;
         const deltaHtml = delta ? `<div class="tooth-unit-delta ${delta > 0 ? 'extra' : 'missing'}">${htmlSafe(toothDeltaLabel(delta))}</div>` : '';
         return `
@@ -2427,31 +2495,41 @@
       }).join('');
     }
 
-    function renderToothRow(rowKey, toothMap, bridgeGroups) {
-      const row = TOOTH_ROWS[rowKey];
-      const bridgeHtml = renderBridgeFrames(rowKey, bridgeGroups);
-      const teethHtml = row.map(tooth => {
-        const entries = toothMap.get(String(tooth)) || [];
+    function renderToothRow(rowKey, toothMap, bridgeGroups, products) {
+      const rowSlots = buildToothRowSlots(rowKey, toothMap, products);
+      const bridgeHtml = renderBridgeFrames(rowKey, bridgeGroups, rowSlots);
+      const teethHtml = rowSlots.map(slot => {
+        const tooth = slot.tooth;
+        const entries = slot.entries;
         const active = entries.length > 0;
         const type = entries.length > 1 ? 'multi' : (entries[0]?.product.type || '');
         const full = entries.some(entry => entry.group.type === 'full') ? ' full' : '';
-        const unitCount = entries.reduce((max, entry) => Math.max(max, Number(entry.product.toothUnits?.[String(tooth)] || 1)), 1);
-        const unitHtml = active && unitCount > 1 ? `<span class="tooth-unit-count">x${unitCount}</span>` : '';
         const title = active
           ? entries.map(entry => `${entry.product.name} (${entry.group.raw})`).join(' | ')
           : '';
-        return `<div class="tooth-chip ${rowKey}${active ? ` active ${type}${full}` : ''}" title="${htmlSafe(title)}"><span>${tooth}</span>${unitHtml}</div>`;
+        const missing = !active && slot.missing;
+        const duplicate = active && slot.duplicate;
+        const cls = [
+          'tooth-chip',
+          rowKey,
+          active ? `active ${type}${full}` : '',
+          missing ? 'missing' : '',
+          duplicate ? 'duplicate' : '',
+        ].filter(Boolean).join(' ');
+        const chipTitle = missing ? `Thiếu/bỏ R${tooth}` : title;
+        return `<div class="${cls}" title="${htmlSafe(chipTitle)}"><span>${tooth}</span></div>`;
       }).join('');
       return `
         <div class="tooth-row-wrap">
           <div class="tooth-bridge-layer">${bridgeHtml}</div>
-          <div class="tooth-row">${teethHtml}</div>
+          <div class="tooth-row" style="grid-template-columns:repeat(${rowSlots.length},minmax(0,1fr));">${teethHtml}</div>
         </div>
       `;
     }
 
     function renderToothChartSection(order) {
       const products = annotateToothProducts(getToothChartProducts(order));
+      const chartTotal = products.reduce((sum, product) => sum + (Number(product.unitCount) || 0), 0);
       const originalText = cleanDisplayText(order?.phuc_hinh);
       if (!products.length) {
         return `<div class="tooth-chart-section">
@@ -2502,16 +2580,16 @@
       return `<div class="tooth-chart-section">
         <div class="tooth-chart-title">
           <span>Sơ đồ răng</span>
-          <span class="tooth-chart-total">${Number(order?.sl) || 0} răng</span>
+          <span class="tooth-chart-total">${chartTotal} răng</span>
         </div>
         <div class="tooth-chart">
           <span class="tooth-region tl">TRÊN P</span>
           <span class="tooth-region tr">TRÊN T</span>
           <span class="tooth-region bl">DƯỚI P</span>
           <span class="tooth-region br">DƯỚI T</span>
-          ${renderToothRow('upper', toothMap, bridgeGroups)}
+          ${renderToothRow('upper', toothMap, bridgeGroups, products)}
           <div class="tooth-bite-line"></div>
-          ${renderToothRow('lower', toothMap, bridgeGroups)}
+          ${renderToothRow('lower', toothMap, bridgeGroups, products)}
         </div>
         ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
         ${productHtml ? `<div class="tooth-products">${productHtml}</div>` : ''}
@@ -5296,6 +5374,18 @@
         filterSearch = searchInput.value;
         searchClear.classList.toggle('visible', filterSearch.length > 0);
         renderCards();
+      });
+
+      // Enter trên search box → nếu filter trả 0 kết quả thì lookup full DB
+      // (reuse handleScannedLookup — tìm theo barcode hoặc ma_dh trong don_hang).
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        const q = (searchInput.value || '').trim();
+        if (!q) return;
+        if (getFiltered().length === 0) {
+          e.preventDefault();
+          handleScannedLookup(q);
+        }
       });
 
       (async () => {

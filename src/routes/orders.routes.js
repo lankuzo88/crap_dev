@@ -4,7 +4,7 @@ const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const { classifyPhucHinh } = require('../utils/phucHinh');
-const { stagesGroupConcatSql } = require('../repositories/orders.repo');
+const { stagesGroupConcatSql, dashboardRowsSql, buildDashboardOrdersFromRows } = require('../repositories/orders.repo');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -137,6 +137,20 @@ router.post('/api/orders/route', requireAuth, express.json(), (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// Single-order lookup in DASHBOARD format (cùng shape với /data.json để client
+// reuse code render modal). Không apply active-Excel filter → admin lookup được
+// đơn cũ ngoài Excel hiện tại.
+router.get('/api/orders/dashboard/:ma_dh', requireAuth, (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ ok: false, error: 'DB chưa khởi tạo' });
+  try {
+    const rows = db.prepare(dashboardRowsSql('WHERE d.ma_dh = ?')).all(req.params.ma_dh);
+    if (!rows.length) return res.status(404).json({ ok: false, error: 'Không tìm thấy đơn' });
+    const orders = buildDashboardOrdersFromRows(rows, null);
+    res.json({ ok: true, order: orders[0] });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 router.get('/api/orders/:ma_dh', requireAuth, (req, res) => {

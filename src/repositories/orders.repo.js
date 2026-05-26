@@ -566,4 +566,6 @@ module.exports = {
   getData,
   resetCache,
   autoCloseCompletedDelayReports,
+  dashboardRowsSql,
+  buildDashboardOrdersFromRows,
 };
