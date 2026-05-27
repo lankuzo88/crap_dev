@@ -127,7 +127,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .tooth-unit-count{position:absolute;right:-3px;bottom:-4px;min-width:14px;height:14px;border-radius:999px;border:1px solid rgba(255,255,255,.92);background:#b65748;color:#fff;font-family:var(--mono);font-size:8px;font-weight:900;line-height:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.22);}
 .tooth-chip.upper{border-radius:4px 4px 7px 7px}.tooth-chip.lower{border-radius:7px 7px 4px 4px}
 .tooth-chip.active{color:#fff;transform:scale(1.04);box-shadow:0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
-.tooth-chip.zirc{background:linear-gradient(160deg,#4979b9,#255f9f)}.tooth-chip.kl{background:linear-gradient(160deg,#997d68,#6e5748)}.tooth-chip.vnr{background:linear-gradient(160deg,#d78672,#b65748)}.tooth-chip.hon{background:linear-gradient(160deg,#7f8c6b,#52664f)}.tooth-chip.inmau{background:linear-gradient(160deg,#4f9a8b,#2e746a)}.tooth-chip.tam{background:linear-gradient(160deg,#b88d4f,#8c6634)}.tooth-chip.multi{background:linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)}
+.tooth-chip.zircf{background:linear-gradient(160deg,#4979b9,#255f9f)}.tooth-chip.zirc{background:linear-gradient(160deg,#9bbde0,#7099c5)}.tooth-chip.zircv{background:linear-gradient(180deg,#255f9f 0%,#255f9f 60%,#9bbde0 80%,#9bbde0 100%)}.tooth-chip.klf{background:linear-gradient(160deg,#997d68,#6e5748)}.tooth-chip.kl{background:linear-gradient(160deg,#bda596,#9a8475)}.tooth-chip.klv{background:linear-gradient(180deg,#6e5748 0%,#6e5748 60%,#bda596 80%,#bda596 100%)}.tooth-chip.vnr{background:linear-gradient(160deg,#d78672,#b65748)}.tooth-chip.hon{background:linear-gradient(160deg,#7f8c6b,#52664f)}.tooth-chip.inmau{background:linear-gradient(160deg,#4f9a8b,#2e746a)}.tooth-chip.tam{background:linear-gradient(160deg,#b88d4f,#8c6634)}.tooth-chip.multi{background:linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)}
 .tooth-chip.full{outline:2px solid rgba(196,131,111,.3);outline-offset:-2px;}
 .tooth-chip.missing{background:#a8a29e;color:#fff;transform:scale(1.04);box-shadow:0 2px 7px rgba(87,83,78,.2),inset 0 1px 0 rgba(255,255,255,.22);}
 .tooth-chip.duplicate{box-shadow:0 0 0 2px rgba(182,87,72,.26),0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
@@ -1500,18 +1500,29 @@ function phType(ph) {
     p.includes('chrome') || p.includes('cobalt');
   const isTemporaryMaterial =
     n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
+  const isFull = /\bfull\b/.test(n);
+  const isVeneer = p.includes('veneer') || /cut[- ]?back/.test(n);
   if (n.includes('mat dan') || n.includes('canh dan')) return 'vnr';
   if (hasInMauHamText(ph) || n.includes('in mau') || n.includes('mau ham')) return 'inmau';
   if (p.includes('cùi giả zirconia') || p.includes('cui gia zirconia')) return 'hon';
   if (isTemporaryMaterial) return 'tam';
-  if (p.includes('veneer')) {
-    if (isZirconiaMaterial) return 'zirc';
-    if (isMetalMaterial) return 'kl';
-    return 'vnr';
+  if (isZirconiaMaterial) {
+    if (isFull) return 'zircf';
+    if (isVeneer) return 'zircv';
+    return 'zirc';
   }
+  if (isMetalMaterial) {
+    if (isFull) return 'klf';
+    if (isVeneer) return 'klv';
+    return 'kl';
+  }
+  if (isVeneer) return 'vnr';
   if (p.includes('mặt dán') || n.includes('mat dan')) return 'vnr';
-  if (isZirconiaMaterial) return 'zirc';
   return 'kl';
+}
+// Map subtype về parent family (cho filter/breakdown logic backwards-compatible).
+function phFamily(type) {
+  return { zircf: 'zirc', zircv: 'zirc', klf: 'kl', klv: 'kl' }[type] || type;
 }
 function splitPhParts(ph) {
   return String(ph || '').split(/;|\r?\n/).map(part => part.trim()).filter(Boolean);
@@ -1656,11 +1667,14 @@ function phBreakdown(ph, totalQty) {
   parts.forEach(part => {
     const q = partQty(part);
     if (!q) return;
-    const type = phType(part);
-    qty[type] += q;
+    const type = phFamily(phType(part));
+    qty[type] = (qty[type] || 0) + q;
     assigned += q;
   });
-  if (!assigned) qty[phType(ph)] += Number(totalQty) || 0;
+  if (!assigned) {
+    const fallback = phFamily(phType(ph));
+    qty[fallback] = (qty[fallback] || 0) + (Number(totalQty) || 0);
+  }
   return qty;
 }
 const PH_FILTERS = ['zirc', 'kl', 'vnr', 'tam', 'inmau'];
@@ -1917,7 +1931,11 @@ function applyProductionToothAdjustments(product, adjustments) {
 function toothTypeLabel(type) {
   return {
     zirc: 'Zirconia',
+    zircf: 'Full Zirconia',
+    zircv: 'Veneer Zirconia',
     kl: 'Kim loại',
+    klf: 'Full kim loại',
+    klv: 'Veneer kim loại',
     vnr: 'Mặt dán',
     hon: 'Hỗn hợp',
     inmau: 'In mẫu',
@@ -1928,8 +1946,12 @@ function toothTypeLabel(type) {
 }
 function toothTypeStyle(type) {
   return {
-    zirc: 'linear-gradient(160deg,#4979b9,#255f9f)',
-    kl: 'linear-gradient(160deg,#997d68,#6e5748)',
+    zirc: 'linear-gradient(160deg,#9bbde0,#7099c5)',
+    zircf: 'linear-gradient(160deg,#4979b9,#255f9f)',
+    zircv: 'linear-gradient(180deg,#255f9f 0%,#255f9f 60%,#9bbde0 80%,#9bbde0 100%)',
+    kl: 'linear-gradient(160deg,#bda596,#9a8475)',
+    klf: 'linear-gradient(160deg,#997d68,#6e5748)',
+    klv: 'linear-gradient(180deg,#6e5748 0%,#6e5748 60%,#bda596 80%,#bda596 100%)',
     vnr: 'linear-gradient(160deg,#d78672,#b65748)',
     hon: 'linear-gradient(160deg,#7f8c6b,#52664f)',
     inmau: 'linear-gradient(160deg,#4f9a8b,#2e746a)',

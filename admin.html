@@ -255,7 +255,7 @@
     .tooth-chip{position:relative;height:29px;min-width:0;border:0;border-radius:4px;background:#e9ddd5;color:#9b8b82;font-family:Consolas,monospace;font-size:8px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -1px 0 rgba(0,0,0,.05);}
     .tooth-chip.upper{border-radius:4px 4px 7px 7px}.tooth-chip.lower{border-radius:7px 7px 4px 4px}
     .tooth-chip.active{color:#fff;transform:scale(1.04);box-shadow:0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
-    .tooth-chip.zirc{background:linear-gradient(160deg,#4979b9,#255f9f)}.tooth-chip.kl{background:linear-gradient(160deg,#997d68,#6e5748)}.tooth-chip.vnr{background:linear-gradient(160deg,#d78672,#b65748)}.tooth-chip.hon{background:linear-gradient(160deg,#7f8c6b,#52664f)}.tooth-chip.tam{background:linear-gradient(160deg,#b88d4f,#8c6634)}.tooth-chip.multi{background:linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)}
+    .tooth-chip.zircf{background:linear-gradient(160deg,#4979b9,#255f9f)}.tooth-chip.zirc{background:linear-gradient(160deg,#9bbde0,#7099c5)}.tooth-chip.zircv{background:linear-gradient(180deg,#255f9f 0%,#255f9f 60%,#9bbde0 80%,#9bbde0 100%)}.tooth-chip.klf{background:linear-gradient(160deg,#997d68,#6e5748)}.tooth-chip.kl{background:linear-gradient(160deg,#bda596,#9a8475)}.tooth-chip.klv{background:linear-gradient(180deg,#6e5748 0%,#6e5748 60%,#bda596 80%,#bda596 100%)}.tooth-chip.vnr{background:linear-gradient(160deg,#d78672,#b65748)}.tooth-chip.hon{background:linear-gradient(160deg,#7f8c6b,#52664f)}.tooth-chip.tam{background:linear-gradient(160deg,#b88d4f,#8c6634)}.tooth-chip.multi{background:linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)}
     .tooth-chip.full{outline:2px solid rgba(196,131,111,.3);outline-offset:-2px;}
     .tooth-chip.missing{background:#a8a29e;color:#fff;transform:scale(1.04);box-shadow:0 2px 7px rgba(87,83,78,.2),inset 0 1px 0 rgba(255,255,255,.22);}
     .tooth-chip.duplicate{box-shadow:0 0 0 2px rgba(182,87,72,.26),0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
@@ -1633,21 +1633,35 @@
     return n.includes('in mau ham') || (n.includes('in mau') && n.includes('ham')) || (n.includes('in ban') && n.includes('ham')) || (n.includes('in toan') && n.includes('ham'));
   }
 
+  // Subtype phục hình theo SHAPE (full / veneer / crown) trong cùng nhóm material.
+  // Cho phép phân biệt visual trên cùng đơn có nhiều loại zirconia hoặc kim loại.
   function phType(ph) {
     const p = String(ph || '').toLowerCase();
     const n = normalizePhText(ph);
     const isZirconia = p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') || p.includes('zir-') || p.includes('zolid') || p.includes('cercon') || p.includes('la va') || p.includes('full zirconia') || n.includes('argen');
     const isMetal = n.includes('kim loai') || p.includes('titanium') || n.includes('titan') || p.includes('chrome') || p.includes('cobalt');
     const isTemporary = n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
+    const isFull = /\bfull\b/.test(n);
+    const isVeneer = p.includes('veneer') || /cut[- ]?back/.test(n);
     if (n.includes('mat dan') || n.includes('canh dan')) return 'vnr';
     if (isTemporary) return 'tam';
-    if (p.includes('veneer')) {
-      if (isZirconia) return 'zirc';
-      if (isMetal) return 'kl';
-      return 'vnr';
+    if (isZirconia) {
+      if (isFull) return 'zircf';
+      if (isVeneer) return 'zircv';
+      return 'zirc';
     }
-    if (isZirconia) return 'zirc';
+    if (isMetal) {
+      if (isFull) return 'klf';
+      if (isVeneer) return 'klv';
+      return 'kl';
+    }
+    if (isVeneer) return 'vnr';
     return 'kl';
+  }
+
+  // Map subtype về parent family (cho filter/breakdown logic backwards-compatible).
+  function phFamily(type) {
+    return { zircf: 'zirc', zircv: 'zirc', klf: 'kl', klv: 'kl' }[type] || type;
   }
 
   function isToothChartAccessory(text) {
@@ -1886,13 +1900,29 @@
   }
 
   function toothTypeLabel(type) {
-    return { zirc: 'Zirconia', kl: 'Kim loại', vnr: 'Mặt dán', hon: 'Hỗn hợp', tam: 'Răng tạm', multi: 'Nhiều loại', ibar: 'Thanh bar (ibar)' }[type] || 'Khác';
+    return {
+      zirc: 'Zirconia',
+      zircf: 'Full Zirconia',
+      zircv: 'Veneer Zirconia',
+      kl: 'Kim loại',
+      klf: 'Full kim loại',
+      klv: 'Veneer kim loại',
+      vnr: 'Mặt dán',
+      hon: 'Hỗn hợp',
+      tam: 'Răng tạm',
+      multi: 'Nhiều loại',
+      ibar: 'Thanh bar (ibar)',
+    }[type] || 'Khác';
   }
 
   function toothTypeStyle(type) {
     return {
-      zirc: 'linear-gradient(160deg,#4979b9,#255f9f)',
-      kl: 'linear-gradient(160deg,#997d68,#6e5748)',
+      zirc: 'linear-gradient(160deg,#9bbde0,#7099c5)',
+      zircf: 'linear-gradient(160deg,#4979b9,#255f9f)',
+      zircv: 'linear-gradient(180deg,#255f9f 0%,#255f9f 60%,#9bbde0 80%,#9bbde0 100%)',
+      kl: 'linear-gradient(160deg,#bda596,#9a8475)',
+      klf: 'linear-gradient(160deg,#997d68,#6e5748)',
+      klv: 'linear-gradient(180deg,#6e5748 0%,#6e5748 60%,#bda596 80%,#bda596 100%)',
       vnr: 'linear-gradient(160deg,#d78672,#b65748)',
       hon: 'linear-gradient(160deg,#7f8c6b,#52664f)',
       tam: 'linear-gradient(160deg,#b88d4f,#8c6634)',

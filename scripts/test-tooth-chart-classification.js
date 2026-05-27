@@ -67,12 +67,25 @@ for (const fn of [desktopAccessory, mobileAccessory]) {
 }
 
 for (const fn of [desktopType, mobileType]) {
-  assert.strictEqual(fn('Veneer sứ Ziconia (Cut Back) (R:11, - SL: 1)'), 'zirc');
-  assert.strictEqual(fn('Veneer sứ kim loại thường (Cut Back) (R:11, - SL: 1)'), 'kl');
-  assert.strictEqual(fn('Mặt dán sứ (R:37, - SL: 1)'), 'vnr');
-  assert.strictEqual(fn('Cánh dán sứ (R:11, - SL: 1)'), 'vnr');
-  assert.strictEqual(fn('Full Sứ Ziconia (R:26-27, - SL: 2)'), 'zirc');
-  assert.strictEqual(fn('Full/ mão kim loại sứ titan (R:38, - SL: 1)'), 'kl');
+  // Zirconia subtypes
+  assert.strictEqual(fn('Răng sứ Zircornia (R:13-17, - SL: 5)'), 'zirc', 'plain Zirconia crown → zirc');
+  assert.strictEqual(fn('Răng sứ Cercon (R:11, - SL: 1)'), 'zirc', 'Cercon crown → zirc');
+  assert.strictEqual(fn('Full Sứ Ziconia (R:26-27, - SL: 2)'), 'zircf', 'Full Ziconia → zircf');
+  assert.strictEqual(fn('Full Zirconia (R:14, - SL: 1)'), 'zircf', 'Full Zirconia → zircf');
+  assert.strictEqual(fn('Veneer sứ Ziconia (Cut Back) (R:11, - SL: 1)'), 'zircv', 'Veneer Ziconia cut-back → zircv');
+  assert.strictEqual(fn('Veneer sứ Zolid (Cut-Back) (R:16-25, - SL: 11)'), 'zircv', 'Veneer Zolid cut-back → zircv');
+  // Metal subtypes
+  assert.strictEqual(fn('Răng sứ kim loại thường (R:33-42, - SL: 5)'), 'kl', 'plain metal crown → kl');
+  assert.strictEqual(fn('Full/ mão kim loại sứ titan (R:38, - SL: 1)'), 'klf', 'Full metal → klf');
+  assert.strictEqual(fn('Veneer sứ kim loại thường (Cut Back) (R:11, - SL: 1)'), 'klv', 'Veneer metal → klv');
+  // Pure veneer / mặt dán with no material specified stays vnr
+  assert.strictEqual(fn('Mặt dán sứ (R:37, - SL: 1)'), 'vnr', 'Mặt dán sứ → vnr (no material)');
+  assert.strictEqual(fn('Cánh dán sứ (R:11, - SL: 1)'), 'vnr', 'Cánh dán sứ → vnr (no material)');
+}
+
+// phFamily helper must exist and map subtypes → parent for backward filter compat.
+for (const [name, source] of [['desktop', desktopSource], ['mobile', mobileSource], ['admin', adminSource]]) {
+  assert(source.includes('function phFamily'), `${name} must define phFamily`);
 }
 
 assert(desktopSource.includes('const chartTotal = products.reduce'), 'desktop tooth chart should total parsed main products');

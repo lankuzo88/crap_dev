@@ -1400,8 +1400,12 @@
       transform: scale(1.04);
       box-shadow: 0 3px 8px rgba(84, 64, 55, 0.18), inset 0 1px 0 rgba(255,255,255,0.28);
     }
-    .tooth-chip.zirc { background: linear-gradient(160deg, #4979b9, #255f9f); }
-    .tooth-chip.kl { background: linear-gradient(160deg, #997d68, #6e5748); }
+    .tooth-chip.zircf { background: linear-gradient(160deg, #4979b9, #255f9f); }
+    .tooth-chip.zirc { background: linear-gradient(160deg, #9bbde0, #7099c5); }
+    .tooth-chip.zircv { background: linear-gradient(180deg, #255f9f 0%, #255f9f 60%, #9bbde0 80%, #9bbde0 100%); }
+    .tooth-chip.klf { background: linear-gradient(160deg, #997d68, #6e5748); }
+    .tooth-chip.kl { background: linear-gradient(160deg, #bda596, #9a8475); }
+    .tooth-chip.klv { background: linear-gradient(180deg, #6e5748 0%, #6e5748 60%, #bda596 80%, #bda596 100%); }
     .tooth-chip.vnr { background: linear-gradient(160deg, #d78672, #b65748); }
     .tooth-chip.hon { background: linear-gradient(160deg, #7f8c6b, #52664f); }
     .tooth-chip.inmau { background: linear-gradient(160deg, #4f9a8b, #2e746a); }
@@ -2135,6 +2139,8 @@
       else if (lower) label = 'In mẫu hàm dưới';
       return { count, label };
     }
+    // Subtype phục hình theo SHAPE (full / veneer / crown) trong cùng nhóm material.
+    // Cho phép phân biệt visual trên cùng đơn có nhiều loại zirconia hoặc kim loại.
     function partType(part) {
       const p = (part || '').toLowerCase();
       const n = normalizePhText(part);
@@ -2147,19 +2153,30 @@
         p.includes('chrome') || p.includes('cobalt');
       const isTemporaryMaterial =
         n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
+      const isFull = /\bfull\b/.test(n);
+      const isVeneer = p.includes('veneer') || /cut[- ]?back/.test(n);
 
       if (n.includes('mat dan') || n.includes('canh dan')) return 'vnr';
       if (hasInMauHamText(part) || n.includes('in mau') || n.includes('mau ham')) return 'inmau';
       if (isTemporaryMaterial) return 'tam';
       if (p.includes('cùi giả zirconia') || n.includes('cui gia zirconia')) return 'hon';
-      if (p.includes('veneer')) {
-        if (isZirconiaMaterial) return 'zirc';
-        if (isMetalMaterial) return 'kl';
-        return 'vnr';
+      if (isZirconiaMaterial) {
+        if (isFull) return 'zircf';
+        if (isVeneer) return 'zircv';
+        return 'zirc';
       }
+      if (isMetalMaterial) {
+        if (isFull) return 'klf';
+        if (isVeneer) return 'klv';
+        return 'kl';
+      }
+      if (isVeneer) return 'vnr';
       if (p.includes('mặt dán') || n.includes('mat dan')) return 'vnr';
-      if (isZirconiaMaterial) return 'zirc';
       return 'kl';
+    }
+    // Map subtype về parent family (cho filter/breakdown logic backwards-compatible).
+    function phFamily(type) {
+      return { zircf: 'zirc', zircv: 'zirc', klf: 'kl', klv: 'kl' }[type] || type;
     }
     function phBreakdown(ph, totalQty) {
       const qty = { zirc: 0, kl: 0, vnr: 0, hon: 0, inmau: 0, tam: 0 };
@@ -2168,11 +2185,14 @@
       parts.forEach(part => {
         const q = partQty(part);
         if (!q) return;
-        const type = partType(part);
-        qty[type] += q;
+        const type = phFamily(partType(part));
+        qty[type] = (qty[type] || 0) + q;
         assigned += q;
       });
-      if (!assigned) qty[partType(ph)] += Number(totalQty) || 0;
+      if (!assigned) {
+        const fallback = phFamily(partType(ph));
+        qty[fallback] = (qty[fallback] || 0) + (Number(totalQty) || 0);
+      }
       return qty;
     }
     function phMatches(o, filter) {
@@ -2191,7 +2211,11 @@
     function filterLabel(filter) {
       return {
         zirc: 'Zirconia',
+        zircf: 'Full Zirconia',
+        zircv: 'Veneer Zirconia',
         kl: 'Kim loại',
+        klf: 'Full kim loại',
+        klv: 'Veneer kim loại',
         vnr: 'Mặt dán',
         hon: 'Hỗn hợp',
         inmau: 'In mẫu',
@@ -2458,8 +2482,12 @@
 
     function toothTypeStyle(type) {
       return {
-        zirc: 'linear-gradient(160deg, #4979b9, #255f9f)',
-        kl: 'linear-gradient(160deg, #997d68, #6e5748)',
+        zirc: 'linear-gradient(160deg, #9bbde0, #7099c5)',
+        zircf: 'linear-gradient(160deg, #4979b9, #255f9f)',
+        zircv: 'linear-gradient(180deg, #255f9f 0%, #255f9f 60%, #9bbde0 80%, #9bbde0 100%)',
+        kl: 'linear-gradient(160deg, #bda596, #9a8475)',
+        klf: 'linear-gradient(160deg, #997d68, #6e5748)',
+        klv: 'linear-gradient(180deg, #6e5748 0%, #6e5748 60%, #bda596 80%, #bda596 100%)',
         vnr: 'linear-gradient(160deg, #d78672, #b65748)',
         hon: 'linear-gradient(160deg, #7f8c6b, #52664f)',
         inmau: 'linear-gradient(160deg, #4f9a8b, #2e746a)',
