@@ -131,12 +131,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .tooth-chip.full{outline:2px solid rgba(196,131,111,.3);outline-offset:-2px;}
 .tooth-chip.missing{background:#a8a29e;color:#fff;transform:scale(1.04);box-shadow:0 2px 7px rgba(87,83,78,.2),inset 0 1px 0 rgba(255,255,255,.22);}
 .tooth-chip.duplicate{box-shadow:0 0 0 2px rgba(182,87,72,.26),0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
-.tooth-bridge-layer{position:absolute;inset:-4px 0;pointer-events:none;z-index:2;}
-.tooth-bridge-frame{position:absolute;border:2px solid var(--terracotta);pointer-events:none;}
-.tooth-bridge-frame.upper{top:0;height:16px;border-bottom:none;border-radius:9px 9px 0 0;}
-.tooth-bridge-frame.lower{bottom:0;height:16px;border-top:none;border-radius:0 0 9px 9px;}
-.tooth-bridge-bar{position:absolute;height:7px;border-radius:7px;background:linear-gradient(180deg,#6f4f43,#4c372f);box-shadow:0 1px 4px rgba(0,0,0,.18);}
-.tooth-bridge-bar.upper{top:5px}.tooth-bridge-bar.lower{bottom:5px}
+.tooth-bridge-layer{position:absolute;inset:-4px 0;pointer-events:none;z-index:5;}
+.tooth-bridge-bar{position:absolute;height:6px;border-radius:7px;background:#2ed573;box-shadow:0 0 6px rgba(46,213,115,.9),0 0 12px rgba(46,213,115,.5);}
+.tooth-bridge-bar.upper{top:0}.tooth-bridge-bar.lower{bottom:0}
 .tooth-unit-delta{position:absolute;top:-10px;right:-2px;z-index:6;border:1px solid rgba(255,255,255,.9);border-radius:999px;padding:1px 5px;color:#fff;font-size:8px;font-weight:900;line-height:1.35;box-shadow:0 2px 5px rgba(0,0,0,.18);}
 .tooth-unit-delta.extra{background:#b65748}.tooth-unit-delta.missing{background:#4f7a5f}
 .tooth-legend,.tooth-products{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
@@ -1909,7 +1906,7 @@ function buildToothRowSlots(rowKey, toothMap, products) {
   });
   return slots;
 }
-function renderBridgeFrames(rowKey, bridgeGroups, rowSlots) {
+function renderBridgeBars(rowKey, bridgeGroups, rowSlots) {
   const slotCount = Math.max(1, rowSlots.length);
   const bounds = new Map();
   rowSlots.forEach((slot, index) => {
@@ -1925,21 +1922,16 @@ function renderBridgeFrames(rowKey, bridgeGroups, rowSlots) {
     const start = Math.min(...positions.map(item => item.bound.first));
     const end = Math.max(...positions.map(item => item.bound.last));
     const span = end - start + 1;
-    const left = `calc(${(start / slotCount) * 100}% - 3px)`;
-    const width = `calc(${(span / slotCount) * 100}% + 6px)`;
     const barLeft = `calc(${(start / slotCount) * 100}% + 4px)`;
     const barWidth = `calc(${(span / slotCount) * 100}% - 8px)`;
     const delta = firstBridge === item.group ? item.product.unitDelta : 0;
     const deltaHtml = delta ? `<div class="tooth-unit-delta ${delta > 0 ? 'extra' : 'missing'}">${escapeHtml(toothDeltaLabel(delta))}</div>` : '';
-    return `
-      <div class="tooth-bridge-frame ${rowKey}" style="left:${left};width:${width};"></div>
-      <div class="tooth-bridge-bar ${rowKey}" style="left:${barLeft};width:${barWidth};" title="${escapeHtml(item.product.name)}">${deltaHtml}</div>
-    `;
+    return `<div class="tooth-bridge-bar ${rowKey}" style="left:${barLeft};width:${barWidth};" title="${escapeHtml(item.product.name)}">${deltaHtml}</div>`;
   }).join('');
 }
 function renderToothRow(rowKey, toothMap, bridgeGroups, products) {
   const rowSlots = buildToothRowSlots(rowKey, toothMap, products);
-  const bridgeHtml = renderBridgeFrames(rowKey, bridgeGroups, rowSlots);
+  const bridgeHtml = renderBridgeBars(rowKey, bridgeGroups, rowSlots);
   const teethHtml = rowSlots.map(slot => {
     const tooth = slot.tooth;
     const entries = slot.entries;
