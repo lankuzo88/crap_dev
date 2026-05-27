@@ -50,6 +50,32 @@
       margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
     }
     .section h2 { font-size: 16px; margin-bottom: 18px; color: #333; display: flex; align-items: center; gap: 8px; }
+    .fix-match-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
+    .fix-match-toolbar select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 5px; font: inherit; font-size: 13px; }
+    .fix-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 14px 0; }
+    .fix-kpi { background: #f7f9fc; border: 1px solid #e8edf5; border-radius: 8px; padding: 12px; }
+    .fix-kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: #777; font-weight: 700; }
+    .fix-kpi-value { font-size: 24px; font-weight: 800; margin-top: 4px; }
+    .fix-card-list { display: grid; gap: 12px; }
+    .fix-card { border: 1px solid #e5e9f0; border-radius: 8px; padding: 14px; background: #fff; }
+    .fix-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .fix-order { color: #1565c0; font-weight: 800; cursor: pointer; }
+    .fix-sub { color: #777; font-size: 12px; margin-top: 3px; }
+    .fix-badge { display: inline-block; border-radius: 12px; padding: 3px 8px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .fix-high { background: #ffebee; color: #c62828; }
+    .fix-warning { background: #fff3e0; color: #e65100; }
+    .fix-info, .fix-low { background: #e3f2fd; color: #1565c0; }
+    .fix-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+    .fix-info-box { background: #fafafa; border-radius: 6px; padding: 9px; border: 1px solid #eee; }
+    .fix-info-label { font-size: 10px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+    .fix-info-value { font-size: 14px; font-weight: 700; margin-top: 3px; }
+    .fix-text { font-size: 12px; color: #444; line-height: 1.5; margin-top: 8px; white-space: normal; word-break: break-word; }
+    .fix-raw { background: #f7f7f7; border-radius: 6px; padding: 8px; margin-top: 8px; font-size: 12px; color: #555; line-height: 1.45; }
+    .fix-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
+    @media (max-width: 800px) {
+      .fix-summary, .fix-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .fix-card-top { flex-direction: column; }
+    }
 
     /* ── FORM GROUP ── */
     .form-group { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
@@ -214,8 +240,40 @@
     /* ── ORDER DETAIL MODAL ── */
     .order-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1500; align-items: center; justify-content: center; padding: 20px; }
     .order-modal.show { display: flex; }
-    .order-modal-content { background: #fff; border-radius: 12px; padding: 0; width: 600px; max-width: 94vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+    .order-modal-content { background: #fff; border-radius: 12px; padding: 0; width: 720px; max-width: 94vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
     .order-modal-content * { box-sizing: border-box; }
+    .tooth-chart-section{border:1px solid #eaded7;background:#fbf7f4;border-radius:7px;padding:10px 12px;margin-bottom:14px;}
+    .tooth-chart-title{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#777;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+    .tooth-chart-total{color:#e65100;font-size:11px;font-weight:800;white-space:nowrap;}
+    .tooth-chart{position:relative;background:#f6f0eb;border:1px solid rgba(196,131,111,.18);border-radius:7px;padding:22px 8px;overflow:hidden;}
+    .tooth-chart::before{content:'';position:absolute;left:50%;top:12px;bottom:12px;width:2px;transform:translateX(-50%);background:rgba(84,64,55,.5);border-radius:2px;z-index:4;}
+    .tooth-region{position:absolute;z-index:5;color:#777;background:rgba(255,255,255,.82);border:1px solid rgba(196,131,111,.14);border-radius:4px;padding:2px 4px;font-size:7px;font-weight:800;line-height:1;}
+    .tooth-region.tl{top:6px;left:6px}.tooth-region.tr{top:6px;right:6px}.tooth-region.bl{bottom:6px;left:6px}.tooth-region.br{bottom:6px;right:6px}
+    .tooth-row-wrap{position:relative;}
+    .tooth-row{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;position:relative;z-index:3;}
+    .tooth-bite-line{height:14px;margin:1px 3px;border-top:1px dashed rgba(84,64,55,.24);}
+    .tooth-chip{position:relative;height:29px;min-width:0;border:0;border-radius:4px;background:#e9ddd5;color:#9b8b82;font-family:Consolas,monospace;font-size:8px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -1px 0 rgba(0,0,0,.05);}
+    .tooth-chip.upper{border-radius:4px 4px 7px 7px}.tooth-chip.lower{border-radius:7px 7px 4px 4px}
+    .tooth-chip.active{color:#fff;transform:scale(1.04);box-shadow:0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
+    .tooth-chip.zirc{background:linear-gradient(160deg,#4979b9,#255f9f)}.tooth-chip.kl{background:linear-gradient(160deg,#997d68,#6e5748)}.tooth-chip.vnr{background:linear-gradient(160deg,#d78672,#b65748)}.tooth-chip.hon{background:linear-gradient(160deg,#7f8c6b,#52664f)}.tooth-chip.tam{background:linear-gradient(160deg,#b88d4f,#8c6634)}.tooth-chip.multi{background:linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)}
+    .tooth-chip.full{outline:2px solid rgba(196,131,111,.3);outline-offset:-2px;}
+    .tooth-chip.missing{background:#a8a29e;color:#fff;transform:scale(1.04);box-shadow:0 2px 7px rgba(87,83,78,.2),inset 0 1px 0 rgba(255,255,255,.22);}
+    .tooth-chip.duplicate{box-shadow:0 0 0 2px rgba(182,87,72,.26),0 3px 8px rgba(84,64,55,.18),inset 0 1px 0 rgba(255,255,255,.28);}
+    .tooth-chip.unknown{background:#f8fafc;color:#64748b;border:1px dashed #94a3b8;box-shadow:none;font-size:11px;}
+    .tooth-bridge-layer{position:absolute;inset:-4px 0;pointer-events:none;z-index:5;}
+    .tooth-bridge-bar{position:absolute;height:6px;border-radius:7px;background:#2ed573;box-shadow:0 0 6px rgba(46,213,115,.9),0 0 12px rgba(46,213,115,.5);}
+    .tooth-bridge-bar.upper{top:0}.tooth-bridge-bar.lower{bottom:0}
+    .tooth-unit-delta{position:absolute;top:-10px;right:-2px;z-index:6;border:1px solid rgba(255,255,255,.9);border-radius:999px;padding:1px 5px;color:#fff;font-size:8px;font-weight:900;line-height:1.35;box-shadow:0 2px 5px rgba(0,0,0,.18);}
+    .tooth-unit-delta.extra{background:#b65748}.tooth-unit-delta.missing{background:#4f7a5f}
+    .tooth-legend,.tooth-products{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+    .tooth-legend-item,.tooth-product-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(196,131,111,.18);background:rgba(255,255,255,.72);border-radius:4px;padding:4px 6px;color:#333;font-size:10px;font-weight:700;line-height:1.25;}
+    .tooth-swatch{width:10px;height:10px;flex:0 0 10px;border-radius:3px;}
+    .tooth-product-pill{max-width:100%;align-items:flex-start;font-weight:600;}
+    .tooth-product-pill b{color:#e65100;font-weight:800;}
+    .tooth-note-pill{border-radius:999px;padding:1px 5px;background:rgba(84,64,55,.1);color:#333;font-size:9px;font-weight:900;white-space:nowrap;}
+    .tooth-delta-pill{border-radius:999px;padding:1px 5px;color:#fff;font-size:9px;font-weight:900;white-space:nowrap;}
+    .tooth-delta-pill.extra{background:#b65748}.tooth-delta-pill.missing{background:#4f7a5f}
+    .tooth-original-text{color:#555;font-size:12px;line-height:1.45;font-weight:600;}
 
     /* ── PRODUCTION STATS ── */
     .prod-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
@@ -436,6 +494,7 @@
   <button class="tab-btn" onclick="switchTab('users', this)">👤 Người dùng</button>
   <button class="tab-btn" onclick="switchTab('clinic-notes', this)">🏥 Lưu ý nha khoa</button>
   <button class="tab-btn" onclick="switchTab('delay-risk', this)">🚨 Nguy cơ trễ</button>
+  <button class="tab-btn" onclick="switchTab('fix-match', this)">🧩 Fix-match <span class="badge" id="fixMatchBadge" style="display:none">0</span></button>
   <button class="tab-btn" onclick="switchTab('system', this)">📊 Thống kê</button>
   <button class="tab-btn" onclick="switchTab('backup', this)">💾 Sao lưu</button>
   <button class="tab-btn" onclick="location.href='/delay-reports'">⏱ Báo trễ tiến độ <span class="badge" id="delayPendingBadge" style="display:none">0</span></button>
@@ -669,6 +728,30 @@
 <!-- ══════════════════════════════════════════
      TAB 5: THỐNG KÊ
 ══════════════════════════════════════════ -->
+<div id="tab-fix-match" class="tab-panel">
+
+  <div class="section">
+    <div class="prod-header">
+      <div>
+        <div class="prod-title">Fix-match ghi chú sản xuất</div>
+        <div class="prod-subtitle">Quét đơn có SL, phục hình, phụ kiện hoặc ghi chú răng không khớp để admin kiểm tra và đánh dấu xử lý.</div>
+      </div>
+      <div class="fix-match-toolbar">
+        <select id="fixMatchStatus" onchange="loadProductionMatchWarnings(this.value)">
+          <option value="open">Đang mở</option>
+          <option value="all">Tất cả</option>
+          <option value="suppressed">Tự ẩn bởi rule</option>
+          <option value="resolved">Đã xử lý</option>
+          <option value="ignored">Bỏ qua</option>
+        </select>
+        <button class="btn btn-primary prod-refresh" onclick="loadProductionMatchWarnings()">Quét lại</button>
+      </div>
+    </div>
+    <div id="fixMatchBody"><div class="empty-state">Chuyển sang tab này để quét các đơn không match.</div></div>
+  </div>
+
+</div><!-- /tab-fix-match -->
+
 <div id="tab-system" class="tab-panel">
 
   <div class="section">
@@ -844,6 +927,8 @@
   let monthlyStats = null;
   let monthlySelectedMonth = '';
   let delayRiskData = null;
+  let fixMatchData = null;
+  let fixMatchStatus = 'open';
   const ORDER_TYPE_ORDER = ['Làm mới', 'Làm thêm', 'Làm lại', 'Bảo hành', 'Sửa', 'Làm tiếp', 'Khác'];
   const USER_CONG_DOAN_OPTS = [
     ['', '-- Không gán --'],
@@ -897,6 +982,7 @@
     if (name === 'feedbacktypes') loadFeedbackTypesAdmin();
     if (name === 'clinic-notes') loadClinicNotes();
     if (name === 'delay-risk' && !delayRiskData) loadDelayRiskOrders();
+    if (name === 'fix-match' && !fixMatchData) loadProductionMatchWarnings();
     if (name === 'system') refreshAllStats();
     if (name === 'backup') initBackupTab();
   }
@@ -922,7 +1008,9 @@
     loadReportStats();
     loadReportMonthlyStats();
     loadReports();
+    loadProductionMatchBadge();
     setInterval(loadPendingCount, 30000);
+    setInterval(loadProductionMatchBadge, 60000);
   }
 
   async function loadPendingCount() {
@@ -1513,6 +1601,454 @@
   }
   function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
 
+  function normalizePhText(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u0111\u0110]/g, 'd')
+      .toLowerCase();
+  }
+
+  function parseKeylabSxInfo(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'object') return raw;
+    try { return JSON.parse(raw) || {}; } catch { return {}; }
+  }
+
+  function splitPhParts(ph) {
+    return String(ph || '').split(/;|\r?\n/).map(part => cleanDisplayText(part)).filter(Boolean);
+  }
+
+  function partQty(part) {
+    const m = String(part || '').match(/SL\s*:\s*(\d+)/i);
+    return m ? Number(m[1]) || 0 : 0;
+  }
+
+  function hasInMauHamText(text) {
+    const n = normalizePhText(text);
+    return n.includes('in mau ham') || (n.includes('in mau') && n.includes('ham')) || (n.includes('in ban') && n.includes('ham')) || (n.includes('in toan') && n.includes('ham'));
+  }
+
+  function phType(ph) {
+    const p = String(ph || '').toLowerCase();
+    const n = normalizePhText(ph);
+    const isZirconia = p.includes('zircornia') || p.includes('zirconia') || p.includes('ziconia') || p.includes('zir-') || p.includes('zolid') || p.includes('cercon') || p.includes('la va') || p.includes('full zirconia') || n.includes('argen');
+    const isMetal = n.includes('kim loai') || p.includes('titanium') || n.includes('titan') || p.includes('chrome') || p.includes('cobalt');
+    const isTemporary = n.includes('rang tam') || p.includes('pmma') || n.includes('in resin');
+    if (n.includes('mat dan') || n.includes('canh dan')) return 'vnr';
+    if (isTemporary) return 'tam';
+    if (p.includes('veneer')) {
+      if (isZirconia) return 'zirc';
+      if (isMetal) return 'kl';
+      return 'vnr';
+    }
+    if (isZirconia) return 'zirc';
+    return 'kl';
+  }
+
+  function isToothChartAccessory(text) {
+    const n = normalizePhText(text);
+    return (
+      hasInMauHamText(text) ||
+      n.includes('in mau') ||
+      n.includes('mau ham') ||
+      n.includes('khay ca nhan') ||
+      n.includes('rang tam') ||
+      n.includes('pmma') ||
+      n.includes('in resin') ||
+      n.includes('dinh da') ||
+      n.includes('hot') ||
+      n.includes('khoan lo') ||
+      n.includes('cui gia') ||
+      n.includes('sap can') ||
+      n.includes('goi sap') ||
+      n.includes('len goi') ||
+      n.includes('khay lay dau') ||
+      n.includes('lay dau') ||
+      n.includes('gia khop') ||
+      n.includes('ham doi') ||
+      n.includes('thay nen') ||
+      n.includes('dem ham') ||
+      n.includes('va ham') ||
+      n.includes('moc nhua') ||
+      n.includes('ep nhua nha si') ||
+      n.includes('mang tay') ||
+      n.includes('thanh bar') ||
+      /\bi\s*bar\b/.test(n) ||
+      /\bibar\b/.test(n) ||
+      /\bbar\b/.test(n) ||
+      n.includes('attachment') ||
+      n.includes('khop noi') ||
+      n.includes('ngat luc') ||
+      n.includes('thao lap')
+    );
+  }
+
+  const TOOTH_UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+  const TOOTH_LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+  const TOOTH_ROWS = { upper: TOOTH_UPPER, lower: TOOTH_LOWER };
+  const TOOTH_INDEX = new Map();
+  TOOTH_UPPER.forEach((tooth, index) => TOOTH_INDEX.set(String(tooth), { row: 'upper', index }));
+  TOOTH_LOWER.forEach((tooth, index) => TOOTH_INDEX.set(String(tooth), { row: 'lower', index }));
+
+  function toothPos(tooth) {
+    return TOOTH_INDEX.get(String(tooth)) || null;
+  }
+
+  function expandFdiRange(from, to) {
+    const a = toothPos(from);
+    const b = toothPos(to);
+    if (!a || !b || a.row !== b.row) return [from, to].map(String).filter(t => toothPos(t));
+    const row = TOOTH_ROWS[a.row];
+    return row.slice(Math.min(a.index, b.index), Math.max(a.index, b.index) + 1).map(String);
+  }
+
+  function parseToothGroups(rawValue) {
+    const raw = cleanDisplayText(rawValue);
+    if (!raw) return [];
+    const groups = [];
+    const normalized = normalizePhText(raw);
+    if (/\bhtren\b/.test(normalized) || normalized.includes('ham tren')) groups.push({ type: 'full', row: 'upper', teeth: TOOTH_UPPER.map(String), raw: 'HTren' });
+    if (/\bhduoi\b/.test(normalized) || normalized.includes('ham duoi')) groups.push({ type: 'full', row: 'lower', teeth: TOOTH_LOWER.map(String), raw: 'HDuoi' });
+    raw.replace(/[，、]/g, ',').replace(/[.;．。]/g, ',').replace(/\s+/g, '').split(',').forEach(token => {
+      if (!token) return;
+      const bridge = token.match(/^(\d{2})-(\d{2})$/);
+      if (bridge) {
+        const teeth = expandFdiRange(bridge[1], bridge[2]);
+        if (teeth.length) groups.push({ type: 'bridge', teeth, raw: `${bridge[1]}-${bridge[2]}` });
+        return;
+      }
+      const single = token.match(/^(\d{2})$/);
+      if (single && toothPos(single[1])) groups.push({ type: 'single', teeth: [single[1]], raw: single[1] });
+    });
+    return groups;
+  }
+
+  function extractRangFromPart(part) {
+    const match = String(part || '').match(/R\s*:\s*([^)]*?)(?:,\s*-\s*SL\s*:|\s*-\s*SL\s*:|\))/i);
+    return match ? match[1].replace(/,+\s*$/g, '').trim() : '';
+  }
+
+  function stripRangBlock(part) {
+    return cleanDisplayText(part).replace(/\s*\([^)]*R\s*:[^)]*\)\s*/i, '').trim();
+  }
+
+  function getAdminPhText(o) {
+    return cleanDisplayText(o?.allPh || o?.ph || o?.phuc_hinh || '');
+  }
+
+  function getProductionToothNote(o) {
+    const info = parseKeylabSxInfo(o?.keylab_sx_info);
+    const instructionText = Array.isArray(info.instructions)
+      ? info.instructions.map(item => [item?.label || '', item?.value || ''].filter(Boolean).join(': ')).join('\n')
+      : '';
+    return [o?.ghi_chu_sx || '', instructionText].filter(Boolean).join('\n');
+  }
+
+  function parseProductionToothAdjustments(text) {
+    const raw = cleanDisplayText(text)
+      .replace(/mặt\s+r?\s*\d{2}/gi, ' ')
+      .replace(/tựa[^\n.;,]{0,50}mat\s+r?\s*\d{2}/gi, ' ');
+    const normalized = normalizePhText(raw);
+    const excluded = new Set();
+    const repeats = new Map();
+    let m;
+    const excludeRe = /(?:khong|ko)\s+lam\s+r?\s*(\d{2})/g;
+    while ((m = excludeRe.exec(normalized))) if (toothPos(m[1])) excluded.add(m[1]);
+    const removeRe = /(?:bo|tru|mat|thieu)\s+r?\s*(\d{2})/g;
+    while ((m = removeRe.exec(normalized))) if (toothPos(m[1])) excluded.add(m[1]);
+    const removeRangeRe = /(?:bo|tru|mat|thieu)\s+r?\s*(\d{2})\s*-\s*(\d{2})/g;
+    while ((m = removeRangeRe.exec(normalized))) expandFdiRange(m[1], m[2]).forEach(tooth => excluded.add(tooth));
+    if (/(?:moi|moi)\s+ben\s+co\s+(?:hai|2)\s*r?2\b/.test(normalized)) {
+      repeats.set('12', Math.max(repeats.get('12') || 1, 2));
+      repeats.set('22', Math.max(repeats.get('22') || 1, 2));
+    }
+    const repeatA = /\b([2-9])\s*(?:r|rang)\s*r?\s*(\d{2})\b/g;
+    while ((m = repeatA.exec(normalized))) {
+      const count = Number(m[1]) || 0;
+      if (count > 1 && toothPos(m[2])) repeats.set(m[2], Math.max(repeats.get(m[2]) || 1, count));
+    }
+    const repeatB = /\br\s*(\d{2})\s*(?:co|la)?\s*([2-9])\s*(?:r|rang)\b/g;
+    while ((m = repeatB.exec(normalized))) {
+      const count = Number(m[2]) || 0;
+      if (count > 1 && toothPos(m[1])) repeats.set(m[1], Math.max(repeats.get(m[1]) || 1, count));
+    }
+    return { excluded, repeats };
+  }
+
+  function applyProductionToothAdjustments(product, adjustments) {
+    if (!adjustments) return product;
+    const originalTeeth = new Set(product.groups.flatMap(group => group.teeth));
+    const excludedTeeth = [...adjustments.excluded].filter(tooth => originalTeeth.has(tooth));
+    const productRepeats = new Map();
+    adjustments.repeats.forEach((count, tooth) => {
+      if (originalTeeth.has(tooth)) productRepeats.set(tooth, count);
+    });
+    const qty = Number(product.qty) || 0;
+    if (qty > 0 && (excludedTeeth.length || productRepeats.size)) {
+      const extraUnits = Array.from(productRepeats.values()).reduce((sum, c) => sum + Math.max(0, Number(c) - 1), 0);
+      const proposedTotal = (originalTeeth.size - excludedTeeth.length) + extraUnits;
+      if (proposedTotal !== qty) return product;
+    }
+    const groups = product.groups
+      .map(group => ({ ...group, teeth: group.teeth.filter(tooth => !adjustments.excluded.has(tooth)) }))
+      .filter(group => group.teeth.length);
+    const toothUnits = {};
+    groups.forEach(group => group.teeth.forEach(tooth => {
+      toothUnits[tooth] = Math.max(toothUnits[tooth] || 1, adjustments.repeats.get(tooth) || 1);
+    }));
+    return { ...product, groups, toothUnits, excludedTeeth };
+  }
+
+  function getToothChartProducts(o) {
+    const info = parseKeylabSxInfo(o?.keylab_sx_info);
+    const sxProducts = Array.isArray(info.products) ? info.products : [];
+    const adjustments = parseProductionToothAdjustments(getProductionToothNote(o));
+    const phProducts = splitPhParts(getAdminPhText(o))
+      .filter(part => !isToothChartAccessory(part))
+      .map((part, index) => {
+        const rang = extractRangFromPart(part);
+        const name = stripRangBlock(part) || cleanDisplayText(part);
+        return { id: `ph-${index}`, name, rang, qty: partQty(part), type: phType(part), groups: parseToothGroups(rang) };
+      })
+      .map(product => applyProductionToothAdjustments(product, adjustments))
+      .filter(product => product.groups.length);
+    if (phProducts.length) return phProducts;
+    return sxProducts
+      .filter(item => !isToothChartAccessory([item?.san_pham || item?.product || '', item?.loai_san_pham || '', item?.rang || ''].join(' ')))
+      .map((item, index) => {
+        const name = cleanDisplayText(item?.san_pham || item?.product || '');
+        const rang = cleanDisplayText(item?.rang || '');
+        return { id: `sx-${index}`, name: name || `Phục hình ${index + 1}`, rang, qty: Number(item?.so_luong || item?.sl) || 0, type: phType(name), groups: parseToothGroups(rang) };
+      })
+      .map(product => applyProductionToothAdjustments(product, adjustments))
+      .filter(product => product.groups.length);
+  }
+
+  function annotateToothProducts(products) {
+    return (products || []).map(product => {
+      const fdiCount = product.groups.reduce((sum, group) => sum + group.teeth.length, 0);
+      const duplicateExtra = Object.values(product.toothUnits || {}).reduce((sum, count) => sum + Math.max(0, Number(count) - 1), 0);
+      const isJawUnit = isJawUnitProductName(product.name);
+      const jawCount = product.groups.filter(group => group.type === 'full').length;
+      const representedCount = isJawUnit && jawCount ? jawCount : fdiCount + duplicateExtra;
+      const qty = Number(product.qty) || 0;
+      const unitCount = qty || representedCount;
+      const unitDelta = qty ? qty - representedCount : 0;
+      const unknownMissingTeeth = unitDelta < 0 ? pickUnknownMissingTeeth(product, Math.abs(unitDelta)) : [];
+      return { ...product, fdiCount, unitCount, unitDelta, unknownMissingTeeth };
+    });
+  }
+  function isJawUnitProductName(name) {
+    const n = normalizePhText(name);
+    return n.includes('khung') || n.includes('nen ham') || n.includes('ham bio') || n.includes('ham nhua') || n.includes('ham thao lap');
+  }
+  function pickUnknownMissingTeeth(product, count) {
+    const seen = new Set();
+    const teeth = product.groups
+      .flatMap(group => group.teeth || [])
+      .map(String)
+      .filter(tooth => toothPos(tooth) && !seen.has(tooth) && seen.add(tooth));
+    const total = Math.min(Number(count) || 0, teeth.length);
+    if (!total) return [];
+    const start = Math.max(0, Math.floor((teeth.length - total) / 2));
+    return teeth.slice(start, start + total);
+  }
+
+  function toothDeltaLabel(delta) {
+    return delta > 0 ? `dư +${delta}` : (delta < 0 ? `thiếu ${Math.abs(delta)}` : '');
+  }
+
+  function toothTypeLabel(type) {
+    return { zirc: 'Zirconia', kl: 'Kim loại', vnr: 'Mặt dán', hon: 'Hỗn hợp', tam: 'Răng tạm', multi: 'Nhiều loại' }[type] || 'Khác';
+  }
+
+  function toothTypeStyle(type) {
+    return {
+      zirc: 'linear-gradient(160deg,#4979b9,#255f9f)',
+      kl: 'linear-gradient(160deg,#997d68,#6e5748)',
+      vnr: 'linear-gradient(160deg,#d78672,#b65748)',
+      hon: 'linear-gradient(160deg,#7f8c6b,#52664f)',
+      tam: 'linear-gradient(160deg,#b88d4f,#8c6634)',
+      multi: 'linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)',
+    }[type] || 'linear-gradient(160deg,#997d68,#6e5748)';
+  }
+
+  function buildToothRowSlots(rowKey, toothMap, products) {
+    const missingSet = new Set();
+    (products || []).forEach(product => (product.excludedTeeth || []).forEach(tooth => {
+      const pos = toothPos(tooth);
+      if (pos && pos.row === rowKey) missingSet.add(String(tooth));
+    }));
+    const slots = [];
+    TOOTH_ROWS[rowKey].forEach(tooth => {
+      const key = String(tooth);
+      const entries = toothMap.get(key) || [];
+      const unitCount = entries.reduce((max, entry) => Math.max(max, Number(entry.product.toothUnits?.[key] || 1)), 1);
+      slots.push({ tooth: key, entries, missing: missingSet.has(key), duplicate: false });
+      for (let i = 2; i <= unitCount; i += 1) slots.push({ tooth: key, entries, missing: false, duplicate: true });
+    });
+    (products || []).forEach(product => {
+      const extra = Math.max(0, Number(product.unitDelta) || 0);
+      if (!extra) return;
+      const teeth = product.groups.flatMap(group => group.teeth || []).map(String);
+      const rowTeeth = teeth.filter(tooth => toothPos(tooth)?.row === rowKey);
+      if (!rowTeeth.length) return;
+      let insertAt = -1;
+      slots.forEach((slot, index) => {
+        if (rowTeeth.includes(slot.tooth)) insertAt = Math.max(insertAt, index);
+      });
+      if (insertAt < 0) return;
+      const placeholders = Array.from({ length: extra }, () => ({
+        tooth: '?',
+        entries: [{ product, group: { type: 'unknown', raw: '?' } }],
+        missing: false,
+        duplicate: true,
+        unknown: true,
+      }));
+      slots.splice(insertAt + 1, 0, ...placeholders);
+    });
+    (products || []).forEach(product => {
+      (product.unknownMissingTeeth || []).forEach(tooth => {
+        const pos = toothPos(tooth);
+        if (!pos || pos.row !== rowKey) return;
+        const index = slots.findIndex(slot => slot.tooth === String(tooth));
+        if (index < 0) return;
+        slots[index] = {
+          tooth: '?',
+          entries: [{ product, group: { type: 'unknown', raw: '?' } }],
+          missing: false,
+          duplicate: false,
+          unknown: true,
+        };
+      });
+    });
+    return slots;
+  }
+
+  function renderBridgeBars(rowKey, bridgeGroups, rowSlots) {
+    const slotCount = Math.max(1, rowSlots.length);
+    const bounds = new Map();
+    rowSlots.forEach((slot, index) => {
+      const old = bounds.get(slot.tooth);
+      bounds.set(slot.tooth, { first: old ? old.first : index, last: index });
+    });
+    return bridgeGroups.map(item => {
+      const positions = item.group.teeth
+        .map(tooth => ({ tooth: String(tooth), pos: toothPos(tooth), bound: bounds.get(String(tooth)) }))
+        .filter(x => x.pos && x.pos.row === rowKey && x.bound);
+      if (!positions.length) return '';
+      const firstBridge = item.product.groups.find(group => group.type === 'bridge');
+      const start = Math.min(...positions.map(x => x.bound.first));
+      const end = Math.max(...positions.map(x => x.bound.last));
+      const span = end - start + 1;
+      const barLeft = `calc(${(start / slotCount) * 100}% + 4px)`;
+      const barWidth = `calc(${(span / slotCount) * 100}% - 8px)`;
+      const delta = firstBridge === item.group ? item.product.unitDelta : 0;
+      const deltaHtml = delta ? `<div class="tooth-unit-delta ${delta > 0 ? 'extra' : 'missing'}">${esc(toothDeltaLabel(delta))}</div>` : '';
+      return `<div class="tooth-bridge-bar ${rowKey}" style="left:${barLeft};width:${barWidth};" title="${esc(item.product.name)}">${deltaHtml}</div>`;
+    }).join('');
+  }
+
+  function renderToothRow(rowKey, toothMap, bridgeGroups, products) {
+    const rowSlots = buildToothRowSlots(rowKey, toothMap, products);
+    const bridgeHtml = renderBridgeBars(rowKey, bridgeGroups, rowSlots);
+    const teethHtml = rowSlots.map(slot => {
+      const entries = slot.entries;
+      const active = entries.length > 0;
+      const type = entries.length > 1 ? 'multi' : (entries[0]?.product.type || '');
+      const full = entries.some(entry => entry.group.type === 'full') ? ' full' : '';
+      const title = active ? entries.map(entry => `${entry.product.name} (${entry.group.raw})`).join(' | ') : '';
+      const missing = !active && slot.missing;
+      const duplicate = active && slot.duplicate;
+      const unknown = Boolean(slot.unknown);
+      const cls = ['tooth-chip', rowKey, active ? `active ${type}${full}` : '', missing ? 'missing' : '', duplicate ? 'duplicate' : '', unknown ? 'unknown' : ''].filter(Boolean).join(' ');
+      const chipTitle = unknown ? 'Răng chưa rõ vị trí' : (missing ? `Thiếu/bỏ R${slot.tooth}` : title);
+      return `<div class="${cls}" title="${esc(chipTitle)}"><span>${slot.tooth}</span></div>`;
+    }).join('');
+    return `<div class="tooth-row-wrap"><div class="tooth-bridge-layer">${bridgeHtml}</div><div class="tooth-row" style="grid-template-columns:repeat(${rowSlots.length},minmax(0,1fr));">${teethHtml}</div></div>`;
+  }
+
+  // KeyLab thường split cầu dài thành nhiều pair-segments (vd "24-25,26-27" cho cầu 24-27).
+  // KTV bù lại bằng cú pháp "Cầu (XX-YY)" trong ghi_chu_sx. Hợp nhất theo overlap:
+  // product bridge nào share răng với clinical bridge → bị thay thế; còn lại giữ nguyên.
+  function parseClinicalBridges(o) {
+    const note = getProductionToothNote(o);
+    if (!note || !/\bcau\b/.test(normalizePhText(note))) return [];
+    const norm = normalizePhText(cleanDisplayText(note));
+    const bridges = [];
+    const rx = /\((\d{2})\s*-\s*(\d{2})\)/g;
+    let m;
+    while ((m = rx.exec(norm))) {
+      const teeth = expandFdiRange(m[1], m[2]).map(String);
+      if (teeth.length >= 2 && teeth.every(t => toothPos(t))) bridges.push({ from: m[1], to: m[2], teeth });
+    }
+    return bridges;
+  }
+
+  function mergeClinicalBridges(productBridges, clinicalBridges) {
+    if (!clinicalBridges.length) return productBridges;
+    const clinicalSets = clinicalBridges.map(br => new Set(br.teeth.map(String)));
+    const survivingProductBridges = productBridges.filter(pg => {
+      const teeth = (pg.group.teeth || []).map(String);
+      return !clinicalSets.some(set => teeth.some(t => set.has(t)));
+    });
+    const clinicalGroups = clinicalBridges.map(br => {
+      const group = { type: 'bridge', teeth: br.teeth, raw: `${br.from}-${br.to}` };
+      return { product: { name: `Cầu R${br.from}-R${br.to}`, unitDelta: 0, groups: [group] }, group };
+    });
+    return [...survivingProductBridges, ...clinicalGroups];
+  }
+
+  function renderToothChartSection(o) {
+    const products = annotateToothProducts(getToothChartProducts(o));
+    const chartTotal = products.reduce((sum, product) => sum + (Number(product.unitCount) || 0), 0);
+    const originalText = getAdminPhText(o);
+    if (!products.length) {
+      return `<div class="tooth-chart-section"><div class="tooth-chart-title"><span>Phục hình</span></div><div class="tooth-original-text">${displayHtml(originalText || '—')}</div></div>`;
+    }
+    const toothMap = new Map();
+    const productBridgeGroups = [];
+    const usedTypes = new Set();
+    products.forEach(product => {
+      usedTypes.add(product.type);
+      product.groups.forEach(group => {
+        if (group.type === 'bridge') productBridgeGroups.push({ product, group });
+        group.teeth.forEach(tooth => {
+          if (!toothPos(tooth)) return;
+          if (!toothMap.has(tooth)) toothMap.set(tooth, []);
+          toothMap.get(tooth).push({ product, group });
+        });
+      });
+    });
+    const bridgeGroups = mergeClinicalBridges(productBridgeGroups, parseClinicalBridges(o));
+    if (Array.from(toothMap.values()).some(entries => entries.length > 1)) usedTypes.add('multi');
+    const legendHtml = Array.from(usedTypes).map(type => `<span class="tooth-legend-item"><span class="tooth-swatch" style="background:${toothTypeStyle(type)}"></span>${esc(toothTypeLabel(type))}</span>`).join('');
+    const productHtml = products.map(product => {
+      const qty = product.qty ? ` · SL: ${product.qty}` : '';
+      const delta = product.unitDelta ? `<span class="tooth-delta-pill ${product.unitDelta > 0 ? 'extra' : 'missing'}">${esc(toothDeltaLabel(product.unitDelta))}</span>` : '';
+      const excluded = product.excludedTeeth?.length ? `<span class="tooth-note-pill">bỏ ${esc(product.excludedTeeth.map(t => 'R' + t).join(', '))}</span>` : '';
+      return `<span class="tooth-product-pill"><b>${esc(product.name)}</b>${qty}${excluded}${delta}</span>`;
+    }).join('');
+    return `<div class="tooth-chart-section">
+      <div class="tooth-chart-title"><span>Sơ đồ răng</span><span class="tooth-chart-total">${chartTotal} răng</span></div>
+      <div class="tooth-chart">
+        <span class="tooth-region tl">TRÊN P</span><span class="tooth-region tr">TRÊN T</span>
+        <span class="tooth-region bl">DƯỚI P</span><span class="tooth-region br">DƯỚI T</span>
+        ${renderToothRow('upper', toothMap, bridgeGroups, products)}
+        <div class="tooth-bite-line"></div>
+        ${renderToothRow('lower', toothMap, bridgeGroups, products)}
+      </div>
+      ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
+      ${productHtml ? `<div class="tooth-products">${productHtml}</div>` : ''}
+    </div>`;
+  }
+
+  function getToothChartTotal(o) {
+    const products = annotateToothProducts(getToothChartProducts(o));
+    return products.reduce((sum, product) => sum + (Number(product.unitCount) || 0), 0);
+  }
+
   async function openOrderDetail(ma_dh) {
     const modal = document.getElementById('orderModal');
     const content = document.getElementById('orderModalContent');
@@ -1529,6 +2065,7 @@
       const data = await r.json();
       const o = data.order || data;
       const stages = data.stages || [];
+      const modalMainQty = getToothChartTotal(o) || Number(o.so_luong || o.sl) || 0;
 
       // Render stages (copy from dashboard mobile)
       const stageHtml = stages.map(s => {
@@ -1566,10 +2103,13 @@
             <div style="font-size: 12px; color: #e65100; font-weight: 600;">${displayHtml(o.phuc_hinh || o.loai_lenh || '—')}</div>
           </div>
 
+          ${renderToothChartSection(o)}
+
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
             <div style="flex: 1;">
-              <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL</div>
-              <div style="font-size: 14px; font-weight: 700; color: #e65100;">${o.so_luong || o.sl || '—'}</div>
+              <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL phục hình</div>
+              <div style="font-size: 14px; font-weight: 700; color: #e65100;">${modalMainQty || '—'}</div>
+              ${Number(o.so_luong || o.sl) && Number(o.so_luong || o.sl) !== modalMainQty ? `<div style="font-size: 10px; color: #888; margin-top: 2px;">Tổng đơn: ${o.so_luong || o.sl}</div>` : ''}
             </div>
             <div style="flex: 1;">
               <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>
@@ -1580,6 +2120,11 @@
           ${o.ghi_chu ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(230, 81, 0, 0.1); border-left: 3px solid #e65100; border-radius: 4px;">
             <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú</div>
             <div style="font-size: 12px; color: #333;">${displayHtml(o.ghi_chu)}</div>
+          </div>` : ''}
+
+          ${o.ghi_chu_sx ? `<div style="margin-bottom: 14px; padding: 8px; background: rgba(25, 118, 210, 0.08); border-left: 3px solid #1976d2; border-radius: 4px;">
+            <div style="color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú sản xuất</div>
+            <div style="font-size: 12px; color: #333;">${displayHtml(o.ghi_chu_sx)}</div>
           </div>` : ''}
 
           <div style="margin-bottom: 14px;">
@@ -1927,6 +2472,162 @@
     return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
   // ── /Clinic Notes tab ──────────────────────────────────
+
+  const FIX_MATCH_LABELS = {
+    ACCESSORY_QTY_PRESENT: 'Có phụ kiện trong SL',
+    RAW_SL_DIFFERS_MAIN_QTY: 'SL tổng khác phục hình chính',
+    MAIN_QTY_TOOTH_COUNT_MISMATCH: 'SL không khớp số răng',
+    NOTE_ADJUSTMENT_APPLIED: 'Ghi chú đã chỉnh sơ đồ',
+    NOTE_ADJUSTMENT_UNMATCHED: 'Ghi chú chưa match',
+    MIXED_MAIN_FAMILIES: 'Ca hỗn hợp',
+    PRODUCT_WITHOUT_TOOTH_SCOPE: 'Thiếu phạm vi răng',
+    OVERLAPPING_TOOTH_PRODUCTS: 'Răng chồng nhiều dòng',
+    NO_MAIN_PRODUCT: 'Không có phục hình chính',
+  };
+  const FIX_STATUS_LABELS = { open: 'Đang mở', resolved: 'Đã xử lý', ignored: 'Bỏ qua', suppressed: 'Tự ẩn bởi rule' };
+
+  async function loadProductionMatchBadge() {
+    try {
+      const res = await fetch('/admin/api/production-match?status=open&limit=1');
+      const d = await res.json();
+      if (!res.ok || !d.ok) return;
+      const badge = document.getElementById('fixMatchBadge');
+      if (!badge) return;
+      const n = d.summary?.open || 0;
+      badge.textContent = n;
+      badge.style.display = n > 0 ? '' : 'none';
+    } catch(e) {}
+  }
+
+  async function loadProductionMatchWarnings(status) {
+    const body = document.getElementById('fixMatchBody');
+    if (!body) return;
+    const select = document.getElementById('fixMatchStatus');
+    fixMatchStatus = status || select?.value || fixMatchStatus || 'open';
+    if (select && select.value !== fixMatchStatus) select.value = fixMatchStatus;
+    body.innerHTML = '<div class="empty-state">Đang quét các đơn không match...</div>';
+    try {
+      const res = await fetch(`/admin/api/production-match?status=${encodeURIComponent(fixMatchStatus)}&limit=150`);
+      const d = await res.json();
+      if (!res.ok || !d.ok) {
+        body.innerHTML = `<div class="prod-empty">Không quét được Fix-match${d.error ? ': ' + esc(d.error) : ''}</div>`;
+        return;
+      }
+      fixMatchData = d;
+      renderProductionMatchWarnings();
+      loadProductionMatchBadge();
+    } catch(e) {
+      body.innerHTML = `<div class="prod-empty">Lỗi kết nối: ${esc(e.message)}</div>`;
+    }
+  }
+
+  function fixKpi(label, value, cls = '') {
+    return `<div class="fix-kpi ${cls}"><div class="fix-kpi-label">${esc(label)}</div><div class="fix-kpi-value">${fmtNumber(value || 0)}</div></div>`;
+  }
+
+  function fixWarningLabel(code) {
+    return FIX_MATCH_LABELS[code] || code || 'Cảnh báo';
+  }
+
+  function fixStatusLabel(status) {
+    return FIX_STATUS_LABELS[status] || status || 'Đang mở';
+  }
+
+  function fixProductText(items) {
+    const rows = (items || []).slice(0, 5).map(item => {
+      const bits = [item.name || '—'];
+      if (item.rang) bits.push(`R ${item.rang}`);
+      if (item.qty) bits.push(`SL ${item.qty}`);
+      if (item.family) bits.push(item.family);
+      return bits.map(esc).join(' · ');
+    });
+    return rows.length ? rows.join('<br>') : '—';
+  }
+
+  function renderProductionMatchWarnings() {
+    const body = document.getElementById('fixMatchBody');
+    const d = fixMatchData;
+    if (!body || !d) return;
+    const summary = d.summary || {};
+    const rows = d.warnings || [];
+    const meta = `Cập nhật: ${fmtDate(d.generatedAt || '')} · Bộ lọc: ${fixStatusLabel(d.status || fixMatchStatus)} · Hiển thị tối đa ${fmtNumber(d.limit || 0)} cảnh báo`;
+    const summaryHtml = `
+      <div class="fix-summary">
+        ${fixKpi('Đang mở', summary.open || 0, 'fix-high')}
+        ${fixKpi('Tự ẩn bởi rule', summary.suppressed || 0)}
+        ${fixKpi('Đã xử lý', summary.resolved || 0)}
+        ${fixKpi('Bỏ qua', summary.ignored || 0)}
+        ${fixKpi('Tổng', summary.total || 0)}
+      </div>
+      <div class="monthly-period">${esc(meta)}</div>
+    `;
+    if (!rows.length) {
+      body.innerHTML = `${summaryHtml}<div class="prod-empty">Không có cảnh báo trong bộ lọc hiện tại.</div>`;
+      return;
+    }
+    const cards = rows.map(item => {
+      const w = item.warning || {};
+      const detail = w.detail || {};
+      const actionButtons = w.status === 'open'
+        ? `
+          <button class="btn btn-success" onclick="setProductionMatchStatus('${esc(item.ma_dh)}','${esc(w.key)}','${esc(w.code)}','resolved')">Đã xử lý</button>
+          <button class="btn btn-secondary" onclick="setProductionMatchStatus('${esc(item.ma_dh)}','${esc(w.key)}','${esc(w.code)}','ignored')">Bỏ qua</button>
+        `
+        : `<button class="btn btn-outline" onclick="setProductionMatchStatus('${esc(item.ma_dh)}','${esc(w.key)}','${esc(w.code)}','open')">Mở lại</button>`;
+      const detailText = [
+        detail.rawSl != null ? `SL DB ${detail.rawSl}` : '',
+        detail.mainQty != null ? `SL chính ${detail.mainQty}` : '',
+        detail.accessoryQty != null ? `Phụ kiện ${detail.accessoryQty}` : '',
+        Array.isArray(detail.excluded) && detail.excluded.length ? `Răng loại: ${detail.excluded.join(', ')}` : '',
+        Array.isArray(detail.repeats) && detail.repeats.length ? `Răng thêm: ${detail.repeats.map(x => `${x.tooth} x${x.count}`).join(', ')}` : '',
+      ].filter(Boolean).join(' · ');
+      return `
+        <article class="fix-card">
+          <div class="fix-card-top">
+            <div>
+              <span class="fix-order" onclick="openOrderDetail('${esc(item.ma_dh)}')">${esc(item.ma_dh)}</span>
+              <div class="fix-sub">${esc(item.benh_nhan || '—')} · ${esc(item.khach_hang || '—')} · ${esc(fixStatusLabel(w.status))}</div>
+            </div>
+            <span class="fix-badge fix-${esc(w.severity || 'warning')}">${esc(fixWarningLabel(w.code))}</span>
+          </div>
+          <div class="fix-grid">
+            <div class="fix-info-box"><div class="fix-info-label">SL DB</div><div class="fix-info-value">${fmtNumber(item.rawSl || 0)}</div></div>
+            <div class="fix-info-box"><div class="fix-info-label">SL chính</div><div class="fix-info-value">${fmtNumber(item.mainQty || 0)}</div></div>
+            <div class="fix-info-box"><div class="fix-info-label">Sơ đồ</div><div class="fix-info-value">${fmtNumber(item.chartTotal || 0)}</div></div>
+            <div class="fix-info-box"><div class="fix-info-label">Phụ kiện</div><div class="fix-info-value">${fmtNumber(item.accessoryQty || 0)}</div></div>
+          </div>
+          <div class="fix-text"><strong>${esc(w.message || '')}</strong>${detailText ? `<br>${esc(detailText)}` : ''}</div>
+          ${w.rule ? `<div class="fix-raw"><strong>Rule tự ẩn:</strong> ${esc(w.rule.name || w.rule.id)}<br>${esc(w.rule.reason || '')}</div>` : ''}
+          <div class="fix-raw"><strong>Phục hình chính:</strong><br>${fixProductText(item.mainProducts)}</div>
+          ${item.accessories?.length ? `<div class="fix-raw"><strong>Phụ kiện:</strong><br>${fixProductText(item.accessories)}</div>` : ''}
+          ${item.ghi_chu_sx ? `<div class="fix-raw"><strong>Ghi chú SX:</strong><br>${displayHtml(item.ghi_chu_sx)}</div>` : ''}
+          ${w.note ? `<div class="fix-raw"><strong>Ghi chú admin:</strong><br>${displayHtml(w.note)}</div>` : ''}
+          <div class="fix-actions">
+            <button class="btn btn-outline" onclick="openOrderDetail('${esc(item.ma_dh)}')">Xem đơn</button>
+            ${actionButtons}
+          </div>
+        </article>
+      `;
+    }).join('');
+    body.innerHTML = `${summaryHtml}<div class="fix-card-list">${cards}</div>`;
+  }
+
+  async function setProductionMatchStatus(maDh, warningKey, warningCode, status) {
+    try {
+      const note = status === 'open' ? '' : (prompt('Ghi chú xử lý Fix-match (có thể bỏ trống):', '') || '');
+      const res = await fetch('/admin/api/production-match/review', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ma_dh: maDh, warning_key: warningKey, warning_code: warningCode, status, note }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.ok) throw new Error(d.error || 'Không cập nhật được trạng thái');
+      await loadProductionMatchWarnings(fixMatchStatus);
+      showAlert('Đã cập nhật Fix-match', 'success');
+    } catch(e) {
+      showAlert('Lỗi Fix-match: ' + e.message, 'error');
+    }
+  }
 
   async function loadDelayRiskOrders() {
     const body = document.getElementById('delayRiskBody');

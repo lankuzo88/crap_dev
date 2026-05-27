@@ -700,6 +700,62 @@ function initFeedbackTables() {
   log('✅ Feedback tables initialized');
 }
 
+function initProductionMatchTables() {
+  const db = getDB();
+  if (!db) { log('⚠ initProductionMatchTables: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS production_match_rules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      rule_id TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      warning_code TEXT NOT NULL,
+      action TEXT NOT NULL DEFAULT 'suppress',
+      reason TEXT NOT NULL DEFAULT '',
+      active INTEGER NOT NULL DEFAULT 1,
+      created_by TEXT NOT NULL DEFAULT 'system',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_production_match_rules_code ON production_match_rules(warning_code, active);
+
+    CREATE TABLE IF NOT EXISTS production_match_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh TEXT NOT NULL,
+      warning_key TEXT NOT NULL,
+      warning_code TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'open',
+      note TEXT NOT NULL DEFAULT '',
+      reviewed_by TEXT NOT NULL DEFAULT '',
+      reviewed_at TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(ma_dh, warning_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_production_match_reviews_order ON production_match_reviews(ma_dh);
+    CREATE INDEX IF NOT EXISTS idx_production_match_reviews_status ON production_match_reviews(status);
+  `);
+  const seeds = [
+    ['default-accessory-present', 'Phụ kiện đã tách khỏi phục hình chính', 'ACCESSORY_QTY_PRESENT', 'suppress', 'Phụ kiện như in mẫu, răng tạm, đính đá/khoan lỗ, cùi giả, máng tẩy, thanh bar/I-bar không vẽ trên sơ đồ răng chính.'],
+    ['default-raw-sl-includes-accessory', 'SL tổng bao gồm phụ kiện', 'RAW_SL_DIFFERS_MAIN_QTY', 'suppress', 'SL DB khác SL chính đúng bằng phụ kiện, parser đã tách phụ kiện ra khỏi số răng chính.'],
+    ['default-note-adjustment-applied', 'Ghi chú răng đã áp dụng được', 'NOTE_ADJUSTMENT_APPLIED', 'suppress', 'Ghi chú mất/thiếu/không làm/thêm răng đã được parser áp dụng vào sơ đồ.'],
+    ['default-mixed-main-families', 'Ca hỗn hợp là thông tin, không phải lỗi match', 'MIXED_MAIN_FAMILIES', 'suppress', 'Đơn có nhiều nhóm phục hình chính vẫn hiển thị theo từng nhóm vật liệu.'],
+    ['default-accessory-only-order', 'Đơn chỉ có phụ kiện', 'NO_MAIN_PRODUCT', 'suppress', 'Đơn chỉ có phụ kiện hoặc không có phục hình chính thì không cần vẽ sơ đồ răng.'],
+  ];
+  const ins = db.prepare(`
+    INSERT INTO production_match_rules (rule_id, name, warning_code, action, reason)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(rule_id) DO UPDATE SET
+      name = excluded.name,
+      warning_code = excluded.warning_code,
+      action = excluded.action,
+      reason = excluded.reason,
+      updated_at = datetime('now','localtime')
+  `);
+  const tx = db.transaction(rows => rows.forEach(row => ins.run(...row)));
+  tx(seeds);
+  log('✅ production match tables initialized');
+}
+
 function initUpdatedAtTriggers() {
   const db = getDB();
   if (!db) { log('⚠ initUpdatedAtTriggers: DB not available'); return; }
@@ -729,6 +785,8 @@ function initUpdatedAtTriggers() {
     'ktv_daily_stats', 'ktv_daily_type_stats',
     'ktv_monthly_stats', 'ktv_monthly_type_stats',
     'feedbacks',
+    'production_match_reviews',
+    'production_match_rules',
   ];
   let created = 0;
   for (const table of tables) {
@@ -749,4 +807,4 @@ function initUpdatedAtTriggers() {
   log(`✅ updated_at triggers initialized (${created} tables)`);
 }
 
-module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initClinicTagsTable, initUpdatedAtTriggers, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initProductionMatchTables, initClinicTagsTable, initUpdatedAtTriggers, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

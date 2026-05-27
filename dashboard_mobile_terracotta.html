@@ -1420,6 +1420,13 @@
     .tooth-chip.duplicate {
       box-shadow: 0 0 0 2px rgba(182,87,72,.26), 0 3px 8px rgba(84,64,55,.18), inset 0 1px 0 rgba(255,255,255,.28);
     }
+    .tooth-chip.unknown {
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px dashed #94a3b8;
+      box-shadow: none;
+      font-size: 11px;
+    }
     .tooth-bridge-layer {
       position: absolute;
       inset: -4px 0;
@@ -2069,12 +2076,25 @@
         hasInMauHamText(text) ||
         n.includes('in mau') ||
         n.includes('mau ham') ||
+        n.includes('khay ca nhan') ||
+        n.includes('rang tam') ||
+        n.includes('pmma') ||
+        n.includes('in resin') ||
+        n.includes('dinh da') ||
+        n.includes('hot') ||
+        n.includes('khoan lo') ||
         n.includes('cui gia') ||
         n.includes('sap can') ||
         n.includes('khay lay dau') ||
         n.includes('lay dau') ||
         n.includes('gia khop') ||
         n.includes('ham doi') ||
+        n.includes('thay nen') ||
+        n.includes('dem ham') ||
+        n.includes('va ham') ||
+        n.includes('moc nhua') ||
+        n.includes('ep nhua nha si') ||
+        n.includes('mang tay') ||
         n.includes('thanh bar') ||
         /\bi\s*bar\b/.test(n) ||
         /\bibar\b/.test(n) ||
@@ -2297,12 +2317,30 @@
         const fdiCount = product.groups.reduce((sum, group) => sum + group.teeth.length, 0);
         const duplicateExtra = Object.values(product.toothUnits || {})
           .reduce((sum, count) => sum + Math.max(0, Number(count) - 1), 0);
-        const representedCount = fdiCount + duplicateExtra;
+        const isJawUnit = isJawUnitProductName(product.name);
+        const jawCount = product.groups.filter(group => group.type === 'full').length;
+        const representedCount = isJawUnit && jawCount ? jawCount : fdiCount + duplicateExtra;
         const qty = Number(product.qty) || 0;
         const unitCount = qty || representedCount;
         const unitDelta = qty ? qty - representedCount : 0;
-        return { ...product, fdiCount, unitCount, unitDelta };
+        const unknownMissingTeeth = unitDelta < 0 ? pickUnknownMissingTeeth(product, Math.abs(unitDelta)) : [];
+        return { ...product, fdiCount, unitCount, unitDelta, unknownMissingTeeth };
       });
+    }
+    function isJawUnitProductName(name) {
+      const n = normalizePhText(name);
+      return n.includes('khung') || n.includes('nen ham') || n.includes('ham bio') || n.includes('ham nhua') || n.includes('ham thao lap');
+    }
+    function pickUnknownMissingTeeth(product, count) {
+      const seen = new Set();
+      const teeth = product.groups
+        .flatMap(group => group.teeth || [])
+        .map(String)
+        .filter(tooth => toothPos(tooth) && !seen.has(tooth) && seen.add(tooth));
+      const total = Math.min(Number(count) || 0, teeth.length);
+      if (!total) return [];
+      const start = Math.max(0, Math.floor((teeth.length - total) / 2));
+      return teeth.slice(start, start + total);
     }
 
     function toothDeltaLabel(delta) {
@@ -2326,7 +2364,10 @@
     }
 
     function parseProductionToothAdjustments(text) {
-      const normalized = normalizePhText(cleanDisplayText(text));
+      const raw = cleanDisplayText(text)
+        .replace(/mặt\s+r?\s*\d{2}/gi, ' ')
+        .replace(/tựa[^\n.;,]{0,50}mat\s+r?\s*\d{2}/gi, ' ');
+      const normalized = normalizePhText(raw);
       const excluded = new Set();
       const repeats = new Map();
       let m;
@@ -2338,9 +2379,17 @@
       while ((m = removeRe.exec(normalized))) {
         if (toothPos(m[1])) excluded.add(m[1]);
       }
+      const removeRangeRe = /(?:bo|tru|mat|thieu)\s+r?\s*(\d{2})\s*-\s*(\d{2})/g;
+      while ((m = removeRangeRe.exec(normalized))) {
+        expandFdiRange(m[1], m[2]).forEach(tooth => excluded.add(tooth));
+      }
       const missingRe = /(?:mat|thieu)\s+r?\s*(\d{2})/g;
       while ((m = missingRe.exec(normalized))) {
         if (toothPos(m[1])) excluded.add(m[1]);
+      }
+      if (/(?:moi|moi)\s+ben\s+co\s+(?:hai|2)\s*r?2\b/.test(normalized)) {
+        repeats.set('12', Math.max(repeats.get('12') || 1, 2));
+        repeats.set('22', Math.max(repeats.get('22') || 1, 2));
       }
       const repeatA = /\b([2-9])\s*(?:r|rang)\s*r?\s*(\d{2})\b/g;
       while ((m = repeatA.exec(normalized))) {
@@ -2353,25 +2402,6 @@
         if (count > 1 && toothPos(m[1])) repeats.set(m[1], Math.max(repeats.get(m[1]) || 1, count));
       }
       return { excluded, repeats };
-    }
-
-    // Layer A: nếu ghi chú sản xuất khai báo cầu kiểu "Cầu (XX-YY)" thì ưu tiên
-    // cấu trúc lâm sàng đó cho bracket, bỏ qua pair-segments encoding của KeyLab.
-    function parseClinicalBridges(order) {
-      const note = getProductionToothNote(order);
-      if (!note) return [];
-      const norm = normalizePhText(cleanDisplayText(note));
-      if (!/\bcau\b/.test(norm)) return [];
-      const bridges = [];
-      const rx = /\((\d{2})\s*-\s*(\d{2})\)/g;
-      let m;
-      while ((m = rx.exec(norm))) {
-        const teeth = expandFdiRange(m[1], m[2]).map(String);
-        if (teeth.length >= 2 && teeth.every(t => toothPos(t))) {
-          bridges.push({ from: m[1], to: m[2], teeth });
-        }
-      }
-      return bridges;
     }
 
     function applyProductionToothAdjustments(product, adjustments) {
@@ -2444,6 +2474,41 @@
           slots.push({ tooth: key, entries, missing: false, duplicate: true });
         }
       });
+      (products || []).forEach(product => {
+        const extra = Math.max(0, Number(product.unitDelta) || 0);
+        if (!extra) return;
+        const teeth = product.groups.flatMap(group => group.teeth || []).map(String);
+        const rowTeeth = teeth.filter(tooth => toothPos(tooth)?.row === rowKey);
+        if (!rowTeeth.length) return;
+        let insertAt = -1;
+        slots.forEach((slot, index) => {
+          if (rowTeeth.includes(slot.tooth)) insertAt = Math.max(insertAt, index);
+        });
+        if (insertAt < 0) return;
+        const placeholders = Array.from({ length: extra }, () => ({
+          tooth: '?',
+          entries: [{ product, group: { type: 'unknown', raw: '?' } }],
+          missing: false,
+          duplicate: true,
+          unknown: true,
+        }));
+        slots.splice(insertAt + 1, 0, ...placeholders);
+      });
+      (products || []).forEach(product => {
+        (product.unknownMissingTeeth || []).forEach(tooth => {
+          const pos = toothPos(tooth);
+          if (!pos || pos.row !== rowKey) return;
+          const index = slots.findIndex(slot => slot.tooth === String(tooth));
+          if (index < 0) return;
+          slots[index] = {
+            tooth: '?',
+            entries: [{ product, group: { type: 'unknown', raw: '?' } }],
+            missing: false,
+            duplicate: false,
+            unknown: true,
+          };
+        });
+      });
       return slots;
     }
 
@@ -2485,14 +2550,16 @@
           : '';
         const missing = !active && slot.missing;
         const duplicate = active && slot.duplicate;
+        const unknown = Boolean(slot.unknown);
         const cls = [
           'tooth-chip',
           rowKey,
           active ? `active ${type}${full}` : '',
           missing ? 'missing' : '',
           duplicate ? 'duplicate' : '',
+          unknown ? 'unknown' : '',
         ].filter(Boolean).join(' ');
-        const chipTitle = missing ? `Thiếu/bỏ R${tooth}` : title;
+        const chipTitle = unknown ? 'Răng chưa rõ vị trí' : (missing ? `Thiếu/bỏ R${tooth}` : title);
         return `<div class="${cls}" title="${htmlSafe(chipTitle)}"><span>${tooth}</span></div>`;
       }).join('');
       return `
@@ -2501,6 +2568,37 @@
           <div class="tooth-row" style="grid-template-columns:repeat(${rowSlots.length},minmax(0,1fr));">${teethHtml}</div>
         </div>
       `;
+    }
+
+    // KeyLab thường split cầu dài thành nhiều pair-segments (vd "24-25,26-27" cho cầu 24-27).
+    // KTV bù lại bằng cú pháp "Cầu (XX-YY)" trong ghi_chu_sx. Hợp nhất theo overlap:
+    // product bridge nào share răng với clinical bridge → bị thay thế; còn lại giữ nguyên.
+    function parseClinicalBridges(order) {
+      const note = getProductionToothNote(order);
+      if (!note || !/\bcau\b/.test(normalizePhText(note))) return [];
+      const norm = normalizePhText(cleanDisplayText(note));
+      const bridges = [];
+      const rx = /\((\d{2})\s*-\s*(\d{2})\)/g;
+      let m;
+      while ((m = rx.exec(norm))) {
+        const teeth = expandFdiRange(m[1], m[2]).map(String);
+        if (teeth.length >= 2 && teeth.every(t => toothPos(t))) bridges.push({ from: m[1], to: m[2], teeth });
+      }
+      return bridges;
+    }
+
+    function mergeClinicalBridges(productBridges, clinicalBridges) {
+      if (!clinicalBridges.length) return productBridges;
+      const clinicalSets = clinicalBridges.map(br => new Set(br.teeth.map(String)));
+      const survivingProductBridges = productBridges.filter(pg => {
+        const teeth = (pg.group.teeth || []).map(String);
+        return !clinicalSets.some(set => teeth.some(t => set.has(t)));
+      });
+      const clinicalGroups = clinicalBridges.map(br => {
+        const group = { type: 'bridge', teeth: br.teeth, raw: `${br.from}-${br.to}` };
+        return { product: { name: `Cầu R${br.from}-R${br.to}`, unitDelta: 0, groups: [group] }, group };
+      });
+      return [...survivingProductBridges, ...clinicalGroups];
     }
 
     function renderToothChartSection(order) {
@@ -2529,15 +2627,7 @@
         });
       });
 
-      // Ghi chú sản xuất là nguồn ưu tiên cho ranh giới cầu lâm sàng;
-      // không có khai báo → fallback về pair-segments của KeyLab.
-      const clinicalBridges = parseClinicalBridges(order);
-      const bridgeGroups = clinicalBridges.length
-        ? clinicalBridges.map(br => {
-            const group = { type: 'bridge', teeth: br.teeth, raw: `${br.from}-${br.to}` };
-            return { product: { name: `Cầu R${br.from}-R${br.to}`, unitDelta: 0, groups: [group] }, group };
-          })
-        : productBridgeGroups;
+      const bridgeGroups = mergeClinicalBridges(productBridgeGroups, parseClinicalBridges(order));
 
       if (Array.from(toothMap.values()).some(entries => entries.length > 1)) usedTypes.add('multi');
       const legendHtml = Array.from(usedTypes).map(type => `
@@ -2570,6 +2660,10 @@
         ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
         ${productHtml ? `<div class="tooth-products">${productHtml}</div>` : ''}
       </div>`;
+    }
+    function getToothChartTotal(order) {
+      const products = annotateToothProducts(getToothChartProducts(order));
+      return products.reduce((sum, product) => sum + (Number(product.unitCount) || 0), 0);
     }
 
     function phType(ph) {
@@ -5414,7 +5508,7 @@
 
     // Modal functions
     function showOrderDetail(o) {
-      const shownQty = displayQty(o);
+      const modalMainQty = getToothChartTotal(o) || Number(o.sl) || 0;
       const stageHtml = o.stagesData.map(s => {
         if (s.sk) return '';
         const icon = s.x ? '✓' : (s.n === o.current_stage ? '●' : '○');
@@ -5449,9 +5543,9 @@
 
           <div style="display: flex; gap: 12px; margin-bottom: 14px;">
             <div style="flex: 1;">
-              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">${shownQty.label}</div>
-              <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${shownQty.qty}</div>
-              ${filterPh !== 'all' && shownQty.total !== shownQty.qty ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Tổng đơn: ${shownQty.total}</div>` : ''}
+              <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">SL phục hình</div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--terracotta);">${modalMainQty || '—'}</div>
+              ${Number(o.sl) && Number(o.sl) !== modalMainQty ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Tổng đơn: ${o.sl}</div>` : ''}
             </div>
             <div style="flex: 1;">
               <div style="color: var(--text-primary); font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">Giao</div>

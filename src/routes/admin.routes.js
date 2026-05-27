@@ -1,5 +1,6 @@
 'use strict';
 const express = require('express');
+const crypto = require('crypto');
 const path    = require('path');
 const router  = express.Router();
 const { requirePermission, requireAdmin } = require('../middleware/auth');
@@ -9,6 +10,7 @@ const { BASE_DIR } = require('../config/paths');
 const { getDB } = require('../db/index');
 const { refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType } = require('../db/migrations');
 const { STAGE_NAMES, getSkipStages, getActiveMaDhList, normalizeRuleText: normalizeText, stagesGroupConcatSql } = require('../repositories/orders.repo');
+const { analyzeProductionMatch, compactAnalysisForApi, matchProductionRule } = require('../utils/productionMatch');
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] ${msg}`);
 
@@ -500,6 +502,155 @@ function parseTypeBreakdown(value) {
     return {};
   }
 }
+
+function productionWarningKey(warning) {
+  const stable = JSON.stringify({ code: warning.code, detail: warning.detail || {} });
+  const hash = crypto.createHash('sha1').update(stable).digest('hex').slice(0, 12);
+  return `${warning.code}:${hash}`;
+}
+
+function loadProductionMatchReviews(db) {
+  const rows = db.prepare(`
+    SELECT ma_dh, warning_key, warning_code, status, note, reviewed_by, reviewed_at, updated_at
+    FROM production_match_reviews
+  `).all();
+  return new Map(rows.map(row => [`${row.ma_dh}\u001f${row.warning_key}`, row]));
+}
+
+function loadProductionMatchRules(db) {
+  const rows = db.prepare(`
+    SELECT rule_id, name, warning_code, action, reason
+    FROM production_match_rules
+    WHERE active = 1
+    ORDER BY id
+  `).all();
+  return rows.map(row => ({
+    id: row.rule_id,
+    name: row.name,
+    warningCode: row.warning_code,
+    action: row.action,
+    reason: row.reason,
+  }));
+}
+
+function buildProductionMatchWarnings(db) {
+  const rows = db.prepare(`
+    SELECT ma_dh, khach_hang, benh_nhan, phuc_hinh, sl, ghi_chu_sx, keylab_sx_info, updated_at
+    FROM don_hang
+    WHERE TRIM(COALESCE(ma_dh, '')) <> ''
+      AND (
+        TRIM(COALESCE(phuc_hinh, '')) <> ''
+        OR TRIM(COALESCE(keylab_sx_info, '')) <> ''
+      )
+    ORDER BY COALESCE(updated_at, created_at, '') DESC, ma_dh DESC
+    LIMIT 8000
+  `).all();
+  const reviews = loadProductionMatchReviews(db);
+  const rules = loadProductionMatchRules(db);
+  const items = [];
+
+  for (const row of rows) {
+    const analysis = analyzeProductionMatch(row);
+    if (!analysis.warnings.length) continue;
+    const base = compactAnalysisForApi(row, analysis);
+    for (const warning of analysis.warnings) {
+      const warningKey = productionWarningKey(warning);
+      const review = reviews.get(`${row.ma_dh}\u001f${warningKey}`) || null;
+      const baseItem = { ...base, updated_at: row.updated_at || '' };
+      const matchedRule = review ? null : matchProductionRule(baseItem, warning, rules);
+      items.push({
+        ...baseItem,
+        warning: {
+          ...warning,
+          key: warningKey,
+          status: review?.status || (matchedRule ? 'suppressed' : 'open'),
+          note: review?.note || '',
+          reviewed_by: review?.reviewed_by || '',
+          reviewed_at: review?.reviewed_at || '',
+          rule: matchedRule ? {
+            id: matchedRule.id,
+            name: matchedRule.name,
+            reason: matchedRule.reason,
+          } : null,
+        },
+      });
+    }
+  }
+  return items;
+}
+
+function summarizeProductionMatchWarnings(items) {
+  const summary = {
+    total: items.length,
+    open: 0,
+    resolved: 0,
+    ignored: 0,
+    suppressed: 0,
+    byCode: {},
+    bySeverity: {},
+  };
+  for (const item of items) {
+    const status = item.warning.status || 'open';
+    summary[status] = (summary[status] || 0) + 1;
+    summary.byCode[item.warning.code] = (summary.byCode[item.warning.code] || 0) + 1;
+    summary.bySeverity[item.warning.severity] = (summary.bySeverity[item.warning.severity] || 0) + 1;
+  }
+  return summary;
+}
+
+router.get('/admin/api/production-match', requirePermission('admin.users.manage'), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const status = String(req.query.status || 'open').trim();
+    const allowedStatuses = new Set(['open', 'resolved', 'ignored', 'suppressed', 'all']);
+    if (!allowedStatuses.has(status)) return res.status(400).json({ ok: false, error: 'Invalid status' });
+    const limit = Math.min(300, Math.max(1, parseInt(req.query.limit, 10) || 120));
+    const allItems = buildProductionMatchWarnings(db);
+    const filtered = status === 'all' ? allItems : allItems.filter(item => item.warning.status === status);
+    res.json({
+      ok: true,
+      generatedAt: new Date().toISOString(),
+      status,
+      limit,
+      summary: summarizeProductionMatchWarnings(allItems),
+      warnings: filtered.slice(0, limit),
+    });
+  } catch (err) {
+    log(`Production match error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.patch('/admin/api/production-match/review', requirePermission('admin.users.manage'), express.json(), (req, res) => {
+  try {
+    const db = getDB();
+    if (!db) return res.status(500).json({ ok: false, error: 'Database not available' });
+    const maDh = String(req.body?.ma_dh || '').trim();
+    const warningKey = String(req.body?.warning_key || '').trim();
+    const warningCode = String(req.body?.warning_code || '').trim().slice(0, 80);
+    const status = String(req.body?.status || '').trim();
+    const note = String(req.body?.note || '').trim().slice(0, 500);
+    if (!maDh || !warningKey) return res.status(400).json({ ok: false, error: 'Missing order or warning key' });
+    if (!['open', 'resolved', 'ignored'].includes(status)) return res.status(400).json({ ok: false, error: 'Invalid status' });
+    db.prepare(`
+      INSERT INTO production_match_reviews
+        (ma_dh, warning_key, warning_code, status, note, reviewed_by, reviewed_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))
+      ON CONFLICT(ma_dh, warning_key) DO UPDATE SET
+        warning_code = excluded.warning_code,
+        status = excluded.status,
+        note = excluded.note,
+        reviewed_by = excluded.reviewed_by,
+        reviewed_at = excluded.reviewed_at,
+        updated_at = excluded.updated_at
+    `).run(maDh, warningKey, warningCode, status, note, req.session.user || '');
+    res.json({ ok: true, ma_dh: maDh, warning_key: warningKey, status });
+  } catch (err) {
+    log(`Production match review error: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 router.get('/admin/api/production-stats', requirePermission('stats.view_production'), (req, res) => {
   try {
