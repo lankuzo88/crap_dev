@@ -263,6 +263,10 @@
     .tooth-bridge-layer{position:absolute;inset:-4px 0;pointer-events:none;z-index:5;}
     .tooth-bridge-bar{position:absolute;height:6px;border-radius:7px;background:#2ed573;box-shadow:0 0 6px rgba(46,213,115,.9),0 0 12px rgba(46,213,115,.5);}
     .tooth-bridge-bar.upper{top:0}.tooth-bridge-bar.lower{bottom:0}
+    .tooth-ibar-bar{position:absolute;height:5px;border-radius:5px;background:linear-gradient(160deg,#a78bfa,#7c3aed);box-shadow:0 0 5px rgba(167,139,250,.65),0 0 10px rgba(124,58,237,.3);}
+    .tooth-ibar-bar.upper{bottom:0}.tooth-ibar-bar.lower{top:0}
+    .tooth-product-pill.ibar{border-color:rgba(124,58,237,.45);background:rgba(167,139,250,.12);}
+    .tooth-product-pill.ibar b{color:#6d28d9;}
     .tooth-unit-delta{position:absolute;top:-10px;right:-2px;z-index:6;border:1px solid rgba(255,255,255,.9);border-radius:999px;padding:1px 5px;color:#fff;font-size:8px;font-weight:900;line-height:1.35;box-shadow:0 2px 5px rgba(0,0,0,.18);}
     .tooth-unit-delta.extra{background:#b65748}.tooth-unit-delta.missing{background:#4f7a5f}
     .tooth-legend,.tooth-products{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
@@ -1825,6 +1829,28 @@
       .filter(product => product.groups.length);
   }
 
+  function getToothChartIbars(o) {
+    const info = parseKeylabSxInfo(o?.keylab_sx_info);
+    const sxProducts = Array.isArray(info.products) ? info.products : [];
+    const fromSx = sxProducts
+      .filter(item => isIbarProduct([item?.san_pham || item?.product || '', item?.loai_san_pham || '', item?.rang || ''].join(' ')))
+      .map((item, index) => {
+        const name = cleanDisplayText(item?.san_pham || item?.product || '');
+        const rang = cleanDisplayText(item?.rang || '');
+        return { id: `ibar-sx-${index}`, name, rang, qty: Number(item?.so_luong || item?.sl) || 0, groups: parseToothGroups(rang) };
+      })
+      .filter(p => p.groups.length);
+    if (fromSx.length) return fromSx;
+    return splitPhParts(getAdminPhText(o))
+      .filter(part => isIbarProduct(part))
+      .map((part, index) => {
+        const rang = extractRangFromPart(part);
+        const name = stripRangBlock(part) || cleanDisplayText(part);
+        return { id: `ibar-ph-${index}`, name, rang, qty: partQty(part), groups: parseToothGroups(rang) };
+      })
+      .filter(p => p.groups.length);
+  }
+
   function annotateToothProducts(products) {
     return (products || []).map(product => {
       const fdiCount = product.groups.reduce((sum, group) => sum + group.teeth.length, 0);
@@ -1860,7 +1886,7 @@
   }
 
   function toothTypeLabel(type) {
-    return { zirc: 'Zirconia', kl: 'Kim loại', vnr: 'Mặt dán', hon: 'Hỗn hợp', tam: 'Răng tạm', multi: 'Nhiều loại' }[type] || 'Khác';
+    return { zirc: 'Zirconia', kl: 'Kim loại', vnr: 'Mặt dán', hon: 'Hỗn hợp', tam: 'Răng tạm', multi: 'Nhiều loại', ibar: 'Thanh bar (ibar)' }[type] || 'Khác';
   }
 
   function toothTypeStyle(type) {
@@ -1871,7 +1897,16 @@
       hon: 'linear-gradient(160deg,#7f8c6b,#52664f)',
       tam: 'linear-gradient(160deg,#b88d4f,#8c6634)',
       multi: 'linear-gradient(135deg,#4979b9,#b65748 52%,#6e5748)',
+      ibar: 'linear-gradient(160deg,#a78bfa,#7c3aed)',
     }[type] || 'linear-gradient(160deg,#997d68,#6e5748)';
+  }
+
+  // Thanh bar / I-bar không phải răng phục hình nên không đếm vào chartTotal,
+  // nhưng nó là cấu trúc bắc qua khoảng răng cụ thể nên cần vẽ riêng (bar tím)
+  // và liệt kê SL ở phần phục hình.
+  function isIbarProduct(text) {
+    const n = normalizePhText(text);
+    return n.includes('thanh bar') || /\bibar\b/.test(n) || /\bi[\s-]*bar\b/.test(n);
   }
 
   function buildToothRowSlots(rowKey, toothMap, products) {
@@ -1950,9 +1985,32 @@
     }).join('');
   }
 
-  function renderToothRow(rowKey, toothMap, bridgeGroups, products) {
+  function renderIbarBars(rowKey, ibarGroups, rowSlots) {
+    const slotCount = Math.max(1, rowSlots.length);
+    const bounds = new Map();
+    rowSlots.forEach((slot, index) => {
+      const old = bounds.get(slot.tooth);
+      bounds.set(slot.tooth, { first: old ? old.first : index, last: index });
+    });
+    return (ibarGroups || []).map(item => {
+      const positions = (item.group.teeth || [])
+        .map(tooth => ({ tooth: String(tooth), pos: toothPos(tooth), bound: bounds.get(String(tooth)) }))
+        .filter(x => x.pos && x.pos.row === rowKey && x.bound);
+      if (!positions.length) return '';
+      const start = Math.min(...positions.map(x => x.bound.first));
+      const end = Math.max(...positions.map(x => x.bound.last));
+      const span = end - start + 1;
+      const barLeft = `calc(${(start / slotCount) * 100}% + 4px)`;
+      const barWidth = `calc(${(span / slotCount) * 100}% - 8px)`;
+      const title = `${item.product.name}${item.product.qty ? ` · SL: ${item.product.qty}` : ''}`;
+      return `<div class="tooth-ibar-bar ${rowKey}" style="left:${barLeft};width:${barWidth};" title="${esc(title)}"></div>`;
+    }).join('');
+  }
+
+  function renderToothRow(rowKey, toothMap, bridgeGroups, ibarGroups, products) {
     const rowSlots = buildToothRowSlots(rowKey, toothMap, products);
     const bridgeHtml = renderBridgeBars(rowKey, bridgeGroups, rowSlots);
+    const ibarHtml = renderIbarBars(rowKey, ibarGroups, rowSlots);
     const teethHtml = rowSlots.map(slot => {
       const entries = slot.entries;
       const active = entries.length > 0;
@@ -1966,7 +2024,7 @@
       const chipTitle = unknown ? 'Răng chưa rõ vị trí' : (missing ? `Thiếu/bỏ R${slot.tooth}` : title);
       return `<div class="${cls}" title="${esc(chipTitle)}"><span>${slot.tooth}</span></div>`;
     }).join('');
-    return `<div class="tooth-row-wrap"><div class="tooth-bridge-layer">${bridgeHtml}</div><div class="tooth-row" style="grid-template-columns:repeat(${rowSlots.length},minmax(0,1fr));">${teethHtml}</div></div>`;
+    return `<div class="tooth-row-wrap"><div class="tooth-bridge-layer">${bridgeHtml}${ibarHtml}</div><div class="tooth-row" style="grid-template-columns:repeat(${rowSlots.length},minmax(0,1fr));">${teethHtml}</div></div>`;
   }
 
   // KeyLab thường split cầu dài thành nhiều pair-segments (vd "24-25,26-27" cho cầu 24-27).
@@ -2002,9 +2060,10 @@
 
   function renderToothChartSection(o) {
     const products = annotateToothProducts(getToothChartProducts(o));
+    const ibars = getToothChartIbars(o);
     const chartTotal = products.reduce((sum, product) => sum + (Number(product.unitCount) || 0), 0);
     const originalText = getAdminPhText(o);
-    if (!products.length) {
+    if (!products.length && !ibars.length) {
       return `<div class="tooth-chart-section"><div class="tooth-chart-title"><span>Phục hình</span></div><div class="tooth-original-text">${displayHtml(originalText || '—')}</div></div>`;
     }
     const toothMap = new Map();
@@ -2022,6 +2081,8 @@
       });
     });
     const bridgeGroups = mergeClinicalBridges(productBridgeGroups, parseClinicalBridges(o));
+    const ibarGroups = ibars.flatMap(ib => ib.groups.filter(g => g.teeth && g.teeth.length).map(group => ({ product: ib, group })));
+    if (ibars.length) usedTypes.add('ibar');
     if (Array.from(toothMap.values()).some(entries => entries.length > 1)) usedTypes.add('multi');
     const legendHtml = Array.from(usedTypes).map(type => `<span class="tooth-legend-item"><span class="tooth-swatch" style="background:${toothTypeStyle(type)}"></span>${esc(toothTypeLabel(type))}</span>`).join('');
     const productHtml = products.map(product => {
@@ -2030,17 +2091,22 @@
       const excluded = product.excludedTeeth?.length ? `<span class="tooth-note-pill">bỏ ${esc(product.excludedTeeth.map(t => 'R' + t).join(', '))}</span>` : '';
       return `<span class="tooth-product-pill"><b>${esc(product.name)}</b>${qty}${excluded}${delta}</span>`;
     }).join('');
+    const ibarHtml = ibars.map(ib => {
+      const qty = ib.qty ? ` · SL: ${ib.qty}` : '';
+      return `<span class="tooth-product-pill ibar"><b>${esc(ib.name)}</b>${qty}</span>`;
+    }).join('');
+    const pillsHtml = productHtml + ibarHtml;
     return `<div class="tooth-chart-section">
       <div class="tooth-chart-title"><span>Sơ đồ răng</span><span class="tooth-chart-total">${chartTotal} răng</span></div>
       <div class="tooth-chart">
         <span class="tooth-region tl">TRÊN P</span><span class="tooth-region tr">TRÊN T</span>
         <span class="tooth-region bl">DƯỚI P</span><span class="tooth-region br">DƯỚI T</span>
-        ${renderToothRow('upper', toothMap, bridgeGroups, products)}
+        ${renderToothRow('upper', toothMap, bridgeGroups, ibarGroups, products)}
         <div class="tooth-bite-line"></div>
-        ${renderToothRow('lower', toothMap, bridgeGroups, products)}
+        ${renderToothRow('lower', toothMap, bridgeGroups, ibarGroups, products)}
       </div>
       ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
-      ${productHtml ? `<div class="tooth-products">${productHtml}</div>` : ''}
+      ${pillsHtml ? `<div class="tooth-products">${pillsHtml}</div>` : ''}
     </div>`;
   }
 
