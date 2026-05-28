@@ -150,8 +150,14 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .tooth-delta-pill{border-radius:999px;padding:1px 5px;color:#fff;font-size:9px;font-weight:900;white-space:nowrap;}
 .tooth-delta-pill.extra{background:#b65748}.tooth-delta-pill.missing{background:#4f7a5f}
 .tooth-original-text{color:var(--text2);font-size:12px;line-height:1.45;font-weight:600;}
-.tooth-ph-tag{margin-top:8px;padding:6px 9px;background:rgba(180,170,160,.08);border:1px dashed rgba(180,170,160,.35);border-radius:5px;color:var(--text2);font-size:11px;line-height:1.5;font-weight:500;word-break:break-word;}
-.tooth-ph-tag::before{content:'PH gốc';display:inline-block;margin-right:6px;padding:1px 6px;background:rgba(84,64,55,.12);color:#544037;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-radius:3px;vertical-align:1px;}
+.tooth-ph-details{margin-top:8px;}
+.tooth-ph-details summary{cursor:pointer;display:inline-block;padding:2px 8px;background:rgba(84,64,55,.10);color:#544037;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-radius:4px;list-style:none;user-select:none;}
+.tooth-ph-details summary::-webkit-details-marker{display:none;}
+.tooth-ph-details summary::marker{display:none;}
+.tooth-ph-details summary::after{content:' ▾';opacity:.55;font-size:9px;}
+.tooth-ph-details[open] summary{background:rgba(84,64,55,.18);}
+.tooth-ph-details[open] summary::after{content:' ▴';}
+.tooth-ph-tag{margin-top:6px;padding:6px 9px;background:rgba(180,170,160,.08);border:1px dashed rgba(180,170,160,.35);border-radius:5px;color:var(--text2);font-size:11px;line-height:1.5;font-weight:500;word-break:break-word;}
 
 .refresh-badge{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--text3);}
 .refresh-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:lp 2s ease infinite;}
@@ -2175,7 +2181,7 @@ function renderToothChartSection(o) {
     </div>
     ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
     ${pillsHtml ? `<div class="tooth-products">${pillsHtml}</div>` : ''}
-    ${originalText ? `<div class="tooth-ph-tag">${displayHtml(originalText)}</div>` : ''}
+    ${originalText ? `<details class="tooth-ph-details"><summary>PH gốc</summary><div class="tooth-ph-tag">${displayHtml(originalText)}</div></details>` : ''}
   </div>`;
 }
 function getToothChartTotal(o) {
