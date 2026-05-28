@@ -1535,6 +1535,32 @@
       line-height: 1.45;
       font-weight: 600;
     }
+    .tooth-ph-tag {
+      margin-top: 8px;
+      padding: 6px 9px;
+      background: rgba(180,170,160,.08);
+      border: 1px dashed rgba(180,170,160,.35);
+      border-radius: 5px;
+      color: var(--text-muted, #555);
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 500;
+      word-break: break-word;
+    }
+    .tooth-ph-tag::before {
+      content: 'PH gốc';
+      display: inline-block;
+      margin-right: 6px;
+      padding: 1px 6px;
+      background: rgba(84,64,55,.12);
+      color: #544037;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      border-radius: 3px;
+      vertical-align: 1px;
+    }
 
     .stage-pips {
       display: flex;
@@ -2761,6 +2787,7 @@
         </div>
         ${legendHtml ? `<div class="tooth-legend">${legendHtml}</div>` : ''}
         ${pillsHtml ? `<div class="tooth-products">${pillsHtml}</div>` : ''}
+        ${originalText ? `<div class="tooth-ph-tag">${displayHtml(originalText)}</div>` : ''}
       </div>`;
     }
     function getToothChartTotal(order) {
