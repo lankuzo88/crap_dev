@@ -82,8 +82,9 @@ if ($SkipRuntime) {
 } else {
 
 Run-Check 'PM2 asia-lab-server online' {
-  # Pipe qua node để parse JSON (PowerShell ConvertFrom-Json fail trên env có key trùng case)
-  $countScript = "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);process.stdout.write(String(j.filter(p=>p.name==='asia-lab-server'&&p.pm2_env&&p.pm2_env.status==='online').length))})"
+  # Pipe qua node để parse JSON (PowerShell ConvertFrom-Json fail trên env có key trùng case).
+  # PowerShell pipe chèn BOM U+FEFF vào đầu stream → strip bằng escape ASCII-pure.
+  $countScript = "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s.replace(/^\uFEFF/,''));process.stdout.write(String(j.filter(p=>p.name==='asia-lab-server'&&p.pm2_env&&p.pm2_env.status==='online').length))})"
   $online = (pm2 jlist 2>$null | node -e $countScript) 2>$null
   if ([int]$online -lt 1) { throw "no online asia-lab-server (saw $online)" }
 }
@@ -93,10 +94,10 @@ Run-Check 'HTTP /status responds' {
   if ($code -notmatch '^(200|302|401)$') { throw "got HTTP $code" }
 }
 
-Run-Check 'DB freshness (don_hang.updated_at < 6h)' {
+Run-Check 'DB freshness (Excel mtime + import_log sync)' {
   if (-not (Test-Path 'labo_data.db')) { W-Warn 'no labo_data.db - skip'; return }
   python 'scripts/db-freshness-check.py'
-  if ($LASTEXITCODE -ne 0) { throw 'DB stale or query failed' }
+  if ($LASTEXITCODE -ne 0) { throw 'DB stale or out of sync with newest Excel' }
 }
 
 Run-Check 'auto-scrape log mtime < 30 min' {
