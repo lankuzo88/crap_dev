@@ -10,6 +10,7 @@ const PERMISSIONS = [
   'orders.view_pending',
   'orders.view_all',
   'orders.route',
+  'orders.create_dashboard',
   'stats.view_daily',
   'stats.view_production',
   'stats.view_monthly',

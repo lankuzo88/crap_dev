@@ -42,7 +42,17 @@ router.get('/', requireAuth, (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  const file = isMobile(req) ? DASHBOARD_MOBILE : DASHBOARD;
+  // ?desktop=1 ép trả desktop và set cookie 24h để giữ qua login redirect.
+  // ?desktop=0 xoá cookie và quay về auto-detect theo UA.
+  const cookieHeader = String(req.headers.cookie || '');
+  const cookieWantsDesktop = /(?:^|;\s*)view=desktop(?:;|$)/.test(cookieHeader);
+  if (req.query.desktop === '1' || req.query.full === '1') {
+    res.setHeader('Set-Cookie', 'view=desktop; Path=/; Max-Age=86400; SameSite=Lax');
+  } else if (req.query.desktop === '0') {
+    res.setHeader('Set-Cookie', 'view=; Path=/; Max-Age=0; SameSite=Lax');
+  }
+  const wantsDesktop = req.query.desktop === '1' || req.query.full === '1' || cookieWantsDesktop;
+  const file = (!wantsDesktop && isMobile(req)) ? DASHBOARD_MOBILE : DASHBOARD;
   if (fs.existsSync(file)) return res.sendFile(file);
   if (fs.existsSync(DASHBOARD)) return res.sendFile(DASHBOARD);
   res.status(404).send(`<h2>Không tìm thấy dashboard.html</h2><p>Đặt file <b>dashboard.html</b> trong thư mục gốc</p>`);

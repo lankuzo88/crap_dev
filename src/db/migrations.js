@@ -787,6 +787,7 @@ function initUpdatedAtTriggers() {
     'feedbacks',
     'production_match_reviews',
     'production_match_rules',
+    'orders_new', 'stages_new',
   ];
   let created = 0;
   for (const table of tables) {
@@ -807,4 +808,77 @@ function initUpdatedAtTriggers() {
   log(`✅ updated_at triggers initialized (${created} tables)`);
 }
 
-module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initProductionMatchTables, initClinicTagsTable, initUpdatedAtTriggers, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };
+// orders_new + stages_new: bảng song song cho đơn tạo từ dashboard (Order tab).
+// Schema 1:1 với don_hang / tien_do để future-merge mechanical (INSERT ... SELECT).
+// ma_dh giữ format YYMMDD<STT>; STT range 500-999 reserved cho dashboard để
+// tránh đụng KeyLab (KeyLab thường <100 đơn/ngày). Phụ lục giữ suffix -N.
+// Khi merge sau này: don_hang_v2 + tien_do_v2 đổ thẳng vào don_hang + tien_do.
+function initOrdersNewTables() {
+  const db = getDB();
+  if (!db) { log('⚠ initOrdersNewTables: DB not available'); return; }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS orders_new (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh           TEXT NOT NULL UNIQUE,
+      ma_dh_goc       TEXT NOT NULL,
+      so_phu          INTEGER,
+      la_don_phu      INTEGER NOT NULL DEFAULT 0,
+
+      nhap_luc        TEXT NOT NULL DEFAULT '',
+      yc_hoan_thanh   TEXT NOT NULL DEFAULT '',
+      yc_giao         TEXT NOT NULL DEFAULT '',
+      khach_hang      TEXT NOT NULL DEFAULT '',
+      benh_nhan       TEXT NOT NULL DEFAULT '',
+      phuc_hinh       TEXT NOT NULL DEFAULT '',
+      sl              INTEGER NOT NULL DEFAULT 0,
+      loai_lenh       TEXT NOT NULL DEFAULT '',
+      ghi_chu         TEXT NOT NULL DEFAULT '',
+      ghi_chu_sx      TEXT NOT NULL DEFAULT '',
+      trang_thai      TEXT NOT NULL DEFAULT '',
+      tai_khoan_cao   TEXT NOT NULL DEFAULT '',
+      barcode_labo    TEXT NOT NULL DEFAULT '',
+      routed_to       TEXT,
+      keylab_sx_info  TEXT NOT NULL DEFAULT '',
+
+      source          TEXT NOT NULL DEFAULT 'dashboard',
+      created_by      TEXT NOT NULL,
+      edited_by       TEXT,
+      edited_at       TEXT,
+
+      nguon_file      TEXT NOT NULL DEFAULT '',
+      created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      updated_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_orders_new_ma_goc     ON orders_new(ma_dh_goc);
+    CREATE INDEX IF NOT EXISTS idx_orders_new_khach_hang ON orders_new(khach_hang);
+    CREATE INDEX IF NOT EXISTS idx_orders_new_created_at ON orders_new(created_at);
+    CREATE INDEX IF NOT EXISTS idx_orders_new_yc_giao    ON orders_new(yc_giao);
+    CREATE INDEX IF NOT EXISTS idx_orders_new_routed_to  ON orders_new(routed_to);
+
+    CREATE TABLE IF NOT EXISTS stages_new (
+      id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+      ma_dh                 TEXT NOT NULL,
+      thu_tu                INTEGER NOT NULL,
+      cong_doan             TEXT NOT NULL,
+      ten_ktv               TEXT NOT NULL DEFAULT '',
+      xac_nhan              TEXT NOT NULL DEFAULT 'Chưa',
+      thoi_gian_hoan_thanh  TEXT NOT NULL DEFAULT '',
+      raw_row_text          TEXT NOT NULL DEFAULT '',
+      nguon_file            TEXT NOT NULL DEFAULT '',
+
+      confirmed_by          TEXT,
+      confirmed_at          TEXT,
+
+      created_at            TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      updated_at            TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+      UNIQUE(ma_dh, thu_tu)
+    );
+    CREATE INDEX IF NOT EXISTS idx_stages_new_ma_dh     ON stages_new(ma_dh);
+    CREATE INDEX IF NOT EXISTS idx_stages_new_cong_doan ON stages_new(cong_doan);
+    CREATE INDEX IF NOT EXISTS idx_stages_new_ktv       ON stages_new(ten_ktv);
+  `);
+  // updated_at touch triggers do initUpdatedAtTriggers() xử lý (centralized).
+  log('✅ orders_new + stages_new initialized');
+}
+
+module.exports = { initErrorTables, initDelayReportTables, initSessionsTable, initOrderBarcodeColumn, initRoutedToColumn, initKeylabNotesRouting, initMonthlyStatsTables, initFeedbackTables, initProductionMatchTables, initClinicTagsTable, initUpdatedAtTriggers, initOrdersNewTables, refreshMonthlyStats, billingPeriodForCompletion, normalizeOrderType };

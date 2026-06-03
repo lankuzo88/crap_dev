@@ -1046,6 +1046,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div class="d-nl active" id="d-nl-orders" onclick="dSw('orders',this)"><span class="ico">📋</span> Đơn Hàng<span class="d-nl-badge" id="d-nav-badge">—</span></div>
         <div class="d-nl" id="d-nl-pipeline" onclick="dSw('pipeline',this)"><span class="ico">⚙️</span> Pipeline</div>
         <div class="d-nl" id="d-nl-summary" onclick="dSw('summary',this)"><span class="ico">📊</span> Tổng Hợp</div>
+        <div class="d-nl" id="d-nl-order" onclick="dSw('order',this)" style="display:none;"><span class="ico">➕</span> Tạo Đơn</div>
         <div class="d-nl" id="d-nl-wip" onclick="dSw('wip',this)" style="display:none;"><span class="ico">WIP</span> WIP công đoạn</div>
         <a href="/wip-live" class="d-nl" id="d-nl-wiplive" style="text-decoration:none;color:inherit;display:none;"><span class="ico">📡</span> WIP live</a>
         <a href="/admin" class="d-nl" id="d-nl-admin" style="text-decoration:none;color:inherit;display:none;"><span class="ico">🛠</span> Admin Dashboard</a>
@@ -1149,6 +1150,175 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
               <div class="d-sum-panel"><div class="d-sum-title">KỸ THUẬT VIÊN</div><table class="d-ktv-t" id="d-KB"></table></div>
               <div class="d-sum-panel"><div class="d-sum-title">LOẠI LỆNH</div><div id="d-LK"></div></div>
             </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="d-pane-order">
+          <style>
+            .d-order-pane { max-width: 820px; padding: 14px 18px; }
+            .d-order-form { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+            .d-order-field { display:flex; flex-direction:column; gap:4px; }
+            .d-order-field.span2 { grid-column: span 2; }
+            .d-order-field label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; }
+            .d-order-field input, .d-order-field select, .d-order-field textarea {
+              background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+              padding: 8px 12px; font-size: 14px; color: var(--text); font-family: inherit; outline:none;
+            }
+            .d-order-field input:focus, .d-order-field select:focus, .d-order-field textarea:focus { border-color: var(--amber); }
+            .d-order-field textarea { min-height: 64px; resize: vertical; }
+            .d-order-actions { grid-column: span 2; display:flex; gap:12px; align-items:center; margin-top: 8px; }
+            .d-order-btn { background: var(--amber); border:none; border-radius:8px; padding:10px 22px; color:#0c0f18; font-weight:600; cursor:pointer; font-family:inherit; font-size:14px; }
+            .d-order-btn:hover { opacity:.88; }
+            .d-order-btn[disabled] { opacity:.5; cursor:not-allowed; }
+            .d-order-status { font-size:13px; }
+            .d-order-status.ok  { color: var(--green); }
+            .d-order-status.err { color: var(--red); }
+            .d-order-list-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+            .d-order-list-tbl th, .d-order-list-tbl td { padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+            .d-order-list-tbl th { color:var(--text2); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; }
+            .d-order-list-tbl tr:hover td { background: rgba(255,255,255,.02); }
+            .d-order-hint { color: var(--text2); font-size: 12px; margin-top: -4px; }
+          </style>
+          <div class="d-sub-tabs">
+            <div class="d-sub-tab active" id="d-order-tab-new"    onclick="dOrderSetTab('new', this)">📝 Đơn mới</div>
+            <div class="d-sub-tab"        id="d-order-tab-phuluc" onclick="dOrderSetTab('phuluc', this)">📎 Phụ lục</div>
+            <div class="d-sub-tab"        id="d-order-tab-list"   onclick="dOrderSetTab('list', this)">📋 Đã tạo</div>
+          </div>
+
+          <!-- ── Đơn mới ── -->
+          <div id="d-order-pane-new" class="d-order-pane">
+            <form id="d-order-form-new" class="d-order-form" onsubmit="dOrderSubmitNew(event)">
+              <div class="d-order-field">
+                <label>Khách hàng (nha khoa) *</label>
+                <input type="text" name="khach_hang" required placeholder="vd: TV-Nk Sài Gòn (Bs Bảo)">
+              </div>
+              <div class="d-order-field">
+                <label>Bệnh nhân</label>
+                <input type="text" name="benh_nhan" placeholder="Họ tên bệnh nhân">
+              </div>
+              <div class="d-order-field span2">
+                <label>Phục hình *</label>
+                <input type="text" name="phuc_hinh" required placeholder="vd: Răng sứ Zircornia (R:11-13, - SL: 3)">
+              </div>
+              <div class="d-order-field">
+                <label>SL răng *</label>
+                <input type="number" name="sl" required min="1" value="1">
+              </div>
+              <div class="d-order-field">
+                <label>Loại lệnh *</label>
+                <select name="loai_lenh" required>
+                  <option value="Làm mới">Làm mới</option>
+                  <option value="Bảo hành">Bảo hành</option>
+                  <option value="Làm thêm">Làm thêm</option>
+                  <option value="Sửa">Sửa</option>
+                  <option value="Làm lại">Làm lại</option>
+                  <option value="Làm tiếp">Làm tiếp</option>
+                </select>
+              </div>
+              <div class="d-order-field">
+                <label>YC hoàn thành</label>
+                <input type="text" name="yc_hoan_thanh" placeholder="dd/mm/yyyy hh:mm">
+              </div>
+              <div class="d-order-field">
+                <label>YC giao</label>
+                <input type="text" name="yc_giao" placeholder="dd/mm/yyyy hh:mm">
+              </div>
+              <div class="d-order-field">
+                <label>Tài khoản cao</label>
+                <input type="text" name="tai_khoan_cao" placeholder="username người nhập">
+              </div>
+              <div class="d-order-field">
+                <label>Phòng SX</label>
+                <select name="routed_to">
+                  <option value="">— Tự động —</option>
+                  <option value="sap">Sáp</option>
+                  <option value="zirco">Zirco</option>
+                  <option value="both">Cả 2</option>
+                </select>
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú (chung)</label>
+                <textarea name="ghi_chu" placeholder="Ghi chú đơn"></textarea>
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú sản xuất</label>
+                <textarea name="ghi_chu_sx" placeholder="Ghi chú riêng cho phòng SX"></textarea>
+              </div>
+              <div class="d-order-actions">
+                <button type="submit" class="d-order-btn">Tạo đơn</button>
+                <span id="d-order-status-new" class="d-order-status"></span>
+              </div>
+            </form>
+          </div>
+
+          <!-- ── Phụ lục ── -->
+          <div id="d-order-pane-phuluc" class="d-order-pane" style="display:none;">
+            <form id="d-order-form-phuluc" class="d-order-form" onsubmit="dOrderSubmitPhuLuc(event)">
+              <div class="d-order-field span2">
+                <label>Mã đơn gốc *</label>
+                <input type="text" name="ma_dh_goc" required placeholder="vd: 260306029 (đơn KeyLab hoặc đơn dashboard)">
+                <div class="d-order-hint">Có thể là đơn từ KeyLab hoặc đơn đã tạo trên dashboard. Phụ lục có tiến độ độc lập.</div>
+              </div>
+              <div class="d-order-field">
+                <label>Khách hàng *</label>
+                <input type="text" name="khach_hang" required>
+              </div>
+              <div class="d-order-field">
+                <label>Bệnh nhân</label>
+                <input type="text" name="benh_nhan">
+              </div>
+              <div class="d-order-field span2">
+                <label>Phục hình *</label>
+                <input type="text" name="phuc_hinh" required>
+              </div>
+              <div class="d-order-field">
+                <label>SL răng *</label>
+                <input type="number" name="sl" required min="1" value="1">
+              </div>
+              <div class="d-order-field">
+                <label>Loại lệnh *</label>
+                <select name="loai_lenh" required>
+                  <option value="Sửa">Sửa</option>
+                  <option value="Bảo hành">Bảo hành</option>
+                  <option value="Làm lại">Làm lại</option>
+                  <option value="Làm tiếp">Làm tiếp</option>
+                  <option value="Làm thêm">Làm thêm</option>
+                </select>
+              </div>
+              <div class="d-order-field">
+                <label>YC giao</label>
+                <input type="text" name="yc_giao" placeholder="dd/mm/yyyy hh:mm">
+              </div>
+              <div class="d-order-field">
+                <label>Tài khoản cao</label>
+                <input type="text" name="tai_khoan_cao">
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú</label>
+                <textarea name="ghi_chu"></textarea>
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú sản xuất</label>
+                <textarea name="ghi_chu_sx"></textarea>
+              </div>
+              <div class="d-order-actions">
+                <button type="submit" class="d-order-btn">Tạo phụ lục</button>
+                <span id="d-order-status-phuluc" class="d-order-status"></span>
+              </div>
+            </form>
+          </div>
+
+          <!-- ── Đã tạo (danh sách) ── -->
+          <div id="d-order-pane-list" class="d-order-pane" style="display:none; max-width: 100%;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+              <button class="d-order-btn" onclick="dOrderRefreshList()" style="background:transparent; border:1px solid var(--border); color:var(--text);">↻ Tải lại</button>
+              <span id="d-order-list-meta" class="d-order-hint" style="margin-top:0;"></span>
+            </div>
+            <table class="d-order-list-tbl">
+              <thead>
+                <tr><th>Mã đơn</th><th>Loại</th><th>Khách hàng</th><th>Bệnh nhân</th><th>Phục hình</th><th style="text-align:right;">SL</th><th>Lệnh</th><th>Tạo lúc</th></tr>
+              </thead>
+              <tbody id="d-order-list-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -4311,7 +4481,7 @@ function dSw(name, el) {
   document.querySelectorAll('.d-nl').forEach(t => t.classList.remove('active'));
   document.getElementById('d-pane-'+name).classList.add('active');
   el.classList.add('active');
-  const titles = { orders:'ĐƠN HÀNG', pipeline:'PIPELINE', summary:'TỔNG HỢP', wip:'WIP CÔNG ĐOẠN' };
+  const titles = { orders:'ĐƠN HÀNG', pipeline:'PIPELINE', summary:'TỔNG HỢP', wip:'WIP CÔNG ĐOẠN', order:'TẠO ĐƠN' };
   document.getElementById('d-tb-title').textContent = titles[name] || name;
   const chips = document.getElementById('d-chips');
   const sbox  = document.getElementById('d-sbox');
@@ -4322,6 +4492,118 @@ function dSw(name, el) {
   if (name==='summary')  {
     tngSetTab('main', document.getElementById('tng-tab-main'));
     dRenderSummary();
+  }
+  if (name==='order') dOrderRefreshList();
+}
+
+/* ═══════ TAB ORDER (TẠO ĐƠN) ═══════ */
+function dOrderSetTab(name, el) {
+  ['new','phuluc','list'].forEach(n => {
+    const pane = document.getElementById('d-order-pane-' + n);
+    if (pane) pane.style.display = (n === name ? '' : 'none');
+  });
+  document.querySelectorAll('#d-pane-order > .d-sub-tabs .d-sub-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (name === 'list') dOrderRefreshList();
+}
+
+function dOrderCollectForm(form) {
+  const payload = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    const v = String(el.value || '').trim();
+    if (v !== '') payload[el.name] = v;
+  }
+  if (payload.sl) payload.sl = Number(payload.sl);
+  return payload;
+}
+
+async function dOrderPost(endpoint, payload, statusEl, form) {
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  statusEl.textContent = 'Đang gửi...';
+  statusEl.className = 'd-order-status';
+  try {
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) {
+      statusEl.textContent = `Lỗi: ${data.error || ('HTTP ' + r.status)}`;
+      statusEl.className = 'd-order-status err';
+      return null;
+    }
+    statusEl.textContent = `✓ Đã tạo: ${data.ma_dh}`;
+    statusEl.className = 'd-order-status ok';
+    form.reset();
+    return data;
+  } catch (e) {
+    statusEl.textContent = `Lỗi network: ${e.message}`;
+    statusEl.className = 'd-order-status err';
+    return null;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function dOrderSubmitNew(ev) {
+  ev.preventDefault();
+  const form = document.getElementById('d-order-form-new');
+  const status = document.getElementById('d-order-status-new');
+  await dOrderPost('/api/orders-new', dOrderCollectForm(form), status, form);
+}
+
+async function dOrderSubmitPhuLuc(ev) {
+  ev.preventDefault();
+  const form = document.getElementById('d-order-form-phuluc');
+  const status = document.getElementById('d-order-status-phuluc');
+  const payload = dOrderCollectForm(form);
+  const ma_dh_goc = payload.ma_dh_goc;
+  if (!ma_dh_goc) { status.textContent = 'Thiếu mã đơn gốc'; status.className = 'd-order-status err'; return; }
+  delete payload.ma_dh_goc;
+  await dOrderPost(`/api/orders-new/${encodeURIComponent(ma_dh_goc)}/phu-luc`, payload, status, form);
+}
+
+function dOrderEscape(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+
+async function dOrderRefreshList() {
+  const tbody = document.getElementById('d-order-list-tbody');
+  const meta  = document.getElementById('d-order-list-meta');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);">Đang tải...</td></tr>';
+  try {
+    const r = await fetch('/api/orders-new?limit=100');
+    const data = await r.json();
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);">${dOrderEscape(data.error)}</td></tr>`;
+      if (meta) meta.textContent = '';
+      return;
+    }
+    if (!data.orders.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:20px;">Chưa có đơn nào tạo từ dashboard</td></tr>';
+      if (meta) meta.textContent = '';
+      return;
+    }
+    tbody.innerHTML = data.orders.map(o => `
+      <tr>
+        <td><strong>${dOrderEscape(o.ma_dh)}</strong></td>
+        <td>${o.la_don_phu ? '📎 PL#' + (o.so_phu || '') : '—'}</td>
+        <td>${dOrderEscape(o.khach_hang)}</td>
+        <td>${dOrderEscape(o.benh_nhan)}</td>
+        <td>${dOrderEscape(o.phuc_hinh)}</td>
+        <td style="text-align:right;">${dOrderEscape(o.sl)}</td>
+        <td>${dOrderEscape(o.loai_lenh)}</td>
+        <td style="color:var(--text2);font-size:11px;white-space:nowrap;">${dOrderEscape(o.created_at)}</td>
+      </tr>
+    `).join('');
+    if (meta) meta.textContent = `${data.count} đơn (giới hạn 100)`;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);">Lỗi: ${dOrderEscape(e.message)}</td></tr>`;
+    if (meta) meta.textContent = '';
   }
 }
 
@@ -4476,6 +4758,10 @@ async function initUserContext() {
     if (hasPerm('munger.view')) {
       const mungerLink = document.getElementById('d-nl-munger');
       if (mungerLink) mungerLink.style.display = '';
+    }
+    if (hasPerm('orders.create_dashboard')) {
+      const orderLink = document.getElementById('d-nl-order');
+      if (orderLink) orderLink.style.display = '';
     }
     if (canViewWipPanel()) {
       const wipLink = document.getElementById('d-nl-wip');

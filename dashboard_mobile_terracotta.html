@@ -1922,6 +1922,9 @@
         <a id="m-analytics-btn" class="menu-item admin-only" href="/analytics">
           <span class="menu-icon">📈</span><span>Analytics</span>
         </a>
+        <button id="m-order-btn" class="menu-item admin-only" type="button" onclick="openOrderPanel()">
+          <span class="menu-icon">➕</span><span>Tạo Đơn</span>
+        </button>
         <a id="m-feedback-btn" class="menu-item" href="/feedback">
           <span class="menu-icon">📝</span><span>Phản hồi nha khoa</span><span class="feedback-alert-dot" id="m-feedback-dot" aria-hidden="true"></span>
         </a>
@@ -1980,6 +1983,195 @@
       </div>
     </div>
     <div id="wipContent" class="wip-content"></div>
+  </div>
+
+  <!-- ═══════════ ORDER PANEL (tạo đơn từ dashboard) ═══════════ -->
+  <style>
+    .order-panel { position: fixed; inset: 0; z-index: 235; display: none; flex-direction: column; background: var(--bg-primary); overflow: hidden; }
+    .order-panel.open { display: flex; }
+    .order-subtabs { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-card); background: rgba(255,251,248,.98); position: sticky; top: 0; z-index: 2; overflow-x: auto; }
+    .order-subtab { flex: 0 0 auto; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-card); background: transparent; color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .order-subtab.active { background: var(--terracotta); color: #fff; border-color: var(--terracotta); }
+    .order-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 14px 80px; }
+    .order-form { display: flex; flex-direction: column; gap: 12px; }
+    .order-field { display: flex; flex-direction: column; gap: 4px; }
+    .order-field label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .order-field input, .order-field select, .order-field textarea {
+      background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 9px;
+      padding: 11px 13px; font-size: 15px; color: var(--text-primary); font-family: inherit; outline: none;
+      min-height: 42px;
+    }
+    .order-field input:focus, .order-field select:focus, .order-field textarea:focus { border-color: var(--terracotta); }
+    .order-field textarea { min-height: 72px; resize: vertical; }
+    .order-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .order-hint { font-size: 12px; color: var(--text-muted); margin-top: -2px; }
+    .order-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .order-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 700; border: none; border-radius: 9px; background: var(--terracotta); color: #fff; font-family: inherit; cursor: pointer; }
+    .order-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .order-btn.ghost { background: transparent; color: var(--terracotta); border: 1px solid var(--terracotta-light); }
+    .order-status { font-size: 13px; min-height: 18px; }
+    .order-status.ok  { color: #2f8f68; }
+    .order-status.err { color: #c44; }
+    .order-list-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .order-list-card-hdr { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .order-list-ma { font-weight: 700; color: var(--text-primary); font-size: 14px; }
+    .order-list-tag { font-size: 11px; color: var(--terracotta); }
+    .order-list-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .order-list-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
+    body.theme-dark .order-subtabs { background: var(--bg-card); }
+    body.theme-dark .order-field input, body.theme-dark .order-field select, body.theme-dark .order-field textarea { background: var(--bg-card); }
+  </style>
+
+  <div id="orderPanel" class="order-panel" aria-hidden="true">
+    <div class="wip-header">
+      <button class="wip-back" type="button" onclick="closeOrderPanel()">‹</button>
+      <div class="wip-title">
+        <div class="wip-title-main">Tạo Đơn</div>
+        <div class="wip-title-sub">Đơn dashboard — song song KeyLab</div>
+      </div>
+    </div>
+    <div class="order-subtabs">
+      <button class="order-subtab active" id="m-order-tab-new"    type="button" onclick="mOrderSetTab('new')">📝 Đơn mới</button>
+      <button class="order-subtab"        id="m-order-tab-phuluc" type="button" onclick="mOrderSetTab('phuluc')">📎 Phụ lục</button>
+      <button class="order-subtab"        id="m-order-tab-list"   type="button" onclick="mOrderSetTab('list')">📋 Đã tạo</button>
+    </div>
+    <div class="order-body">
+      <!-- Đơn mới -->
+      <form id="m-order-form-new" class="order-form" onsubmit="mOrderSubmitNew(event)">
+        <div class="order-field">
+          <label>Khách hàng *</label>
+          <input type="text" name="khach_hang" required placeholder="vd: TV-Nk Sài Gòn (Bs Bảo)">
+        </div>
+        <div class="order-field">
+          <label>Bệnh nhân</label>
+          <input type="text" name="benh_nhan" placeholder="Họ tên">
+        </div>
+        <div class="order-field">
+          <label>Phục hình *</label>
+          <input type="text" name="phuc_hinh" required placeholder="vd: Răng sứ Zircornia (R:11-13, - SL: 3)">
+        </div>
+        <div class="order-row2">
+          <div class="order-field">
+            <label>SL răng *</label>
+            <input type="number" name="sl" required min="1" value="1" inputmode="numeric">
+          </div>
+          <div class="order-field">
+            <label>Loại lệnh *</label>
+            <select name="loai_lenh" required>
+              <option value="Làm mới">Làm mới</option>
+              <option value="Bảo hành">Bảo hành</option>
+              <option value="Làm thêm">Làm thêm</option>
+              <option value="Sửa">Sửa</option>
+              <option value="Làm lại">Làm lại</option>
+              <option value="Làm tiếp">Làm tiếp</option>
+            </select>
+          </div>
+        </div>
+        <div class="order-row2">
+          <div class="order-field">
+            <label>YC hoàn thành</label>
+            <input type="text" name="yc_hoan_thanh" placeholder="dd/mm/yyyy hh:mm">
+          </div>
+          <div class="order-field">
+            <label>YC giao</label>
+            <input type="text" name="yc_giao" placeholder="dd/mm/yyyy hh:mm">
+          </div>
+        </div>
+        <div class="order-row2">
+          <div class="order-field">
+            <label>TK cao</label>
+            <input type="text" name="tai_khoan_cao">
+          </div>
+          <div class="order-field">
+            <label>Phòng SX</label>
+            <select name="routed_to">
+              <option value="">— Tự động —</option>
+              <option value="sap">Sáp</option>
+              <option value="zirco">Zirco</option>
+              <option value="both">Cả 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="order-field">
+          <label>Ghi chú</label>
+          <textarea name="ghi_chu"></textarea>
+        </div>
+        <div class="order-field">
+          <label>Ghi chú SX</label>
+          <textarea name="ghi_chu_sx"></textarea>
+        </div>
+        <div class="order-actions">
+          <button type="submit" class="order-btn">Tạo đơn</button>
+          <span id="m-order-status-new" class="order-status"></span>
+        </div>
+      </form>
+
+      <!-- Phụ lục -->
+      <form id="m-order-form-phuluc" class="order-form" style="display:none;" onsubmit="mOrderSubmitPhuLuc(event)">
+        <div class="order-field">
+          <label>Mã đơn gốc *</label>
+          <input type="text" name="ma_dh_goc" required placeholder="vd: 260306029">
+          <div class="order-hint">Đơn KeyLab hoặc đơn dashboard. Phụ lục có tiến độ riêng.</div>
+        </div>
+        <div class="order-field">
+          <label>Khách hàng *</label>
+          <input type="text" name="khach_hang" required>
+        </div>
+        <div class="order-field">
+          <label>Bệnh nhân</label>
+          <input type="text" name="benh_nhan">
+        </div>
+        <div class="order-field">
+          <label>Phục hình *</label>
+          <input type="text" name="phuc_hinh" required>
+        </div>
+        <div class="order-row2">
+          <div class="order-field">
+            <label>SL *</label>
+            <input type="number" name="sl" required min="1" value="1" inputmode="numeric">
+          </div>
+          <div class="order-field">
+            <label>Loại lệnh *</label>
+            <select name="loai_lenh" required>
+              <option value="Sửa">Sửa</option>
+              <option value="Bảo hành">Bảo hành</option>
+              <option value="Làm lại">Làm lại</option>
+              <option value="Làm tiếp">Làm tiếp</option>
+              <option value="Làm thêm">Làm thêm</option>
+            </select>
+          </div>
+        </div>
+        <div class="order-row2">
+          <div class="order-field">
+            <label>YC giao</label>
+            <input type="text" name="yc_giao" placeholder="dd/mm/yyyy hh:mm">
+          </div>
+          <div class="order-field">
+            <label>TK cao</label>
+            <input type="text" name="tai_khoan_cao">
+          </div>
+        </div>
+        <div class="order-field">
+          <label>Ghi chú</label>
+          <textarea name="ghi_chu"></textarea>
+        </div>
+        <div class="order-field">
+          <label>Ghi chú SX</label>
+          <textarea name="ghi_chu_sx"></textarea>
+        </div>
+        <div class="order-actions">
+          <button type="submit" class="order-btn">Tạo phụ lục</button>
+          <span id="m-order-status-phuluc" class="order-status"></span>
+        </div>
+      </form>
+
+      <!-- Đã tạo -->
+      <div id="m-order-pane-list" style="display:none;">
+        <button class="order-btn ghost" type="button" onclick="mOrderRefreshList()" style="margin-bottom:10px;">↻ Tải lại</button>
+        <div id="m-order-list-meta" class="order-hint" style="margin-bottom:8px;"></div>
+        <div id="m-order-list-content"></div>
+      </div>
+    </div>
   </div>
 
   <div id="transferScannerModal" class="scanner-modal" onclick="handleTransferScannerBackdrop(event)">
@@ -3510,6 +3702,128 @@
       if (!panel) return;
       panel.classList.remove('open');
       panel.setAttribute('aria-hidden', 'true');
+    }
+
+    /* ═══════ ORDER PANEL (mobile) ═══════ */
+    function openOrderPanel() {
+      closeActionMenu();
+      const panel = document.getElementById('orderPanel');
+      if (!panel) return;
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
+      mOrderSetTab('new');
+    }
+    function closeOrderPanel() {
+      const panel = document.getElementById('orderPanel');
+      if (!panel) return;
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+    function mOrderSetTab(name) {
+      const formNew = document.getElementById('m-order-form-new');
+      const formPL  = document.getElementById('m-order-form-phuluc');
+      const list    = document.getElementById('m-order-pane-list');
+      formNew.style.display = name === 'new' ? '' : 'none';
+      formPL.style.display  = name === 'phuluc' ? '' : 'none';
+      list.style.display    = name === 'list' ? '' : 'none';
+      ['new','phuluc','list'].forEach(n => {
+        const tab = document.getElementById('m-order-tab-' + n);
+        if (tab) tab.classList.toggle('active', n === name);
+      });
+      if (name === 'list') mOrderRefreshList();
+    }
+    function mOrderCollect(form) {
+      const payload = {};
+      for (const el of form.elements) {
+        if (!el.name) continue;
+        const v = String(el.value || '').trim();
+        if (v !== '') payload[el.name] = v;
+      }
+      if (payload.sl) payload.sl = Number(payload.sl);
+      return payload;
+    }
+    async function mOrderPost(endpoint, payload, statusEl, form) {
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      statusEl.textContent = 'Đang gửi...';
+      statusEl.className = 'order-status';
+      try {
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok) {
+          statusEl.textContent = 'Lỗi: ' + (data.error || ('HTTP ' + r.status));
+          statusEl.className = 'order-status err';
+          return null;
+        }
+        statusEl.textContent = '✓ Đã tạo: ' + data.ma_dh;
+        statusEl.className = 'order-status ok';
+        form.reset();
+        return data;
+      } catch (e) {
+        statusEl.textContent = 'Lỗi network: ' + e.message;
+        statusEl.className = 'order-status err';
+        return null;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    async function mOrderSubmitNew(ev) {
+      ev.preventDefault();
+      const form = document.getElementById('m-order-form-new');
+      const status = document.getElementById('m-order-status-new');
+      await mOrderPost('/api/orders-new', mOrderCollect(form), status, form);
+    }
+    async function mOrderSubmitPhuLuc(ev) {
+      ev.preventDefault();
+      const form = document.getElementById('m-order-form-phuluc');
+      const status = document.getElementById('m-order-status-phuluc');
+      const payload = mOrderCollect(form);
+      const ma_dh_goc = payload.ma_dh_goc;
+      if (!ma_dh_goc) { status.textContent = 'Thiếu mã đơn gốc'; status.className = 'order-status err'; return; }
+      delete payload.ma_dh_goc;
+      await mOrderPost('/api/orders-new/' + encodeURIComponent(ma_dh_goc) + '/phu-luc', payload, status, form);
+    }
+    function mOrderEscape(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+    }
+    async function mOrderRefreshList() {
+      const container = document.getElementById('m-order-list-content');
+      const meta = document.getElementById('m-order-list-meta');
+      if (!container) return;
+      container.innerHTML = '<div class="order-list-empty">Đang tải...</div>';
+      try {
+        const r = await fetch('/api/orders-new?limit=100');
+        const data = await r.json();
+        if (!data.ok) {
+          container.innerHTML = '<div class="order-list-empty" style="color:#c44;">' + mOrderEscape(data.error) + '</div>';
+          meta.textContent = '';
+          return;
+        }
+        if (!data.orders.length) {
+          container.innerHTML = '<div class="order-list-empty">Chưa có đơn nào</div>';
+          meta.textContent = '';
+          return;
+        }
+        container.innerHTML = data.orders.map(o => `
+          <div class="order-list-card">
+            <div class="order-list-card-hdr">
+              <div class="order-list-ma">${mOrderEscape(o.ma_dh)}</div>
+              <div class="order-list-tag">${o.la_don_phu ? '📎 PL#' + (o.so_phu || '') : o.loai_lenh}</div>
+            </div>
+            <div class="order-list-meta">${mOrderEscape(o.khach_hang)} · ${mOrderEscape(o.benh_nhan)}</div>
+            <div class="order-list-meta">${mOrderEscape(o.phuc_hinh)} · SL ${mOrderEscape(o.sl)}</div>
+            <div class="order-list-meta" style="opacity:.7;">${mOrderEscape(o.created_at)}</div>
+          </div>
+        `).join('');
+        meta.textContent = data.count + ' đơn';
+      } catch (e) {
+        container.innerHTML = '<div class="order-list-empty" style="color:#c44;">Lỗi: ' + mOrderEscape(e.message) + '</div>';
+        meta.textContent = '';
+      }
     }
 
     function refreshWipIfOpen() {
@@ -5872,6 +6186,10 @@
         if (hasPerm('analytics.view')) {
           const analyticsBtn = document.getElementById('m-analytics-btn');
           if (analyticsBtn) analyticsBtn.classList.add('admin-visible');
+        }
+        if (hasPerm('orders.create_dashboard')) {
+          const orderBtn = document.getElementById('m-order-btn');
+          if (orderBtn) orderBtn.classList.add('admin-visible');
         }
         if (canViewWipPanel()) {
           const wipBtn = document.getElementById('m-wip-btn');

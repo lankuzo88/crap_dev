@@ -23,6 +23,7 @@ app.use('/', require('./routes/dashboard.routes'));
 app.use('/', require('./routes/users.routes'));
 app.use('/', require('./routes/admin.routes'));
 app.use('/', require('./routes/orders.routes'));
+app.use('/', require('./routes/ordersNew.routes'));
 app.use('/', require('./routes/analytics.routes'));
 app.use('/', require('./routes/scraper.routes'));
 app.use('/', require('./routes/feedback.routes'));
