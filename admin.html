@@ -112,8 +112,10 @@
     .data-table td { padding: 11px 12px; border-bottom: 1px solid #f0f0f0; }
     .data-table tr:hover td { background: #fafbfc; }
     .role-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
-    .role-admin { background: #ffebee; color: #c62828; }
-    .role-user  { background: #e8f5e9; color: #2e7d32; }
+    .role-admin   { background: #ffebee; color: #c62828; }
+    .role-manager { background: #fff3e0; color: #e65100; }
+    .role-creator { background: #e3f2fd; color: #1565c0; }
+    .role-user    { background: #e8f5e9; color: #2e7d32; }
     .cd-badge   { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e3f2fd; color: #1565c0; }
     .actions { display: flex; gap: 6px; }
     .empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
@@ -540,6 +542,8 @@
           <label for="role">Vai trò</label>
           <select id="role">
             <option value="user">User (Nhân viên)</option>
+            <option value="creator">Creator (Tạo đơn)</option>
+            <option value="manager">Manager (Trưởng ca)</option>
             <option value="admin">Admin (Quản lý)</option>
           </select>
         </div>
@@ -952,9 +956,11 @@
     ['mài', 'Mài'],
   ];
   const USER_CONG_DOAN_LABELS = Object.fromEntries(USER_CONG_DOAN_OPTS);
-  const ROLE_LABELS = { admin: 'Admin', user: 'User' };
+  const ROLE_LABELS = { admin: 'Admin', manager: 'Manager', creator: 'Creator', user: 'User' };
   const ROLE_OPTS = [
     ['user', 'User'],
+    ['creator', 'Creator'],
+    ['manager', 'Manager'],
     ['admin', 'Admin'],
   ];
   const PERMISSION_LABELS = [

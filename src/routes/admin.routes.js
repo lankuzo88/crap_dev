@@ -33,7 +33,7 @@ router.post('/admin/api/users', requirePermission('admin.users.manage'), express
   const { username, password, role, cong_doan, permissions } = req.body;
   if (!username || !password || !role) return res.status(400).json({ error: 'Missing username, password, or role' });
   if (USERS[username]) return res.status(400).json({ error: 'Username already exists' });
-  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  if (!['admin', 'manager', 'creator', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
   const normalizedCongDoan = normalizeUserCongDoan(cong_doan);
   if (!isValidUserCongDoan(normalizedCongDoan)) return res.status(400).json({ error: 'Invalid cong_doan' });
   try {
@@ -69,7 +69,7 @@ router.patch('/admin/api/users/:username/role', requirePermission('admin.users.m
   const { username } = req.params;
   const { role } = req.body;
   if (!USERS[username]) return res.status(404).json({ error: 'User not found' });
-  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  if (!['admin', 'manager', 'creator', 'user'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
   if (username === req.session.user && role !== 'admin') return res.status(400).json({ error: 'Cannot remove your own admin role' });
   USERS[username].role = role;
   USERS[username].permissions = normalizePermissions(undefined, role);

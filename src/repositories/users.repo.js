@@ -32,6 +32,21 @@ const PERMISSIONS = [
 ];
 const ROLE_DEFAULT_PERMISSIONS = {
   admin: ['*'],
+  manager: [
+    'orders.create_dashboard',
+    'orders.view_all',
+    'stats.view_daily',
+    'feedback.submit',
+    'delay_reports.review',
+  ],
+  creator: [
+    'orders.view_pending',
+    'orders.create_dashboard',
+    'error_reports.submit',
+    'error_reports.view_own',
+    'delay_reports.view_active',
+    'feedback.submit',
+  ],
   user: ['orders.view_pending', 'error_reports.submit', 'error_reports.view_own', 'delay_reports.view_active', 'feedback.submit'],
 };
 const USER_CONG_DOAN_LEGACY_MAP = {
