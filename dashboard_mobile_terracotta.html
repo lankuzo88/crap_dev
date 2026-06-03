@@ -2033,6 +2033,7 @@
     <div class="order-subtabs">
       <button class="order-subtab active" id="m-order-tab-new"    type="button" onclick="mOrderSetTab('new')">📝 Đơn mới</button>
       <button class="order-subtab"        id="m-order-tab-phuluc" type="button" onclick="mOrderSetTab('phuluc')">📎 Phụ lục</button>
+      <button class="order-subtab"        id="m-order-tab-edit"   type="button" onclick="mOrderSetTab('edit')">✏️ Sửa</button>
       <button class="order-subtab"        id="m-order-tab-list"   type="button" onclick="mOrderSetTab('list')">📋 Đã tạo</button>
     </div>
     <div class="order-body">
@@ -2164,6 +2165,84 @@
           <span id="m-order-status-phuluc" class="order-status"></span>
         </div>
       </form>
+
+      <!-- Sửa đơn -->
+      <div id="m-order-pane-edit" style="display:none;">
+        <div class="order-field">
+          <label>Mã đơn cần sửa *</label>
+          <input type="text" id="m-order-edit-ma" placeholder="vd: 260306500">
+        </div>
+        <button class="order-btn ghost" type="button" onclick="mOrderEditLoad()" style="margin-top:8px;">Tải đơn</button>
+        <div id="m-order-edit-status" class="order-status" style="margin-top:8px;"></div>
+        <form id="m-order-form-edit" class="order-form" style="display:none; margin-top:14px;" onsubmit="mOrderSubmitEdit(event)">
+          <div class="order-field">
+            <label>Khách hàng *</label>
+            <input type="text" name="khach_hang" required>
+          </div>
+          <div class="order-field">
+            <label>Bệnh nhân</label>
+            <input type="text" name="benh_nhan">
+          </div>
+          <div class="order-field">
+            <label>Phục hình *</label>
+            <input type="text" name="phuc_hinh" required>
+          </div>
+          <div class="order-row2">
+            <div class="order-field">
+              <label>SL *</label>
+              <input type="number" name="sl" required min="1" inputmode="numeric">
+            </div>
+            <div class="order-field">
+              <label>Loại lệnh *</label>
+              <select name="loai_lenh" required>
+                <option value="Làm mới">Làm mới</option>
+                <option value="Bảo hành">Bảo hành</option>
+                <option value="Làm thêm">Làm thêm</option>
+                <option value="Sửa">Sửa</option>
+                <option value="Làm lại">Làm lại</option>
+                <option value="Làm tiếp">Làm tiếp</option>
+              </select>
+            </div>
+          </div>
+          <div class="order-row2">
+            <div class="order-field">
+              <label>YC hoàn thành</label>
+              <input type="text" name="yc_hoan_thanh">
+            </div>
+            <div class="order-field">
+              <label>YC giao</label>
+              <input type="text" name="yc_giao">
+            </div>
+          </div>
+          <div class="order-row2">
+            <div class="order-field">
+              <label>TK cao</label>
+              <input type="text" name="tai_khoan_cao">
+            </div>
+            <div class="order-field">
+              <label>Phòng SX</label>
+              <select name="routed_to">
+                <option value="">— Tự động —</option>
+                <option value="sap">Sáp</option>
+                <option value="zirco">Zirco</option>
+                <option value="both">Cả 2</option>
+              </select>
+            </div>
+          </div>
+          <div class="order-field">
+            <label>Ghi chú</label>
+            <textarea name="ghi_chu"></textarea>
+          </div>
+          <div class="order-field">
+            <label>Ghi chú SX</label>
+            <textarea name="ghi_chu_sx"></textarea>
+          </div>
+          <div class="order-actions">
+            <button type="submit" class="order-btn">Lưu thay đổi</button>
+            <span id="m-order-edit-savestatus" class="order-status"></span>
+          </div>
+        </form>
+      </div>
 
       <!-- Đã tạo -->
       <div id="m-order-pane-list" style="display:none;">
@@ -3722,15 +3801,86 @@
     function mOrderSetTab(name) {
       const formNew = document.getElementById('m-order-form-new');
       const formPL  = document.getElementById('m-order-form-phuluc');
+      const edit    = document.getElementById('m-order-pane-edit');
       const list    = document.getElementById('m-order-pane-list');
       formNew.style.display = name === 'new' ? '' : 'none';
       formPL.style.display  = name === 'phuluc' ? '' : 'none';
+      edit.style.display    = name === 'edit' ? '' : 'none';
       list.style.display    = name === 'list' ? '' : 'none';
-      ['new','phuluc','list'].forEach(n => {
+      ['new','phuluc','edit','list'].forEach(n => {
         const tab = document.getElementById('m-order-tab-' + n);
         if (tab) tab.classList.toggle('active', n === name);
       });
       if (name === 'list') mOrderRefreshList();
+    }
+    async function mOrderEditLoad() {
+      const ma_dh = String(document.getElementById('m-order-edit-ma').value || '').trim();
+      const status = document.getElementById('m-order-edit-status');
+      const form = document.getElementById('m-order-form-edit');
+      if (!ma_dh) { status.textContent = 'Nhập mã đơn'; status.className = 'order-status err'; return; }
+      status.textContent = 'Đang tải...';
+      status.className = 'order-status';
+      form.style.display = 'none';
+      try {
+        const r = await fetch('/api/orders-new/' + encodeURIComponent(ma_dh));
+        const data = await r.json();
+        if (!r.ok || !data.ok) {
+          status.textContent = 'Lỗi: ' + (data.error || 'HTTP ' + r.status);
+          status.className = 'order-status err';
+          return;
+        }
+        const o = data.order;
+        form.khach_hang.value = o.khach_hang || '';
+        form.benh_nhan.value = o.benh_nhan || '';
+        form.phuc_hinh.value = o.phuc_hinh || '';
+        form.sl.value = o.sl || 1;
+        form.loai_lenh.value = o.loai_lenh || 'Làm mới';
+        form.yc_hoan_thanh.value = o.yc_hoan_thanh || '';
+        form.yc_giao.value = o.yc_giao || '';
+        form.tai_khoan_cao.value = o.tai_khoan_cao || '';
+        form.routed_to.value = o.routed_to || '';
+        form.ghi_chu.value = o.ghi_chu || '';
+        form.ghi_chu_sx.value = o.ghi_chu_sx || '';
+        form.dataset.maDh = o.ma_dh;
+        form.style.display = '';
+        status.textContent = 'Đã tải ' + o.ma_dh + (o.edited_at ? ' (sửa lần cuối ' + o.edited_at + ')' : '');
+        status.className = 'order-status ok';
+      } catch (e) {
+        status.textContent = 'Lỗi network: ' + e.message;
+        status.className = 'order-status err';
+      }
+    }
+    async function mOrderSubmitEdit(ev) {
+      ev.preventDefault();
+      const form = document.getElementById('m-order-form-edit');
+      const status = document.getElementById('m-order-edit-savestatus');
+      const ma_dh = form.dataset.maDh;
+      if (!ma_dh) { status.textContent = 'Chưa tải đơn'; status.className = 'order-status err'; return; }
+      const payload = mOrderCollect(form);
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      status.textContent = 'Đang lưu...';
+      status.className = 'order-status';
+      try {
+        const r = await fetch('/api/orders-new/' + encodeURIComponent(ma_dh), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok) {
+          status.textContent = 'Lỗi: ' + (data.error || 'HTTP ' + r.status);
+          status.className = 'order-status err';
+          return;
+        }
+        status.textContent = '✓ Đã lưu ' + data.order.ma_dh;
+        status.className = 'order-status ok';
+      } catch (e) {
+        status.textContent = 'Lỗi network: ' + e.message;
+        status.className = 'order-status err';
+      } finally {
+        btn.disabled = false;
+      }
     }
     function mOrderCollect(form) {
       const payload = {};

@@ -183,6 +183,52 @@ function cleanup() {
     assert(r.json.count === 2, `phụ lục only: expected 2, got ${r.json.count}`);
     console.log(`✓ GET list filters`);
 
+    // 13. PATCH sửa metadata
+    r = await request('PATCH', `/api/orders-new/${ma1}`, {
+      khach_hang: 'NK Đã sửa', benh_nhan: 'BN Mới', sl: 7, ghi_chu: 'PATCH ok',
+    });
+    assert(r.status === 200, `PATCH status: ${r.status} ${JSON.stringify(r.json)}`);
+    assert(r.json.order.khach_hang === 'NK Đã sửa', `khach_hang: ${r.json.order.khach_hang}`);
+    assert(r.json.order.sl === 7, `sl: ${r.json.order.sl}`);
+    assert(r.json.order.edited_by === 'admin', `edited_by: ${r.json.order.edited_by}`);
+    console.log(`✓ PATCH /api/orders-new/${ma1} → cập nhật metadata`);
+
+    // 14. PATCH bỏ qua field không cho phép
+    r = await request('PATCH', `/api/orders-new/${ma1}`, {
+      khach_hang: 'NK A', ma_dh: 'HACK', source: 'evil', created_by: 'attacker',
+    });
+    assert(r.status === 200, `PATCH should accept mixed payload, got ${r.status}`);
+    assert(r.json.order.ma_dh === ma1, `ma_dh changed: ${r.json.order.ma_dh}`);
+    assert(r.json.order.source === 'dashboard', `source changed: ${r.json.order.source}`);
+    console.log(`✓ PATCH bỏ qua identity/audit fields`);
+
+    // 15. PATCH chỉ với forbidden fields → 400
+    r = await request('PATCH', `/api/orders-new/${ma1}`, { ma_dh: 'X', source: 'X' });
+    assert(r.status === 400, `expected 400, got ${r.status}`);
+    console.log(`✓ PATCH chỉ field cấm → 400`);
+
+    // 16. PATCH loai_lenh sai → 400
+    r = await request('PATCH', `/api/orders-new/${ma1}`, { loai_lenh: 'BậyBạ' });
+    assert(r.status === 400, `expected 400 loai_lenh, got ${r.status}`);
+    console.log(`✓ PATCH loai_lenh sai → 400`);
+
+    // 17. PATCH sl <= 0 → 400
+    r = await request('PATCH', `/api/orders-new/${ma1}`, { sl: 0 });
+    assert(r.status === 400 && r.json.error.includes('sl'), `expected 400 sl, got ${r.status}`);
+    console.log(`✓ PATCH sl <= 0 → 400`);
+
+    // 18. PATCH ma_dh không tồn tại → 404
+    r = await request('PATCH', '/api/orders-new/999888777', { ghi_chu: 'x' });
+    assert(r.status === 404, `expected 404, got ${r.status}`);
+    console.log(`✓ PATCH ma_dh lạ → 404`);
+
+    // 19. PATCH không có quyền → 403
+    sessionState.hasPerm = false;
+    r = await request('PATCH', `/api/orders-new/${ma1}`, { ghi_chu: 'denied' });
+    assert(r.status === 403, `expected 403, got ${r.status}`);
+    sessionState.hasPerm = true;
+    console.log(`✓ PATCH không có quyền → 403`);
+
     cleanup();
     console.log('\nALL HTTP TESTS PASSED');
   } catch (e) {

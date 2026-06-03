@@ -11,6 +11,7 @@ const PERMISSIONS = [
   'orders.view_all',
   'orders.route',
   'orders.create_dashboard',
+  'orders.edit_dashboard',
   'stats.view_daily',
   'stats.view_production',
   'stats.view_monthly',
@@ -34,6 +35,7 @@ const ROLE_DEFAULT_PERMISSIONS = {
   admin: ['*'],
   manager: [
     'orders.create_dashboard',
+    'orders.edit_dashboard',
     'orders.view_all',
     'stats.view_daily',
     'feedback.submit',

@@ -182,6 +182,45 @@ function getOrder(db, ma_dh) {
   return { order, stages };
 }
 
+// Fields user được phép sửa qua PATCH. KHÔNG cho sửa identity (ma_dh, ma_dh_goc,
+// so_phu, la_don_phu), source, created_*, hoặc raw nguon_file. SL phải > 0.
+const EDITABLE_FIELDS = [
+  'khach_hang', 'benh_nhan', 'phuc_hinh', 'sl', 'loai_lenh',
+  'ghi_chu', 'ghi_chu_sx', 'trang_thai',
+  'yc_hoan_thanh', 'yc_giao', 'tai_khoan_cao', 'routed_to', 'keylab_sx_info',
+];
+
+function updateOrder(db, ma_dh, patch, editor) {
+  if (!editor) throw new Error('editor required');
+  const existing = db.prepare('SELECT ma_dh FROM orders_new WHERE ma_dh = ?').get(ma_dh);
+  if (!existing) throw new Error(`Đơn không tồn tại: ${ma_dh}`);
+
+  const sets = [];
+  const params = {};
+  for (const field of EDITABLE_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(patch, field)) continue;
+    const raw = patch[field];
+    if (field === 'sl') {
+      const n = num(raw);
+      if (n <= 0) throw new Error('sl phải > 0');
+      params[field] = n;
+    } else if (field === 'routed_to') {
+      params[field] = str(raw) || null;
+    } else {
+      params[field] = str(raw);
+    }
+    sets.push(`${field} = @${field}`);
+  }
+  if (!sets.length) throw new Error('Không có field nào để cập nhật');
+
+  sets.push("edited_by = @editor", "edited_at = datetime('now','localtime')");
+  params.editor = editor;
+  params.ma_dh = ma_dh;
+
+  db.prepare(`UPDATE orders_new SET ${sets.join(', ')} WHERE ma_dh = @ma_dh`).run(params);
+  return getOrder(db, ma_dh);
+}
+
 function listOrders(db, { limit = 100, offset = 0, ma_dh_goc, loai_lenh, created_by, la_don_phu } = {}) {
   let sql = 'SELECT * FROM orders_new WHERE 1=1';
   const params = [];
@@ -197,9 +236,9 @@ function listOrders(db, { limit = 100, offset = 0, ma_dh_goc, loai_lenh, created
 }
 
 module.exports = {
-  STAGE_NAMES,
+  STAGE_NAMES, EDITABLE_FIELDS,
   DASHBOARD_STT_MIN, DASHBOARD_STT_MAX,
   todayMaPrefix, nowVnString,
   issueMaDh, issuePhuLucMaDh, maDhExists,
-  createOrder, createPhuLuc, getOrder, listOrders,
+  createOrder, createPhuLuc, getOrder, listOrders, updateOrder,
 };

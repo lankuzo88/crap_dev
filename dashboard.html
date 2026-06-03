@@ -1181,6 +1181,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
           <div class="d-sub-tabs">
             <div class="d-sub-tab active" id="d-order-tab-new"    onclick="dOrderSetTab('new', this)">📝 Đơn mới</div>
             <div class="d-sub-tab"        id="d-order-tab-phuluc" onclick="dOrderSetTab('phuluc', this)">📎 Phụ lục</div>
+            <div class="d-sub-tab"        id="d-order-tab-edit"   onclick="dOrderSetTab('edit', this)">✏️ Sửa đơn</div>
             <div class="d-sub-tab"        id="d-order-tab-list"   onclick="dOrderSetTab('list', this)">📋 Đã tạo</div>
           </div>
 
@@ -1315,10 +1316,85 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
             </div>
             <table class="d-order-list-tbl">
               <thead>
-                <tr><th>Mã đơn</th><th>Loại</th><th>Khách hàng</th><th>Bệnh nhân</th><th>Phục hình</th><th style="text-align:right;">SL</th><th>Lệnh</th><th>Tạo lúc</th></tr>
+                <tr><th>Mã đơn</th><th>Loại</th><th>Khách hàng</th><th>Bệnh nhân</th><th>Phục hình</th><th style="text-align:right;">SL</th><th>Lệnh</th><th>Tạo lúc</th><th></th></tr>
               </thead>
               <tbody id="d-order-list-tbody"></tbody>
             </table>
+          </div>
+
+          <!-- ── Sửa đơn ── -->
+          <div id="d-order-pane-edit" class="d-order-pane" style="display:none;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+              <input type="text" id="d-order-edit-ma" placeholder="Mã đơn cần sửa (vd: 260306500)" style="flex:1; max-width:260px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:14px; color:var(--text); font-family:inherit;">
+              <button type="button" class="d-order-btn" onclick="dOrderEditLoad()">Tải</button>
+              <span id="d-order-edit-status" class="d-order-status"></span>
+            </div>
+            <form id="d-order-form-edit" class="d-order-form" style="display:none;" onsubmit="dOrderSubmitEdit(event)">
+              <div class="d-order-field span2">
+                <label>Mã đơn (read-only)</label>
+                <input type="text" name="_ma_dh_display" readonly style="opacity:.7;">
+              </div>
+              <div class="d-order-field">
+                <label>Khách hàng *</label>
+                <input type="text" name="khach_hang" required>
+              </div>
+              <div class="d-order-field">
+                <label>Bệnh nhân</label>
+                <input type="text" name="benh_nhan">
+              </div>
+              <div class="d-order-field span2">
+                <label>Phục hình *</label>
+                <input type="text" name="phuc_hinh" required>
+              </div>
+              <div class="d-order-field">
+                <label>SL răng *</label>
+                <input type="number" name="sl" required min="1">
+              </div>
+              <div class="d-order-field">
+                <label>Loại lệnh *</label>
+                <select name="loai_lenh" required>
+                  <option value="Làm mới">Làm mới</option>
+                  <option value="Bảo hành">Bảo hành</option>
+                  <option value="Làm thêm">Làm thêm</option>
+                  <option value="Sửa">Sửa</option>
+                  <option value="Làm lại">Làm lại</option>
+                  <option value="Làm tiếp">Làm tiếp</option>
+                </select>
+              </div>
+              <div class="d-order-field">
+                <label>YC hoàn thành</label>
+                <input type="text" name="yc_hoan_thanh">
+              </div>
+              <div class="d-order-field">
+                <label>YC giao</label>
+                <input type="text" name="yc_giao">
+              </div>
+              <div class="d-order-field">
+                <label>Tài khoản cao</label>
+                <input type="text" name="tai_khoan_cao">
+              </div>
+              <div class="d-order-field">
+                <label>Phòng SX</label>
+                <select name="routed_to">
+                  <option value="">— Tự động —</option>
+                  <option value="sap">Sáp</option>
+                  <option value="zirco">Zirco</option>
+                  <option value="both">Cả 2</option>
+                </select>
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú</label>
+                <textarea name="ghi_chu"></textarea>
+              </div>
+              <div class="d-order-field span2">
+                <label>Ghi chú sản xuất</label>
+                <textarea name="ghi_chu_sx"></textarea>
+              </div>
+              <div class="d-order-actions">
+                <button type="submit" class="d-order-btn">Lưu thay đổi</button>
+                <span id="d-order-edit-savestatus" class="d-order-status"></span>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -4498,7 +4574,7 @@ function dSw(name, el) {
 
 /* ═══════ TAB ORDER (TẠO ĐƠN) ═══════ */
 function dOrderSetTab(name, el) {
-  ['new','phuluc','list'].forEach(n => {
+  ['new','phuluc','edit','list'].forEach(n => {
     const pane = document.getElementById('d-order-pane-' + n);
     if (pane) pane.style.display = (n === name ? '' : 'none');
   });
@@ -4598,12 +4674,96 @@ async function dOrderRefreshList() {
         <td style="text-align:right;">${dOrderEscape(o.sl)}</td>
         <td>${dOrderEscape(o.loai_lenh)}</td>
         <td style="color:var(--text2);font-size:11px;white-space:nowrap;">${dOrderEscape(o.created_at)}</td>
+        <td><button type="button" onclick="dOrderEditFromList('${dOrderEscape(o.ma_dh)}')" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text);font-size:11px;">✏️</button></td>
       </tr>
     `).join('');
     if (meta) meta.textContent = `${data.count} đơn (giới hạn 100)`;
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);">Lỗi: ${dOrderEscape(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);">Lỗi: ${dOrderEscape(e.message)}</td></tr>`;
     if (meta) meta.textContent = '';
+  }
+}
+
+function dOrderEditFromList(ma_dh) {
+  document.getElementById('d-order-edit-ma').value = ma_dh;
+  dOrderSetTab('edit', document.getElementById('d-order-tab-edit'));
+  dOrderEditLoad();
+}
+
+async function dOrderEditLoad() {
+  const ma_dh = String(document.getElementById('d-order-edit-ma').value || '').trim();
+  const status = document.getElementById('d-order-edit-status');
+  const form = document.getElementById('d-order-form-edit');
+  if (!ma_dh) { status.textContent = 'Nhập mã đơn'; status.className = 'd-order-status err'; return; }
+  status.textContent = 'Đang tải...';
+  status.className = 'd-order-status';
+  form.style.display = 'none';
+  try {
+    const r = await fetch('/api/orders-new/' + encodeURIComponent(ma_dh));
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      status.textContent = 'Lỗi: ' + (data.error || 'HTTP ' + r.status);
+      status.className = 'd-order-status err';
+      return;
+    }
+    const o = data.order;
+    form._ma_dh_display.value = o.ma_dh;
+    form.khach_hang.value = o.khach_hang || '';
+    form.benh_nhan.value = o.benh_nhan || '';
+    form.phuc_hinh.value = o.phuc_hinh || '';
+    form.sl.value = o.sl || 1;
+    form.loai_lenh.value = o.loai_lenh || 'Làm mới';
+    form.yc_hoan_thanh.value = o.yc_hoan_thanh || '';
+    form.yc_giao.value = o.yc_giao || '';
+    form.tai_khoan_cao.value = o.tai_khoan_cao || '';
+    form.routed_to.value = o.routed_to || '';
+    form.ghi_chu.value = o.ghi_chu || '';
+    form.ghi_chu_sx.value = o.ghi_chu_sx || '';
+    form.dataset.maDh = o.ma_dh;
+    form.style.display = '';
+    status.textContent = 'Đã tải ' + o.ma_dh + (o.edited_at ? ' (sửa lần cuối ' + o.edited_at + ' bởi ' + (o.edited_by || '—') + ')' : '');
+    status.className = 'd-order-status ok';
+  } catch (e) {
+    status.textContent = 'Lỗi network: ' + e.message;
+    status.className = 'd-order-status err';
+  }
+}
+
+async function dOrderSubmitEdit(ev) {
+  ev.preventDefault();
+  const form = document.getElementById('d-order-form-edit');
+  const status = document.getElementById('d-order-edit-savestatus');
+  const ma_dh = form.dataset.maDh;
+  if (!ma_dh) { status.textContent = 'Chưa tải đơn'; status.className = 'd-order-status err'; return; }
+  const payload = {};
+  for (const el of form.elements) {
+    if (!el.name || el.name.startsWith('_')) continue;
+    payload[el.name] = String(el.value || '').trim();
+  }
+  if (payload.sl) payload.sl = Number(payload.sl);
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  status.textContent = 'Đang lưu...';
+  status.className = 'd-order-status';
+  try {
+    const r = await fetch('/api/orders-new/' + encodeURIComponent(ma_dh), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) {
+      status.textContent = 'Lỗi: ' + (data.error || 'HTTP ' + r.status);
+      status.className = 'd-order-status err';
+      return;
+    }
+    status.textContent = '✓ Đã lưu ' + data.order.ma_dh + ' (sửa bởi ' + (data.order.edited_by || '—') + ')';
+    status.className = 'd-order-status ok';
+  } catch (e) {
+    status.textContent = 'Lỗi network: ' + e.message;
+    status.className = 'd-order-status err';
+  } finally {
+    btn.disabled = false;
   }
 }
 

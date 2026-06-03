@@ -126,6 +126,47 @@ catch (e) { caught = e.message.includes('createdBy required'); }
 assert(caught, 'should reject missing createdBy');
 console.log(`✓ createOrder reject missing createdBy`);
 
+// 10. updateOrder: sửa metadata được, bỏ qua field không cho phép
+const beforeEdit = repo.getOrder(db, ma1);
+const updated = repo.updateOrder(db, ma1, {
+  khach_hang: 'NK Edited',
+  benh_nhan: 'BN Y',
+  sl: 5,
+  ghi_chu: 'Đã sửa',
+  ma_dh: 'HACK',
+  created_by: 'attacker',
+}, 'editor1');
+assert(updated.order.khach_hang === 'NK Edited', 'khach_hang not edited');
+assert(updated.order.benh_nhan === 'BN Y', 'benh_nhan not edited');
+assert(updated.order.sl === 5, `sl: ${updated.order.sl}`);
+assert(updated.order.ghi_chu === 'Đã sửa', 'ghi_chu not edited');
+assert(updated.order.ma_dh === ma1, `ma_dh corrupted: ${updated.order.ma_dh}`);
+assert(updated.order.created_by === beforeEdit.order.created_by, 'created_by changed');
+assert(updated.order.edited_by === 'editor1', `edited_by: ${updated.order.edited_by}`);
+assert(updated.order.edited_at, 'edited_at not set');
+console.log(`✓ updateOrder: sửa được metadata, identity & audit field được bảo vệ`);
+
+// 11. updateOrder reject sl <= 0
+let caught2 = false;
+try { repo.updateOrder(db, ma1, { sl: 0 }, 'editor1'); }
+catch (e) { caught2 = e.message.includes('sl phải'); }
+assert(caught2, 'should reject sl=0');
+console.log(`✓ updateOrder reject sl <= 0`);
+
+// 12. updateOrder reject patch chỉ có field cấm
+caught2 = false;
+try { repo.updateOrder(db, ma1, { ma_dh_goc: 'HACK', source: 'HACK' }, 'editor1'); }
+catch (e) { caught2 = e.message.includes('Không có field'); }
+assert(caught2, 'should reject empty patch');
+console.log(`✓ updateOrder reject empty patch`);
+
+// 13. updateOrder reject ma_dh không tồn tại
+caught2 = false;
+try { repo.updateOrder(db, '999888777', { ghi_chu: 'x' }, 'editor1'); }
+catch (e) { caught2 = e.message.includes('không tồn tại'); }
+assert(caught2, 'should reject unknown ma_dh');
+console.log(`✓ updateOrder reject unknown ma_dh`);
+
 db.close();
 fs.unlinkSync(TMP);
 console.log('\nALL TESTS PASSED');

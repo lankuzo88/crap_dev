@@ -11,10 +11,11 @@ const router  = express.Router();
 const { requirePermission } = require('../middleware/auth');
 const { getDB } = require('../db/index');
 const {
-  createOrder, createPhuLuc, getOrder, listOrders,
+  createOrder, createPhuLuc, getOrder, listOrders, updateOrder, EDITABLE_FIELDS,
 } = require('../repositories/ordersNew.repo');
 
 const LOAI_LENH_ALLOWED = new Set(['Làm mới', 'Sửa', 'Làm lại', 'Bảo hành', 'Làm tiếp', 'Làm thêm']);
+const EDITABLE_SET = new Set(EDITABLE_FIELDS);
 
 const log = msg => console.log(`[${new Date().toLocaleTimeString('vi-VN')}] [orders-new] ${msg}`);
 const str = v => (v != null) ? String(v).trim() : '';
@@ -92,6 +93,32 @@ router.post('/api/orders-new/:ma_dh_goc/phu-luc', requirePermission('orders.crea
     res.status(201).json({ ok: true, ma_dh, so_phu, ...created });
   } catch (e) {
     if (e.message.includes('không tồn tại')) return res.status(404).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ── PATCH sửa metadata ───────────────────────────────
+router.patch('/api/orders-new/:ma_dh', requirePermission('orders.edit_dashboard'), (req, res) => {
+  const db = getDB();
+  if (!db) return res.status(503).json({ ok: false, error: 'DB chưa khởi tạo' });
+  const body = req.body || {};
+  const patch = {};
+  for (const k of Object.keys(body)) {
+    if (EDITABLE_SET.has(k)) patch[k] = body[k];
+  }
+  if (Object.keys(patch).length === 0) {
+    return res.status(400).json({ ok: false, error: 'Không có field hợp lệ để cập nhật' });
+  }
+  if (patch.loai_lenh && !LOAI_LENH_ALLOWED.has(str(patch.loai_lenh))) {
+    return res.status(400).json({ ok: false, error: `loai_lenh không hợp lệ: ${patch.loai_lenh}` });
+  }
+  try {
+    const updated = updateOrder(db, req.params.ma_dh, patch, req.session.user);
+    log(`${req.session.user} edited ${req.params.ma_dh} (${Object.keys(patch).join(',')})`);
+    res.json({ ok: true, ...updated });
+  } catch (e) {
+    if (e.message.includes('không tồn tại')) return res.status(404).json({ ok: false, error: e.message });
+    if (e.message.includes('sl phải') || e.message.includes('Không có field')) return res.status(400).json({ ok: false, error: e.message });
     res.status(500).json({ ok: false, error: e.message });
   }
 });
