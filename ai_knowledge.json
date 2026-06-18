@@ -1,0 +1,57 @@
+{
+  "lab": {
+    "name": "ASIA LAB",
+    "type": "Labo Nha Khoa",
+    "stages": ["CBM", "SÁP/Cadcam", "SƯỜN", "ĐẮP", "MÀI"],
+    "stage_descriptions": {
+      "CBM": "Cat Be Mi — cong doan dau tien, cat va chuan bi be mi (khung kim loai/zirconia)",
+      "SÁP/Cadcam": "Thiet ke va duc sap, hoac xu ly Cadcam. Co the lam song song voi CBM",
+      "SƯỜN": "Lam suon rang, kiem tra khap cat. Cong doan QC quan trong",
+      "ĐẮP": "Dep so/ceramic len suon — NUT THAT LON NHAT, thuong chiem nhieu thoi gian nhat",
+      "MÀI": "Mai tinh, danh bong, kiem tra cuoi truoc khi giao"
+    }
+  },
+  "materials": {
+    "Zirconia": {
+      "keywords": ["zircornia","ziconia","cercon","diamond","zirconia","zolid","zr","HT"],
+      "time": "3-7 ngay",
+      "note": "Can kilnnung, thoi gian cho giua cac cong doan"
+    },
+    "Titanium": {
+      "keywords": ["titanium","ti "],
+      "time": "3-5 ngay"
+    },
+    "Kim loại": {
+      "keywords": ["kim loại","thường","mão kim loại"],
+      "time": "2-4 ngay"
+    },
+    "Veneer": {
+      "keywords": ["veneer","laminate","cut back","mặt dán"],
+      "time": "2-3 ngay, doi hoi tay nghe cao"
+    },
+    "Temp/PMMA": {
+      "keywords": ["tạm","temporary","pmma"],
+      "time": "1-2 ngay, thuong lam gap"
+    }
+  },
+  "ktvs": [
+    "Ngọc Lân","HẠNH","Võ Văn Vạn","Bùi Tấn Đạt","Trường","Gia Thư",
+    "Toàn","Tấn Sĩ","H.Trang","Tuấn","Thái Sơn","ĐINH THIỆN TÂM",
+    "Hồng Thắm","Trực","Trúc My","Mỹ Hiền","Thế Hỷ","Văn Trải",
+    "Bảo Trân","Cẩm Hồng","Phạm Tấn Hữu","Yến Vy","Văn Huyến"
+  ],
+  "special_orders": {
+    "sua_laitiep": {
+      "keywords": ["sửa","làm tiếp","làm lại","remake"],
+      "skip": ["CBM","SÁP/Cadcam","SƯỜN"],
+      "only": ["ĐẮP","MÀI"],
+      "note": "Don sua/lai tiep → skip 3 cong doan dau → chi lam ĐẮP + MÀI. Thuong lam gap"
+    },
+    "thu_suon": {
+      "keywords": ["ts","thử sườn","thu suon"],
+      "skip": ["ĐẮP","MÀI"],
+      "only": ["CBM","SÁP/Cadcam","SƯỜN"],
+      "note": "Don thu suon (TS) → skip 2 cong doan cuoi → chi lam CBM→SÁP→SƯỜN roi tra lai. Thuong can lam nhanh"
+    }
+  }
+}

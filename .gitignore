@@ -58,6 +58,7 @@ logs/
 *.tmp
 *.temp
 *.bak
+*.bak.*
 *.orig
 
 # ============ Compiled / Build ============
