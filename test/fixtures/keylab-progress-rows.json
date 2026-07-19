@@ -1,0 +1,72 @@
+{
+  "list_rows": [
+    {
+      "iddonhang": "ORDER-1",
+      "idchitietdonhang": "PART-1",
+      "madonhangcuauser": "DH-KEYLAB-1",
+      "sanpham": "Răng sứ Zircornia",
+      "rang": "45-47,",
+      "soluong": 3,
+      "loaisanpham": "Làm mới",
+      "giaothucte": null
+    },
+    {
+      "iddonhang": "ORDER-1",
+      "idchitietdonhang": "PART-2",
+      "madonhangcuauser": "DH-KEYLAB-1",
+      "sanpham": "In Mẫu Toàn Hàm",
+      "rang": "HTren,",
+      "soluong": 1,
+      "loaisanpham": "Làm mới",
+      "giaothucte": null
+    }
+  ],
+  "progress_by_internal_order": {
+    "ORDER-1": [
+      {
+        "idchitietdonhang": "PART-1",
+        "congdoan": "CBM",
+        "thutulam": 1,
+        "nhanvien": "Võ Văn Vạn",
+        "thoigianbatdau": "2026-07-18T10:30:52+07:00",
+        "sanpham": "Răng sứ Zircornia",
+        "rang": "45-47,",
+        "soluong": 3,
+        "loaisanpham": "Làm mới"
+      },
+      {
+        "idchitietdonhang": "PART-1",
+        "congdoan": "ĐẮP",
+        "thutulam": 4,
+        "nhanvien": "Yến Vy",
+        "thoigianbatdau": "2026-07-19T13:06:54+07:00",
+        "sanpham": "Răng sứ Zircornia",
+        "rang": "45-47,",
+        "soluong": 3,
+        "loaisanpham": "Làm mới"
+      },
+      {
+        "idchitietdonhang": "PART-2",
+        "congdoan": "ĐẮP",
+        "thutulam": 4,
+        "nhanvien": null,
+        "thoigianbatdau": null,
+        "sanpham": "In Mẫu Toàn Hàm",
+        "rang": "HTren,",
+        "soluong": 1,
+        "loaisanpham": "Làm mới"
+      },
+      {
+        "idchitietdonhang": "PART-1",
+        "congdoan": "MÀI",
+        "thutulam": 5,
+        "nhanvien": null,
+        "thoigianbatdau": null,
+        "sanpham": "Răng sứ Zircornia",
+        "rang": "45-47,",
+        "soluong": 3,
+        "loaisanpham": "Làm mới"
+      }
+    ]
+  }
+}

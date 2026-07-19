@@ -3,9 +3,9 @@ Headless Auto-Scrape.
 
 Production PM2 daemon:
 - Watches the newest Excel file every 10 minutes.
-- Runs run_scrape.py to scrape LaboAsia progress and import SQLite.
-- Does not scrape Keylab notes via UI. Keylab Excel export remains handled by
-  keylab_exporter.py through the Node service/routes.
+- Imports progress directly from KeyLab SQL by default.
+- Keeps run_scrape.py available as an explicit web rollback mode.
+- Does not scrape KeyLab notes via UI.
 """
 
 import json
@@ -58,6 +58,7 @@ def load_env_file(path: Path):
 
 
 load_env_file(BASE_DIR / ".env")
+PROGRESS_SOURCE = os.environ.get("PROGRESS_SOURCE", "keylab_sql").strip().lower().replace("-", "_")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -311,32 +312,43 @@ def export_keylab_sql_if_due():
 
 
 def scrape_excel(file_path: Path) -> bool:
-    log.info(f"Starting web scrape: {file_path.name}")
+    source = PROGRESS_SOURCE
+    if source == "web":
+        runner = "run_scrape.py"
+        label = "LaboAsia web rollback"
+    elif source == "keylab_sql":
+        runner = "run_keylab_sync.py"
+        label = "KeyLab SQL"
+    else:
+        log.error(f"Unsupported PROGRESS_SOURCE={source!r}; expected 'keylab_sql' or 'web'")
+        return False
+
+    log.info(f"Starting {label} progress sync: {file_path.name}")
     try:
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         result = subprocess.run(
-            [sys.executable, "run_scrape.py", str(file_path)],
+            [sys.executable, runner, str(file_path)],
             cwd=BASE_DIR,
             env=env,
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=300,
+            timeout=1200,
             creationflags=_NO_WINDOW,
         )
         output_tail = ((result.stdout or "") + (result.stderr or ""))[-1200:]
         if result.returncode == 0:
-            log.info(f"Web scrape successful: {file_path.name}")
+            log.info(f"{label} progress sync successful: {file_path.name}")
             update_last_run_file(file_path)
             return True
-        log.error(f"Web scrape failed (exit {result.returncode}): {output_tail or 'No output'}")
+        log.error(f"{label} progress sync failed (exit {result.returncode}): {output_tail or 'No output'}")
         return False
     except subprocess.TimeoutExpired:
-        log.error(f"Web scrape timeout (300s): {file_path.name}")
+        log.error(f"{label} progress sync timeout (1200s): {file_path.name}")
         return False
     except Exception as exc:
-        log.error(f"Web scrape error: {exc}")
+        log.error(f"{label} progress sync error: {exc}")
         return False
 
 
@@ -373,9 +385,12 @@ def cleanup_old_excel_files():
 
 def main():
     log.info("=== Auto-Scrape Headless start ===")
-    log.info(f"Schedule: progress check every {INTERVAL_MINUTES} min, KeyLab SQL export every {KEYLAB_EXPORT_INTERVAL_MINUTES} min, 24/7")
+    log.info(
+        f"Schedule: progress={PROGRESS_SOURCE} every {INTERVAL_MINUTES} min, "
+        f"KeyLab SQL export every {KEYLAB_EXPORT_INTERVAL_MINUTES} min, 24/7"
+    )
     cleanup_old_excel_files()
-    log.info("Keylab UI notes scraping is disabled; KeyLab SQL notes sync runs inside run_scrape.py.")
+    log.info("KeyLab UI notes scraping is disabled; KeyLab SQL notes sync runs inside the selected progress runner.")
 
     while True:
         lock = acquire_pipeline_lock("auto-exporter")
@@ -400,14 +415,17 @@ def main():
 
                 is_new_file = last_run is None or newest.resolve() != last_run.resolve()
                 if exported_file:
-                    log.info("KeyLab SQL export completed; scraping exported file and syncing SQL notes.")
+                    log.info("KeyLab SQL export completed; syncing progress and SQL notes.")
                 elif is_new_file:
-                    log.info("New file detected; scraping web progress.")
+                    log.info("New file detected; syncing progress.")
                 else:
-                    log.info("Same file; re-scraping web progress.")
+                    log.info("Same file; refreshing progress.")
 
                 if not scrape_excel(newest):
-                    log.error(f"run_scrape failed for {newest.name}; will retry next cycle.")
+                    log.error(
+                        f"Progress sync failed for {newest.name}; will retry next cycle "
+                        "without clearing existing data."
+                    )
         finally:
             release_pipeline_lock(lock)
 
