@@ -52,7 +52,7 @@ test('KeyLab SQL progress exporter keeps a completed product stage when another 
   assert.match(dap.raw_row_text, /^Răng sứ Zircornia/);
 });
 
-test('KeyLab progress integration is parameterized, atomic and selectable without removing web rollback', () => {
+test('KeyLab progress integration is parameterized, atomic and SQL-only', () => {
   const exporter = fs.readFileSync(SCRIPT, 'utf8');
   const runner = fs.readFileSync(path.join(ROOT, 'run_keylab_sync.py'), 'utf8');
   const daemon = fs.readFileSync(path.join(ROOT, 'auto_scrape_headless.py'), 'utf8');
@@ -64,9 +64,23 @@ test('KeyLab progress integration is parameterized, atomic and selectable withou
   assert.doesNotMatch(exporter, /Password\s*=/i);
   assert.match(runner, /keylab_sql_progress_exporter\.ps1/);
   assert.match(runner, /import_json\(str\(json_out\)\)/);
-  assert.match(daemon, /PROGRESS_SOURCE/);
-  assert.match(daemon, /source == ['"]web['"]/);
   assert.match(daemon, /run_keylab_sync\.py/);
+  assert.doesNotMatch(daemon, /PROGRESS_SOURCE|run_scrape\.py|source == ['"]web['"]/);
+});
+
+test('KeyLab Excel export and direct progress sync both use a five-minute cycle', () => {
+  const daemon = fs.readFileSync(path.join(ROOT, 'auto_scrape_headless.py'), 'utf8');
+  const statusRoute = fs.readFileSync(path.join(ROOT, 'src', 'routes', 'keylab.routes.js'), 'utf8');
+
+  assert.match(daemon, /^INTERVAL_MINUTES = 5$/m);
+  assert.match(daemon, /^KEYLAB_EXPORT_INTERVAL_MINUTES = 5$/m);
+  assert.match(daemon, /cycle_started = time\.monotonic\(\)/);
+  assert.match(daemon, /remaining_seconds = max\(0, INTERVAL_MINUTES \* 60 - elapsed_seconds\)/);
+  assert.match(daemon, /export_started_at = vietnam_now\(\)/);
+  assert.match(daemon, /update_last_keylab_export\(saved_file, export_started_at\)/);
+  assert.match(statusRoute, /intervalMinutes: 5/);
+  assert.match(statusRoute, /mode: 'keylab_sql_only'/);
+  assert.doesNotMatch(statusRoute, /hourly KeyLab SQL export|export 60 phut/);
 });
 
 test('KeyLab SQL progress exporter fails closed and preserves the previous output', () => {

@@ -1,11 +1,10 @@
 """
-Headless Auto-Scrape.
+KeyLab SQL Sync Daemon.
 
 Production PM2 daemon:
-- Watches the newest Excel file every 10 minutes.
-- Imports progress directly from KeyLab SQL by default.
-- Keeps run_scrape.py available as an explicit web rollback mode.
-- Does not scrape KeyLab notes via UI.
+- Watches the newest Excel file every 5 minutes.
+- Imports progress and production notes directly from KeyLab SQL.
+- Does not connect to an external production website.
 """
 
 import json
@@ -24,8 +23,8 @@ except Exception:
 
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
-INTERVAL_MINUTES = 10
-KEYLAB_EXPORT_INTERVAL_MINUTES = 15
+INTERVAL_MINUTES = 5
+KEYLAB_EXPORT_INTERVAL_MINUTES = 5
 EXCEL_RETENTION_DAYS = 60  # Excel/ cleanup: xoá file cũ hơn N ngày mỗi cycle
 
 BASE_DIR = Path(__file__).parent
@@ -58,7 +57,6 @@ def load_env_file(path: Path):
 
 
 load_env_file(BASE_DIR / ".env")
-PROGRESS_SOURCE = os.environ.get("PROGRESS_SOURCE", "keylab_sql").strip().lower().replace("-", "_")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -194,10 +192,11 @@ def get_last_keylab_export_at():
         return None
 
 
-def update_last_keylab_export(file_path: Path):
+def update_last_keylab_export(file_path: Path, export_started_at=None):
     try:
         cfg = load_config()
-        cfg["last_keylab_sql_export_at"] = vietnam_now().isoformat(timespec="seconds")
+        exported_at = export_started_at or vietnam_now()
+        cfg["last_keylab_sql_export_at"] = exported_at.isoformat(timespec="seconds")
         cfg["last_keylab_sql_export_file"] = str(file_path)
         save_config(cfg)
     except Exception as exc:
@@ -251,12 +250,13 @@ def export_keylab_sql_if_due():
     if not is_keylab_export_due():
         return None
     if sys.platform != "win32":
-        log.error("KeyLab SQL export requires Windows PowerShell; skip hourly export.")
+        log.error("KeyLab SQL export requires Windows PowerShell; skipping export.")
         return None
     if not KEYLAB_SQL_EXPORTER.exists():
         log.error(f"KeyLab SQL exporter not found: {KEYLAB_SQL_EXPORTER}")
         return None
 
+    export_started_at = vietnam_now()
     state = load_keylab_export_state()
     out_file = next_keylab_export_path(state)
     log.info(f"KeyLab SQL export due ({KEYLAB_EXPORT_INTERVAL_MINUTES} min); exporting to {out_file.name}")
@@ -301,7 +301,7 @@ def export_keylab_sql_if_due():
 
         state["export_count"] = int(state["export_count"]) + 1
         save_keylab_export_state(state)
-        update_last_keylab_export(saved_file)
+        update_last_keylab_export(saved_file, export_started_at)
         log.info(f"KeyLab SQL export successful: {saved_file.name}")
         return saved_file
     except subprocess.TimeoutExpired:
@@ -311,19 +311,9 @@ def export_keylab_sql_if_due():
     return None
 
 
-def scrape_excel(file_path: Path) -> bool:
-    source = PROGRESS_SOURCE
-    if source == "web":
-        runner = "run_scrape.py"
-        label = "LaboAsia web rollback"
-    elif source == "keylab_sql":
-        runner = "run_keylab_sync.py"
-        label = "KeyLab SQL"
-    else:
-        log.error(f"Unsupported PROGRESS_SOURCE={source!r}; expected 'keylab_sql' or 'web'")
-        return False
-
-    log.info(f"Starting {label} progress sync: {file_path.name}")
+def sync_keylab_excel(file_path: Path) -> bool:
+    runner = "run_keylab_sync.py"
+    log.info(f"Starting KeyLab SQL progress sync: {file_path.name}")
     try:
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         result = subprocess.run(
@@ -339,16 +329,16 @@ def scrape_excel(file_path: Path) -> bool:
         )
         output_tail = ((result.stdout or "") + (result.stderr or ""))[-1200:]
         if result.returncode == 0:
-            log.info(f"{label} progress sync successful: {file_path.name}")
+            log.info(f"KeyLab SQL progress sync successful: {file_path.name}")
             update_last_run_file(file_path)
             return True
-        log.error(f"{label} progress sync failed (exit {result.returncode}): {output_tail or 'No output'}")
+        log.error(f"KeyLab SQL progress sync failed (exit {result.returncode}): {output_tail or 'No output'}")
         return False
     except subprocess.TimeoutExpired:
-        log.error(f"{label} progress sync timeout (1200s): {file_path.name}")
+        log.error(f"KeyLab SQL progress sync timeout (1200s): {file_path.name}")
         return False
     except Exception as exc:
-        log.error(f"{label} progress sync error: {exc}")
+        log.error(f"KeyLab SQL progress sync error: {exc}")
         return False
 
 
@@ -386,13 +376,14 @@ def cleanup_old_excel_files():
 def main():
     log.info("=== Auto-Scrape Headless start ===")
     log.info(
-        f"Schedule: progress={PROGRESS_SOURCE} every {INTERVAL_MINUTES} min, "
+        f"Schedule: KeyLab SQL progress every {INTERVAL_MINUTES} min, "
         f"KeyLab SQL export every {KEYLAB_EXPORT_INTERVAL_MINUTES} min, 24/7"
     )
     cleanup_old_excel_files()
-    log.info("KeyLab UI notes scraping is disabled; KeyLab SQL notes sync runs inside the selected progress runner.")
+    log.info("SQL-only mode: KeyLab export, progress and notes; no web scraper is available.")
 
     while True:
+        cycle_started = time.monotonic()
         lock = acquire_pipeline_lock("auto-exporter")
         if not lock:
             active = read_pipeline_lock() or {}
@@ -401,7 +392,9 @@ def main():
                 f"{active.get('owner', 'unknown')} {active.get('file', '')}. "
                 f"Checking again in {INTERVAL_MINUTES} min..."
             )
-            time.sleep(INTERVAL_MINUTES * 60)
+            elapsed_seconds = time.monotonic() - cycle_started
+            remaining_seconds = max(0, INTERVAL_MINUTES * 60 - elapsed_seconds)
+            time.sleep(remaining_seconds)
             continue
 
         try:
@@ -421,7 +414,7 @@ def main():
                 else:
                     log.info("Same file; refreshing progress.")
 
-                if not scrape_excel(newest):
+                if not sync_keylab_excel(newest):
                     log.error(
                         f"Progress sync failed for {newest.name}; will retry next cycle "
                         "without clearing existing data."
@@ -429,8 +422,10 @@ def main():
         finally:
             release_pipeline_lock(lock)
 
-        log.info(f"Checking again in {INTERVAL_MINUTES} min...")
-        time.sleep(INTERVAL_MINUTES * 60)
+        elapsed_seconds = time.monotonic() - cycle_started
+        remaining_seconds = max(0, INTERVAL_MINUTES * 60 - elapsed_seconds)
+        log.info(f"Next cycle in {remaining_seconds:.0f}s (fixed {INTERVAL_MINUTES}-minute cadence)...")
+        time.sleep(remaining_seconds)
 
 
 if __name__ == "__main__":

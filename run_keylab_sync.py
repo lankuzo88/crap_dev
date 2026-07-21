@@ -19,14 +19,15 @@ if hasattr(sys.stderr, "reconfigure"):
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 sys.path.insert(0, str(Path(__file__).parent))
-from laboasia_gui_scraper_tkinter import (  # noqa: E402
+from keylab_sync_helpers import (  # noqa: E402
     BASE_DIR,
     CLEAN_DIR,
     DATA_DIR,
+    detect_sheet_col,
     load_order_ids,
     merge_back_to_workbook,
+    sync_keylab_sql_notes,
 )
-from run_scrape import detect_sheet_col, sync_keylab_sql_notes  # noqa: E402
 
 PROGRESS_EXPORTER = BASE_DIR / "keylab_sql_progress_exporter.ps1"
 

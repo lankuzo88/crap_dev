@@ -5,13 +5,6 @@ const express = require('express');
 const app     = express();
 
 // Wire up scraper ↔ orders cache reset (tránh circular dep)
-const { setResetCallback, setCloseDBCallback, setAutoCloseCallback } = require('./services/scraper.service');
-const { resetCache, autoCloseCompletedDelayReports } = require('./repositories/orders.repo');
-const { closeDB }    = require('./db/index');
-setResetCallback(resetCache);
-setCloseDBCallback(closeDB);
-setAutoCloseCallback(autoCloseCompletedDelayReports);
-
 // ── Body parser ───────────────────────────────────────
 app.set('trust proxy', 1);
 app.use(express.json());
@@ -25,7 +18,7 @@ app.use('/', require('./routes/admin.routes'));
 app.use('/', require('./routes/orders.routes'));
 app.use('/', require('./routes/ordersNew.routes'));
 app.use('/', require('./routes/analytics.routes'));
-app.use('/', require('./routes/scraper.routes'));
+app.use('/', require('./routes/keylab.routes'));
 app.use('/', require('./routes/feedback.routes'));
 app.use('/', require('./routes/errorReports.routes'));
 app.use('/', require('./routes/delayReports.routes'));
